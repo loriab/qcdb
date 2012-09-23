@@ -1,5 +1,5 @@
 """
-Database of Pulay corannulene structures. Subsumed into CFLOW.
+| Database of Pulay corannulene structures. Subsumed into CFLOW.
 
 - **cp**  ``'off'`` || ``'on'``
 

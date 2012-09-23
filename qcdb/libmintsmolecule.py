@@ -928,7 +928,7 @@ class LibmintsMolecule(object):
 #            if self.full_pg:  TODO symmetry
 #                text += """    Full point group: %s\n\n""" % (self.full_point_group())  TODO symmetry
             text += """    Geometry (in %s), charge = %d, multiplicity = %d:\n\n""" % \
-                ('Bohr', self.molecular_charge(), self.multiplicity())
+                ('Angstrom', self.molecular_charge(), self.multiplicity())
             text += """       Center              X                  Y                   Z       \n"""
             text += """    ------------   -----------------  -----------------  -----------------\n"""
 
@@ -1677,8 +1677,8 @@ class LibmintsMolecule(object):
     def rotational_constants(self, tol=FULL_PG_TOL):
         """Compute the rotational constants and return them in wavenumbers"""
 
-        evals = diagonalize3x3symmat(self.inertia_tensor())
-        evals = [evals[2], evals[1], evals[0]]  # order ascending
+        evals, evecs = diagonalize3x3symmat(self.inertia_tensor())
+        evals = sorted(evals)
         isLinear = True if evals[0] < ZERO else False
         isOne = True if evals[1] < ZERO else False
         isAtom = True if evals[2] < ZERO else False

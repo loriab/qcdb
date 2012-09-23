@@ -1,3 +1,6 @@
+qcdb
+====
+
 Quantum Chemical Databases
 --------------------------
 

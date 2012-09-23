@@ -109,6 +109,31 @@ class Molecule(LibmintsMolecule):
         instance.update_geometry()
         return instance
 
+    def save_string_xyz(self):
+        """Save a string for a XYZ-style file.
+
+        >>> H2OH2O.save_string_xyz()
+        6
+        -2 3 water_dimer
+         O   -1.551007000000   -0.114520000000    0.000000000000
+         H   -1.934259000000    0.762503000000    0.000000000000
+         H   -0.599677000000    0.040712000000    0.000000000000
+         O    1.350625000000    0.111469000000    0.000000000000
+         H    1.680398000000   -0.373741000000   -0.758561000000
+         H    1.680398000000   -0.373741000000    0.758561000000
+
+        """
+        factor = 1.0 if self.PYunits == 'Angstrom' else psi_bohr2angstroms
+
+        text = '%d\n' % (self.natom())
+        text += '%d %d %s\n' % (self.molecular_charge(), self.multiplicity(), self.tagline)
+
+        for i in range(self.natom()):
+            [x, y, z] = self.atoms[i].compute()
+            text += '%2s %17.12f %17.12f %17.12f\n' % ((self.symbol(i) if self.Z(i) else "Gh"), \
+                x * factor, y * factor, z * factor)
+        return text
+
     def save_string_for_psi4(self):
         """Returns a string of Molecule formatted for psi4.
         Includes fragments and reorienting, if specified.
@@ -145,8 +170,65 @@ class Molecule(LibmintsMolecule):
         text += """units %s\n""" % (self.units().lower())
         return text
 
-    def format_string_for_qchem(self):
+    def format_molecule_for_psi4(self):
+        """Returns string of molecule definition block."""
+        text = 'molecule mol {\n'
+        for line in self.save_string_for_psi4().splitlines():
+            text += '   ' + line + '\n'
+        text += '}\n'
+        return text
+
+    def format_molecule_for_qchem(self):
+        """
+
+        """
+        factor = 1.0 if self.PYunits == 'Angstrom' else psi_bohr2angstroms
+
+        text = ""
+        text += '%d %d %s\n' % (self.molecular_charge(), self.multiplicity(), self.tagline)
+
+        for i in range(self.natom()):
+            [x, y, z] = self.atoms[i].compute()
+            text += '%2s %17.12f %17.12f %17.12f\n' % ((self.symbol(i) if self.Z(i) else "Gh"), \
+                x * factor, y * factor, z * factor)
+        return text
         pass
+
+    def format_molecule_for_molpro(self):
+        """
+
+        """
+        factor = 1.0 if self.PYunits == 'Angstrom' else psi_bohr2angstroms
+
+        text = ""
+        text += '%d %d %s\n' % (self.molecular_charge(), self.multiplicity(), self.tagline)
+
+        for i in range(self.natom()):
+            [x, y, z] = self.atoms[i].compute()
+            text += '%2s %17.12f %17.12f %17.12f\n' % ((self.symbol(i) if self.Z(i) else "Gh"), \
+                x * factor, y * factor, z * factor)
+        return text
+        pass
+
+    def format_molecule_for_nwchem(self):
+        """
+
+        """
+        factor = 1.0 if self.PYunits == 'Angstrom' else psi_bohr2angstroms
+
+        text = ""
+        text += '%d %d %s\n' % (self.molecular_charge(), self.multiplicity(), self.tagline)
+
+        for i in range(self.natom()):
+            [x, y, z] = self.atoms[i].compute()
+            text += '%4s %17.12f %17.12f %17.12f\n' % (("" if self.Z(i) else 'Bq') + self.symbol(i), \
+                x * factor, y * factor, z * factor)
+        return text
+        pass
+
+    #    if symm   print M2OUT "nosym\nnoorient\n";
+    #    print DIOUT "angstrom\ngeometry={\n";
+
 
     def auto_fragments(self):
         """Detects fragments in an unfragmented molecule using BFS
@@ -246,3 +328,170 @@ class Molecule(LibmintsMolecule):
                 White.remove(White[0])
 
         return Fragment
+
+    def inertia_tensor(self, masswt=True):
+        """Compute inertia tensor.
+
+        >>> print H2OH2O.inertia_tensor()
+        [[8.704574864178731, -8.828375721817082, 0.0], [-8.828375721817082, 280.82861714077666, 0.0], [0.0, 0.0, 281.249500988553]]
+
+        """
+        return self.inertia_tensor_partial(range(self.natom()), masswt)
+
+    def inertia_tensor_partial(self, part, masswt=True):
+        """Compute inertia tensor based on atoms in *part*.
+
+        """
+        tensor = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
+
+        for i in part:
+            if masswt:
+                # I(alpha, alpha)
+                tensor[0][0] += self.mass(i) * (self.y(i) * self.y(i) + self.z(i) * self.z(i))
+                tensor[1][1] += self.mass(i) * (self.x(i) * self.x(i) + self.z(i) * self.z(i))
+                tensor[2][2] += self.mass(i) * (self.x(i) * self.x(i) + self.y(i) * self.y(i))
+
+                # I(alpha, beta)
+                tensor[0][1] -= self.mass(i) * self.x(i) * self.y(i)
+                tensor[0][2] -= self.mass(i) * self.x(i) * self.z(i)
+                tensor[1][2] -= self.mass(i) * self.y(i) * self.z(i)
+
+            else:
+                # I(alpha, alpha)
+                tensor[0][0] += self.y(i) * self.y(i) + self.z(i) * self.z(i)
+                tensor[1][1] += self.x(i) * self.x(i) + self.z(i) * self.z(i)
+                tensor[2][2] += self.x(i) * self.x(i) + self.y(i) * self.y(i)
+
+                # I(alpha, beta)
+                tensor[0][1] -= self.x(i) * self.y(i)
+                tensor[0][2] -= self.x(i) * self.z(i)
+                tensor[1][2] -= self.y(i) * self.z(i)
+
+        # mirror
+        tensor[1][0] = tensor[0][1]
+        tensor[2][0] = tensor[0][2]
+        tensor[2][1] = tensor[1][2]
+
+        # Check the elements for zero and make them a hard zero.
+        for i in range(3):
+            for j in range(3):
+                if math.fabs(tensor[i][j]) < ZERO:
+                    tensor[i][j] = 0.0
+        return tensor
+
+    def inertial_system_partial(self, part, masswt=True):
+        """Solve inertial system based on atoms in *part*"""
+        return diagonalize3x3symmat(self.inertia_tensor_partial(part, masswt))
+
+    def inertial_system(self, masswt=True):
+        """Solve inertial system"""
+        return diagonalize3x3symmat(self.inertia_tensor(masswt))
+
+    def print_ring_planes(self, entity1, entity2, entity3=None, entity4=None):
+        """(reals only, 1-indexed)
+
+        """
+        pass
+        # TODO allow handle lines
+        text = ""
+        summ = []
+
+        #for entity in [entity1, entity2, entity3, entity4]:
+        for item in [entity1, entity2]:
+
+            text += """\n  ==> Entity %s <==\n\n""" % (item)
+
+            # convert plain atoms into list and move from 1-indexed to 0-indexed
+            entity = []
+            try:
+                for idx in item:
+                    entity.append(idx - 1)
+            except TypeError:
+                entity = [item - 1]
+
+            if len(entity) == 1:
+                dim = 'point'
+            elif len(entity) == 2:
+                dim = 'line'
+            else:
+                dim = 'plane'
+
+            # compute centroid
+            cent = [0.0, 0.0, 0.0]
+            for at in entity:
+                cent = add(cent, self.xyz(at))
+            cent = scale(cent, 1.0 / len(entity))
+            text += '  Centroid:      %14.8f %14.8f %14.8f                  [Angstrom]\n' % \
+                (cent[0] * psi_bohr2angstroms, \
+                 cent[1] * psi_bohr2angstroms, \
+                 cent[2] * psi_bohr2angstroms)
+            text += '  Centroid:      %14.8f %14.8f %14.8f                  [Bohr]\n' % \
+                (cent[0], cent[1], cent[2])
+
+            if dim == 'point':
+                summ.append({'dim': dim, 'geo': cent, 'cent': cent})
+                # TODO: figure out if should be using mass-weighted
+
+            self.translate(scale(cent, -1))
+            evals, evecs = self.inertial_system_partial(entity, masswt=False)
+            midx = evals.index(max(evals))
+
+            text += '  Normal Vector: %14.8f %14.8f %14.8f                  [unit]\n' % \
+                (evecs[0][midx], evecs[1][midx], evecs[2][midx])
+            text += '  Normal Vector: %14.8f %14.8f %14.8f                  [unit]\n' % \
+                (evecs[0][midx] + cent[0], evecs[1][midx] + cent[1], evecs[2][midx] + cent[2])
+            xplane = [evecs[0][midx], evecs[1][midx], evecs[2][midx], \
+                -1.0 * (evecs[0][midx] * cent[0] + evecs[1][midx] * cent[1] + evecs[2][midx] * cent[2])]
+            text += '  Eqn. of Plane: %14.8f %14.8f %14.8f %14.8f   [Ai + Bj + Ck + D = 0]\n' % \
+                (xplane[0], xplane[1], xplane[2], xplane[3])
+
+            self.translate(cent)
+
+            if dim == 'plane':
+                summ.append({'dim': dim, 'geo': xplane, 'cent': cent})
+
+
+        #print summ
+        text += """\n  ==> 1 (%s) vs. 2 (%s) <==\n\n""" % (summ[0]['dim'], summ[1]['dim'])
+
+#        if summ[0]['dim'] == 'plane' and summ[1]['dim'] == 'point':
+#            cent = summ[1]['geo']
+#            plane = summ[0]['geo']
+#            print cent, plane
+#
+#            D = math.fabs(plane[0] * cent[0] + plane[1] * cent[1] + plane[2] * cent[2] + plane[3]) / \
+#                math.sqrt(plane[0] * plane[0] + plane[1] * plane[1] + plane[2] * plane[2])
+#            text += '  Pt to Plane: %14.8f [Angstrom]\n' % (D * psi_bohr2angstroms)
+
+        #if summ[0]['dim'] == 'plane' and summ[1]['dim'] == 'plane':
+        if summ[0]['dim'] == 'plane' and (summ[1]['dim'] == 'plane' or summ[1]['dim'] == 'point'):
+            cent1 = summ[0]['cent']
+            cent2 = summ[1]['cent']
+            plane1 = summ[0]['geo']
+            #plane2 = summ[1]['geo']
+
+            distCC = distance(cent1, cent2)
+            text += '  Distance from Center of %s to Center of %s:                   %14.8f   [Angstrom]\n' % \
+                ('2', '1', distCC * psi_bohr2angstroms)
+
+            distCP = math.fabs(plane1[0] * cent2[0] + plane1[1] * cent2[1] + plane1[2] * cent2[2] + plane1[3])
+            # distCP expression has a denominator that's one since plane constructed from unit vector
+            text += '  Distance from Center of %s to Plane of %s:                    %14.8f   [Angstrom]\n' % \
+                ('2', '1', distCP * psi_bohr2angstroms) 
+
+            distCPC = math.sqrt(distCC * distCC - distCP * distCP)
+            text += '  Distance from Center of %s to Center of %s along Plane of %s:  %14.8f   [Angstrom]\n' % \
+                ('2', '1', '1', distCPC * psi_bohr2angstroms) 
+
+        print text 
+
+
+
+#        text = "        Interatomic Distances (Angstroms)\n\n"
+#        for i in range(self.natom()):
+#            for j in range(i + 1, self.natom()):
+#                eij = sub(self.xyz(j), self.xyz(i))
+#                dist = norm(eij) * psi_bohr2angstroms
+#                text += "        Distance %d to %d %-8.3lf\n" % (i + 1, j + 1, dist)
+#        text += "\n\n"
+#        return text
