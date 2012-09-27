@@ -1,4 +1,4 @@
-#import os
+import os
 #import re
 #import math
 #import copy
@@ -7,6 +7,8 @@
 #from vecutil import *
 #from exceptions import *
 #from coordentry import *
+import subprocess
+import socket
 from libmintsmolecule import *
 
 
@@ -495,3 +497,182 @@ class Molecule(LibmintsMolecule):
 #                text += "        Distance %d to %d %-8.3lf\n" % (i + 1, j + 1, dist)
 #        text += "\n\n"
 #        return text
+
+    def grimme_dash(self, func='b3lyp', dashlvl='d3zero'):
+        """Function to call Grimme's dftd3 program (http://toc.uni-muenster.de/DFTD3/)
+        to compute the -D correction of level *dashlvl* using parameters for
+        the functional *func*. dftd3 executable must be independently compiled and
+        found in :envvar:PATH.
+
+        """
+        # Validate -D correction level
+        dashlvl = dashlvl.lower()
+        dashlvls = ['d2', 'd3zero', 'd3bj']
+        if dashlvl not in dashlvls:
+            raise ValidationError("""-D correction level %s is not available. Choose among %s.""" % (dashlvl, dashlvls))
+
+        # Parameters from http://toc.uni-muenster.de/DFTD3/ on September 25, 2012
+        #   dict keys translated from Turbomole to Psi4 functional names
+        dashcoeff = {
+            'd2': {
+                'blyp'        : {'s6': 1.2,  'sr6': 1.1,   's8': 0.0,   'alpha6': 20.0},  # in psi4
+                'bp86'        : {'s6': 1.05, 'sr6': 1.1,   's8': 0.0,   'alpha6': 20.0},  # in psi4
+                'b97-d'       : {'s6': 1.25, 'sr6': 1.1,   's8': 0.0,   'alpha6': 20.0},  # in psi4
+                'revpbe'      : {'s6': 1.25, 'sr6': 1.1,   's8': 0.0,   'alpha6': 20.0},
+                'pbe'         : {'s6': 0.75, 'sr6': 1.1,   's8': 0.0,   'alpha6': 20.0},  # in psi4
+                'tpss'        : {'s6': 1.0,  'sr6': 1.1,   's8': 0.0,   'alpha6': 20.0},
+                'b3lyp'       : {'s6': 1.05, 'sr6': 1.1,   's8': 0.0,   'alpha6': 20.0},  # in psi4
+                'pbe0'        : {'s6': 0.6,  'sr6': 1.1,   's8': 0.0,   'alpha6': 20.0},  # in psi4
+                'pw6b95'      : {'s6': 0.5,  'sr6': 1.1,   's8': 0.0,   'alpha6': 20.0},
+                'tpss0'       : {'s6': 0.85, 'sr6': 1.1,   's8': 0.0,   'alpha6': 20.0},
+                'b2plyp'      : {'s6': 0.55, 'sr6': 1.1,   's8': 0.0,   'alpha6': 20.0},  # in psi4
+                'b2gp-plyp'   : {'s6': 0.4,  'sr6': 1.1,   's8': 0.0,   'alpha6': 20.0},
+                'dsd-blyp'    : {'s6': 0.41, 'sr6': 1.1,   's8': 0.0,   'alpha6': 60.0},  # in psi4
+            },
+            'd3zero': {
+                'b1b95'       : {'s6': 1.0,  'sr6': 1.613, 's8': 1.868, 'alpha6': 14.0},
+                'b2gpplyp'    : {'s6': 0.56, 'sr6': 1.586, 's8': 0.760, 'alpha6': 14.0},
+                'b3lyp'       : {'s6': 1.0,  'sr6': 1.261, 's8': 1.703, 'alpha6': 14.0},  # in psi4 
+                'b97-d'       : {'s6': 1.0,  'sr6': 0.892, 's8': 0.909, 'alpha6': 14.0},  # in psi4
+                'bhlyp'       : {'s6': 1.0,  'sr6': 1.370, 's8': 1.442, 'alpha6': 14.0},
+                'blyp'        : {'s6': 1.0,  'sr6': 1.094, 's8': 1.682, 'alpha6': 14.0},
+                'bp86'        : {'s6': 1.0,  'sr6': 1.139, 's8': 1.683, 'alpha6': 14.0},  # in psi4 
+                'bpbe'        : {'s6': 1.0,  'sr6': 1.087, 's8': 2.033, 'alpha6': 14.0},
+                'mpwlyp'      : {'s6': 1.0,  'sr6': 1.239, 's8': 1.098, 'alpha6': 14.0},
+                'pbe'         : {'s6': 1.0,  'sr6': 1.217, 's8': 0.722, 'alpha6': 14.0},  # in psi4 
+                'pbe0'        : {'s6': 1.0,  'sr6': 1.287, 's8': 0.928, 'alpha6': 14.0},  # in psi4 
+                'pw6b95'      : {'s6': 1.0,  'sr6': 1.532, 's8': 0.862, 'alpha6': 14.0},
+                'pwb6k'       : {'s6': 1.0,  'sr6': 1.660, 's8': 0.550, 'alpha6': 14.0},
+                'revpbe'      : {'s6': 1.0,  'sr6': 0.923, 's8': 1.010, 'alpha6': 14.0},
+                'tpss'        : {'s6': 1.0,  'sr6': 1.166, 's8': 1.105, 'alpha6': 14.0},
+                'tpss0'       : {'s6': 1.0,  'sr6': 1.252, 's8': 1.242, 'alpha6': 14.0},
+                'tpssh'       : {'s6': 1.0,  'sr6': 1.223, 's8': 1.219, 'alpha6': 14.0},
+                'bop'         : {'s6': 1.0,  'sr6': 0.929, 's8': 1.975, 'alpha6': 14.0},
+                'mpw1b95'     : {'s6': 1.0,  'sr6': 1.605, 's8': 1.118, 'alpha6': 14.0},
+                'mpwb1k'      : {'s6': 1.0,  'sr6': 1.671, 's8': 1.061, 'alpha6': 14.0},
+                'olyp'        : {'s6': 1.0,  'sr6': 0.806, 's8': 1.764, 'alpha6': 14.0},
+                'opbe'        : {'s6': 1.0,  'sr6': 0.837, 's8': 2.055, 'alpha6': 14.0},
+                'otpss'       : {'s6': 1.0,  'sr6': 1.128, 's8': 1.494, 'alpha6': 14.0},
+                'pbe38'       : {'s6': 1.0,  'sr6': 1.333, 's8': 0.998, 'alpha6': 14.0},
+                'pbesol'      : {'s6': 1.0,  'sr6': 1.345, 's8': 0.612, 'alpha6': 14.0},
+                'revssb'      : {'s6': 1.0,  'sr6': 1.221, 's8': 0.560, 'alpha6': 14.0},
+                'ssb'         : {'s6': 1.0,  'sr6': 1.215, 's8': 0.663, 'alpha6': 14.0},
+                'b3pw91'      : {'s6': 1.0,  'sr6': 1.176, 's8': 1.775, 'alpha6': 14.0},
+                'bmk'         : {'s6': 1.0,  'sr6': 1.931, 's8': 2.168, 'alpha6': 14.0},
+                'camb3lyp'    : {'s6': 1.0,  'sr6': 1.378, 's8': 1.217, 'alpha6': 14.0},
+                'lcwpbe'      : {'s6': 1.0,  'sr6': 1.355, 's8': 1.279, 'alpha6': 14.0},
+                'm05-2x'      : {'s6': 1.0,  'sr6': 1.417, 's8': 0.00 , 'alpha6': 14.0},  # in psi4 
+                'm05'         : {'s6': 1.0,  'sr6': 1.373, 's8': 0.595, 'alpha6': 14.0},  # in psi4 
+                'm062x'       : {'s6': 1.0,  'sr6': 1.619, 's8': 0.00 , 'alpha6': 14.0},
+                'm06hf'       : {'s6': 1.0,  'sr6': 1.446, 's8': 0.00 , 'alpha6': 14.0},
+                'm06l'        : {'s6': 1.0,  'sr6': 1.581, 's8': 0.00 , 'alpha6': 14.0},
+                'm06'         : {'s6': 1.0,  'sr6': 1.325, 's8': 0.00 , 'alpha6': 14.0},
+                'hcth120'     : {'s6': 1.0,  'sr6': 1.221, 's8': 1.206, 'alpha6': 14.0},  # in psi4
+                'b2plyp'      : {'s6': 0.64, 'sr6': 1.427, 's8': 1.022, 'alpha6': 14.0},  # in psi4
+                'dsd-blyp'    : {'s6': 0.50, 'sr6': 1.569, 's8': 0.705, 'alpha6': 14.0},  # in psi4
+                'ptpss'       : {'s6': 0.75, 'sr6': 1.541, 's8': 0.879, 'alpha6': 14.0},
+                'pwpb95'      : {'s6': 0.82, 'sr6': 1.557, 's8': 0.705, 'alpha6': 14.0},
+                'revpbe0'     : {'s6': 1.0,  'sr6': 0.949, 's8': 0.792, 'alpha6': 14.0},
+                'revpbe38'    : {'s6': 1.0,  'sr6': 1.021, 's8': 0.862, 'alpha6': 14.0},
+                'rpw86pbe'    : {'s6': 1.0,  'sr6': 1.224, 's8': 0.901, 'alpha6': 14.0},
+            },
+            'd3bj': {
+                'b1b95'       : {'s6': 1.000, 'a1':  0.2092, 's8':  1.4507, 'a2': 5.5545},
+                'b2gpplyp'    : {'s6': 0.560, 'a1':  0.0000, 's8':  0.2597, 'a2': 6.3332},
+                'b3pw91'      : {'s6': 1.000, 'a1':  0.4312, 's8':  2.8524, 'a2': 4.4693},
+                'bhlyp'       : {'s6': 1.000, 'a1':  0.2793, 's8':  1.0354, 'a2': 4.9615},
+                'bmk'         : {'s6': 1.000, 'a1':  0.1940, 's8':  2.0860, 'a2': 5.9197},
+                'bop'         : {'s6': 1.000, 'a1':  0.4870, 's8':  3.295,  'a2': 3.5043},
+                'bpbe'        : {'s6': 1.000, 'a1':  0.4567, 's8':  4.0728, 'a2': 4.3908},
+                'camb3lyp'    : {'s6': 1.000, 'a1':  0.3708, 's8':  2.0674, 'a2': 5.4743},
+                'lcwpbe'      : {'s6': 1.000, 'a1':  0.3919, 's8':  1.8541, 'a2': 5.0897},
+                'mpw1b95'     : {'s6': 1.000, 'a1':  0.1955, 's8':  1.0508, 'a2': 6.4177},
+                'mpwb1k'      : {'s6': 1.000, 'a1':  0.1474, 's8':  0.9499, 'a2': 6.6223},
+                'mpwlyp'      : {'s6': 1.000, 'a1':  0.4831, 's8':  2.0077, 'a2': 4.5323},
+                'olyp'        : {'s6': 1.000, 'a1':  0.5299, 's8':  2.6205, 'a2': 2.8065},
+                'opbe'        : {'s6': 1.000, 'a1':  0.5512, 's8':  3.3816, 'a2': 2.9444},
+                'otpss'       : {'s6': 1.000, 'a1':  0.4634, 's8':  2.7495, 'a2': 4.3153},
+                'pbe38'       : {'s6': 1.000, 'a1':  0.3995, 's8':  1.4623, 'a2': 5.1405},
+                'pbesol'      : {'s6': 1.000, 'a1':  0.4466, 's8':  2.9491, 'a2': 6.1742},
+                'ptpss'       : {'s6': 0.750, 'a1':  0.000,  's8':  0.2804, 'a2': 6.5745},
+                'pwb6k'       : {'s6': 1.000, 'a1':  0.1805, 's8':  0.9383, 'a2': 7.7627},
+                'revssb'      : {'s6': 1.000, 'a1':  0.4720, 's8':  0.4389, 'a2': 4.0986},
+                'ssb'         : {'s6': 1.000, 'a1': -0.0952, 's8': -0.1744, 'a2': 5.2170},
+                'tpssh'       : {'s6': 1.000, 'a1':  0.0000, 's8':  0.4243, 'a2': 5.5253},
+                'hcth120'     : {'s6': 1.000, 'a1':  0.3563, 's8':  1.0821, 'a2': 4.3359},  # in psi4
+                'b2plyp'      : {'s6': 0.640, 'a1':  0.3065, 's8':  0.9147, 'a2': 5.0570},  # in psi4
+                'b3lyp'       : {'s6': 1.000, 'a1':  0.3981, 's8':  1.9889, 'a2': 4.4211},  # in psi4
+                'b97-d'       : {'s6': 1.000, 'a1':  0.5545, 's8':  2.2609, 'a2': 3.2297},  # in psi4
+                'blyp'        : {'s6': 1.000, 'a1':  0.4298, 's8':  2.6996, 'a2': 4.2359},  # in psi4
+                'bp86'        : {'s6': 1.000, 'a1':  0.3946, 's8':  3.2822, 'a2': 4.8516},  # in psi4
+                'dsd-blyp'    : {'s6': 0.500, 'a1':  0.000,  's8':  0.2130, 'a2': 6.0519},  # in psi4
+                'pbe0'        : {'s6': 1.000, 'a1':  0.4145, 's8':  1.2177, 'a2': 4.8593},  # in psi4
+                'pbe'         : {'s6': 1.000, 'a1':  0.4289, 's8':  0.7875, 'a2': 4.4407},  # in psi4
+                'pw6b95'      : {'s6': 1.000, 'a1':  0.2076, 's8':  0.7257, 'a2': 6.3750},
+                'pwpb95'      : {'s6': 0.820, 'a1':  0.0000, 's8':  0.2904, 'a2': 7.3141},
+                'revpbe0'     : {'s6': 1.000, 'a1':  0.4679, 's8':  1.7588, 'a2': 3.7619},
+                'revpbe38'    : {'s6': 1.000, 'a1':  0.4309, 's8':  1.4760, 'a2': 3.9446},
+                'revpbe'      : {'s6': 1.000, 'a1':  0.5238, 's8':  2.3550, 'a2': 3.5016},
+                'rpw86pbe'    : {'s6': 1.000, 'a1':  0.4613, 's8':  1.3845, 'a2': 4.5062},
+                'tpss0'       : {'s6': 1.000, 'a1':  0.3768, 's8':  1.2576, 'a2': 4.5865},
+                'tpss'        : {'s6': 1.000, 'a1':  0.4535, 's8':  1.9435, 'a2': 4.4752},
+            }
+        }
+
+        # TODO add move any existing file out of the way then bring it back
+
+        # Write .dftd3par file that governs dispersion calc
+        #paramfile = os.path.expanduser('~') + '/.dftd3par.' + socket.gethostname()
+        paramfile = './.dftd3par.' + socket.gethostname()
+        pfile = open(paramfile, 'w')
+
+        if dashlvl == 'd2':
+            # d2:      s6 sr6 s8 a2=None alpha6 version=2
+            pfile.write('%12.6f %12.6f %12.6f %12.6f %12.6f %6d\n' % 
+                (dashcoeff[dashlvl][func]['s6'], dashcoeff[dashlvl][func]['sr6'], dashcoeff[dashlvl][func]['s8'], 
+                0.0, dashcoeff[dashlvl][func]['alpha6'], 2))
+        elif dashlvl == 'd3zero':
+            # d3zero:  s6 sr6 s8 a2=None alpha6 version=3
+            pfile.write('%12.6f %12.6f %12.6f %12.6f %12.6f %6d\n' % 
+                (dashcoeff[dashlvl][func]['s6'], dashcoeff[dashlvl][func]['sr6'], dashcoeff[dashlvl][func]['s8'], 
+                1.0, dashcoeff[dashlvl][func]['alpha6'], 3))
+        elif dashlvl == 'd3bj':
+            # d3bj:    s6 a1 s8 a2 alpha6=None version=4
+            pfile.write('%12.6f %12.6f %12.6f %12.6f %12.6f %6d\n' % 
+                (dashcoeff[dashlvl][func]['s6'], dashcoeff[dashlvl][func]['a1'], dashcoeff[dashlvl][func]['s8'], 
+                dashcoeff[dashlvl][func]['a2'], 0.0, 4))
+        
+        pfile.close()
+
+        # Write .dftd3xyz file that supplies geometry to dispersion calc
+        #geomfile = os.path.expanduser('~') + '/.dftd3xyz.' + socket.gethostname()
+        geomfile = './.dftd3xyz.' + socket.gethostname()
+        gfile = open(geomfile, 'w')
+        gfile.write(self.save_string_xyz())
+        gfile.close()
+
+        # Call dftd3 program
+        try:
+            dashout = subprocess.Popen(['dftd3', geomfile], stdout=subprocess.PIPE)
+        except OSError:
+            raise ValidationError('Program dftd3 not found in path.')
+
+        out, err = dashout.communicate()
+        lout = out.splitlines()
+
+        # Parse output (could go further and break into E6, E8, E10 and Cn coeff)
+        success = False
+        for line in lout:
+            if re.match(' Edisp /kcal,au', line):
+                sline = line.split()
+                dashd = float(sline[3])
+            if re.match(' normal termination of dftd3', line):
+                success = True
+
+        if not success:
+            raise ValidationError('Program dftd3 did not complete successfully.')
+
+        os.unlink(paramfile)
+        os.unlink(geomfile)
+
+        return dashd
