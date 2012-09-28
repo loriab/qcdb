@@ -498,19 +498,13 @@ class Molecule(LibmintsMolecule):
 #        text += "\n\n"
 #        return text
 
-    def grimme_dash(self, func='b3lyp', dashlvl='d3zero'):
+    def grimme_dash(self, func=None, dashlvl='d2', dashparam=None):
         """Function to call Grimme's dftd3 program (http://toc.uni-muenster.de/DFTD3/)
         to compute the -D correction of level *dashlvl* using parameters for
         the functional *func*. dftd3 executable must be independently compiled and
         found in :envvar:PATH.
 
         """
-        # Validate -D correction level
-        dashlvl = dashlvl.lower()
-        dashlvls = ['d2', 'd3zero', 'd3bj']
-        if dashlvl not in dashlvls:
-            raise ValidationError("""-D correction level %s is not available. Choose among %s.""" % (dashlvl, dashlvls))
-
         # Parameters from http://toc.uni-muenster.de/DFTD3/ on September 25, 2012
         #   dict keys translated from Turbomole to Psi4 functional names
         dashcoeff = {
@@ -619,6 +613,39 @@ class Molecule(LibmintsMolecule):
             }
         }
 
+        # Validate arguments
+        dashlvl = dashlvl.lower()
+        if dashlvl not in dashcoeff.keys():
+            raise ValidationError("""-D correction level %s is not available. Choose among %s.""" % (dashlvl, dashcoeff.keys()))
+
+        if func is None:
+            if dashparam is None:
+                # defunct case
+                raise ValidationError("""Parameters for -D correction missing. Provide a func or a dashparam kwarg.""")
+            else:
+                # case where all param read from dashparam dict (which must have all correct keys)
+                func = 'custom'
+                dashcoeff[dashlvl][func] = {}
+                dashparam = dict((k.lower(), v) for k, v in dashparam.iteritems())
+                for key in dashcoeff[dashlvl]['b3lyp'].keys():
+                    if key in dashparam.keys():
+                        dashcoeff[dashlvl][func][key] = dashparam[key]
+                    else:
+                        raise ValidationError("""Parameter %s is missing from dashparam dict %s.""" % (key, dashparam)) 
+        else:
+            func = func.lower()
+            if func not in dashcoeff[dashlvl].keys():
+                raise ValidationError("""Functional %s is not available for -D level %s.""" % (func, dashlvl))        
+            if dashparam is None:
+                # (normal) case where all param taken from dashcoeff above
+                pass
+            else:
+                # case where items in dashparam dict can override param taken from dashcoeff above
+                dashparam = dict((k.lower(), v) for k, v in dashparam.iteritems())
+                for key in dashcoeff[dashlvl]['b3lyp'].keys():
+                    if key in dashparam.keys():
+                        dashcoeff[dashlvl][func][key] = dashparam[key]
+
         # TODO add move any existing file out of the way then bring it back
 
         # Write .dftd3par file that governs dispersion calc
@@ -641,11 +668,9 @@ class Molecule(LibmintsMolecule):
             pfile.write('%12.6f %12.6f %12.6f %12.6f %12.6f %6d\n' % 
                 (dashcoeff[dashlvl][func]['s6'], dashcoeff[dashlvl][func]['a1'], dashcoeff[dashlvl][func]['s8'], 
                 dashcoeff[dashlvl][func]['a2'], 0.0, 4))
-        
         pfile.close()
 
         # Write .dftd3xyz file that supplies geometry to dispersion calc
-        #geomfile = os.path.expanduser('~') + '/.dftd3xyz.' + socket.gethostname()
         geomfile = './.dftd3xyz.' + socket.gethostname()
         gfile = open(geomfile, 'w')
         gfile.write(self.save_string_xyz())
@@ -653,16 +678,14 @@ class Molecule(LibmintsMolecule):
 
         # Call dftd3 program
         try:
-            dashout = subprocess.Popen(['dftd3', geomfile], stdout=subprocess.PIPE)
+            dashout = subprocess.Popen(['dftd3', geomfile, '-grad'], stdout=subprocess.PIPE)
         except OSError:
             raise ValidationError('Program dftd3 not found in path.')
-
         out, err = dashout.communicate()
-        lout = out.splitlines()
 
         # Parse output (could go further and break into E6, E8, E10 and Cn coeff)
         success = False
-        for line in lout:
+        for line in out.splitlines():
             if re.match(' Edisp /kcal,au', line):
                 sline = line.split()
                 dashd = float(sline[3])
@@ -672,7 +695,20 @@ class Molecule(LibmintsMolecule):
         if not success:
             raise ValidationError('Program dftd3 did not complete successfully.')
 
+        # Parse grad output
+        derivfile = './dftd3_gradient'
+        dfile = open(derivfile, 'r')
+        dashdderiv = []
+        for at in dfile.readlines():
+            dashdderiv.append([float(x.replace('D', 'E')) for x in at.split()])
+        dfile.close()
+        if len(dashdderiv) != self.natom():
+            raise ValidationError('Program dftd3 gradient file has %d atoms- %d expected.' % \
+                (len(dashdderiv), self.natom()))
+
+        # Clean up files and return -D & d(-D)/dx
         os.unlink(paramfile)
         os.unlink(geomfile)
+        os.unlink(derivfile)
 
-        return dashd
+        return dashd, dashdderiv

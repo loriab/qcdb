@@ -8,10 +8,9 @@ import string
 qcdbpkg_path = os.path.expanduser('~loriab/linux/qcdb')
 sys.path.append(qcdbpkg_path)
 import qcdb
-#sys.path.append(os.path.abspath('./../qcdb'))
-#print sys.path
 import qcdb.basislist
 sys.path.append(qcdbpkg_path + '/databases')
+import qcdb.exceptions
 
 
 # load docstring info from database files (doesn't actually import database modules)
@@ -43,7 +42,7 @@ while not user_obedient:
         user_obedient = True
 
 # query functionals
-print '\n State your functional (multiple allowed).\n'
+print '\n State your functional with Psi4 names (multiple allowed).\n'
 
 functionals = []
 user_obedient = False
@@ -54,7 +53,7 @@ while not user_obedient:
         functionals = ['B3LYP', 'PBE', 'PBE0', 'BP86', 'B2PLYP', 'B97-D']
         user_obedient = True
     for item in ltemp:
-        functionals.append(item)
+        functionals.append(item.upper())
         user_obedient = True
 
 # query dash level
@@ -120,9 +119,19 @@ print """
 # commence main computation loop
 maxrgt = max([len(ACTV[rgt]) for rgt in ACTV])
 
+h2 = qcdb.Molecule("""\nH\nH 1 0.74\n""")
+h2.update_geometry()
+
 for func in functionals:
     for variant in variants:
         print """\n  ==> %s-%s <==""" % (func.upper(), variant.upper())
+
+        # catch if this is an invalid functional-dashlvl before run database
+        try:
+            h2.grimme_dash(func=func, dashlvl=variant)
+        except qcdb.ValidationError:
+            print 'No output or files will be generated.'
+            continue
 
         #ddir = 'output-dftd3_$set-$functional-$variant'
         #try:
@@ -137,8 +146,7 @@ for func in functionals:
         textline = '\n                                 '
         for i in range(maxrgt):
             textline += '             REAGENT_%s' % (string.uppercase[i])
-        textline += '            REACTION\n'
-        textline += '                              SYS'
+        textline += '            REACTION\n                              SYS'
         for i in range(maxrgt):
             textline += '          DASHCORR  WT'
         textline += '       DISP      REF\n'
@@ -152,7 +160,7 @@ for func in functionals:
             # compute correction for rgts and rxn
             for rgt in ACTV[index]:
                 GEOS[rgt].update_geometry()
-                DASHCORR[rgt] = GEOS[rgt].grimme_dash(func=func, dashlvl=variant)
+                DASHCORR[rgt], temp = GEOS[rgt].grimme_dash(func=func, dashlvl=variant)
             IEDASH = sum([RXNM[index][rgt] * DASHCORR[rgt] for rgt in ACTV[index]]) * qcdb.psi_hartree2kcalmol
 
             # print main results
