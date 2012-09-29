@@ -9,6 +9,8 @@ import os
 #from coordentry import *
 import subprocess
 import socket
+import shutil
+from random import randint
 from libmintsmolecule import *
 
 
@@ -446,6 +448,14 @@ class Molecule(LibmintsMolecule):
                 -1.0 * (evecs[0][midx] * cent[0] + evecs[1][midx] * cent[1] + evecs[2][midx] * cent[2])]
             text += '  Eqn. of Plane: %14.8f %14.8f %14.8f %14.8f   [Ai + Bj + Ck + D = 0]\n' % \
                 (xplane[0], xplane[1], xplane[2], xplane[3])
+            dtemp = math.sqrt(evecs[0][midx] * evecs[0][midx] + evecs[1][midx] * evecs[1][midx] + evecs[2][midx] * evecs[2][midx])
+            print 'denom', dtemp
+            hessplane = [evecs[0][midx] / dtemp, evecs[1][midx] / dtemp, evecs[2][midx] / dtemp, xplane[3] / dtemp]
+            hessplane2 = [xplane[0] / dtemp, xplane[1] / dtemp, xplane[2] / dtemp, xplane[3] / dtemp]
+            text += '  Eqn. of Plane: %14.8f %14.8f %14.8f %14.8f   [Ai + Bj + Ck + D = 0] H\n' % \
+                (hessplane[0], hessplane[1], hessplane[2], hessplane[3])
+            text += '  Eqn. of Plane: %14.8f %14.8f %14.8f %14.8f   [Ai + Bj + Ck + D = 0] H2\n' % \
+                (hessplane2[0], hessplane2[1], hessplane2[2], hessplane2[3])
 
             self.translate(cent)
 
@@ -646,11 +656,22 @@ class Molecule(LibmintsMolecule):
                     if key in dashparam.keys():
                         dashcoeff[dashlvl][func][key] = dashparam[key]
 
-        # TODO add move any existing file out of the way then bring it back
+        # Move ~/.dftd3par.<hostname> out of the way so it won't interfere
+        defaultfile = os.path.expanduser('~') + '/.dftd3par.' + socket.gethostname()
+        defmoved = False
+        if os.path.isfile(defaultfile):
+            os.rename(defaultfile, defaultfile + '_hide')
+            defmoved = True
 
-        # Write .dftd3par file that governs dispersion calc
-        #paramfile = os.path.expanduser('~') + '/.dftd3par.' + socket.gethostname()
-        paramfile = './.dftd3par.' + socket.gethostname()
+        # Setup unique scratch directory and move in
+        current_directory = os.getcwd()
+        dftd3_tmpdir = 'dftd3_' + str(randint(0, 99999))
+        if os.path.exists(dftd3_tmpdir) is False:
+            os.mkdir(dftd3_tmpdir)
+        os.chdir(dftd3_tmpdir)
+
+        # Write dftd3_parameters file that governs dispersion calc
+        paramfile = './dftd3_parameters'
         pfile = open(paramfile, 'w')
 
         if dashlvl == 'd2':
@@ -670,8 +691,8 @@ class Molecule(LibmintsMolecule):
                 dashcoeff[dashlvl][func]['a2'], 0.0, 4))
         pfile.close()
 
-        # Write .dftd3xyz file that supplies geometry to dispersion calc
-        geomfile = './.dftd3xyz.' + socket.gethostname()
+        # Write dftd3_geometry file that supplies geometry to dispersion calc
+        geomfile = './dftd3_geometry'
         gfile = open(geomfile, 'w')
         gfile.write(self.save_string_xyz())
         gfile.close()
@@ -706,9 +727,19 @@ class Molecule(LibmintsMolecule):
             raise ValidationError('Program dftd3 gradient file has %d atoms- %d expected.' % \
                 (len(dashdderiv), self.natom()))
 
-        # Clean up files and return -D & d(-D)/dx
+        # Clean up files and remove scratch directory
         os.unlink(paramfile)
         os.unlink(geomfile)
         os.unlink(derivfile)
+        if defmoved is True:
+            os.rename(defaultfile + '_hide', defaultfile)
 
+        os.chdir('..')
+        try:
+            shutil.rmtree(dftd3_tmpdir)
+        except OSError as e:
+            ValidationError('Unable to remove dftd3 temporary directory %s' % e, file=sys.stderr)
+        os.chdir(current_directory)
+
+        # return -D & d(-D)/dx
         return dashd, dashdderiv
