@@ -214,7 +214,7 @@ class Molecule(LibmintsMolecule):
                 x * factor, y * factor, z * factor)
         text += '}\n\n'
         text += 'SET,CHARGE=%d\n' % (self.molecular_charge())
-        text += 'SET,SPIN=%d\n' % (self.multiplicity())
+        text += 'SET,SPIN=%d\n' % (self.multiplicity() - 1)  # Molpro wants (mult-1)
 
         textDummy = "dummy"
         for fr in range(self.nfragments()):

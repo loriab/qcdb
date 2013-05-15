@@ -12,6 +12,7 @@ import qcdb
 import qcdb.basislist
 import qcdb.exceptions
 sys.path.append(qcdbpkg_path + '/databases')
+sys.path.append(qcdbpkg_path + '/qcprograms')
 
 
 # load docstring info from database files (doesn't actually import database modules)
@@ -20,7 +21,7 @@ DBdocstrings = qcdb.dictify_database_docstrings()
 # instructions
 print """
  Welcome to imake-db.
-    Just fill in the variables when prompted. 
+    Just fill in the variables when prompted.
     Hit ENTER to accept default.
     Strings should not be in quotes.
     Elements in arrays should be space-delimited.
@@ -46,7 +47,7 @@ while not user_obedient:
 subset_choices = dict(zip([x.upper() for x in DBdocstrings[db_name]['subset'].keys()], DBdocstrings[db_name]['subset'].keys()))
 
 print '\n Choose your subset (multiple allowed).'
-for key, val in DBdocstrings[db_name]['subset'].items():    
+for key, val in DBdocstrings[db_name]['subset'].items():
     print '    %-12s   %s' % ('[' + key + ']', val)
 print '\n'
 
@@ -85,12 +86,11 @@ while not user_obedient:
 
 
 # Load module for QC program
-try: 
-    qcmodstr = 'qcdb.' + qcprog
-    qcmod = __import__(qcmodstr) 
-except ImportError: 
-    print('\nPython module for QC program %s failed to load\n\n' % (qcprog)) 
-    print('\nSearch path that was tried:\n') 
+try:
+    qcmod = __import__(qcprog)
+except ImportError:
+    print('\nPython module for QC program %s failed to load\n\n' % (qcprog))
+    print('\nSearch path that was tried:\n')
     print(", ".join(map(str, sys.path)))
     raise qcdb.exceptions.ValidationError("Python module loading problem for QC program " + str(qcprog))
 else:
@@ -102,7 +102,7 @@ else:
 method_choices = dict(zip([x.upper() for x in qcmtdIN.keys()], qcmtdIN.keys()))
 
 print '\n Choose your quantum chemical methods (multiple allowed).'
-for key, val in qcmtdIN.items():    
+for key, val in qcmtdIN.items():
     print '    %-12s' % ('[' + key + ']')
 print '\n'
 
@@ -160,7 +160,7 @@ while not user_obedient:
     user_obedient = True
 
 
-# query directory prefix 
+# query directory prefix
 print """
  State your destination directory prefix.
 """
@@ -192,11 +192,11 @@ while not user_obedient:
         user_obedient = True
 
 # Load module for requested database
-try: 
-    database = __import__(db_name) 
-except ImportError: 
-    print('\nPython module for database %s failed to load\n\n' % (db_name)) 
-    print('\nSearch path that was tried:\n') 
+try:
+    database = __import__(db_name)
+except ImportError:
+    print('\nPython module for database %s failed to load\n\n' % (db_name))
+    print('\nSearch path that was tried:\n')
     print(", ".join(map(str, sys.path)))
     raise qcdb.exceptions.ValidationError("Python module loading problem for database " + str(db_name))
 else:
@@ -223,7 +223,7 @@ print """
                          bases = %s
                      dirprefix = %s
                         memory = %d [MB]
-                       usesymm = 
+                       usesymm =
                        cast up = %s
 
         <<< SCANNED SETTINGS  DISREGARD RESULTS IF INAPPROPRIATE  SCANNED SETTINGS >>>
@@ -282,7 +282,7 @@ HSYS = qcdb.drop_duplicates(temp)
 #print 'HSYS', HSYS
 
 
-methods = ['B3LYP-D', 'DF-MP2']
+#methods = ['B3LYP-D', 'DF-MP2']
 # commence the file-writing loop
 tdir = '-'.join([dirprefix, dbse, qcprog])
 try:
@@ -301,7 +301,7 @@ for basis in bases:
             os.mkdir(tdir + '/' + subdir)
         except OSError:
             print 'Warning: directory %s/%s already present.' % (tdir, subdir)
-    
+
         # TODO: forcing c1 symm skipped - still needed for xdm and molpro
 
 #        ans = open('ssi.big', 'w')
@@ -340,4 +340,3 @@ for basis in bases:
 #            if re.search('dimer', system):
 #                ans.write('%d\n' % (GEOS[system].natom()))
 #        ans.close()
-
