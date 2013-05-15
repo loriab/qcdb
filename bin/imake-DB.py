@@ -10,6 +10,7 @@ import qcdb
 #sys.path.append(os.path.abspath('./../qcdb'))
 #print sys.path
 import qcdb.basislist
+import qcdb.exceptions
 sys.path.append(qcdbpkg_path + '/databases')
 
 
@@ -83,6 +84,42 @@ while not user_obedient:
         user_obedient = True
 
 
+# Load module for QC program
+try: 
+    qcmodstr = 'qcdb.' + qcprog
+    qcmod = __import__(qcmodstr) 
+except ImportError: 
+    print('\nPython module for QC program %s failed to load\n\n' % (qcprog)) 
+    print('\nSearch path that was tried:\n') 
+    print(", ".join(map(str, sys.path)))
+    raise qcdb.exceptions.ValidationError("Python module loading problem for QC program " + str(qcprog))
+else:
+    print qcmod
+    qcmtdIN = qcmod.qcmtdIN
+
+
+# query quantum chemical method(s)
+method_choices = dict(zip([x.upper() for x in qcmtdIN.keys()], qcmtdIN.keys()))
+
+print '\n Choose your quantum chemical methods (multiple allowed).'
+for key, val in qcmtdIN.items():    
+    print '    %-12s' % ('[' + key + ']')
+print '\n'
+
+methods = []
+user_obedient = False
+while not user_obedient:
+    temp = raw_input('    methods = ').strip()
+    ltemp = temp.split()
+    for item in ltemp:
+        if item.upper() in method_choices:
+            methods.append(method_choices[item.upper()])
+            user_obedient = True
+        else:
+            user_obedient = False
+            methods = []
+            break
+
 
 # query basis set(s)
 print """
@@ -111,6 +148,18 @@ while not user_obedient:
                 user_obedient = False
                 break
 
+
+# query castup preference
+print """
+ Do cast up from smaller basis set?
+"""
+
+user_obedient = False
+while not user_obedient:
+    castup = qcdb.query_yes_no('    castup [F] = ', False)
+    user_obedient = True
+
+
 # query directory prefix 
 print """
  State your destination directory prefix.
@@ -125,6 +174,7 @@ while not user_obedient:
     if temp.isalnum():
         dirprefix = temp
         user_obedient = True
+
 
 # query memory
 print """
@@ -148,7 +198,7 @@ except ImportError:
     print('\nPython module for database %s failed to load\n\n' % (db_name)) 
     print('\nSearch path that was tried:\n') 
     print(", ".join(map(str, sys.path)))
-    raise ValidationError("Python module loading problem for database " + str(db_name))
+    raise qcdb.exceptions.ValidationError("Python module loading problem for database " + str(db_name))
 else:
     dbse = database.dbse
     HRXN = database.HRXN
@@ -169,16 +219,16 @@ print """
                           dbse = %s
                         subset = %s
                         qcprog = %s
-                   HFUNCTIONAL = 
+                       methods = %s
                          bases = %s
                      dirprefix = %s
-                   memory [MB] = %d
+                        memory = %d [MB]
                        usesymm = 
-                       cast up =
+                       cast up = %s
 
         <<< SCANNED SETTINGS  DISREGARD RESULTS IF INAPPROPRIATE  SCANNED SETTINGS >>>
 
-""" % (dbse, subset, qcprog, bases, dirprefix, memory)
+""" % (dbse, subset, qcprog, methods, bases, dirprefix, memory, castup)
 
 
 # establish multiplicity hash table
@@ -219,14 +269,15 @@ else:
                 try:
                     temp.append(getattr(database, 'HRXN_' + item))
                 except AttributeError:
-                    raise ValidationError('Special subset \'%s\' not available for database %s.' % (item, db_name))
+                    raise qcdb.exceptions.ValidationError('Special subset \'%s\' not available for database %s.' % (item, db_name))
     HRXN = qcdb.drop_duplicates(temp)
 #print 'HRXN', HRXN
 
 # TODO: choose ACTV or merge ACTV
 temp = []
 for rxn in HRXN:
-    temp.append(ACTV['%s-%s' % (dbse, rxn)])
+    #temp.append(ACTV['%s-%s' % (dbse, rxn)])
+    temp.append(database.ACTV_CP['%s-%s' % (dbse, rxn)])
 HSYS = qcdb.drop_duplicates(temp)
 #print 'HSYS', HSYS
 
@@ -262,24 +313,27 @@ for basis in bases:
             GEOS[system].tagline = TAGL[system]
             GEOS[system].update_geometry()
 
-            # write start of file and comment line
-            if qcprog == 'qchem':
-                infile.write('$comment\n%s %s\n$end\n\n' % (system, TAGL[system]))
-            elif qcprog == 'molpro':
-                infile.write('***, %s %s\n' % (system, TAGL[system]))
-                infile.write('memory,%d,m\n' % (int(math.ceil(memory / 8.0))))
-            elif qcprog == 'psi4':
-                infile.write('# %s %s\n\n' % (system, TAGL[system]))
-            elif qcprog == 'nwchem':
-                infile.write('echo\ntitle "%s %s"\n\n' % (system, TAGL[system]))
-            elif qcprog == 'xyz':
-                pass
+            if qcprog == 'molpro':
+                #import molpro
+                #ins = molpro.MolproIn(memory, method, basis, GEOS[system], system, castup)
+                #infile.write(ins.format_infile_string())
+                infile.write(qcmod.MolproIn(memory, method, basis, GEOS[system], system, castup).format_infile_string())
 
-            # write molecule section
-            if qcprog == 'xyz':
-                infile.write(GEOS[system].save_string_xyz())
-            elif qcprog == 'psi4':
-                infile.write(GEOS[system].format_molecule_for_psi4())
+#            # write start of file and comment line
+#            if qcprog == 'qchem':
+#                infile.write('$comment\n%s %s\n$end\n\n' % (system, TAGL[system]))
+#            elif qcprog == 'psi4':
+#                infile.write('# %s %s\n\n' % (system, TAGL[system]))
+#            elif qcprog == 'nwchem':
+#                infile.write('echo\ntitle "%s %s"\n\n' % (system, TAGL[system]))
+#            elif qcprog == 'xyz':
+#                pass
+#
+#            # write molecule section
+#            if qcprog == 'xyz':
+#                infile.write(GEOS[system].save_string_xyz())
+#            elif qcprog == 'psi4':
+#                infile.write(GEOS[system].format_molecule_for_psi4())
 
             infile.close()
 

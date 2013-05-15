@@ -10,7 +10,7 @@ import os
 import subprocess
 import socket
 import shutil
-from random import randint
+import random 
 from libmintsmolecule import *
 
 
@@ -205,14 +205,26 @@ class Molecule(LibmintsMolecule):
         factor = 1.0 if self.PYunits == 'Angstrom' else psi_bohr2angstroms
 
         text = ""
-        text += '%d %d %s\n' % (self.molecular_charge(), self.multiplicity(), self.tagline)
+        text += 'angstrom\n'
+        text += 'geometry={\n'
 
         for i in range(self.natom()):
             [x, y, z] = self.atoms[i].compute()
-            text += '%2s %17.12f %17.12f %17.12f\n' % ((self.symbol(i) if self.Z(i) else "Gh"), \
+            text += '%2s %17.12f %17.12f %17.12f\n' % (self.symbol(i), \
                 x * factor, y * factor, z * factor)
+        text += '}\n\n'
+        text += 'SET,CHARGE=%d\n' % (self.molecular_charge())
+        text += 'SET,SPIN=%d\n' % (self.multiplicity())
+
+        textDummy = "dummy"
+        for fr in range(self.nfragments()):
+            if self.fragment_types[fr] == 'Ghost':
+                for at in range(self.fragments[fr][0], self.fragments[fr][1] + 1):
+                    textDummy += """,%d""" % (at + 1)  # Molpro atom numbering is 1-indexed
+        textDummy += '\n'        
+        if len(textDummy) > 6:
+            text += textDummy
         return text
-        pass
 
     def format_molecule_for_nwchem(self):
         """
@@ -281,24 +293,44 @@ class Molecule(LibmintsMolecule):
 
         """
         vdW_diameter = {
-            'H':  1.001 / 1.5,
-            'HE': 1.012 / 1.5,
-            'LI': 0.825 / 1.5,
-            'BE': 1.408 / 1.5,
-            'B':  1.485 / 1.5,
-            'C':  1.452 / 1.5,
-            'N':  1.397 / 1.5,
-            'O':  1.342 / 1.5,
-            'F':  1.287 / 1.5,
-            'NE': 1.243 / 1.5,
-            'NA': 1.144 / 1.5,
-            'MG': 1.364 / 1.5,
-            'AL': 1.639 / 1.5,
-            'SI': 1.716 / 1.5,
-            'P':  1.705 / 1.5,
-            'S':  1.683 / 1.5,
-            'CL': 1.639 / 1.5,
-            'AR': 1.595 / 1.5}
+            #'H':  1.001 / 1.5,  # JMol
+            'HE': 1.012 / 1.5,  # JMol
+            'LI': 0.825 / 1.5,  # JMol
+            'BE': 1.408 / 1.5,  # JMol
+            #'B':  1.485 / 1.5,  # JMol
+            #'C':  1.452 / 1.5,  # JMol
+            #'N':  1.397 / 1.5,  # JMol
+            #'O':  1.342 / 1.5,  # JMol
+            #'F':  1.287 / 1.5,  # JMol
+            'NE': 1.243 / 1.5,  # JMol
+            'NA': 1.144 / 1.5,  # JMol
+            'MG': 1.364 / 1.5,  # JMol
+            'AL': 1.639 / 1.5,  # JMol
+            #'SI': 1.716 / 1.5,  # JMol
+            #'P':  1.705 / 1.5,  # JMol
+            #'S':  1.683 / 1.5,  # JMol
+            #'CL': 1.639 / 1.5,  # JMol
+            'AR': 1.595 / 1.5,  # JMol
+
+            'H':   1.06 / 1.5,  # Bondi JPC 68 441 (1964)
+            'B':   1.65 / 1.5,  # Bondi JPC 68 441 (1964)
+            'C':   1.53 / 1.5,  # Bondi JPC 68 441 (1964)
+            'N':   1.46 / 1.5,  # Bondi JPC 68 441 (1964)
+            'O':   1.42 / 1.5,  # Bondi JPC 68 441 (1964)
+            'F':   1.40 / 1.5,  # Bondi JPC 68 441 (1964)
+            'SI':  1.93 / 1.5,  # Bondi JPC 68 441 (1964)
+            'P':   1.86 / 1.5,  # Bondi JPC 68 441 (1964)
+            'S':   1.80 / 1.5,  # Bondi JPC 68 441 (1964)
+            'CL':  1.75 / 1.5,  # Bondi JPC 68 441 (1964)
+            'GE':  1.98 / 1.5,  # Bondi JPC 68 441 (1964)
+            'AS':  1.94 / 1.5,  # Bondi JPC 68 441 (1964)
+            'SE':  1.90 / 1.5,  # Bondi JPC 68 441 (1964)
+            'BR':  1.87 / 1.5,  # Bondi JPC 68 441 (1964)
+            'SN':  2.16 / 1.5,  # Bondi JPC 68 441 (1964)
+            'SB':  2.12 / 1.5,  # Bondi JPC 68 441 (1964)
+            'TE':  2.08 / 1.5,  # Bondi JPC 68 441 (1964)
+            'I':   2.04 / 1.5,  # Bondi JPC 68 441 (1964)
+            'XE':  2.05 / 1.5}  # Bondi JPC 68 441 (1964)
 
         Queue = []
         White = range(self.natom())  # untouched
@@ -508,11 +540,13 @@ class Molecule(LibmintsMolecule):
 #        text += "\n\n"
 #        return text
 
-    def grimme_dash(self, func=None, dashlvl='d2', dashparam=None):
+    def grimme_dftd3(self, func=None, dashlvl=None, dashparam=None, verbosity=1):
         """Function to call Grimme's dftd3 program (http://toc.uni-muenster.de/DFTD3/)
         to compute the -D correction of level *dashlvl* using parameters for
-        the functional *func*. dftd3 executable must be independently compiled and
-        found in :envvar:PATH.
+        the functional *func*. The dictionary *dashparam* can be used to supply
+        a full set of dispersion parameters in the absense of *func* or to supply
+        individual overrides in the presence of *func*. The dftd3 executable must be 
+        independently compiled and found in :envvar:PATH.
 
         """
         # Parameters from http://toc.uni-muenster.de/DFTD3/ on September 25, 2012
@@ -665,7 +699,7 @@ class Molecule(LibmintsMolecule):
 
         # Setup unique scratch directory and move in
         current_directory = os.getcwd()
-        dftd3_tmpdir = 'dftd3_' + str(randint(0, 99999))
+        dftd3_tmpdir = 'dftd3_' + str(random.randint(0, 99999))
         if os.path.exists(dftd3_tmpdir) is False:
             os.mkdir(dftd3_tmpdir)
         os.chdir(dftd3_tmpdir)
@@ -692,7 +726,7 @@ class Molecule(LibmintsMolecule):
         pfile.close()
 
         # Write dftd3_geometry file that supplies geometry to dispersion calc
-        geomfile = './dftd3_geometry'
+        geomfile = './dftd3_geometry.xyz'
         gfile = open(geomfile, 'w')
         gfile.write(self.save_string_xyz())
         gfile.close()
@@ -703,6 +737,8 @@ class Molecule(LibmintsMolecule):
         except OSError:
             raise ValidationError('Program dftd3 not found in path.')
         out, err = dashout.communicate()
+        if verbosity >= 3:
+            print out
 
         # Parse output (could go further and break into E6, E8, E10 and Cn coeff)
         success = False
@@ -728,17 +764,17 @@ class Molecule(LibmintsMolecule):
                 (len(dashdderiv), self.natom()))
 
         # Clean up files and remove scratch directory
-        os.unlink(paramfile)
-        os.unlink(geomfile)
-        os.unlink(derivfile)
+#        os.unlink(paramfile)
+#        os.unlink(geomfile)
+#        os.unlink(derivfile)
         if defmoved is True:
             os.rename(defaultfile + '_hide', defaultfile)
 
         os.chdir('..')
-        try:
-            shutil.rmtree(dftd3_tmpdir)
-        except OSError as e:
-            ValidationError('Unable to remove dftd3 temporary directory %s' % e, file=sys.stderr)
+#        try:
+#            shutil.rmtree(dftd3_tmpdir)
+#        except OSError as e:
+#            ValidationError('Unable to remove dftd3 temporary directory %s' % e, file=sys.stderr)
         os.chdir(current_directory)
 
         # return -D & d(-D)/dx
