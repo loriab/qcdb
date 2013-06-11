@@ -222,7 +222,7 @@ print """
                        methods = %s
                          bases = %s
                      dirprefix = %s
-                        memory = %d [MB]
+                   memory [MB] = %d
                        usesymm =
                        cast up = %s
 
@@ -245,10 +245,6 @@ mult = {
 
 # file extension
 fext = 'xyz' if qcprog == 'xyz' else 'in'
-
-# manipulate memory TODO: move to qcprog file
-#if qcprog == 'molpro':
-#    memory = int(math.ceil(memory / 8.0))
 
 # merge and condense HRXN from subset
 if len(subset) == 0:
@@ -281,8 +277,6 @@ for rxn in HRXN:
 HSYS = qcdb.drop_duplicates(temp)
 #print 'HSYS', HSYS
 
-
-#methods = ['B3LYP-D', 'DF-MP2']
 # commence the file-writing loop
 tdir = '-'.join([dirprefix, dbse, qcprog])
 try:
@@ -292,11 +286,13 @@ except OSError:
 
 for basis in bases:
     basdir = qcdb.basislist.sanitize_basisname(basis)
-
-    # TODO: handling basis sets skipped
+    basdir = re.sub('-', '', basdir)
 
     for method in methods:
-        subdir = '-'.join([basdir, method])
+        mtddir = qcdb.basislist.sanitize_basisname(method).upper()
+        mtddir = re.sub('-', '', mtddir)
+
+        subdir = '-'.join([basdir, mtddir])
         try:
             os.mkdir(tdir + '/' + subdir)
         except OSError:
@@ -304,12 +300,13 @@ for basis in bases:
 
         # TODO: forcing c1 symm skipped - still needed for xdm and molpro
 
-#        ans = open('ssi.big', 'w')
-
         for system in HSYS:
             sfile = tdir + '/' + subdir + '/' + system + '.' + fext
             infile = open(sfile, 'w')
 
+            # QC program may reorient but at least input file geometry will match database
+            GEOS[system].fix_orientation(True)
+            GEOS[system].PYmove_to_com = False
             GEOS[system].tagline = TAGL[system]
             GEOS[system].update_geometry()
 
@@ -336,7 +333,3 @@ for basis in bases:
 #                infile.write(GEOS[system].format_molecule_for_psi4())
 
             infile.close()
-
-#            if re.search('dimer', system):
-#                ans.write('%d\n' % (GEOS[system].natom()))
-#        ans.close()

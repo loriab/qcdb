@@ -203,6 +203,10 @@ class Molecule(LibmintsMolecule):
 
         """
         factor = 1.0 if self.PYunits == 'Angstrom' else psi_bohr2angstroms
+        # TODO keep fix_or?
+        self.fix_orientation(True)
+        self.PYmove_to_com = False
+        self.update_geometry()
 
         text = ""
         text += 'angstrom\n'

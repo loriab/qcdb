@@ -58,43 +58,42 @@ class MolproIn(qcformat.InputFormat):
         return text
 
     def format_infile_string(self):
-        infile = ''
+        text = ''
 
         # format comment and memory
-        infile += """***, %s %s\n""" % (self.index, self.molecule.tagline)
-        infile += """memory,%d,m\n""" % (self.memory)
-        infile += '\n'
+        text += """***, %s %s\n""" % (self.index, self.molecule.tagline)
+        text += """memory,%d,m\n""" % (self.memory)
 
         # format molecule, incl. charges and dummy atoms
-        infile += self.molecule.format_molecule_for_molpro()
+        text += self.molecule.format_molecule_for_molpro()
 
         # format global convergence directions
-        infile += self.format_global_parameters()
+        text += self.format_global_parameters()
 
         # format castup directions
         if self.castup is True:
-            infile += """basis=sto-3g\n"""
-            infile += """rhf\n"""
-            infile += '\n'
+            text += """basis=sto-3g\n"""
+            text += """rhf\n"""
+            text += '\n'
 
         # format basis set
-        infile += self.format_basis()
+        text += self.format_basis()
 
         # format method
         for line in qcmtdIN[self.method]:
-            infile += """%s\n""" % (line)
-        infile += """show[1,20f20.12],ee*,ce*,te*\n"""
-        infile += """show[1,60f20.12],_E*\n"""
-        infile += '\n'
+            text += """%s\n""" % (line)
+        text += """show[1,20f20.12],ee*,ce*,te*\n"""
+        text += """show[1,60f20.12],_E*\n"""
+        text += '\n'
 
-        return infile
+        return text
 
 
 qcmtdIN = {
 'ccsd(t)-f12': [
     'rhf',
     'eehf=energy',
-    'ccsd(t)-F12',
+    'ccsd(t)-f12',
     'eemp2=emp2',
     'cemp2=eemp2-eehf',
     'eemp3=emp3',
@@ -223,36 +222,40 @@ qcmtdIN = {
     'gdirect',
     '{df-rks,b3lyp3,basis=jkfit}',
     'eehf=energy'],
+
+#'mp2c': [ # this job computes one part [E_disp(TDDFT)] of the three parts of a MP2C calculation
+#        # check that nfrag = 2
+#         'gdirect',
+#         'ga=1101.2; gb=1102.2',
+#         'ca=2101.2; cb=2102.2\n',
+#
+#         $spin = $cgmp{MLPmol1} - 1;
+#         'SET,CHARGE=$cgmp{CHGmol1}',
+#         'SET,SPIN=$spin',
+#         'dummy',
+#         foreach $at (@monoBreal) { print $handle ",$at"; }
+#         ''
+#         '{df-hf,basis=jkfit,locorb=0; start,atdens; save,$ga}',
+#         '{df-ks,lhf,df_basis=dflhf,basis_coul=jkfitb,basis_exch=jkfitb; dftfac,1.0; start,$ga; save,$ca}',
+#         'eehfa=energy; sapt; monomerA',
+#         '',
+#
+#         $spin = $cgmp{MLPmol2} - 1;
+#         print $handle "SET,CHARGE=$cgmp{CHGmol2}\nSET,SPIN=$spin\ndummy";
+#         foreach $at (@monoAreal) { print $handle ",$at"; }
+#         print $handle "\n{df-hf,basis=jkfit,locorb=0; start,atdens; save,\$gb}\n";
+#         print $handle "{df-ks,lhf,df_basis=dflhf,basis_coul=jkfitb,basis_exch=jkfitb; dftfac,1.0; start,\$gb; save,\$cb}\n";
+#         print $handle "eehfb=energy; sapt; monomerB\n\n";
+#
+#         $spin = $cgmp{MLPsyst} - 1;
+#         print $handle "SET,CHARGE=$cgmp{CHGsyst}\nSET,SPIN=$spin\n";
+#         print $handle "{sapt,SAPT_LEVEL=3; intermol,ca=\$ca,cb=\$cb,icpks=0,fitlevel=3,nlexfac=0.0,cfac=0.0\n";
+#         print $handle "dfit,basis_coul=jkfit,basis_exch=jkfit,cfit_scf=3}\n";
+#         print $handle "eedisp=E2disp\n\n";
+#
+#    ],
 }
-
-
 """
-'mp2c': [ # this job computes one part [E_disp(TDDFT)] of the three parts of a MP2C calculation
-         print $handle "gdirect'\n";
-         print $handle "ga=1101.2; gb=1102.2'\n";
-         print $handle "ca=2101.2; cb=2102.2\n'
-
-         $spin = $cgmp{MLPmol1} - 1;
-         print $handle "SET,CHARGE=$cgmp{CHGmol1}\nSET,SPIN=$spin\ndummy";
-         foreach $at (@monoBreal) { print $handle ",$at"; }
-         print $handle "\n{df-hf,basis=jkfit,locorb=0; start,atdens; save,\$ga}\n";
-         print $handle "{df-ks,lhf,df_basis=dflhf,basis_coul=jkfitb,basis_exch=jkfitb; dftfac,1.0; start,\$ga; save,\$ca}\n";
-         print $handle "eehfa=energy; sapt; monomerA\n\n";
-
-         $spin = $cgmp{MLPmol2} - 1;
-         print $handle "SET,CHARGE=$cgmp{CHGmol2}\nSET,SPIN=$spin\ndummy";
-         foreach $at (@monoAreal) { print $handle ",$at"; }
-         print $handle "\n{df-hf,basis=jkfit,locorb=0; start,atdens; save,\$gb}\n";
-         print $handle "{df-ks,lhf,df_basis=dflhf,basis_coul=jkfitb,basis_exch=jkfitb; dftfac,1.0; start,\$gb; save,\$cb}\n";
-         print $handle "eehfb=energy; sapt; monomerB\n\n";
-
-         $spin = $cgmp{MLPsyst} - 1;
-         print $handle "SET,CHARGE=$cgmp{CHGsyst}\nSET,SPIN=$spin\n";
-         print $handle "{sapt,SAPT_LEVEL=3; intermol,ca=\$ca,cb=\$cb,icpks=0,fitlevel=3,nlexfac=0.0,cfac=0.0\n";
-         print $handle "dfit,basis_coul=jkfit,basis_exch=jkfit,cfit_scf=3}\n";
-         print $handle "eedisp=E2disp\n\n";
-
-    ]
 'dft-sapt-shift': [
 
          # this is written in an inflexible way (fixed basis, functional) so that it is computed
