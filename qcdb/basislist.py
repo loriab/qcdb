@@ -1,4 +1,26 @@
-r"""Module to define a class :py:class:`~BasisFamily` that associates 
+#
+#@BEGIN LICENSE
+#
+# PSI4: an ab initio quantum chemistry software package
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+#@END LICENSE
+#
+
+r"""Module to define a class :py:class:`~BasisFamily` that associates
 fitting basis sets to an orbital basis and to provide functions to
 query appropriate fitting bases for any orbital basis distributed
 with Psi4.
@@ -12,8 +34,8 @@ basisfamily_list = []
 
 class BasisFamily(object):
     """Class to associate with an orbital basis name *ornate*
-    the gbs file names in which the orbital basis *orbital* 
-    (usually the coded form of *ornate*) and *jkfit*, *rifit*, 
+    the gbs file names in which the orbital basis *orbital*
+    (usually the coded form of *ornate*) and *jkfit*, *rifit*,
     and *dualfit* auxiliary bases can be found.
 
     """
@@ -63,9 +85,9 @@ class BasisFamily(object):
 
 
 def sanitize_basisname(name):
-    """Function to return *name* in coded form, stripped of 
-    characters that confuse filenames, characters into lowercase, 
-    ``+`` into ``p``, ``*`` into ``s``, and ``(``, ``)``, & ``,`` 
+    """Function to return *name* in coded form, stripped of
+    characters that confuse filenames, characters into lowercase,
+    ``+`` into ``p``, ``*`` into ``s``, and ``(``, ``)``, & ``,``
     into ``_``.
     """
     temp = name.lower()
@@ -97,12 +119,14 @@ def print_basis_families():
     """
     basisfamily_list = load_basis_families()
 
+    text = ''
     for fam in basisfamily_list:
-        print('%s' % fam)
+        text += '%s' % (fam)
+    return text
 
 
 def corresponding_orbital(name):
-    """Function to validate if the orbital basis *name* in coded or 
+    """Function to validate if the orbital basis *name* in coded or
     ornate form is in Psi4's standard installed bases list. ``None``
     is returned if the orbital basis is not found.
     """

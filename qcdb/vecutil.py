@@ -1,3 +1,25 @@
+#
+#@BEGIN LICENSE
+#
+# PSI4: an ab initio quantum chemistry software package
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+#@END LICENSE
+#
+
 r"""File for accessory procedures in the chem module.
 Credit for the libmints vector3 class to Justin M. Turney and
 incremental improvements by other psi4 developers.
@@ -160,24 +182,24 @@ def diagonalize3x3symmat(M):
     # sd, so                  # Sums of diagonal resp. off-diagonal elements
     # s, c, t                 # sin(phi), cos(phi), tan(phi) and temporary storage
     # g, h, z, theta          # More temporary storage
-  
-    # Calculate SQR(tr(A))  
+
+    # Calculate SQR(tr(A))
     sd = 0.0
     for i in range(3):
         sd += math.fabs(w[i])
     sd = sd * sd
- 
+
     # Main iteration loop
     for nIter in range(50):
 
-        # Test for convergence 
+        # Test for convergence
         so = 0.0
         for p in range(3):
             for q in range(p + 1, 3):
                 so += math.fabs(A[p][q])
         if so == 0.0:
             return w, Q  # return eval, evec
-    
+
         if nIter < 4:
             thresh = 0.2 * so / (3 * 3)
         else:
@@ -185,15 +207,15 @@ def diagonalize3x3symmat(M):
 
         # Do sweep
         for p in range(3):
-          for q in range(p + 1, 3):
-          
+            for q in range(p + 1, 3):
+
                 g = 100.0 * math.fabs(A[p][q])
                 if nIter > 4  and (math.fabs(w[p]) + g == math.fabs(w[p])) and \
                     (math.fabs(w[q]) + g == math.fabs(w[q])):
                     A[p][q] = 0.0
-            
+
                 elif math.fabs(A[p][q]) > thresh:
-            
+
                     # Calculate Jacobi transformation
                     h = w[q] - w[p]
                     if math.fabs(h) + g == math.fabs(h):
@@ -204,31 +226,31 @@ def diagonalize3x3symmat(M):
                             t = -1.0 / (math.sqrt(1.0 + theta * theta) - theta)
                         else:
                             t = 1.0 / (math.sqrt(1.0 + theta * theta) + theta)
-                    
+
                     c = 1.0 / math.sqrt(1.0 + t * t)
                     s = t * c
                     z = t * A[p][q]
-    
+
                     # Apply Jacobi transformation
                     A[p][q] = 0.0
                     w[p] -= z
-                    w[q] += z;
-    
+                    w[q] += z
+
                     for r in range(p):
                         t = A[r][p]
                         A[r][p] = c * t - s * A[r][q]
                         A[r][q] = s * t + c * A[r][q]
-                    
+
                     for r in range(p + 1, q):
                         t = A[p][r]
                         A[p][r] = c * t - s * A[r][q]
                         A[r][q] = s * t + c * A[r][q]
-                    
+
                     for r in range(q + 1, 3):
                         t = A[p][r]
                         A[p][r] = c * t - s * A[q][r]
                         A[q][r] = s * t + c * A[q][r]
-    
+
                     # Update eigenvectors
                     for r in range(3):
                         t = Q[r][p]

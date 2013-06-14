@@ -1,3 +1,25 @@
+#
+#@BEGIN LICENSE
+#
+# PSI4: an ab initio quantum chemistry software package
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+#@END LICENSE
+#
+
 import os
 #import re
 #import math
@@ -10,7 +32,7 @@ import os
 import subprocess
 import socket
 import shutil
-import random 
+import random
 from libmintsmolecule import *
 
 
@@ -113,7 +135,7 @@ class Molecule(LibmintsMolecule):
         instance.update_geometry()
         return instance
 
-    def save_string_xyz(self):
+    def save_string_xyz(self, save_ghosts=True):
         """Save a string for a XYZ-style file.
 
         >>> H2OH2O.save_string_xyz()
@@ -129,55 +151,62 @@ class Molecule(LibmintsMolecule):
         """
         factor = 1.0 if self.PYunits == 'Angstrom' else psi_bohr2angstroms
 
-        text = '%d\n' % (self.natom())
+        N = self.natom()
+        if not save_ghosts:
+            N = 0
+            for i in range(self.natom()):
+                if self.Z(i):
+                    N += 1
+        text = "%d\n" % (N)
         text += '%d %d %s\n' % (self.molecular_charge(), self.multiplicity(), self.tagline)
 
         for i in range(self.natom()):
             [x, y, z] = self.atoms[i].compute()
-            text += '%2s %17.12f %17.12f %17.12f\n' % ((self.symbol(i) if self.Z(i) else "Gh"), \
-                x * factor, y * factor, z * factor)
+            if save_ghosts or self.Z(i):
+                text += '%2s %17.12f %17.12f %17.12f\n' % ((self.symbol(i) if self.Z(i) else "Gh"), \
+                    x * factor, y * factor, z * factor)
         return text
 
-    def save_string_for_psi4(self):
-        """Returns a string of Molecule formatted for psi4.
-        Includes fragments and reorienting, if specified.
-
-        >>> print H2OH2O.save_string_for_psi4()
-        6
-        0 1
-        O         -1.55100700      -0.11452000       0.00000000
-        H         -1.93425900       0.76250300       0.00000000
-        H         -0.59967700       0.04071200       0.00000000
-        --
-        0 1
-        @X         0.00000000       0.00000000       0.00000000
-        O          1.35062500       0.11146900       0.00000000
-        H          1.68039800      -0.37374100      -0.75856100
-        H          1.68039800      -0.37374100       0.75856100
-        units Angstrom
-
-        """
-        Nfr = 0
-        text = ""
-        for fr in range(self.nfragments()):
-            if self.fragment_types[fr] == 'Absent':
-                continue
-            if Nfr != 0:
-                text += """--\n"""
-            Nfr += 1
-            text += """%d %d\n""" % (self.fragment_charges[fr], self.fragment_multiplicities[fr])
-            for at in range(self.fragments[fr][0], self.fragments[fr][1] + 1):
-                geom = self.full_atoms[at].compute()
-                text += """%-3s  %16.8f %16.8f %16.8f\n""" % \
-                    (("" if self.fZ(at) else "@") + self.full_atoms[at].symbol(), \
-                    geom[0], geom[1], geom[2])
-        text += """units %s\n""" % (self.units().lower())
-        return text
+#    def save_string_for_psi4(self):
+#        """Returns a string of Molecule formatted for psi4.
+#        Includes fragments and reorienting, if specified.
+#
+#        >>> print H2OH2O.save_string_for_psi4()
+#        6
+#        0 1
+#        O         -1.55100700      -0.11452000       0.00000000
+#        H         -1.93425900       0.76250300       0.00000000
+#        H         -0.59967700       0.04071200       0.00000000
+#        --
+#        0 1
+#        @X         0.00000000       0.00000000       0.00000000
+#        O          1.35062500       0.11146900       0.00000000
+#        H          1.68039800      -0.37374100      -0.75856100
+#        H          1.68039800      -0.37374100       0.75856100
+#        units Angstrom
+#
+#        """
+#        Nfr = 0
+#        text = ""
+#        for fr in range(self.nfragments()):
+#            if self.fragment_types[fr] == 'Absent':
+#                continue
+#            if Nfr != 0:
+#                text += """--\n"""
+#            Nfr += 1
+#            text += """%d %d\n""" % (self.fragment_charges[fr], self.fragment_multiplicities[fr])
+#            for at in range(self.fragments[fr][0], self.fragments[fr][1] + 1):
+#                geom = self.full_atoms[at].compute()
+#                text += """%-3s  %16.8f %16.8f %16.8f\n""" % \
+#                    (("" if self.fZ(at) else "@") + self.full_atoms[at].symbol(), \
+#                    geom[0], geom[1], geom[2])
+#        text += """units %s\n""" % (self.units().lower())
+#        return text
 
     def format_molecule_for_psi4(self):
         """Returns string of molecule definition block."""
         text = 'molecule mol {\n'
-        for line in self.save_string_for_psi4().splitlines():
+        for line in self.create_psi4_string_from_molecule().splitlines():
             text += '   ' + line + '\n'
         text += '}\n'
         return text
@@ -225,7 +254,7 @@ class Molecule(LibmintsMolecule):
             if self.fragment_types[fr] == 'Ghost':
                 for at in range(self.fragments[fr][0], self.fragments[fr][1] + 1):
                     textDummy += """,%d""" % (at + 1)  # Molpro atom numbering is 1-indexed
-        textDummy += '\n'        
+        textDummy += '\n'
         if len(textDummy) > 6:
             text += textDummy
         return text
@@ -248,7 +277,6 @@ class Molecule(LibmintsMolecule):
 
     #    if symm   print M2OUT "nosym\nnoorient\n";
     #    print DIOUT "angstrom\ngeometry={\n";
-
 
     def auto_fragments(self):
         """Detects fragments in an unfragmented molecule using BFS
@@ -498,7 +526,6 @@ class Molecule(LibmintsMolecule):
             if dim == 'plane':
                 summ.append({'dim': dim, 'geo': xplane, 'cent': cent})
 
-
         #print summ
         text += """\n  ==> 1 (%s) vs. 2 (%s) <==\n\n""" % (summ[0]['dim'], summ[1]['dim'])
 
@@ -525,15 +552,13 @@ class Molecule(LibmintsMolecule):
             distCP = math.fabs(plane1[0] * cent2[0] + plane1[1] * cent2[1] + plane1[2] * cent2[2] + plane1[3])
             # distCP expression has a denominator that's one since plane constructed from unit vector
             text += '  Distance from Center of %s to Plane of %s:                    %14.8f   [Angstrom]\n' % \
-                ('2', '1', distCP * psi_bohr2angstroms) 
+                ('2', '1', distCP * psi_bohr2angstroms)
 
             distCPC = math.sqrt(distCC * distCC - distCP * distCP)
             text += '  Distance from Center of %s to Center of %s along Plane of %s:  %14.8f   [Angstrom]\n' % \
-                ('2', '1', '1', distCPC * psi_bohr2angstroms) 
+                ('2', '1', '1', distCPC * psi_bohr2angstroms)
 
-        print text 
-
-
+        print text
 
 #        text = "        Interatomic Distances (Angstroms)\n\n"
 #        for i in range(self.natom()):
@@ -549,7 +574,7 @@ class Molecule(LibmintsMolecule):
         to compute the -D correction of level *dashlvl* using parameters for
         the functional *func*. The dictionary *dashparam* can be used to supply
         a full set of dispersion parameters in the absense of *func* or to supply
-        individual overrides in the presence of *func*. The dftd3 executable must be 
+        individual overrides in the presence of *func*. The dftd3 executable must be
         independently compiled and found in :envvar:PATH.
 
         """
@@ -574,15 +599,15 @@ class Molecule(LibmintsMolecule):
             'd3zero': {
                 'b1b95'       : {'s6': 1.0,  'sr6': 1.613, 's8': 1.868, 'alpha6': 14.0},
                 'b2gpplyp'    : {'s6': 0.56, 'sr6': 1.586, 's8': 0.760, 'alpha6': 14.0},
-                'b3lyp'       : {'s6': 1.0,  'sr6': 1.261, 's8': 1.703, 'alpha6': 14.0},  # in psi4 
+                'b3lyp'       : {'s6': 1.0,  'sr6': 1.261, 's8': 1.703, 'alpha6': 14.0},  # in psi4
                 'b97-d'       : {'s6': 1.0,  'sr6': 0.892, 's8': 0.909, 'alpha6': 14.0},  # in psi4
                 'bhlyp'       : {'s6': 1.0,  'sr6': 1.370, 's8': 1.442, 'alpha6': 14.0},
                 'blyp'        : {'s6': 1.0,  'sr6': 1.094, 's8': 1.682, 'alpha6': 14.0},
-                'bp86'        : {'s6': 1.0,  'sr6': 1.139, 's8': 1.683, 'alpha6': 14.0},  # in psi4 
+                'bp86'        : {'s6': 1.0,  'sr6': 1.139, 's8': 1.683, 'alpha6': 14.0},  # in psi4
                 'bpbe'        : {'s6': 1.0,  'sr6': 1.087, 's8': 2.033, 'alpha6': 14.0},
                 'mpwlyp'      : {'s6': 1.0,  'sr6': 1.239, 's8': 1.098, 'alpha6': 14.0},
-                'pbe'         : {'s6': 1.0,  'sr6': 1.217, 's8': 0.722, 'alpha6': 14.0},  # in psi4 
-                'pbe0'        : {'s6': 1.0,  'sr6': 1.287, 's8': 0.928, 'alpha6': 14.0},  # in psi4 
+                'pbe'         : {'s6': 1.0,  'sr6': 1.217, 's8': 0.722, 'alpha6': 14.0},  # in psi4
+                'pbe0'        : {'s6': 1.0,  'sr6': 1.287, 's8': 0.928, 'alpha6': 14.0},  # in psi4
                 'pw6b95'      : {'s6': 1.0,  'sr6': 1.532, 's8': 0.862, 'alpha6': 14.0},
                 'pwb6k'       : {'s6': 1.0,  'sr6': 1.660, 's8': 0.550, 'alpha6': 14.0},
                 'revpbe'      : {'s6': 1.0,  'sr6': 0.923, 's8': 1.010, 'alpha6': 14.0},
@@ -603,8 +628,8 @@ class Molecule(LibmintsMolecule):
                 'bmk'         : {'s6': 1.0,  'sr6': 1.931, 's8': 2.168, 'alpha6': 14.0},
                 'camb3lyp'    : {'s6': 1.0,  'sr6': 1.378, 's8': 1.217, 'alpha6': 14.0},
                 'lcwpbe'      : {'s6': 1.0,  'sr6': 1.355, 's8': 1.279, 'alpha6': 14.0},
-                'm05-2x'      : {'s6': 1.0,  'sr6': 1.417, 's8': 0.00 , 'alpha6': 14.0},  # in psi4 
-                'm05'         : {'s6': 1.0,  'sr6': 1.373, 's8': 0.595, 'alpha6': 14.0},  # in psi4 
+                'm05-2x'      : {'s6': 1.0,  'sr6': 1.417, 's8': 0.00 , 'alpha6': 14.0},  # in psi4
+                'm05'         : {'s6': 1.0,  'sr6': 1.373, 's8': 0.595, 'alpha6': 14.0},  # in psi4
                 'm062x'       : {'s6': 1.0,  'sr6': 1.619, 's8': 0.00 , 'alpha6': 14.0},
                 'm06hf'       : {'s6': 1.0,  'sr6': 1.446, 's8': 0.00 , 'alpha6': 14.0},
                 'm06l'        : {'s6': 1.0,  'sr6': 1.581, 's8': 0.00 , 'alpha6': 14.0},
@@ -679,11 +704,11 @@ class Molecule(LibmintsMolecule):
                     if key in dashparam.keys():
                         dashcoeff[dashlvl][func][key] = dashparam[key]
                     else:
-                        raise ValidationError("""Parameter %s is missing from dashparam dict %s.""" % (key, dashparam)) 
+                        raise ValidationError("""Parameter %s is missing from dashparam dict %s.""" % (key, dashparam))
         else:
             func = func.lower()
             if func not in dashcoeff[dashlvl].keys():
-                raise ValidationError("""Functional %s is not available for -D level %s.""" % (func, dashlvl))        
+                raise ValidationError("""Functional %s is not available for -D level %s.""" % (func, dashlvl))
             if dashparam is None:
                 # (normal) case where all param taken from dashcoeff above
                 pass
@@ -714,18 +739,18 @@ class Molecule(LibmintsMolecule):
 
         if dashlvl == 'd2':
             # d2:      s6 sr6 s8 a2=None alpha6 version=2
-            pfile.write('%12.6f %12.6f %12.6f %12.6f %12.6f %6d\n' % 
-                (dashcoeff[dashlvl][func]['s6'], dashcoeff[dashlvl][func]['sr6'], dashcoeff[dashlvl][func]['s8'], 
+            pfile.write('%12.6f %12.6f %12.6f %12.6f %12.6f %6d\n' %
+                (dashcoeff[dashlvl][func]['s6'], dashcoeff[dashlvl][func]['sr6'], dashcoeff[dashlvl][func]['s8'],
                 0.0, dashcoeff[dashlvl][func]['alpha6'], 2))
         elif dashlvl == 'd3zero':
             # d3zero:  s6 sr6 s8 a2=None alpha6 version=3
-            pfile.write('%12.6f %12.6f %12.6f %12.6f %12.6f %6d\n' % 
-                (dashcoeff[dashlvl][func]['s6'], dashcoeff[dashlvl][func]['sr6'], dashcoeff[dashlvl][func]['s8'], 
+            pfile.write('%12.6f %12.6f %12.6f %12.6f %12.6f %6d\n' %
+                (dashcoeff[dashlvl][func]['s6'], dashcoeff[dashlvl][func]['sr6'], dashcoeff[dashlvl][func]['s8'],
                 1.0, dashcoeff[dashlvl][func]['alpha6'], 3))
         elif dashlvl == 'd3bj':
             # d3bj:    s6 a1 s8 a2 alpha6=None version=4
-            pfile.write('%12.6f %12.6f %12.6f %12.6f %12.6f %6d\n' % 
-                (dashcoeff[dashlvl][func]['s6'], dashcoeff[dashlvl][func]['a1'], dashcoeff[dashlvl][func]['s8'], 
+            pfile.write('%12.6f %12.6f %12.6f %12.6f %12.6f %6d\n' %
+                (dashcoeff[dashlvl][func]['s6'], dashcoeff[dashlvl][func]['a1'], dashcoeff[dashlvl][func]['s8'],
                 dashcoeff[dashlvl][func]['a2'], 0.0, 4))
         pfile.close()
 
