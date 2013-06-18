@@ -8,3 +8,4 @@ __author__ = 'Lori A. Burns'
 
 # Load Python modules
 from qcformat import *
+from cfour import *
