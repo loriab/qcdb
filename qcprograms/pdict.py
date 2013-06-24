@@ -21,27 +21,25 @@ class PreservingDict(dict):
         except AttributeError:
             raise AttributeError('Keys stored as upper-case strings: %s unsuitable' % (key))
         value = Decimal(value)
-        if key in self.keys():
-            existing_exp = self[key].as_tuple().exponent  # 0.1234 --> -4
+        if key in self.keys() and not 'CURRENT' in key:
+            # Validate choosing more detailed value for variable
+            existing_exp = self[key].as_tuple().exponent  # 0.1111 --> -4
             candidate_exp = value.as_tuple().exponent
             if existing_exp > candidate_exp:  # candidate has more digits
-                places = Decimal(10) ** (existing_exp + 1)  # exp is proper, exp+1 is slack
+                places = Decimal(10) ** (existing_exp + 1)  # exp+1 permits slack in rounding
                 best_value = value
-                #print '\ncandidate wins', places, best_value, existing_exp, candidate_exp
-            else:  # existing has more digits
+            else:                             # existing has more digits
                 places = Decimal(10) ** (candidate_exp + 1)
                 best_value = self[key]
-                #print '\nexisting wins', places, best_value, existing_exp, candidate_exp
-            #print 'duplicate: ', key, places, places.as_tuple().exponent
-            #print 'existing:  ', self[key], self[key].quantize(places)
-            #print 'potential: ', value, value.quantize(places)
-            #print 'best:      ', best_value
+            # Validate values are the same
             if self[key].quantize(places).compare(value.quantize(places)) != 0:
                 raise qcdb.exceptions.ParsingValidationError(
                     """Output file yielded both %s and %s as values for quantity %s.""" %
                     (self[key].to_eng_string(), value.to_eng_string(), key))
+            #print 'Resetting variable %s to %s' % (key, best_value.to_eng_string())
         else:
             best_value = value
+            #print 'Setting   variable %s to %s' % (key, best_value.to_eng_string())
         super(PreservingDict, self).__setitem__(key, best_value)
 
     def update(self, *args, **kwargs):
