@@ -26,16 +26,14 @@ import sys
 import math
 import os
 import re
-qcdbpkg_path = os.path.expanduser('~loriab/linux/qcdb')
-sys.path.append(qcdbpkg_path)
+
+qcdbpkg_path = os.path.dirname(__file__)
+sys.path.append(qcdbpkg_path + '/../')
 import qcdb
-#sys.path.append(os.path.abspath('./../qcdb'))
-#print sys.path
 import qcdb.basislist
 import qcdb.exceptions
-sys.path.append(qcdbpkg_path + '/databases')
-sys.path.append(qcdbpkg_path + '/qcprograms')
-
+sys.path.append(qcdbpkg_path + '/../databases')
+sys.path.append(qcdbpkg_path + '/../qcprograms')
 
 # load docstring info from database files (doesn't actually import database modules)
 DBdocstrings = qcdb.dictify_database_docstrings()
@@ -294,8 +292,8 @@ else:
 # TODO: choose ACTV or merge ACTV
 temp = []
 for rxn in HRXN:
-    #temp.append(ACTV['%s-%s' % (dbse, rxn)])
-    temp.append(database.ACTV_CP['%s-%s' % (dbse, rxn)])
+    temp.append(database.ACTV['%s-%s' % (dbse, rxn)])
+    #temp.append(database.ACTV_CP['%s-%s' % (dbse, rxn)])
 HSYS = qcdb.drop_duplicates(temp)
 #print 'HSYS', HSYS
 

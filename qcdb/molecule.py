@@ -241,10 +241,14 @@ class Molecule(LibmintsMolecule):
         text += 'angstrom\n'
         text += 'geometry={\n'
 
-        for i in range(self.natom()):
-            [x, y, z] = self.atoms[i].compute()
-            text += '%2s %17.12f %17.12f %17.12f\n' % (self.symbol(i), \
-                x * factor, y * factor, z * factor)
+        for fr in range(self.nfragments()):
+            if self.fragment_types[fr] == 'Absent':
+                pass
+            else:
+                for at in range(self.fragments[fr][0], self.fragments[fr][1] + 1):
+                    [x, y, z] = self.atoms[at].compute()
+                    text += '%2s %17.12f %17.12f %17.12f\n' % (self.symbol(at), \
+                        x * factor, y * factor, z * factor)
         text += '}\n\n'
         text += 'SET,CHARGE=%d\n' % (self.molecular_charge())
         text += 'SET,SPIN=%d\n' % (self.multiplicity() - 1)  # Molpro wants (mult-1)
