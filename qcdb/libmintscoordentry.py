@@ -90,6 +90,10 @@ class NumberValue(CoordValue):
         """Takes a CoordValue object, and returns a string for printing."""
         return "%*.*f" % (precision + 5, precision, self.compute())
 
+#    def variable_to_string_cfour(self, precision):
+#        """Takes a CoordValue object, and returns a string for printing."""
+#        return "%.*f" % (precision, self.compute())
+
     def everything(self):
         print '\nNumberValue\n  Fixed = %s\n  Computed = %s\n  Type = %s\n  Value = %f\n  FValue = %s\n\n' % \
             (self.PYfixed, self.computed, self.type(), self.value, self.variable_to_string(4))
@@ -325,6 +329,17 @@ class CartesianEntry(CoordEntry):
         return "  %17s  %17s  %17s\n" % (xstr, ystr, zstr)
         # should go to outfile
 
+    def print_in_input_format_cfour(self):
+        """Prints the updated geometry, in the format provided by the user.
+        This, for Cfour not different from regular version.
+
+        """
+        xstr = self.x.variable_to_string(12)
+        ystr = self.y.variable_to_string(12)
+        zstr = self.z.variable_to_string(12)
+        return " %17s %17s %17s\n" % (xstr, ystr, zstr)
+        # should go to outfile
+
     def invalidate(self):
         """Flags the current coordinates as being outdated."""
         self.computed = False
@@ -375,24 +390,55 @@ class ZMatrixEntry(CoordEntry):
         elif self.ato == None and self.dto == None:
             # The second atom
             now_rto = self.rto.entry_number() + 1
-            now_rval = self.rval.variable_to_string(6)
+            now_rval = self.rval.variable_to_string(10)
             text += "  %5d %11s\n" % (now_rto, now_rval)
         elif self.dto == None:
             # The third atom
             now_rto = self.rto.entry_number() + 1
-            now_rval = self.rval.variable_to_string(6)
+            now_rval = self.rval.variable_to_string(10)
             now_ato = self.ato.entry_number() + 1
-            now_aval = self.aval.variable_to_string(6)
+            now_aval = self.aval.variable_to_string(10)
             text += "  %5d %11s  %5d %11s\n" % (now_rto, now_rval, now_ato, now_aval)
         else:
             # Remaining atoms
             now_rto = self.rto.entry_number() + 1
-            now_rval = self.rval.variable_to_string(6)
+            now_rval = self.rval.variable_to_string(10)
             now_ato = self.ato.entry_number() + 1
-            now_aval = self.aval.variable_to_string(6)
+            now_aval = self.aval.variable_to_string(10)
             now_dto = self.dto.entry_number() + 1
-            now_dval = self.dval.variable_to_string(6)
+            now_dval = self.dval.variable_to_string(10)
             text += "  %5d %11s  %5d %11s  %5d %11s\n" % \
+                (now_rto, now_rval, now_ato, now_aval, now_dto, now_dval)
+        return text
+#        outfile
+
+    def print_in_input_format_cfour(self):
+        """Prints the updated geometry, in the format provided by the user"""
+        text = ""
+        if self.rto == None and self.ato == None and self.dto == None:
+            # The first atom
+            text += "\n"
+        elif self.ato == None and self.dto == None:
+            # The second atom
+            now_rto = self.rto.entry_number() + 1
+            now_rval = self.rval.variable_to_string(10)
+            text += " %d %s\n" % (now_rto, now_rval)
+        elif self.dto == None:
+            # The third atom
+            now_rto = self.rto.entry_number() + 1
+            now_rval = self.rval.variable_to_string(10)
+            now_ato = self.ato.entry_number() + 1
+            now_aval = self.aval.variable_to_string(10)
+            text += " %d %s %d %s\n" % (now_rto, now_rval, now_ato, now_aval)
+        else:
+            # Remaining atoms
+            now_rto = self.rto.entry_number() + 1
+            now_rval = self.rval.variable_to_string(10)
+            now_ato = self.ato.entry_number() + 1
+            now_aval = self.aval.variable_to_string(10)
+            now_dto = self.dto.entry_number() + 1
+            now_dval = self.dval.variable_to_string(10)
+            text += " %d %s %d %s %d %s\n" % \
                 (now_rto, now_rval, now_ato, now_aval, now_dto, now_dval)
         return text
 #        outfile
