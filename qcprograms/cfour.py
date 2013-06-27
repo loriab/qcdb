@@ -333,17 +333,11 @@ def cfour_memory(mem):
     """Transform input *mem* in MB into psi4-type options for cfour.
 
     """
-
-    #mem = int(0.000001 * psi4.get_memory())
     text = ''
 
     # prepare memory keywords to be set as c-side keywords
     options = collections.defaultdict(lambda: collections.defaultdict(dict))
-    options['CFOUR']['CFOUR_MEMORY_SIZE']['has_changed'] = True
-    options['CFOUR']['CFOUR_MEM_UNIT']['has_changed'] = True
-
     options['CFOUR']['CFOUR_MEMORY_SIZE']['value'] = int(mem)
     options['CFOUR']['CFOUR_MEM_UNIT']['value'] = 'MB'
 
     return text, options
-

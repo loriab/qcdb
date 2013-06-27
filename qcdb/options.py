@@ -37,7 +37,7 @@ def format_option_for_cfour(opt, val):
     else:
         text += str(val)
 
-    return opt[6:], text  
+    return opt[6:], text
 
 
 def prepare_options_for_cfour(options):
@@ -74,7 +74,7 @@ def reconcile_options(full, partial):
             if full[okey][ikey]['has_changed']:
                 if full[okey][ikey]['value'] != ival['value']:
                     raise ValidationError("""Option %s value `%s` set by options block incompatible with value `%s` in memory/molecule/psi4options block.""" %
-                        (ikey, full[okey][ikey]['value'], ival['value'])) 
+                        (ikey, full[okey][ikey]['value'], ival['value']))
                 else:
                     # kw in full is touched, but in agreement with value in partial, no change
                     full[okey][ikey]['has_changed'] = True
@@ -84,5 +84,4 @@ def reconcile_options(full, partial):
                 full[okey][ikey]['has_changed'] = True
                 print 'Overwriting %s with %s' % (ikey, ival['value'])
 
-    #TODO: Allow cfour_memory_size to clobber default psi4 memory?
     return full

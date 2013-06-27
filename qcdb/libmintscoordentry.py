@@ -90,10 +90,6 @@ class NumberValue(CoordValue):
         """Takes a CoordValue object, and returns a string for printing."""
         return "%*.*f" % (precision + 5, precision, self.compute())
 
-#    def variable_to_string_cfour(self, precision):
-#        """Takes a CoordValue object, and returns a string for printing."""
-#        return "%.*f" % (precision, self.compute())
-
     def everything(self):
         print '\nNumberValue\n  Fixed = %s\n  Computed = %s\n  Type = %s\n  Value = %f\n  FValue = %s\n\n' % \
             (self.PYfixed, self.computed, self.type(), self.value, self.variable_to_string(4))
@@ -331,7 +327,7 @@ class CartesianEntry(CoordEntry):
 
     def print_in_input_format_cfour(self):
         """Prints the updated geometry, in the format provided by the user.
-        This, for Cfour not different from regular version.
+        This, for Cfour, not different from regular version.
 
         """
         xstr = self.x.variable_to_string(12)
