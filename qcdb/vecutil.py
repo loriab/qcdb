@@ -304,3 +304,15 @@ def transpose(matrix):
 
     tmat = [list(i) for i in zip(*matrix)]
     return tmat
+
+
+def matadd(matrix1, matrix2, fac1=1.0, fac2=1.0):
+    """Matrix addition"""
+    if (len(matrix1[0]) != len(matrix2[0])) or (len(matrix1) != len(matrix2)):
+        raise ValidationError('Matrices must be same dimension to add.')
+    new_matrix = zero(len(matrix1), len(matrix1[0]))
+    for i in range(len(matrix1)):
+        for j in range(len(matrix1[0])):
+            new_matrix[i][j] = fac1 * matrix1[i][j] + fac2 * matrix2[i][j]
+    return new_matrix
+

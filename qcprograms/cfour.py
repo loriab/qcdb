@@ -9,6 +9,8 @@ def cfour_harvest(outtext):
     Function to read CFOUR output file *outtext* and parse important quantum chemical information from it in
     """
     psivar = PreservingDict()
+    psivar_coord = None #[]
+    psivar_grad = None #[]
 
 #    TODO: BCC
 #          CI
@@ -217,8 +219,7 @@ def cfour_harvest(outtext):
         outtext, re.MULTILINE | re.DOTALL)
     if mobj:
         print('matched cc with full %s iterating %s' % (mobj.group('fullCC'), mobj.group('iterCC')))
-        print('matched cc')
-        print mobj.group(1), mobj.group(2), mobj.group(3), mobj.group(4)
+        #print mobj.group(1), mobj.group(2), mobj.group(3), mobj.group(4)
         psivar['%s CORRELATION ENERGY' % (mobj.group('iterCC'))] = mobj.group(3)
         psivar['%s TOTAL ENERGY' % (mobj.group('iterCC'))] = mobj.group(4)
 
@@ -266,7 +267,6 @@ def cfour_harvest(outtext):
         outtext, re.MULTILINE | re.DOTALL)
     if mobj:  # PRINT=2 to get SCS-CC components
         print('matched scscc')
-        print mobj.groups()
         psivar['%s SAME-SPIN ENERGY' % (mobj.group('iterCC'))] = Decimal(mobj.group(3)) + Decimal(mobj.group(4))
         psivar['%s OPPOSITE-SPIN ENERGY' % (mobj.group('iterCC'))] = mobj.group(5)
         psivar['%s CORRELATION ENERGY' % (mobj.group('iterCC'))] = mobj.group(6)
@@ -279,14 +279,54 @@ def cfour_harvest(outtext):
         r'^\s+' + r'The BB contribution to the correlation energy is:\s+' + NUMBER + r'\s+a.u.\s*' +
         r'^\s+' + r'The AB contribution to the correlation energy is:\s+' + NUMBER + r'\s+a.u.\s*' +
         r'^\s+' + r'The total correlation energy is\s+' + NUMBER + r'\s+a.u.\s*' +
-        r'^\s+' + r'The CC iterations have converged.' + r'\s*$',
+        r'(?:.*?)' +
+        #r'^\s+' + r'The CC iterations have converged.' + r'\s*$',
+        r'^\s+' + r'(?:A miracle come to pass. )?' + r'The CC iterations have converged.' + r'\s*$',
         outtext, re.MULTILINE | re.DOTALL)
     if mobj:  # PRINT=2 to get SCS components
         print('matched scscc2')
-        print mobj.groups()
         psivar['%s SAME-SPIN ENERGY' % (mobj.group('iterCC'))] = Decimal(mobj.group(3)) + Decimal(mobj.group(4))
         psivar['%s OPPOSITE-SPIN ENERGY' % (mobj.group('iterCC'))] = mobj.group(5)
         psivar['%s CORRELATION ENERGY' % (mobj.group('iterCC'))] = mobj.group(6)
+
+    # Process gradient
+    mobj = re.search(
+        r'\s+' + r'Molecular gradient' + r'\s*' +
+        r'\s+' + r'------------------' + r'\s*' +
+        r'\s+' + r'\n' +
+        #r'(?:(?:\s+[A-Z]+\s+#\d+\s+[xyz]\s+[-+]?\d+\.\d+\s*\n)+)' +
+        #r'\n\n' +
+        r'((?:\s+[A-Z]+\s+#\d+\s+\d?\s+[-+]?\d+\.\d+\s+[-+]?\d+\.\d+\s+[-+]?\d+\.\d+\s*\n)+)' +
+        r'\n\n' + 
+        r'\s+' + 'Molecular gradient norm',
+        outtext, re.MULTILINE)
+    if mobj:
+        print('matched molgrad')
+        atoms = []
+        psivar_grad = []
+        for line in mobj.group(1).splitlines():
+            lline = line.split()
+            atoms.append(lline[0])
+            #psivar_gradient.append([Decimal(lline[-3]), Decimal(lline[-2]), Decimal(lline[-1])])
+            psivar_grad.append([float(lline[-3]), float(lline[-2]), float(lline[-1])])
+
+    # Process geometry
+    mobj = re.search(
+#        r'\s+(?:-+)\s*' +
+#        r'^\s+' + r'Z-matrix   Atomic            Coordinates (in bohr)' + r'\s*' +
+        r'^\s+' + r'Symbol    Number           X              Y              Z' + r'\s*' +
+        r'^\s+(?:-+)\s*' +
+        r'((?:\s+[A-Z]+\s+[0-9]+\s+[-+]?\d+\.\d+\s+[-+]?\d+\.\d+\s+[-+]?\d+\.\d+\s*\n)+)' +
+        r'^\s+(?:-+)\s*',
+        outtext, re.MULTILINE)
+    if mobj:
+        print('matched geom')
+        atoms = []
+        psivar_coord = []
+        for line in mobj.group(1).splitlines():
+            lline = line.split()
+            atoms.append(lline[0])
+            psivar_coord.append([float(lline[-3]), float(lline[-2]), float(lline[-1])])
 
     # Process CURRENT energies (needs better way)
     if 'SCF TOTAL ENERGY' in psivar:
@@ -326,7 +366,7 @@ def cfour_harvest(outtext):
         psivar['CURRENT CORRELATION ENERGY'] = psivar['CCSDT CORRELATION ENERGY']
         psivar['CURRENT ENERGY'] = psivar['CCSDT TOTAL ENERGY']
 
-    return psivar
+    return psivar, psivar_coord, psivar_grad
 
 
 def cfour_memory(mem):
@@ -339,5 +379,46 @@ def cfour_memory(mem):
     options = collections.defaultdict(lambda: collections.defaultdict(dict))
     options['CFOUR']['CFOUR_MEMORY_SIZE']['value'] = int(mem)
     options['CFOUR']['CFOUR_MEM_UNIT']['value'] = 'MB'
+
+    return text, options
+
+
+def cfour_method(name):
+    """Function to
+
+    """
+    lowername = name.lower()
+    text = ''
+
+    options = collections.defaultdict(lambda: collections.defaultdict(dict))
+
+    if lowername == 'c4-scf':
+        options['CFOUR']['CFOUR_CALC_LEVEL']['value'] = 'SCF'
+
+    elif lowername == 'c4-mp2':
+        options['CFOUR']['CFOUR_CALC_LEVEL']['value'] = 'MP2'
+
+    elif lowername == 'c4-mp3':
+        options['CFOUR']['CFOUR_CALC_LEVEL']['value'] = 'MP3'
+
+    elif lowername == 'c4-mp4(sdq)':
+        options['CFOUR']['CFOUR_CALC_LEVEL']['value'] = 'SDQ-MP4'
+
+    elif lowername == 'c4-mp4':
+        options['CFOUR']['CFOUR_CALC_LEVEL']['value'] = 'MP4'
+
+    elif lowername == 'c4-ccsd':
+        options['CFOUR']['CFOUR_CALC_LEVEL']['value'] = 'CCSD'
+        options['CFOUR']['CFOUR_CC_PROGRAM']['value'] = 'ECC'
+
+    elif lowername == 'c4-cc3':
+        options['CFOUR']['CFOUR_CALC_LEVEL']['value'] = 'CC3'
+
+    elif lowername == 'c4-ccsd(t)':
+        options['CFOUR']['CFOUR_CALC_LEVEL']['value'] = 'CCSD(T)'
+        options['CFOUR']['CFOUR_CC_PROGRAM']['value'] = 'ECC'
+
+    elif lowername == 'c4-ccsdt':
+        options['CFOUR']['CFOUR_CALC_LEVEL']['value'] = 'CCSDT'
 
     return text, options
