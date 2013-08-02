@@ -1,3 +1,4 @@
+import math
 from exceptions import *
 
 
@@ -30,8 +31,16 @@ def format_option_for_cfour(opt, val):
                     text += '-'
 
     # Transform the basis sets that *must* be lowercase (dratted c4 input)
-    elif (opt == 'CFOUR_BASIS') and (val.lower() in ['svp', 'dzp', 'tzp', 'tzp2p', 'qz2p', 'pz3d2f', '13s9p4d    3f']):
+    elif (opt == 'CFOUR_BASIS') and (val.upper() in ['SVP', 'DZP', 'TZP', 'TZP2P', 'QZ2P', 'PZ3D2F', '13S9P4D3F']):
         text += str(val.lower())
+
+    # Transform convergence options to order-of-magnitude
+#    elif (opt.upper() in ['CFOUR_BRUCK_CONV', 'CFOUR_CC_CONV', 'CFOUR_CIS_CONV', 
+#        'CFOUR_CONVERGENCE', 'CFOUR_CPHF_CONVER', 'CFOUR_ESTATE_CONV', 
+#        'CFOUR_GEO_CONV', 'CFOUR_LINEQ_CONV', 'CFOUR_SCF_CONV']):
+#        print val, math.log10(val)
+#        text += str(-1 * math.log10(val))
+#        print 'asdf', val, text
 
     # No Transform
     else:

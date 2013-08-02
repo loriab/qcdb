@@ -6,11 +6,36 @@ from pdict import PreservingDict
 
 def cfour_harvest(outtext):
     """
+    Function to separate portions of a CFOUR output file *outtest*,
+    divided by xjoda.
+    """
+    pass_psivar = []
+    pass_coord = []
+    pass_grad = []
+
+    for outpass in re.split(r'--invoking executable xjoda', outtext, re.MULTILINE):
+        psivar, c4coord, c4grad = cfour_harvest_pass(outpass)
+        pass_psivar.append(psivar)
+        pass_coord.append(c4coord)
+        pass_grad.append(c4grad)
+
+        #print '\n\nXXXXXXXXXXXXXXXXXXXXXXXXXX\n\n'
+        #print outpass
+        print psivar, c4coord, c4grad
+
+    if pass_coord[-1]:
+        return pass_psivar[-1], pass_coord[-1], pass_grad[-1]
+    else:  # sometimes final xjoda section is trivial
+        return pass_psivar[-2], pass_coord[-2], pass_grad[-2]
+
+
+def cfour_harvest_pass(outtext):
+    """
     Function to read CFOUR output file *outtext* and parse important quantum chemical information from it in
     """
     psivar = PreservingDict()
-    psivar_coord = None #[]
-    psivar_grad = None #[]
+    psivar_coord = None
+    psivar_grad = None
 
 #    TODO: BCC
 #          CI
@@ -256,6 +281,19 @@ def cfour_harvest(outtext):
         psivar['CCSD(T) CORRELATION ENERGY'] = Decimal(mobj.group(4)) - Decimal(mobj.group(2))
         psivar['CCSD(T) TOTAL ENERGY'] = mobj.group(4)
 
+    mobj = re.search(
+        r'^\s+' + r'(?:CCSD energy)' + r'\s+' + NUMBER + r'\s*' +
+        r'^\s*(?:-+)\s*' +
+        r'^\s+' + r'(?:CCSD\(T\) energy)' + r'\s+' + NUMBER + r'\s*$',
+        outtext, re.MULTILINE | re.DOTALL)
+    if mobj:
+        print('matched ccsd(t) lamb')
+        #print mobj.group(1), mobj.group(2)
+        psivar['CCSD TOTAL ENERGY'] = mobj.group(1)
+        psivar['(T) CORRECTION ENERGY'] = Decimal(mobj.group(2)) - Decimal(mobj.group(1))
+        psivar['CCSD(T) CORRELATION ENERGY'] = Decimal(mobj.group(2)) - psivar['SCF TOTAL ENERGY']
+        psivar['CCSD(T) TOTAL ENERGY'] = mobj.group(2)
+
     # Process SCS-CC
     mobj = re.search(
         r'^\s+' + r'(?P<fullCC>(?P<iterCC>CC(?:\w+))(?:\(T\))?)' + r'\s+(?:energy will be calculated.)\s*' +
@@ -294,8 +332,8 @@ def cfour_harvest(outtext):
         r'\s+' + r'Molecular gradient' + r'\s*' +
         r'\s+' + r'------------------' + r'\s*' +
         r'\s+' + r'\n' +
-        #r'(?:(?:\s+[A-Z]+\s+#\d+\s+[xyz]\s+[-+]?\d+\.\d+\s*\n)+)' +
-        #r'\n\n' +
+        r'(?:(?:\s+[A-Z]+\s+#\d+\s+[xyz]\s+[-+]?\d+\.\d+\s*\n)+)' +  # optional, it seems
+        r'\n\n' +  # optional, it seems
         r'((?:\s+[A-Z]+\s+#\d+\s+\d?\s+[-+]?\d+\.\d+\s+[-+]?\d+\.\d+\s+[-+]?\d+\.\d+\s*\n)+)' +
         r'\n\n' + 
         r'\s+' + 'Molecular gradient norm',
@@ -379,6 +417,23 @@ def cfour_memory(mem):
     options = collections.defaultdict(lambda: collections.defaultdict(dict))
     options['CFOUR']['CFOUR_MEMORY_SIZE']['value'] = int(mem)
     options['CFOUR']['CFOUR_MEM_UNIT']['value'] = 'MB'
+
+    return text, options
+
+
+def cfour_calclevel(dertype):
+    """
+    """
+    text = ''
+    options = collections.defaultdict(lambda: collections.defaultdict(dict))
+    
+    if dertype == 0:
+        pass
+    elif dertype == 1:
+        options['CFOUR']['CFOUR_DERIV_LEVEL']['value'] = 'FIRST'
+    else:
+        print('bad dertype')
+        exit()
 
     return text, options
 
