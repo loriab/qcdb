@@ -22,6 +22,7 @@ def cfour_harvest(outtext):
         #print '\n\nXXXXXXXXXXXXXXXXXXXXXXXXXX\n\n'
         #print outpass
         print psivar, c4coord, c4grad
+        #print '\n\nxxxxxxxxxxxxxxxxxxxxxxxxxx\n\n'
 
     if pass_coord[-1]:
         return pass_psivar[-1], pass_coord[-1], pass_grad[-1]
@@ -52,6 +53,11 @@ def cfour_harvest_pass(outtext):
     if mobj:
         print('matched nre')
         psivar['NUCLEAR REPULSION ENERGY'] = mobj.group(1)
+        # Coordinates for atom-only calc
+        if float(mobj.group(1)) < 1.0E-6:
+            print('matched atom')
+            psivar_coord = [0.0, 0.0, 0.0]
+
 
     # Process SCF
     mobj = re.search(

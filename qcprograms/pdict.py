@@ -1,4 +1,4 @@
-from decimal import Decimal
+from decimal import Decimal, ROUND_FLOOR, ROUND_CEILING
 import qcdb.exceptions
 
 
@@ -32,7 +32,9 @@ class PreservingDict(dict):
                 places = Decimal(10) ** (candidate_exp + 1)
                 best_value = self[key]
             # Validate values are the same
-            if self[key].quantize(places).compare(value.quantize(places)) != 0:
+            #print('FLOOR: ', self[key].quantize(places, rounding=ROUND_FLOOR) - value.quantize(places, rounding=ROUND_FLOOR))
+            #print('CEIL:  ', self[key].quantize(places, rounding=ROUND_CEILING) - value.quantize(places, rounding=ROUND_CEILING))
+            if (self[key].quantize(places, rounding=ROUND_CEILING).compare(value.quantize(places, rounding=ROUND_CEILING)) != 0):
                 raise qcdb.exceptions.ParsingValidationError(
                     """Output file yielded both %s and %s as values for quantity %s.""" %
                     (self[key].to_eng_string(), value.to_eng_string(), key))

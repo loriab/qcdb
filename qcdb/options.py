@@ -30,6 +30,12 @@ def format_option_for_cfour(opt, val):
                 if n < (len(val) - 1):
                     text += '-'
 
+    # Transform booleans into integers
+    elif str(val) == 'True':
+        text += '1'
+    elif str(val) == 'False':
+        text += '0'
+
     # Transform the basis sets that *must* be lowercase (dratted c4 input)
     elif (opt == 'CFOUR_BASIS') and (val.upper() in ['SVP', 'DZP', 'TZP', 'TZP2P', 'QZ2P', 'PZ3D2F', '13S9P4D3F']):
         text += str(val.lower())

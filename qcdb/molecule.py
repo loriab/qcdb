@@ -419,6 +419,30 @@ class Molecule(LibmintsMolecule):
 
         return text, options
 
+    def format_basis_for_cfour(self, puream):
+        """Function to print the BASIS=SPECIAL block for Cfour according
+        to the active atoms in Molecule. Special short basis names
+        are used by Psi4 libmints GENBAS-writer in accordance with
+        Cfour constraints.
+
+        """
+        text = ''
+        cr = 1
+        for fr in range(self.nfragments()):
+            if self.fragment_types[fr] == 'Absent':
+                pass
+            else:
+                for at in range(self.fragments[fr][0], self.fragments[fr][1] + 1):
+                    text += """%s:P4_%d\n""" % (self.symbol(at).upper(), cr)
+                    cr += 1
+        text += '\n'
+
+        options = collections.defaultdict(lambda: collections.defaultdict(dict))
+        options['CFOUR']['CFOUR_BASIS']['value'] = 'SPECIAL'
+        options['CFOUR']['CFOUR_SPHERICAL']['value'] = puream
+
+        return text, options
+
     def format_molecule_for_cfour_old(self):
         """Function to print Molecule in a form readable by Cfour. This
         version works as long as zmat is composed entirely of variables,
