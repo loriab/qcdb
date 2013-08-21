@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 #
 #@BEGIN LICENSE
 #
@@ -19,8 +21,6 @@
 #
 #@END LICENSE
 #
-
-#!/usr/bin/python
 
 import sys
 import math
@@ -335,6 +335,9 @@ for basis in bases:
                 #ins = molpro.MolproIn(memory, method, basis, GEOS[system], system, castup)
                 #infile.write(ins.format_infile_string())
                 infile.write(qcmod.MolproIn(memory, method, basis, GEOS[system], system, castup).format_infile_string())
+
+            elif qcprog == 'psi4':
+                infile.write(qcmod.Psi4In(memory, method, basis, GEOS[system], system, castup).format_infile_string())
 
 #            # write start of file and comment line
 #            if qcprog == 'qchem':
