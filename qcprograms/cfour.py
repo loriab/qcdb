@@ -58,7 +58,6 @@ def cfour_harvest_pass(outtext):
             print('matched atom')
             psivar_coord = [0.0, 0.0, 0.0]
 
-
     # Process SCF
     mobj = re.search(
         r'^\s+' + r'(?:E\(SCF\))' + r'\s+=\s+' + NUMBER + r'\s+a\.u\.\s*$',
@@ -341,7 +340,7 @@ def cfour_harvest_pass(outtext):
         r'(?:(?:\s+[A-Z]+\s+#\d+\s+[xyz]\s+[-+]?\d+\.\d+\s*\n)+)' +  # optional, it seems
         r'\n\n' +  # optional, it seems
         r'((?:\s+[A-Z]+\s+#\d+\s+\d?\s+[-+]?\d+\.\d+\s+[-+]?\d+\.\d+\s+[-+]?\d+\.\d+\s*\n)+)' +
-        r'\n\n' + 
+        r'\n\n' +
         r'\s+' + 'Molecular gradient norm',
         outtext, re.MULTILINE)
     if mobj:
@@ -432,7 +431,7 @@ def cfour_calclevel(dertype):
     """
     text = ''
     options = collections.defaultdict(lambda: collections.defaultdict(dict))
-    
+
     if dertype == 0:
         pass
     elif dertype == 1:
@@ -483,3 +482,94 @@ def cfour_method(name):
         options['CFOUR']['CFOUR_CALC_LEVEL']['value'] = 'CCSDT'
 
     return text, options
+
+
+def cfour_list():
+    """Return an array of Cfour methods with energies. Appended
+    to procedures['energy'].
+
+    """
+    val = []
+    val.append('cfour')
+    val.append('c4-scf')
+    val.append('c4-mp2')
+    val.append('c4-mp3')
+    val.append('c4-mp4(sdq)')
+    val.append('c4-mp4')
+    val.append('c4-ccsd')
+    val.append('c4-cc3')
+    val.append('c4-ccsd(t)')
+    val.append('c4-ccsdt')
+    return val
+
+
+def cfour_gradient_list():
+    """Return an array of Cfour methods with analytical gradients.
+    Appended to procedures['gradient'].
+
+    """
+    val = []
+    val.append('cfour')
+    val.append('c4-scf')
+    val.append('c4-mp2')
+    val.append('c4-mp3')
+    val.append('c4-mp4(sdq)')
+    val.append('c4-mp4')
+    val.append('c4-ccsd')
+    val.append('c4-cc3')
+    val.append('c4-ccsd(t)')
+    val.append('c4-ccsdt')
+    return val
+
+
+def cfour_psivar_list():
+    """Return a dict with keys of most Cfour methods and values of dicts
+    with the PSI Variables returned by those methods. Used by cbs()
+    wrapper to avoid unnecessary computations in compound methods.
+    Result is appended to ``VARH``.
+
+    """
+    VARH = {}
+    VARH['c4-scf'] = {
+                         'c4-scftot': 'SCF TOTAL ENERGY'}
+    VARH['c4-mp2'] = {
+                         'c4-scftot': 'SCF TOTAL ENERGY',
+                        'c4-mp2corl': 'MP2 CORRELATION ENERGY'}
+    VARH['c4-mp3'] = {
+                         'c4-scftot': 'SCF TOTAL ENERGY',
+                        'c4-mp2corl': 'MP2 CORRELATION ENERGY',
+                      'c4-mp2.5corl': 'MP2.5 CORRELATION ENERGY',
+                        'c4-mp3corl': 'MP3 CORRELATION ENERGY'}
+    VARH['c4-mp4(sdq)'] = {
+                         'c4-scftot': 'SCF TOTAL ENERGY',
+                        'c4-mp2corl': 'MP2 CORRELATION ENERGY',
+                      'c4-mp2.5corl': 'MP2.5 CORRELATION ENERGY',
+                        'c4-mp3corl': 'MP3 CORRELATION ENERGY',
+                   'c4-mp4(sdq)corl': 'MP4(SDQ) CORRELATION ENERGY'}
+    VARH['c4-mp4'] = {
+                         'c4-scftot': 'SCF TOTAL ENERGY',
+                        'c4-mp2corl': 'MP2 CORRELATION ENERGY',
+                      'c4-mp2.5corl': 'MP2.5 CORRELATION ENERGY',
+                        'c4-mp3corl': 'MP3 CORRELATION ENERGY',
+                   'c4-mp4(sdq)corl': 'MP4(SDQ) CORRELATION ENERGY',
+                        'c4-mp4corl': 'MP4(SDTQ) CORRELATION ENERGY'}
+    VARH['c4-ccsd'] = {
+                         'c4-scftot': 'SCF TOTAL ENERGY',
+                        'c4-mp2corl': 'MP2 CORRELATION ENERGY',
+                       'c4-ccsdcorl': 'CCSD CORRELATION ENERGY'}
+    VARH['c4-cc3'] = {
+                         'c4-scftot': 'SCF TOTAL ENERGY',
+                        'c4-mp2corl': 'MP2 CORRELATION ENERGY',
+                        'c4-cc3corl': 'CC3 CORRELATION ENERGY'}
+    VARH['c4-ccsd(t)'] = {
+                         'c4-scftot': 'SCF TOTAL ENERGY',
+                        'c4-mp2corl': 'MP2 CORRELATION ENERGY',
+                       'c4-ccsdcorl': 'CCSD CORRELATION ENERGY',
+                    'c4-ccsd(t)corl': 'CCSD(T) CORRELATION ENERGY'}
+    VARH['c4-ccsdt'] = {
+                         'c4-scftot': 'SCF TOTAL ENERGY',
+                        'c4-mp2corl': 'MP2 CORRELATION ENERGY',
+                       'c4-ccsdcorl': 'CCSD CORRELATION ENERGY',
+                      'c4-ccsdtcorl': 'CCSDT CORRELATION ENERGY'}
+
+    return VARH
