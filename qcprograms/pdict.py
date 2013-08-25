@@ -34,7 +34,8 @@ class PreservingDict(dict):
             # Validate values are the same
             #print('FLOOR: ', self[key].quantize(places, rounding=ROUND_FLOOR) - value.quantize(places, rounding=ROUND_FLOOR))
             #print('CEIL:  ', self[key].quantize(places, rounding=ROUND_CEILING) - value.quantize(places, rounding=ROUND_CEILING))
-            if (self[key].quantize(places, rounding=ROUND_CEILING).compare(value.quantize(places, rounding=ROUND_CEILING)) != 0):
+            if (self[key].quantize(places, rounding=ROUND_CEILING).compare(value.quantize(places, rounding=ROUND_CEILING)) != 0) and \
+               (self[key].quantize(places, rounding=ROUND_FLOOR).compare(value.quantize(places, rounding=ROUND_FLOOR)) != 0):
                 raise qcdb.exceptions.ParsingValidationError(
                     """Output file yielded both %s and %s as values for quantity %s.""" %
                     (self[key].to_eng_string(), value.to_eng_string(), key))
