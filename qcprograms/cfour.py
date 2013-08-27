@@ -21,13 +21,22 @@ def cfour_harvest(outtext):
 
         #print '\n\nXXXXXXXXXXXXXXXXXXXXXXXXXX\n\n'
         #print outpass
-        print psivar, c4coord, c4grad
+        #print psivar, c4coord, c4grad
         #print '\n\nxxxxxxxxxxxxxxxxxxxxxxxxxx\n\n'
 
-    if pass_coord[-1]:
-        return pass_psivar[-1], pass_coord[-1], pass_grad[-1]
-    else:  # sometimes final xjoda section is trivial
-        return pass_psivar[-2], pass_coord[-2], pass_grad[-2]
+    retindx = -1 if pass_coord[-1] else -2
+
+    print '    <<<  C4 PSIVAR  >>>'
+    for item in pass_psivar[retindx]:
+        print('       %30s %16.8f' % (item, pass_psivar[retindx][item]))
+    print '    <<<  C4 COORD   >>>'
+    for item in pass_coord[retindx]:
+        print('       %16.8f %16.8f %16.8f' % (item[0], item[1], item[2]))
+    print '    <<<   C4 GRAD   >>>'
+    for item in pass_grad[retindx]:
+        print('       %16.8f %16.8f %16.8f' % (item[0], item[1], item[2]))
+
+    return pass_psivar[retindx], pass_coord[retindx], pass_grad[retindx]
 
 
 def cfour_harvest_pass(outtext):

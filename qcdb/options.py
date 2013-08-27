@@ -97,6 +97,6 @@ def reconcile_options(full, partial):
                 # If kw in full is untouched, overwrite it with value in partial
                 full[okey][ikey]['value'] = ival['value']
                 full[okey][ikey]['has_changed'] = True
-                print 'Overwriting %s with %s' % (ikey, ival['value'])
+                #print 'Overwriting %s with %s' % (ikey, ival['value'])
 
     return full

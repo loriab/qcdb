@@ -306,33 +306,10 @@ class Molecule(LibmintsMolecule):
         newc4 = mult(c4grad, transpose(evecs))
         show(newc4)
 
-    def deorient_array_from_cfour(self, arr):
-        """
-
-        """
-        self.update_geometry()
-        print 'start'
-        self.print_out_in_bohr()
-        print self.nuclear_repulsion_energy()
-
-        self.move_to_com()
-#        print self.inertia_tensor()
-        evals, evecs = self.inertial_system()
-        print evecs
-
-        self.rotate(evecs)
-        self.print_out_in_bohr()
-        print self.inertia_tensor()
-
-        print '\n==> C4 GRAD <==\n'
-        show(arr)
-        print '\n==> ROTATED C4 GRAD <==\n'
-        newc4 = mult(arr, transpose(evecs))
-        show(newc4)
-        return newc4
-
-    def deorient_array_from_cfour_2(self, geom, arr):
-        """
+    def deorient_array_from_cfour(self, geom, arr):
+        """Function to take the array *arr* and transform it from the
+        inertial but otherwise unstandardized orientation embodied by
+        the geometry *geom* into the orientation of the Molecule *self*.
 
         """
         self.update_geometry()
@@ -346,31 +323,33 @@ class Molecule(LibmintsMolecule):
         #print 'c4 geom'
         #show(geom)
         #print 'geom diff'
-        gdiff = matadd(self.geometry(), geom, 1.0, -1.0)
-        gadd = matadd(self.geometry(), geom)
+        #gdiff = matadd(self.geometry(), geom, 1.0, -1.0)
+        #gadd = matadd(self.geometry(), geom)
         #show(gdiff)
+        #print 'geom add'
+        #show(gadd)
 
-        #asdf = [[1, 0, 0], [0, -1, 0], [0, 0, -1]]
-        asdf = zero(3, 3)
+        shuffle = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]]
+        flip = zero(3, 3)
         for i in range(3):
-            valP = 0.0
-            valM = 0.0
-            for j in range(len(geom)):
-                valP += gadd[j][i]
-                valM += gdiff[j][i]
-            #print i, valM, valP
-            if abs(valM) < 1.0E-6: #NOISY_ZERO:
-                asdf[i][i] = 1.0
-            elif abs(valP) < 1.0E-6: #NOISY_ZERO:
-                asdf[i][i] = -1.0
+            for item in shuffle:
+                trial = sum(mult(geom, item), [])
+                for indx in range(len(geom)):
+                    if abs(trial[indx] - self.geometry()[indx][i]) > 1.0E-6:
+                        break
+                else:
+                    flip[0][i] = item[0]
+                    flip[1][i] = item[1]
+                    flip[2][i] = item[2]
+                    break
             else:
-                raise ValidationError("""deorient_array axis switching NYI.""")
+                raise ValidationError("""Unable to reorient from CFOUR to input orientation.""")
     
-        #print 'rotmat'
-        #show(asdf)
+        print 'rotmat'
+        show(flip)
 
         #print 'reformed c4 geom'
-        #reformed = mult(geom, asdf)
+        #reformed = mult(geom, flip)
         #show(reformed)
         #print 'reformed difference'
         #show(matadd(self.geometry(), reformed, 1.0, -1.0))
@@ -378,13 +357,15 @@ class Molecule(LibmintsMolecule):
         #print 'arr'
         #show(arr)
         #print 'arrROT'
-        arr = mult(arr, asdf)
+#        arr = mult(arr, flip)
         #show(arr)
         #print 'arrROTIR'
-        arr = mult(arr, transpose(evecs))
+#        arr = mult(arr, transpose(evecs))
         #show(arr)
 
-        return arr
+        # Apply axis exchange and flipping (flip) and inertial tensor transformation (evecs)
+        oarr = mult(mult(arr, flip), transpose(evecs))
+        return oarr
 
     def format_molecule_for_cfour(self):
         """Function to print Molecule in a form readable by Cfour.
