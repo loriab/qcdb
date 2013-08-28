@@ -31,6 +31,8 @@ __author__ = 'Lori A. Burns'
 from molecule import *
 from dbproc import *
 from options import *
+from qcformat import *
+from cfour import *
 
 # Load items that are useful to access from an input file
 from psiutil import *
