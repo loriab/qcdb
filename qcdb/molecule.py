@@ -57,9 +57,15 @@ class Molecule(LibmintsMolecule):
         return text
 
     @classmethod
-    def init_with_xyz(cls, xyzfilename, no_com=False, no_reorient=False):
+    def init_with_xyz(cls, xyzfilename, no_com=False, no_reorient=False, contentsNotFilename=False):
         """Pull information from an XYZ file. No fragment info detected.
-        Charge, multiplicity, tagline pulled from second line if available.
+        Bohr/Angstrom pulled from first line if available.  Charge,
+        multiplicity, tagline pulled from second line if available.  Body
+        accepts atom symbol or atom charge in first column. Arguments
+        *no_com* and *no_reorient* can be used to turn off shift and
+        rotation. If *xyzfilename* is a string of the contents of an XYZ
+        file, rather than the name of a file, set *contentsNotFilename*
+        to ``True``.
 
         >>> H2O = qcdb.Molecule.init_with_xyz('h2o.xyz')
 
@@ -69,17 +75,21 @@ class Molecule(LibmintsMolecule):
         instance.PYmove_to_com = not no_com
         instance.PYfix_orientation = no_reorient
 
-        try:
-            infile = open(xyzfilename, 'r')
-        except IOError:
-            raise ValidationError("""Molecule::init_with_xyz: given filename '%s' does not exist.""" % (xyzfilename))
-        if os.stat(xyzfilename).st_size == 0:
-            raise ValidationError("""Molecule::init_with_xyz: given filename '%s' is blank.""" % (xyzfilename))
-        text = infile.readlines()
+        if contentsNotFilename:
+            text = xyzfilename.splitlines()
+        else:
+            try:
+                infile = open(xyzfilename, 'r')
+            except IOError:
+                raise ValidationError("""Molecule::init_with_xyz: given filename '%s' does not exist.""" % (xyzfilename))
+            if os.stat(xyzfilename).st_size == 0:
+                raise ValidationError("""Molecule::init_with_xyz: given filename '%s' is blank.""" % (xyzfilename))
+            text = infile.readlines()
 
         xyz1 = re.compile(r"^\s*(\d+)\s*(bohr|au)?\s*$", re.IGNORECASE)
         xyz2 = re.compile(r'^\s*(-?\d+)\s+(\d+)\s+(.*)\s*$')
         xyzN = re.compile(r"(?:\s*)([A-Z](?:[a-z])?)(?:\s+)(-?\d+\.\d+)(?:\s+)(-?\d+\.\d+)(?:\s+)(-?\d+\.\d+)(?:\s*)", re.IGNORECASE)
+        xyzC = re.compile(r"(?:\s*)(\d+\.?\d*)(?:\s+)(-?\d+\.\d+)(?:\s+)(-?\d+\.\d+)(?:\s+)(-?\d+\.\d+)(?:\s*)", re.IGNORECASE)
 
         # Try to match the first line
         if xyz1.match(text[0]):
@@ -115,6 +125,20 @@ class Molecule(LibmintsMolecule):
 
                     # Add it to the molecule.
                     instance.add_atom(el2z[fileAtom], fileX, fileY, fileZ, fileAtom, el2masses[fileAtom])
+
+                elif xyzC.match(text[2 + i]):
+
+                    fileAtom = int(float(xyzC.match(text[2 + i]).group(1)))
+                    fileX = float(xyzC.match(text[2 + i]).group(2))
+                    fileY = float(xyzC.match(text[2 + i]).group(3))
+                    fileZ = float(xyzC.match(text[2 + i]).group(4))
+
+                    # Check that the atomic number is valid
+                    if not fileAtom in z2el:
+                        raise ValidationError('Illegal atom symbol in geometry specification: %d' % (atomSym))
+
+                    # Add it to the molecule.
+                    instance.add_atom(fileAtom, fileX, fileY, fileZ, z2el[fileAtom], z2masses[fileAtom])
 
                 else:
                     raise ValidationError("Molecule::init_with_xyz: Malformed atom information line %d." % (i + 3))
@@ -264,47 +288,47 @@ class Molecule(LibmintsMolecule):
             text += textDummy
         return text
 
-    def orient_molecule_for_cfour(self):
-        """
-
-        """
-        self.update_geometry()
-        print 'start'
-        self.print_out_in_bohr()
-        print self.nuclear_repulsion_energy()
-
-        self.move_to_com()
-        print self.inertia_tensor()
-        evals, evecs = self.inertial_system()
-
-        print evecs
-        self.rotate(evecs)
-        print 'rotated'
-        self.print_out_in_bohr()
-        print self.nuclear_repulsion_energy()
-        print self.inertia_tensor()
-    
-        print 'c4grad'
-        c4grad = [[      0.0398939995,            0.3703147445,           -0.0525569336],
-                  [     -0.0016925785,            0.0088655347,            0.0172871072],
-                  [      0.3159906908,           -0.2172415379,            0.0256400196],
-                  [     -0.4083967952,           -0.1506844328,           -0.0128822467],
-                  [      0.0542046834,           -0.0112543085,            0.0225120535]]
-        show(c4grad)
-        print 'p4grad'
-        p4grad = [[ 0.024653902657,     0.373606940493,    -0.036011384951],
-                  [-0.001840849461,     0.008001310643,     0.017688902218],
-                  [ 0.324584617102,    -0.205394217748,     0.012627865218],
-                  [-0.402260468523,    -0.166126819877,    -0.015751160560],
-                  [ 0.054862798225,    -0.010087213511,     0.021445778075]]
-        show(p4grad)
-
-        print 'rotated p4grad'
-        newp4 = mult(p4grad, evecs)
-        show(newp4)
-        print 'rotated c4grad'
-        newc4 = mult(c4grad, transpose(evecs))
-        show(newc4)
+#    def orient_molecule_for_cfour(self):
+#        """
+#
+#        """
+#        self.update_geometry()
+#        print 'start'
+#        self.print_out_in_bohr()
+#        print self.nuclear_repulsion_energy()
+#
+#        self.move_to_com()
+#        print self.inertia_tensor()
+#        evals, evecs = self.inertial_system()
+#
+#        print evecs
+#        self.rotate(evecs)
+#        print 'rotated'
+#        self.print_out_in_bohr()
+#        print self.nuclear_repulsion_energy()
+#        print self.inertia_tensor()
+#
+#        print 'c4grad'
+#        c4grad = [[      0.0398939995,            0.3703147445,           -0.0525569336],
+#                  [     -0.0016925785,            0.0088655347,            0.0172871072],
+#                  [      0.3159906908,           -0.2172415379,            0.0256400196],
+#                  [     -0.4083967952,           -0.1506844328,           -0.0128822467],
+#                  [      0.0542046834,           -0.0112543085,            0.0225120535]]
+#        show(c4grad)
+#        print 'p4grad'
+#        p4grad = [[ 0.024653902657,     0.373606940493,    -0.036011384951],
+#                  [-0.001840849461,     0.008001310643,     0.017688902218],
+#                  [ 0.324584617102,    -0.205394217748,     0.012627865218],
+#                  [-0.402260468523,    -0.166126819877,    -0.015751160560],
+#                  [ 0.054862798225,    -0.010087213511,     0.021445778075]]
+#        show(p4grad)
+#
+#        print 'rotated p4grad'
+#        newp4 = mult(p4grad, evecs)
+#        show(newp4)
+#        print 'rotated c4grad'
+#        newc4 = mult(c4grad, transpose(evecs))
+#        show(newc4)
 
     def deorient_array_from_cfour(self, geom, arr):
         """Function to take the array *arr* and transform it from the
@@ -316,7 +340,7 @@ class Molecule(LibmintsMolecule):
         self.move_to_com()
         evals, evecs = self.inertial_system()
         self.rotate(evecs)
-        
+
         #self.print_out_in_bohr()
         #print 'mol geom'
         #show(self.geometry())
@@ -344,7 +368,7 @@ class Molecule(LibmintsMolecule):
                     break
             else:
                 raise ValidationError("""Unable to reorient from CFOUR to input orientation.""")
-    
+
         print 'rotmat'
         show(flip)
 
@@ -367,6 +391,165 @@ class Molecule(LibmintsMolecule):
         oarr = mult(mult(arr, flip), transpose(evecs))
         return oarr
 
+#    def atom_map_and_orient_from_cfour(self, c4mol):
+#        """Takes another qcdb.Molecule *c4mol* that (1) contains the
+#        same atoms as *self*, (2) is situated at COM, and (3) is in
+#        an inertial frame (all of which are satisfied by Cfour) and
+#        finds the correct atom mapping and axis exchange and flipping
+#        to bring *self* and *c4mol* into coincidence.
+#
+#        """
+#        #TODO: add a center of charge and charge orientation as option
+#        p4mol = self.clone()
+#        p4mol.update_geometry()
+#        p4mol.move_to_com()
+#        evals, evecs = p4mol.inertial_system()
+#        p4mol.rotate(evecs)
+#        Pfactor = 1.0 if p4mol.PYunits == 'Angstrom' else psi_bohr2angstroms
+#        Cfactor = 1.0 if c4mol.PYunits == 'Angstrom' else psi_bohr2angstroms
+#        Nat = p4mol.natom()
+#
+#        for at in range(p4mol.natom()):
+#            [x, y, z] = p4mol.atoms[at].compute()
+#            print('P4    %-2s %17.12f %17.12f %17.12f' % ((p4mol.symbol(at) if p4mol.Z(at) else "GH"), \
+#                x * Pfactor, y * Pfactor, z * Pfactor))
+#        print '\n'
+#        for at in range(c4mol.natom()):
+#            [x, y, z] = c4mol.atoms[at].compute()
+#            print('C4    %-2s %17.12f %17.12f %17.12f' % ((c4mol.symbol(at) if c4mol.Z(at) else "GH"), \
+#                x * Cfactor, y * Cfactor, z * Cfactor))
+#
+#        p4mol.rotational_constants()
+#        evals, evecs = diagonalize3x3symmat(p4mol.inertia_tensor())
+#        print p4mol.rotor_type(), evals
+#        rotor = p4mol.rotor_type()
+#        Psort = sorted(range(len(evals)), key=lambda x:evals[x])
+#        evals, evecs = diagonalize3x3symmat(c4mol.inertia_tensor())
+#        print c4mol.rotor_type(), evals
+#        Csort = sorted(range(len(evals)), key=lambda x:evals[x])
+#        if c4mol.rotor_type() != rotor:
+#            raise ValidationError("""Molecule::atom_map_and_orient_from_cfour: rotor types '%s'  and '%s' are inconsistent.""" % \
+#                (p4mol.rotor_type(), c4mol.rotor_type()))
+#
+#        if rotor == 'RT_ATOM':
+#            freebytop = []
+#        elif rotor == 'RT_LINEAR':                 # 0 < IB == IC        inf > B == C
+#            freebytop = [1, 2]
+#        elif rotor == 'RT_SPHERICAL_TOP':          # IA == IB == IC      A == B == C
+#            freebytop = [0, 1, 2]
+#        elif rotor == 'RT_PROLATE_SYMMETRIC_TOP':  # IA < IB == IC       A > B == C
+#            freebytop = [1, 2]
+#        elif rotor == 'RT_OBLATE_SYMMETRIC_TOP':   # IA == IB < IC       A == B > C
+#            freebytop = [0, 1]
+#        elif rotor == 'RT_ASYMMETRIC_TOP':         # IA < IB < IC        A > B > C
+#            freebytop = []
+#        print 'Sorts and tops: ', Psort, Csort, freebytop
+#
+#        Pgeom = p4mol.geometry()
+#        Cgeom = c4mol.geometry()
+#        #print Pgeom, Cgeom
+#
+#        # axis index in Psi4 geometry
+#        # axis index in Cfour geometry
+#        # ordering index in moments of inertia
+#
+#        # Find mapping of axis exchange and flipping that brings Cgeom into coincidence with Pgeom
+#        exchMat = zero(3, 3)
+#        Pwhite = list(range(3))
+#        Cwhite = list(range(3))
+#
+#        while len(Pwhite) > 0:
+#            Paxs = Pwhite[0]
+#            allowed = list(set(freebytop) & set(Cwhite)) if Paxs in freebytop else [Paxs]
+#
+#            for Caxs in allowed:
+#                exchEntry = None
+#                print '\nPaxs', Paxs, 'Caxs', Caxs, 'Pwhite', Pwhite, 'Cwhite', Cwhite, \
+#                    'allowed', allowed, 'P(axs)', Psort.index(Paxs), 'C(Caxs)', Csort.index(Caxs)
+#
+#                PcolS = sorted([row[Psort[Paxs]] for row in Pgeom])
+#                CcolS = sorted([row[Csort[Caxs]] for row in Cgeom])
+#                CcolMS = sorted([-row[Csort[Caxs]] for row in Cgeom])
+#                print PcolS
+#                print CcolS
+#                print CcolMS
+#
+#                if all([abs(CcolS[at] - PcolS[at]) < COORD_ZERO for at in range(Nat)]):
+#                    if all([abs(CcolS[at] - CcolMS[at]) < COORD_ZERO for at in range(Nat)]):
+#                        PcolI = sorted(range(Nat), key=lambda x:[row[Psort[Paxs]] for row in Pgeom][x])
+#                        CcolI = sorted(range(Nat), key=lambda x:[row[Csort[Caxs]] for row in Cgeom][x])
+#                        if (PcolI[0] > PcolI[-1]) == (CcolI[0] > CcolI[-1]):
+#                            exchEntry = 1  # Pos when symm P4 col == C4 col and Pos vals at same col ends
+#                            print 'case A', exchEntry
+#                        else:
+#                            exchEntry = -1  # Neg when symm P4 col == C4 col and Pos vals at diff col ends
+#                            print 'case B', exchEntry
+#                    else:
+#                        exchEntry = 1  # Pos when asym P4 col == C4 col
+#                        print 'case C', exchEntry
+#                elif all([abs(CcolMS[at] - PcolS[at]) < COORD_ZERO for at in range(Nat)]):
+#                    exchEntry = -1  # Neg when P4 col == -C4 col
+#                    print 'case D', exchEntry
+#
+#                if exchEntry:
+#                    exchMat[Csort[Caxs]][Psort[Paxs]] = exchEntry
+#                    Pwhite.remove(Paxs)
+#                    Cwhite.remove(Caxs)
+#                    break
+#            else:
+#                raise ValidationError("""Axis unreconcilable between QC programs.""")
+#
+#        show(exchMat)
+#        c4mol.rotate(exchMat)
+#        Cgeom = c4mol.geometry()
+#
+#        # Find mapping of atom exchange that brings Cgeom into coincidence with Pgeom
+#        mapMat = [0] * Nat
+#        Pwhite = list(range(Nat))
+#        Cwhite = list(range(Nat))
+#        print 'mapMat', mapMat
+#
+#        while len(Pwhite) > 0:
+#            Patm = Pwhite[0]
+#            sameElem = [at for at in range(Nat) if c4mol.symbol(at) == p4mol.symbol(Patm)]
+#            allowed = list(set(sameElem) & set(Cwhite))
+#
+#            for Catm in allowed:
+#                print '\nPatm', Patm, 'Catm', Catm, 'Pwhite', Pwhite, 'Cwhite', Cwhite, 'elem', sameElem, 'allowed', allowed
+#                print Cgeom[Catm]
+#                print Pgeom[Patm]
+#                print [abs(Cgeom[Catm][ax] - Pgeom[Patm][ax]) < COORD_ZERO for ax in range(3)]
+#
+#
+#                if all([abs(Cgeom[Catm][ax] - Pgeom[Patm][ax]) < COORD_ZERO for ax in range(3)]):
+#                    mapMat[Patm] = Catm
+#                    Pwhite.remove(Patm)
+#                    Cwhite.remove(Catm)
+#                    break
+#            else:
+#                raise ValidationError("""Atom unreconcilable between QC programs.""")
+#
+#        new_geom = []
+#        for at in range(Nat):
+#            new_geom.append(Cgeom[mapMat[at]])
+#            print at, mapMat[at], Cgeom[mapMat[at]]
+#        c4mol.set_geometry(new_geom)
+#
+#        # One last check that p4mol and c4mol align
+#        # TODO back out shift and rot
+#        Pgeom = p4mol.geometry()
+#        Cgeom = c4mol.geometry()
+#
+#        if not all([all([abs(Cgeom[at][ax] - Pgeom[at][ax]) < COORD_ZERO for ax in range(3)]) for at in range(Nat)]):
+#            raise ValidationError("""Geometries unreconcilable between QC programs:\n  P4 %s\n  C4 %s""" % (Pgeom, Cgeom))
+#
+#        p4mol.print_out_in_bohr()
+#        c4mol.print_out_in_bohr()
+#
+#        # Apply axis exchange and flipping (flip) and inertial tensor transformation (evecs)
+#        #oarr = mult(mult(arr, flip), transpose(evecs))
+#        #return oarr
+
     def format_molecule_for_cfour(self):
         """Function to print Molecule in a form readable by Cfour.
 
@@ -377,7 +560,7 @@ class Molecule(LibmintsMolecule):
 
         text = 'auto-generated by qcdb from molecule %s\n' % (self.tagline)
 
-        # append atoms and coordentries 
+        # append atoms and coordentries
         for fr in range(self.nfragments()):
             if self.fragment_types[fr] == 'Absent':
                 pass
@@ -631,16 +814,16 @@ class Molecule(LibmintsMolecule):
 
         return Fragment
 
-    def inertia_tensor(self, masswt=True):
+    def inertia_tensor(self, masswt=True, zero=ZERO):
         """Compute inertia tensor.
 
         >>> print H2OH2O.inertia_tensor()
         [[8.704574864178731, -8.828375721817082, 0.0], [-8.828375721817082, 280.82861714077666, 0.0], [0.0, 0.0, 281.249500988553]]
 
         """
-        return self.inertia_tensor_partial(range(self.natom()), masswt)
+        return self.inertia_tensor_partial(range(self.natom()), masswt, zero)
 
-    def inertia_tensor_partial(self, part, masswt=True):
+    def inertia_tensor_partial(self, part, masswt=True, zero=ZERO):
         """Compute inertia tensor based on atoms in *part*.
 
         """
@@ -677,17 +860,17 @@ class Molecule(LibmintsMolecule):
         # Check the elements for zero and make them a hard zero.
         for i in range(3):
             for j in range(3):
-                if math.fabs(tensor[i][j]) < ZERO:
+                if math.fabs(tensor[i][j]) < zero:
                     tensor[i][j] = 0.0
         return tensor
 
-    def inertial_system_partial(self, part, masswt=True):
+    def inertial_system_partial(self, part, masswt=True, zero=ZERO):
         """Solve inertial system based on atoms in *part*"""
-        return diagonalize3x3symmat(self.inertia_tensor_partial(part, masswt))
+        return diagonalize3x3symmat(self.inertia_tensor_partial(part, masswt, zero))
 
-    def inertial_system(self, masswt=True):
+    def inertial_system(self, masswt=True, zero=ZERO):
         """Solve inertial system"""
-        return diagonalize3x3symmat(self.inertia_tensor(masswt))
+        return diagonalize3x3symmat(self.inertia_tensor(masswt, zero))
 
     def print_ring_planes(self, entity1, entity2, entity3=None, entity4=None):
         """(reals only, 1-indexed)
@@ -1042,3 +1225,49 @@ class Molecule(LibmintsMolecule):
 
         # return -D & d(-D)/dx
         return dashd, dashdderiv
+
+    def rotor_type(self, tol=FULL_PG_TOL):
+        """Returns the rotor type.
+
+        >>> H2OH2O.rotor_type()
+        RT_ASYMMETRIC_TOP
+
+        """
+        evals, evecs = diagonalize3x3symmat(self.inertia_tensor())
+        evals = sorted(evals)
+
+        rot_const = [1.0 / evals[0] if evals[0] > 1.0e-6 else 0.0,
+                     1.0 / evals[1] if evals[1] > 1.0e-6 else 0.0,
+                     1.0 / evals[2] if evals[2] > 1.0e-6 else 0.0]
+
+        # Determine degeneracy of rotational constants.
+        degen = 0
+        for i in range(2):
+            for j in range(i + 1, 3):
+                if degen >= 2:
+                    continue
+                rabs = math.fabs(rot_const[i] - rot_const[j])
+                tmp = rot_const[i] if rot_const[i] > rot_const[j] else rot_const[j]
+                if rabs > ZERO:
+                    rel = rabs / tmp
+                else:
+                    rel = 0.0
+                if rel < tol:
+                    degen += 1
+        #print "\tDegeneracy is %d\n" % (degen)
+
+        # Determine rotor type
+        if self.natom() == 1:
+            rotor_type = 'RT_ATOM'
+        elif rot_const[0] == 0.0:
+            rotor_type = 'RT_LINEAR'                     # 0  <  IB == IC      inf > B == C
+        elif degen == 2:
+            rotor_type = 'RT_SPHERICAL_TOP'              # IA == IB == IC       A == B == C
+        elif degen == 1:
+            if (rot_const[1] - rot_const[2]) < 1.0e-6:
+                rotor_type = 'RT_PROLATE_SYMMETRIC_TOP'  # IA <  IB == IC       A >  B == C
+            elif (rot_const[0] - rot_const[1]) < 1.0e-6:
+                rotor_type = 'RT_OBLATE_SYMMETRIC_TOP'   # IA == IB <  IC       A == B >  C
+        else:
+            rotor_type = 'RT_ASYMMETRIC_TOP'             # IA <  IB <  IC       A  > B >  C
+        return rotor_type

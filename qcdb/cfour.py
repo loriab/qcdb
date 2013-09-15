@@ -2,9 +2,11 @@ import re
 import collections
 from decimal import Decimal
 from pdict import PreservingDict
+from molecule import Molecule
+from orient import OrientMols
 
 
-def cfour_harvest(outtext):
+def harvest_output(outtext):
     """
     Function to separate portions of a CFOUR output file *outtest*,
     divided by xjoda.
@@ -14,7 +16,7 @@ def cfour_harvest(outtext):
     pass_grad = []
 
     for outpass in re.split(r'--invoking executable xjoda', outtext, re.MULTILINE):
-        psivar, c4coord, c4grad = cfour_harvest_pass(outpass)
+        psivar, c4coord, c4grad = harvest_outfile_pass(outpass)
         pass_psivar.append(psivar)
         pass_coord.append(c4coord)
         pass_grad.append(c4grad)
@@ -22,24 +24,25 @@ def cfour_harvest(outtext):
         #print '\n\nXXXXXXXXXXXXXXXXXXXXXXXXXX\n\n'
         #print outpass
         #print psivar, c4coord, c4grad
+        #print psivar, c4grad
         #print '\n\nxxxxxxxxxxxxxxxxxxxxxxxxxx\n\n'
 
     retindx = -1 if pass_coord[-1] else -2
 
-    print '    <<<  C4 PSIVAR  >>>'
-    for item in pass_psivar[retindx]:
-        print('       %30s %16.8f' % (item, pass_psivar[retindx][item]))
-    print '    <<<  C4 COORD   >>>'
-    for item in pass_coord[retindx]:
-        print('       %16.8f %16.8f %16.8f' % (item[0], item[1], item[2]))
-    print '    <<<   C4 GRAD   >>>'
-    for item in pass_grad[retindx]:
-        print('       %16.8f %16.8f %16.8f' % (item[0], item[1], item[2]))
+#    print '    <<<  C4 PSIVAR  >>>'
+#    for item in pass_psivar[retindx]:
+#        print('       %30s %16.8f' % (item, pass_psivar[retindx][item]))
+#    print '    <<<  C4 COORD   >>>'
+#    for item in pass_coord[retindx]:
+#        print('       %16.8f %16.8f %16.8f' % (item[0], item[1], item[2]))
+#    print '    <<<   C4 GRAD   >>>'
+#    for item in pass_grad[retindx]:
+#        print('       %16.8f %16.8f %16.8f' % (item[0], item[1], item[2]))
 
     return pass_psivar[retindx], pass_coord[retindx], pass_grad[retindx]
 
 
-def cfour_harvest_pass(outtext):
+def harvest_outfile_pass(outtext):
     """
     Function to read CFOUR output file *outtext* and parse important quantum chemical information from it in
     """
@@ -62,10 +65,12 @@ def cfour_harvest_pass(outtext):
     if mobj:
         print('matched nre')
         psivar['NUCLEAR REPULSION ENERGY'] = mobj.group(1)
-        # Coordinates for atom-only calc
-        if float(mobj.group(1)) < 1.0E-6:
-            print('matched atom')
-            psivar_coord = [0.0, 0.0, 0.0]
+#        # Coordinates for atom-only calc
+#        if float(mobj.group(1)) < 1.0E-6:
+#            print('matched atom')
+#            # Dinky Molecule and the element's invented TODO
+#            molxyz = '1 bohr\n\n%s 0.0 0.0 0.0\n' % ('H')
+#            psivar_coord = Molecule.init_with_xyz(molxyz, no_com=True, no_reorient=True, contentsNotFilename=True)
 
     # Process SCF
     mobj = re.search(
@@ -346,9 +351,9 @@ def cfour_harvest_pass(outtext):
         r'\s+' + r'Molecular gradient' + r'\s*' +
         r'\s+' + r'------------------' + r'\s*' +
         r'\s+' + r'\n' +
-        r'(?:(?:\s+[A-Z]+\s+#\d+\s+[xyz]\s+[-+]?\d+\.\d+\s*\n)+)' +  # optional, it seems
+        r'(?:(?:\s+[A-Z]+\s*#\d+\s+[xyz]\s+[-+]?\d+\.\d+\s*\n)+)' +  # optional, it seems
         r'\n\n' +  # optional, it seems
-        r'((?:\s+[A-Z]+\s+#\d+\s+\d?\s+[-+]?\d+\.\d+\s+[-+]?\d+\.\d+\s+[-+]?\d+\.\d+\s*\n)+)' +
+        r'((?:\s+[A-Z]+\s*#\d+\s+\d?\s+[-+]?\d+\.\d+\s+[-+]?\d+\.\d+\s+[-+]?\d+\.\d+\s*\n)+)' +
         r'\n\n' +
         r'\s+' + 'Molecular gradient norm',
         outtext, re.MULTILINE)
@@ -373,14 +378,35 @@ def cfour_harvest_pass(outtext):
         outtext, re.MULTILINE)
     if mobj:
         print('matched geom')
-        atoms = []
-        psivar_coord = []
+        molxyz = '%d bohr\n\n' % len(mobj.group(1).splitlines())
         for line in mobj.group(1).splitlines():
             lline = line.split()
-            atoms.append(lline[0])
-            psivar_coord.append([float(lline[-3]), float(lline[-2]), float(lline[-1])])
+            molxyz += '%s %16s %16s %16s\n' % (lline[0], lline[-3], lline[-2], lline[-1])
+        # Rather a dinky Molecule as no ghost, charge, or multiplicity
+        psivar_coord = Molecule.init_with_xyz(molxyz, no_com=True, no_reorient=True, contentsNotFilename=True)
+        #print molxyz
 
-    # Process CURRENT energies (needs better way)
+    # Process atom geometry
+    mobj = re.search(
+        r'^\s+' + r'@GETXYZ-I,     1 atoms read from ZMAT.' + r'\s*' +
+        r'^\s+' + r'[0-9]+\s+([A-Z]+)\s+[0-9]+\s+' + NUMBER + r'\s*',
+        outtext, re.MULTILINE)
+    if mobj:
+        print('matched atom')
+        # Dinky Molecule
+        molxyz = '1 bohr\n\n%s 0.0 0.0 0.0\n' % (mobj.group(1))
+        psivar_coord = Molecule.init_with_xyz(molxyz, no_com=True, no_reorient=True, contentsNotFilename=True)
+
+    # Process error codes
+    mobj = re.search(
+        r'^\s*' + r'--executable ' + r'(\w+)' + r' finished with status' + r'\s+' + r'([1-9][0-9]*)',
+        outtext, re.MULTILINE)
+    if mobj:
+        print('matched error')
+        print mobj.group(1), mobj.group(2)
+        psivar['CFOUR ERROR CODE'] = mobj.group(2)
+
+    # Process CURRENT energies (TODO: needs better way)
     if 'SCF TOTAL ENERGY' in psivar:
         psivar['CURRENT REFERENCE ENERGY'] = psivar['SCF TOTAL ENERGY']
         psivar['CURRENT ENERGY'] = psivar['SCF TOTAL ENERGY']
@@ -419,6 +445,239 @@ def cfour_harvest_pass(outtext):
         psivar['CURRENT ENERGY'] = psivar['CCSDT TOTAL ENERGY']
 
     return psivar, psivar_coord, psivar_grad
+
+
+def harvest(p4Mol, c4out, **largs):
+    """Parses all the pieces of output from Cfour: the stdout in
+    *c4out* and the contents of various scratch files like GRD stored
+    in their namesake keys in *largs*. Since all Cfour output uses
+    its own orientation and atom ordering for the given molecule,
+    a qcdb.Molecule *p4Mol*, if supplied, is used to transform the
+    Cfour output back into consistency with *p4Mol*.
+
+    """
+    # Collect results from output file and subsidiary files
+    outPsivar, outMol, outGrad = harvest_output(c4out)
+
+    if 'GRD' in largs:
+        grdMol, grdGrad = harvest_GRD(largs['GRD'])
+    else:
+        grdMol, grdGrad = None, None
+
+    if 'FCMFINAL' in largs:
+        fcmHess = harvest_FCM(largs['FCMFINAL'])
+    else:
+        fcmHess = None
+
+    # Reconcile the coordinate information: several cases
+    #   Case                            p4Mol   GRD      Check consistency           Apply orientation?
+    #   sp with mol thru cfour {}       None    None              outMol             N.C.
+    #   opt with mol thru cfour {}      None    grdMol            outMol && grdMol   N.C.
+    #   sp with mol thru molecule {}    p4Mol   None     p4Mol && outMol             p4Mol <-- outMol
+    #   opt with mol thru molecule {}   p4Mol   grdMol   p4Mol && outMol && grdMol   p4Mol <-- grdMol
+
+    if outMol:
+#        try:
+        if grdMol:
+#            print 'grdMol', grdMol
+            if abs(outMol.nuclear_repulsion_energy() - grdMol.nuclear_repulsion_energy()) > 1.0e-3:
+                raise ValidationError("""Cfour outfile (NRE: %f) inconsistent with Cfour GRD (NRE: %f).""" % \
+                        (outMol.nuclear_repulsion_energy(), grdMol.nuclear_repulsion_energy()))
+#        except:
+#            print 'ack'
+        if p4Mol:
+            if abs(outMol.nuclear_repulsion_energy() - p4Mol.nuclear_repulsion_energy()) > 1.0e-3:
+                raise ValidationError("""Cfour outfile (NRE: %f) inconsistent with Psi4 input (NRE: %f).""" % \
+                    (outMol.nuclear_repulsion_energy(), p4Mol.nuclear_repulsion_energy()))
+    else:
+        raise ValidationError("""No coordinate information extracted from Cfour output.""")
+
+#    try:
+    print '    <<<   [1] P4-MOL   >>>'
+    if p4Mol:
+        p4Mol.print_out_in_bohr()
+    print '    <<<   [2] C4-OUT-MOL   >>>'
+    if outMol:
+        outMol.print_out_in_bohr()
+    print '    <<<   [3] C4-GRD-MOL   >>>'
+    if grdMol:
+        grdMol.print_out_in_bohr()
+#    except UnboundLocalError:
+#        pass
+
+    # Set up array reorientation object
+    if p4Mol and grdMol:
+        p4c4 = OrientMols(p4Mol, grdMol)
+        print p4c4
+        oriCoord = p4c4.transform_coordinates2(grdMol)
+        oriGrad = p4c4.transform_gradient(grdGrad)
+    elif p4Mol and outMol:
+        p4c4 = OrientMols(p4Mol, outMol)
+        print p4c4
+        oriCoord = p4c4.transform_coordinates2(outMol)
+        oriGrad = None
+    elif outMol:
+        oriCoord = None
+        oriGrad = None
+
+    print '    <<<   [4] C4-ORI-MOL   >>>'
+    if oriCoord is not None:
+        for item in oriCoord:
+            print('       %16.8f %16.8f %16.8f' % (item[0], item[1], item[2]))
+
+    print '    <<<   [1] C4-GRD-GRAD   >>>'
+    if grdGrad is not None:
+        for item in grdGrad:
+            print('       %16.8f %16.8f %16.8f' % (item[0], item[1], item[2]))
+    print '    <<<   [2] C4-ORI-GRAD   >>>'
+    if oriGrad is not None:
+        for item in oriGrad:
+            print('       %16.8f %16.8f %16.8f' % (item[0], item[1], item[2]))
+
+
+
+
+#    p4c4 = OrientMols(p4Mol, grdMol)
+#    print p4c4
+#    print p4c4.transform_coordinates2(grdMol)
+#    print 'pre grad'
+#    oriGrad = p4c4.transform_gradient(grdGrad)
+#    print 'post grad'
+
+
+
+
+
+
+
+    #p4mol                             c4mol
+    #mol.atom_map_and_orient_from_cfour(newmol)
+
+
+
+#    if not p4Mol and not grdMol:
+#        pass
+#    elif not p4Mol and grdMol:
+#        if abs(outMol.nuclear_repulsion_energy() - grdMol.nuclear_repulsion_energy()) > 1.0e-3:
+#            raise ValidationError("""Cfour outfile (NRE: %f) inconsistent with Cfour GRD (NRE: %f).""" % \
+#                (outMol.nuclear_repulsion_energy(), grdMol.nuclear_repulsion_energy()))
+#        pass
+#    elif p4Mol and not grdMol:
+#        if abs(outMol.nuclear_repulsion_energy() - p4Mol.nuclear_repulsion_energy()) > 1.0e-3:
+#            raise ValidationError("""Cfour outfile (NRE: %f) inconsistent with Psi4 input (NRE: %f).""" % \
+#                (outMol.nuclear_repulsion_energy(), p4Mol.nuclear_repulsion_energy()))
+#        pass
+#    elif p4Mol and grdMol:
+#        if (abs(outMol.nuclear_repulsion_energy() - grdMol.nuclear_repulsion_energy()) > 1.0e-3) or \
+#           (abs(outMol.nuclear_repulsion_energy() - p4Mol.nuclear_repulsion_energy()) > 1.0e-3):
+#            raise ValidationError("""Cfour outfile (NRE: %f) inconsistent with Cfour GRD (NRE: %f) or Psi4 input (NRE: %f).""" % \
+#                (outMol.nuclear_repulsion_energy(), grdMol.nuclear_repulsion_energy(), p4Mol.nuclear_repulsion_energy()))
+#        pass
+#    else:
+#        raise ValidationError("""Inexplicable pattern of Psi4 molecule and Cfour GRD information.""")
+
+
+
+
+    #p4mol                             c4mol
+    #mol.atom_map_and_orient_from_cfour(newmol)
+
+    if oriGrad:
+        retGrad = oriGrad
+    elif grdGrad:
+        retGrad = grdGrad
+    else:
+        retGrad = None
+
+    return outPsivar, retGrad
+
+
+def harvest_GRD(grd):
+    """Parses the contents *grd* of the Cfour GRD file into the gradient
+    array and coordinate information. The coordinate info is converted
+    into a rather dinky Molecule (no charge, multiplicity, or fragment),
+    but this is these coordinates that govern the reading of molecule
+    orientation by Cfour. Return qcdb.Molecule and gradient array.
+
+    """
+    grd = grd.splitlines()
+    Nat = int(grd[0].split()[0])
+    molxyz = '%d bohr\n\n' % (Nat)
+
+    grad = []
+    for at in range(Nat):
+        molxyz += grd[at + 1] + '\n'
+        lline = grd[at + 1 + Nat].split()
+        grad.append([float(lline[-3]), float(lline[-2]), float(lline[-1])])
+    mol = Molecule.init_with_xyz(molxyz, no_com=True, no_reorient=True, contentsNotFilename=True)
+
+    return mol, grad
+    
+
+def harvest_FCM(fcm):
+    """Parses the contents *fcm* of the Cfour FCMFINAL file into a hessian array.
+
+    """
+    fcm = fcm.splitlines()
+    Nat = int(fcm[0].split()[0])
+    Ndof = int(fcm[0].split()[1])
+
+    empty = True
+    hess = []
+    for df in range(Ndof):
+        for at in range(Nat):
+            lline = fcm[Ndof * at + at + 1].split()
+            if empty:
+                if (abs(float(lline[0])) > 1.0e-8) or \
+                   (abs(float(lline[1])) > 1.0e-8) or \
+                   (abs(float(lline[2])) > 1.0e-8):
+                    empty = False
+            fcm.append([float(lline[0]), float(lline[1]), float(lline[2])])
+
+    return None if empty else hess
+
+#def cfour_harvest_files(mol, grd=None, fcmfinal=None):
+#    """
+#    grad = []
+#
+#    if grd:
+#        grd = grd.splitlines()
+#        Nat = int(grd[0].split()[0])
+#        molxyz = '%d bohr\n\n' % (Nat)
+#        for at in range(Nat):
+#            molxyz += grd[at + 1] + '\n'
+#            lline = grd[at + 1 + Nat].split()
+#            grad.append([float(lline[-3]), float(lline[-2]), float(lline[-1])])
+#
+#        newmol = Molecule.init_with_xyz(molxyz, no_com=True, no_reorient=True, contentsNotFilename=True)
+#        newmol.print_out()
+#
+#        mol.atom_map_and_orient_from_cfour(newmol)
+#
+#def cfour_harvest_GRD(outtext):
+#    """Function to
+#
+#    """
+#    atoms = []
+#    coord = []
+#    grad = []
+#
+#    outtext = outtext.splitlines()
+#    Nat = int(outtext[0].split()[0])
+#    xyzstring = '%d bohr\n\n' % (Nat)
+#    for at in range(Nat):
+#        lline = outtext[at + 1].split()
+#        atoms.append(float(lline[0]))
+#        coord.append([float(lline[-3]), float(lline[-2]), float(lline[-1])])
+#        xyzstring += outtext[at + 1] + '\n'
+#    for at in range(Nat):
+#        lline = outtext[at + 1 + Nat].split()
+#        if abs(float(lline[0]) - atoms[at]) > 1.0E-6:
+#            raise qcdb.exceptions.ValidationError("""Inconsistent CFOUR GRD file.""")
+#        grad.append([float(lline[-3]), float(lline[-2]), float(lline[-1])])
+#
+#    newmol = Molecule.init_with_xyz(xyzstring, no_com=True, no_reorient=True, contentsNotFilename=True)
+#    newmol.print_out()
 
 
 def cfour_memory(mem):
