@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 #
 #@BEGIN LICENSE
@@ -33,7 +33,6 @@ import qcdb
 import qcdb.basislist
 import qcdb.exceptions
 sys.path.append(qcdbpkg_path + '/../databases')
-sys.path.append(qcdbpkg_path + '/../qcprograms')
 
 # load docstring info from database files (doesn't actually import database modules)
 DBdocstrings = qcdb.dictify_database_docstrings()

@@ -337,7 +337,7 @@ class LibmintsMolecule(object):
         if math.fabs(self.atoms[atom].Z() - int(self.atoms[atom].Z())) > 0.0:
             print "WARNING: Obtaining masses from atom with fractional charge...may be incorrect!!!\n"
             # TODO outfile
-        return an2masses[int(self.atoms[atom].Z())]
+        return z2masses[int(self.atoms[atom].Z())]
 
     def symbol(self, atom):
         """Returns the cleaned up label of the atom (C2 => C, H4 = H) (0-indexed)
@@ -564,7 +564,7 @@ class LibmintsMolecule(object):
     # <<< Methods for Construction >>>
 
     def create_molecule_from_string(self, text):
-        """Given a string *geom* of psi4-style geometry specification
+        """Given a string *text* of psi4-style geometry specification
         (including newlines to separate lines), builds a new molecule.
         Called from constructor.
 
@@ -1840,14 +1840,15 @@ class LibmintsMolecule(object):
         # Determine rotor type
         if self.natom() == 1:
             rotor_type = 'RT_ATOM'
-        elif rot_const[0] == 0.0:             # A == 0, B == C
-            rotor_type = 'RT_LINEAR'
-        elif degen == 2:                      # A == B == C
-            rotor_type = 'RT_SPHERICAL_TOP'
-        elif degen == 1:                      # A > B == C
-            rotor_type = 'RT_SYMMETRIC_TOP'   # A == B > C
+        elif rot_const[0] == 0.0:
+            rotor_type = 'RT_LINEAR'          # 0  <  IB == IC      inf > B == C
+        elif degen == 2:
+            rotor_type = 'RT_SPHERICAL_TOP'   # IA == IB == IC       A == B == C
+        elif degen == 1:
+            rotor_type = 'RT_SYMMETRIC_TOP'   # IA <  IB == IC       A >  B == C --or--
+                                              # IA == IB <  IC       A == B >  C
         else:
-            rotor_type = 'RT_ASYMMETRIC_TOP'  # A != B != C
+            rotor_type = 'RT_ASYMMETRIC_TOP'  # IA <  IB <  IC       A >  B >  C
         return rotor_type
 
     def rotate(self, R):

@@ -63,4 +63,5 @@ _temp_mass = [
 
 el2masses = dict(zip(_temp_symbol, _temp_mass))
 el2z = dict(zip(_temp_symbol, _temp_z))
-an2masses = dict(zip(_temp_z, _temp_mass))
+z2masses = dict(zip(_temp_z, _temp_mass))
+z2el = dict(zip(_temp_z, _temp_symbol))
