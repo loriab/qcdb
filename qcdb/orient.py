@@ -2,6 +2,7 @@
 #import re
 #import math
 #import copy
+import itertools
 from molecule import Molecule
 #from periodictable import *
 #from physconst import *
@@ -58,8 +59,7 @@ class OrientMols(object):
 
         try:
             if ((self.Pmol.natom() == self.Cmol.natom()) and \
-               (abs(self.Pmol.nuclear_repulsion_energy() - self.Cmol.nuclear_repulsion_energy()) < 1.0e-3) and \
-               (self.Pmol.rotor_type() == self.Cmol.rotor_type())):
+               (abs(self.Pmol.nuclear_repulsion_energy() - self.Cmol.nuclear_repulsion_energy()) < 1.0e-3)):
                 self.create_orientation_from_molecules(self.Pmol, self.Cmol)
             else:
                 print 'qcdb.orient.__init__ debug info'
@@ -100,13 +100,12 @@ class OrientMols(object):
         eye3 = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
 
         # Find translation to CoM, straightforward
-        com = p4mol.center_of_mass()
 #        com = [ x if abs(x) > NOISY_ZERO else 0.0 for x in com]
+        com = p4mol.center_of_mass()
         p4mol.translate(scale(com, -1.0))
         self.Pshift = com
 
         com = c4mol.center_of_mass()
-#        com = [ x if abs(x) > NOISY_ZERO else 0.0 for x in com]
         c4mol.translate(scale(com, -1.0))
         self.Cshift = com
         #   Extra check since Cfour always returns at center of mass
@@ -116,16 +115,14 @@ class OrientMols(object):
             raise ValidationError("""molChangeable not at center of mass.""")
 
         # Find rotation to MoI frame, straightforward
+#        frame = [[ x if abs(x) > NOISY_ZERO else 0.0 for x in ax] for ax in frame]
         moi, frame = p4mol.inertial_system(zero=NOISY_ZERO)
         Psort = sorted(range(3), key=lambda x: moi[x])
-#        frame = [[ x if abs(x) > NOISY_ZERO else 0.0 for x in ax] for ax in frame]
         p4mol.rotate(frame)
         self.Protate = frame
 
         moi, frame = c4mol.inertial_system(zero=NOISY_ZERO)
-        #moi, frame = c4mol.inertial_system(zero=1.0e-6)
         Csort = sorted(range(3), key=lambda x: moi[x])
-#        frame = [[ x if abs(x) > NOISY_ZERO else 0.0 for x in ax] for ax in frame]
         c4mol.rotate(frame)
         self.Crotate = frame
         #   Extra check since Cfour always returns in inertial frame
@@ -139,6 +136,9 @@ class OrientMols(object):
 
         # Find degrees of freedom among axis exchanges
         rotor = p4mol.rotor_type()
+        if rotor != c4mol.rotor_type():
+            raise ValidationError("""molPermanent (%s) and molChangeable (%s) of different rotor types.""" % \
+                (rotor, c4mol.rotor_type()))
         if rotor == 'RT_ATOM':
             freebytop = []
         elif rotor == 'RT_LINEAR':                 # 0  <  IB == IC      inf > B == C
@@ -156,68 +156,41 @@ class OrientMols(object):
         Pgeom = p4mol.geometry()
         Cgeom = c4mol.geometry()
 
-        exchMat = zero(3, 3)
-        Pwhite = list(range(3))
-        Cwhite = list(range(3))
-        freeaxphase = [] #[1, 1, 1]]
+        axExch = [[], [], []]
+        axPhse = [[], [], []]
 
-        while len(Pwhite) > 0:
-            Paxs = Pwhite[0]
-            allowed = list(set(freebytop) & set(Cwhite)) if Paxs in freebytop else [Paxs]
+        print '\nPgeom: '
+        for item in Pgeom:
+            print '       %16.8f %16.8f %16.8f' % (item[0], item[1], item[2])
+        print '\nCgeom: '
+        for item in Cgeom:
+            print '       %16.8f %16.8f %16.8f' % (item[0], item[1], item[2])
+
+        for Paxs in range(3):
+            allowed = freebytop if Paxs in freebytop else [Paxs]
 
             for Caxs in allowed:
-                exchEntry = None
                 PcolS = sorted([row[Psort[Paxs]] for row in Pgeom])
                 CcolS = sorted([row[Csort[Caxs]] for row in Cgeom])
                 CcolMS = sorted([-row[Csort[Caxs]] for row in Cgeom])
 
-#                print [row[Psort[Paxs]] for row in Pgeom]
-#                print [row[Csort[Caxs]] for row in Cgeom]
-#                print PcolS
-#                print CcolS
                 if all([abs(CcolS[at] - PcolS[at]) < COORD_ZERO for at in range(Nat)]):
                     if all([abs(CcolS[at] - CcolMS[at]) < COORD_ZERO for at in range(Nat)]):
-#                        PcolI = sorted(range(Nat), key=lambda x: [row[Psort[Paxs]] for row in Pgeom][x])
-#                        CcolI = sorted(range(Nat), key=lambda x: [row[Csort[Caxs]] for row in Cgeom][x])
-#                        print PcolI[0] > PcolI[-1], PcolI[0], PcolI[-1]
-#                        print CcolI[0] > CcolI[-1], CcolI[0], CcolI[-1]
-#                        if (PcolI[0] > PcolI[-1]) == (CcolI[0] > CcolI[-1]):
-#                            exchEntry = 1  # Pos when symm P4 col == C4 col and pos vals at same col ends
-#                            print 'a', exchEntry
-#                        else:
-#                            exchEntry = -1  # Neg when symm P4 col == C4 col and pos vals at diff col ends
-#                            print 'b', exchEntry
-                        exchEntry = 1  # Indeterminate when symm P4 col == C4 col
-#                        cfap = freeaxphase[:]
-#                        print freeaxphase, cfap
-#                        for indx in rang
-#                        for ph in cfap:
-#                            ph[Psort[Paxs]] = -1
-#                            freeaxphase.append(ph)
-                        freeaxphase.append(Psort[Paxs])
-                        print 'b'
-                        print PcolS
+                        axPhse[Psort[Paxs]] = [1, -1]  # Indeterminate when symm P4 col == C4 col
+                        axExch[Psort[Paxs]].append(Csort[Caxs])
                     else:
-                        exchEntry = 1  # Pos when asym P4 col == C4 col
-                        print 'c', exchEntry
-                        print PcolS
+                        axPhse[Psort[Paxs]] = [1]  # Pos when asym P4 col == C4 col
+                        axExch[Psort[Paxs]].append(Csort[Caxs])
                 elif all([abs(CcolMS[at] - PcolS[at]) < COORD_ZERO for at in range(Nat)]):
-                    exchEntry = -1  # Neg when P4 col == -C4 col
-                    print 'd', exchEntry
-                    print PcolS
+                    axPhse[Psort[Paxs]] = [-1]  # Neg when P4 col == -C4 col
+                    axExch[Psort[Paxs]].append(Csort[Caxs])
 
-                if exchEntry is not None:
-                    exchMat[Csort[Caxs]][Psort[Paxs]] = exchEntry
-                    Pwhite.remove(Paxs)
-                    Cwhite.remove(Caxs)
-                    break
-            else:
+            if len(axPhse[Psort[Paxs]]) == 0:
                 print 'qcdb.orient.create_orientation_from_molecules debug info'
-                print '\nrotor', rotor, 'Paxs', Paxs, 'Caxs', Caxs, 'Pwhite', Pwhite, 'Cwhite', Cwhite, \
+                print '\nrotor', rotor, 'Paxs', Paxs, 'Caxs', Caxs, \
                     'allowed', allowed, 'P(axs)', Psort.index(Paxs), 'C(Caxs)', Csort.index(Caxs), \
-                    '\nPcolS: ', PcolS, '\nCcolS: ', CcolS, '\nCcolMS: ', CcolMS
-                print '\nexchMat'
-                show(exchMat)
+                    '\nPcolS: ', PcolS, '\nCcolS: ', CcolS, '\nCcolMS: ', CcolMS, \
+                    'axExch', axExch, 'axPhse', axPhse
                 print '\nPgeom: '
                 for item in Pgeom:
                     print '       %16.8f %16.8f %16.8f' % (item[0], item[1], item[2])
@@ -227,98 +200,80 @@ class OrientMols(object):
                 print self
                 raise ValidationError("""Axis unreconcilable between QC programs.""")
 
-        self.Cexchflip = exchMat
-        c4mol.rotate(exchMat)
-        print 'freeaxphase', freeaxphase
+        print 'FINAL: axExch', axExch
+        print 'FINAL: axPhse', axPhse
 
-#        ph2 = [[1, 1, 1]]
-#        for ax in freeaxphase:
-#            for indx in range(len(ph2)):
-#                asdf = copy.deepcopy(ph2[indx])
-#                asdf[ax] = -1
-#                ph2.append(asdf)
-#
-#        print 'ph2', ph2
-        show(exchMat)
+        allowedExchflip = []
+        for lee in itertools.product(*axExch):
+            for lpp in itertools.product(*axPhse):
+                if (sorted(lee) == [0, 1, 2]):
+#                    print '\n', lee, lpp
+                    temp = zero(3, 3)
+                    for ax in range(3):
+                        temp[lee[ax]][ax] = lpp[ax]
+                    allowedExchflip.append(temp)
+#                    show(temp)
+
+
+        print allowedExchflip
+#        exit(1)
 
         # Find mapping of atom exchange that brings Cgeom into coincidence with Pgeom
-        Cgeom = c4mol.geometry()
+        for exfp in allowedExchflip:
+            Cgeom = mult(c4mol.geometry(), exfp)
 
-#        print '\nPgeom: '
-#        for item in Pgeom:
-#            print '       %16.8f %16.8f %16.8f' % (item[0], item[1], item[2])
-#        print '\nCgeom: '
-#        for item in Cgeom:
-#            print '       %16.8f %16.8f %16.8f' % (item[0], item[1], item[2])
+            mapMat = [None] * Nat
+            Pwhite = list(range(Nat))
+            Cwhite = list(range(Nat))
+            print 'trying', exfp
 
-        mapMat = [None] * Nat
-        Pwhite = list(range(Nat))
-        Cwhite = list(range(Nat))
+            print '\nPgeom: '
+            for item in Pgeom:
+                print '       %16.8f %16.8f %16.8f' % (item[0], item[1], item[2])
+            print '\nCgeom: '
+            for item in Cgeom:
+                print '       %16.8f %16.8f %16.8f' % (item[0], item[1], item[2])
 
-        while len(Pwhite) > 0:
-            Patm = Pwhite[0]
-            sameElem = [at for at in range(Nat) if c4mol.symbol(at) == p4mol.symbol(Patm)]
-            allowed = list(set(sameElem) & set(Cwhite))
-
-
-            allowedPh = [[1, 1, 1]]
-            for ax in freeaxphase:
-                for indx in range(len(allowedPh)):
-                    asdf = copy.deepcopy(allowedPh[indx])
-                    asdf[ax] = -1
-                    allowedPh.append(asdf)
-                allowedPh = sorted(allowedPh, reverse=True, key=lambda x: sum(x))
-#            print 'Patm', Patm, 'allowedPH', allowedPh
-
-#            print '\nAAAAA Patm', Patm, 'Pwhite', Pwhite, \
-#                'Cwhite', Cwhite, 'sameElem', sameElem, 'allowed', allowed, \
-#                'allowedPh', allowedPh, \
-#                '\nPgeom[Patm]: ', Pgeom[Patm], '\nmapMat', mapMat
-            for ph in allowedPh:
+            while len(Pwhite) > 0:
+                Patm = Pwhite[0]
+                sameElem = [at for at in range(Nat) if c4mol.symbol(at) == p4mol.symbol(Patm)]
+                allowed = list(set(sameElem) & set(Cwhite))
+    
                 for Catm in allowed:
-#                    print 'ph Catm', ph, Catm
-                    print 'Pgeom', Pgeom[Patm]
-                    print 'Cgeom', Cgeom[Catm]
-                    print 'CgeomP', [Cgeom[Catm][ax] * ph[ax] for ax in range(3)]
-
-                    if all([abs(Cgeom[Catm][ax] * ph[ax] - Pgeom[Patm][ax]) < COORD_ZERO for ax in range(3)]):
-
+                    if all([abs(Cgeom[Catm][ax] - Pgeom[Patm][ax]) < COORD_ZERO for ax in range(3)]):
                         mapMat[Patm] = Catm
-                        print 'setting mapMat[', Patm, '] = ', Catm, 'under phase', ph
-                        for ax in range(3):
-                            #if ph[ax] == -1 and abs(Pgeom[Patm][ax]) > COORD_ZERO:
-                            if ax in freeaxphase and abs(Pgeom[Patm][ax]) > COORD_ZERO:
-                                freeaxphase.remove(ax)
-                                print 'removing', ax, 'now freeaxphase', freeaxphase
-#                                print 'freeaxphaseREV', freeaxphase
-                                for at in range(Nat):
-                                    Cgeom[at][ax] *= ph[ax]
-                                for ax2 in range(3):
-                                    exchMat[ax2][ax] *= ph[ax]
-                                print 'new Cexchflip', exchMat
                         Pwhite.remove(Patm)
                         Cwhite.remove(Catm)
+                        print 'matchd on atom', 'Patm', Patm, 'Catm', Catm
                         break
-                if mapMat[Patm] is not None:
+                else:
+                    print 'failed on atom', 'Patm', Patm, 'rejecting', exfp
                     break
             else:
-                print 'qcdb.orient.create_orientation_from_molecules debug info'
-                print '\nPatm', Patm, 'Catm', Catm, 'ph', ph, 'Pwhite', Pwhite, \
-                    'Cwhite', Cwhite, 'sameElem', sameElem, 'allowed', allowed, \
-                    'allowedPh', allowedPh, '\nCgeom[Catm]: ', Cgeom[Catm], \
-                    '\nPgeom[Patm]: ', Pgeom[Patm], '\nmapMat', mapMat
-                print '\nPgeom: '
-                for item in Pgeom:
-                    print('       %16.8f %16.8f %16.8f' % (item[0], item[1], item[2]))
-                print('\nCgeom: ')
-                for item in Cgeom:
-                    print('       %16.8f %16.8f %16.8f' % (item[0], item[1], item[2]))
-                print self
-                raise ValidationError("""Atom unreconcilable between QC programs.""")
+                print 'accept exchflp', exfp, 'with map', mapMat
+                break
+        else:
+            print 'else of for', exfp, mapMat
+            print 'qcdb.orient.create_orientation_from_molecules debug info'
+            print '\nPatm', Patm, 'Catm', Catm, 'Pwhite', Pwhite, \
+                'Cwhite', Cwhite, 'sameElem', sameElem, 'allowed', allowed, \
+                '\nCgeom[Catm]: ', Cgeom[Catm], '\nPgeom[Patm]: ', Pgeom[Patm], \
+                '\nmapMat', mapMat
+            print '\nPgeom: '
+            for item in Pgeom:
+                print('       %16.8f %16.8f %16.8f' % (item[0], item[1], item[2]))
+            print('\nCgeom: ')
+            for item in Cgeom:
+                print('       %16.8f %16.8f %16.8f' % (item[0], item[1], item[2]))
+            print self
+            raise ValidationError("""Atom unreconcilable between QC programs.""")
 
+        print 'out of loop', exfp, mapMat
+
+        self.Cexchflip = exfp
         self.Catommap = mapMat
-        self.Cexchflip = exchMat
         # Note that this is resetting the geom but not the atoms, so c4mol.print_out() is deceptive
+        c4mol.rotate(exfp)
         new_geom = []
         for at in range(Nat):
             new_geom.append(Cgeom[mapMat[at]])

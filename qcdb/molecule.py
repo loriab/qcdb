@@ -578,6 +578,7 @@ class Molecule(LibmintsMolecule):
         options['CFOUR']['CFOUR_UNITS']['value'] = 'ANGSTROM'
 #        options['CFOUR']['CFOUR_UNITS']['value'] = 'BOHR'
         options['CFOUR']['CFOUR_COORDINATES']['value'] = 'CARTESIAN'
+#        options['CFOUR']['CFOUR_SUBGROUP']['value'] = self.symmetry_from_input().upper()
 #        print self.inertia_tensor()
 #        print self.inertial_system()
 
