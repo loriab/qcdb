@@ -8,7 +8,6 @@ from molecule import Molecule
 #from physconst import *
 from vecutil import *
 from exceptions import *
-#from libmintscoordentry import *
 
 #LINEAR_A_TOL = 1.0E-2  # When sin(a) is below this, we consider the angle to be linear
 #DEFAULT_SYM_TOL = 1.0E-8
@@ -152,20 +151,12 @@ class OrientMols(object):
         elif rotor == 'RT_ASYMMETRIC_TOP':         # IA <  IB <  IC       A >  B >  C
             freebytop = []
 
-        # Find mapping of axis exchange and flipping that brings Cgeom into coincidence with Pgeom
-        Pgeom = p4mol.geometry()
-        Cgeom = c4mol.geometry()
-
+        # Find possible mappings of axis exchange and flipping that brings Cgeom into coincidence with Pgeom
         axExch = [[], [], []]
         axPhse = [[], [], []]
 
-        print '\nPgeom: '
-        for item in Pgeom:
-            print '       %16.8f %16.8f %16.8f' % (item[0], item[1], item[2])
-        print '\nCgeom: '
-        for item in Cgeom:
-            print '       %16.8f %16.8f %16.8f' % (item[0], item[1], item[2])
-
+        Pgeom = p4mol.geometry()
+        Cgeom = c4mol.geometry()
         for Paxs in range(3):
             allowed = freebytop if Paxs in freebytop else [Paxs]
 
@@ -200,23 +191,14 @@ class OrientMols(object):
                 print self
                 raise ValidationError("""Axis unreconcilable between QC programs.""")
 
-        print 'FINAL: axExch', axExch
-        print 'FINAL: axPhse', axPhse
-
         allowedExchflip = []
         for lee in itertools.product(*axExch):
             for lpp in itertools.product(*axPhse):
                 if (sorted(lee) == [0, 1, 2]):
-#                    print '\n', lee, lpp
                     temp = zero(3, 3)
                     for ax in range(3):
                         temp[lee[ax]][ax] = lpp[ax]
                     allowedExchflip.append(temp)
-#                    show(temp)
-
-
-        print allowedExchflip
-#        exit(1)
 
         # Find mapping of atom exchange that brings Cgeom into coincidence with Pgeom
         for exfp in allowedExchflip:
@@ -225,14 +207,13 @@ class OrientMols(object):
             mapMat = [None] * Nat
             Pwhite = list(range(Nat))
             Cwhite = list(range(Nat))
-            print 'trying', exfp
 
-            print '\nPgeom: '
-            for item in Pgeom:
-                print '       %16.8f %16.8f %16.8f' % (item[0], item[1], item[2])
-            print '\nCgeom: '
-            for item in Cgeom:
-                print '       %16.8f %16.8f %16.8f' % (item[0], item[1], item[2])
+#            print '\nPgeom: '
+#            for item in Pgeom:
+#                print '       %16.8f %16.8f %16.8f' % (item[0], item[1], item[2])
+#            print '\nCgeom: '
+#            for item in Cgeom:
+#                print '       %16.8f %16.8f %16.8f' % (item[0], item[1], item[2])
 
             while len(Pwhite) > 0:
                 Patm = Pwhite[0]
@@ -244,13 +225,13 @@ class OrientMols(object):
                         mapMat[Patm] = Catm
                         Pwhite.remove(Patm)
                         Cwhite.remove(Catm)
-                        print 'matchd on atom', 'Patm', Patm, 'Catm', Catm
+#                        print 'matchd on atom', 'Patm', Patm, 'Catm', Catm
                         break
                 else:
-                    print 'failed on atom', 'Patm', Patm, 'rejecting', exfp
+#                    print 'failed on atom', 'Patm', Patm, 'rejecting', exfp
                     break
             else:
-                print 'accept exchflp', exfp, 'with map', mapMat
+#                print 'accept exchflp', exfp, 'with map', mapMat
                 break
         else:
             print 'else of for', exfp, mapMat
@@ -267,8 +248,6 @@ class OrientMols(object):
                 print('       %16.8f %16.8f %16.8f' % (item[0], item[1], item[2]))
             print self
             raise ValidationError("""Atom unreconcilable between QC programs.""")
-
-        print 'out of loop', exfp, mapMat
 
         self.Cexchflip = exfp
         self.Catommap = mapMat
