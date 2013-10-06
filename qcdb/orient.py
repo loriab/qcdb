@@ -57,7 +57,7 @@ class OrientMols(object):
         self.Catommap = []
 
         try:
-            if ((self.Pmol.natom() == self.Cmol.natom()) and \
+            if ((self.Pmol.nallatom() == self.Cmol.nallatom()) and \
                (abs(self.Pmol.nuclear_repulsion_energy() - self.Cmol.nuclear_repulsion_energy()) < 1.0e-3)):
                 self.create_orientation_from_molecules(self.Pmol, self.Cmol)
             else:
@@ -100,38 +100,25 @@ class OrientMols(object):
 
         # Find translation to CoM, straightforward
 #        com = [ x if abs(x) > NOISY_ZERO else 0.0 for x in com]
-        com = p4mol.center_of_mass()
+        com = p4mol.center_of_charge()  # avoids trouble of ghost atoms w/center_of_mass
         p4mol.translate(scale(com, -1.0))
         self.Pshift = com
 
-        com = c4mol.center_of_mass()
+        com = c4mol.center_of_charge()
         c4mol.translate(scale(com, -1.0))
         self.Cshift = com
-        #   Extra check since Cfour always returns at center of mass
-        if not (all([abs(com[i]) < COORD_ZERO for i in range(3)])):
-            print 'qcdb.orient.create_orientation_from_molecules debug info'
-            print '\ncom', com
-            raise ValidationError("""molChangeable not at center of mass.""")
 
         # Find rotation to MoI frame, straightforward
 #        frame = [[ x if abs(x) > NOISY_ZERO else 0.0 for x in ax] for ax in frame]
-        moi, frame = p4mol.inertial_system(zero=NOISY_ZERO)
+        moi, frame = p4mol.inertial_system(masswt=False, zero=NOISY_ZERO)  # avoids trouble of ghost atoms w/masswt'd
         Psort = sorted(range(3), key=lambda x: moi[x])
         p4mol.rotate(frame)
         self.Protate = frame
 
-        moi, frame = c4mol.inertial_system(zero=NOISY_ZERO)
+        moi, frame = c4mol.inertial_system(masswt=False, zero=NOISY_ZERO)
         Csort = sorted(range(3), key=lambda x: moi[x])
         c4mol.rotate(frame)
         self.Crotate = frame
-        #   Extra check since Cfour always returns in inertial frame
-        if not all([all([abs(frame[i][j] - eye3[i][j]) < COORD_ZERO for j in range(3)]) for i in range(3)]):
-            print 'qcdb.orient.create_orientation_from_molecules debug info'
-            print '\nCgeom: '
-            for item in c4mol.geometry():
-                print('       %16.8f %16.8f %16.8f' % (item[0], item[1], item[2]))
-            print '\nmoi', moi, '\nframe', frame, '\nCsort', Csort
-            raise ValidationError("""molChangeable not in inertial frame.""")
 
         # Find degrees of freedom among axis exchanges
         rotor = p4mol.rotor_type()
@@ -217,7 +204,7 @@ class OrientMols(object):
 
             while len(Pwhite) > 0:
                 Patm = Pwhite[0]
-                sameElem = [at for at in range(Nat) if c4mol.symbol(at) == p4mol.symbol(Patm)]
+                sameElem = [at for at in range(Nat) if ((c4mol.symbol(at) == p4mol.symbol(Patm)) or (c4mol.symbol(at) == 'GH'))]
                 allowed = list(set(sameElem) & set(Cwhite))
     
                 for Catm in allowed:

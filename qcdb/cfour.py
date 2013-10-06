@@ -2,6 +2,7 @@ import re
 import collections
 from decimal import Decimal
 from pdict import PreservingDict
+from periodictable import *
 from molecule import Molecule
 from orient import OrientMols
 
@@ -606,7 +607,9 @@ def harvest_GRD(grd):
 
     grad = []
     for at in range(Nat):
-        molxyz += grd[at + 1] + '\n'
+        mline = grd[at + 1].split()
+        el = 'GH' if int(float(mline[0])) == 0 else z2el[int(float(mline[0]))]
+        molxyz += '%s %16s %16s %16s\n' % (el, mline[-3], mline[-2], mline[-1])
         lline = grd[at + 1 + Nat].split()
         grad.append([float(lline[-3]), float(lline[-2]), float(lline[-1])])
     mol = Molecule.init_with_xyz(molxyz, no_com=True, no_reorient=True, contentsNotFilename=True)

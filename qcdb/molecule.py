@@ -121,10 +121,10 @@ class Molecule(LibmintsMolecule):
 
                     # Check that the atom symbol is valid
                     if not fileAtom in el2z:
-                        raise ValidationError('Illegal atom symbol in geometry specification: %s' % (atomSym))
+                        raise ValidationError('Illegal atom symbol in geometry specification: %s' % (fileAtom))
 
                     # Add it to the molecule.
-                    instance.add_atom(el2z[fileAtom], fileX, fileY, fileZ, fileAtom, el2masses[fileAtom])
+                    instance.add_atom(el2z[fileAtom], fileX, fileY, fileZ, fileAtom, el2masses[fileAtom], el2z[fileAtom])
 
                 elif xyzC.match(text[2 + i]):
 
@@ -135,10 +135,10 @@ class Molecule(LibmintsMolecule):
 
                     # Check that the atomic number is valid
                     if not fileAtom in z2el:
-                        raise ValidationError('Illegal atom symbol in geometry specification: %d' % (atomSym))
+                        raise ValidationError('Illegal atom symbol in geometry specification: %d' % (fileAtom))
 
                     # Add it to the molecule.
-                    instance.add_atom(fileAtom, fileX, fileY, fileZ, z2el[fileAtom], z2masses[fileAtom])
+                    instance.add_atom(fileAtom, fileX, fileY, fileZ, z2el[fileAtom], z2masses[fileAtom], fileAtom)
 
                 else:
                     raise ValidationError("Molecule::init_with_xyz: Malformed atom information line %d." % (i + 3))
@@ -1010,3 +1010,28 @@ class Molecule(LibmintsMolecule):
         else:
             rotor_type = 'RT_ASYMMETRIC_TOP'             # IA <  IB <  IC       A  > B >  C
         return rotor_type
+
+    def center_of_charge(self):
+        """Computes center of charge of molecule (does not translate molecule).
+
+        >>> H2OH2O.center_of_charge()
+        [-0.073339893272065401, 0.002959783555632145, 0.0]
+
+        """
+        ret = [0.0, 0.0, 0.0]
+        total_c = 0.0
+
+        for at in range(self.natom()):
+            c = self.charge(at)
+            ret = add(ret, scale(self.xyz(at), c))
+            total_c += c
+
+        ret = scale(ret, 1.0 / total_c)
+        return ret
+
+    def move_to_coc(self):
+        """Moves molecule to center of charge
+
+        """
+        coc = scale(self.center_of_charge(), -1.0)
+        self.translate(coc)
