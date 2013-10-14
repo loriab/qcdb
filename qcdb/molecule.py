@@ -320,6 +320,11 @@ class Molecule(LibmintsMolecule):
 #        print self.inertia_tensor()
 #        print self.inertial_system()
 
+        options['CFOUR']['CFOUR_CHARGE']['clobber'] = True
+        options['CFOUR']['CFOUR_MULTIPLICITY']['clobber'] = True
+        options['CFOUR']['CFOUR_UNITS']['clobber'] = True
+        options['CFOUR']['CFOUR_COORDINATES']['clobber'] = True
+
         return text, options
 
     def format_basis_for_cfour(self, puream):
@@ -343,6 +348,9 @@ class Molecule(LibmintsMolecule):
         options = collections.defaultdict(lambda: collections.defaultdict(dict))
         options['CFOUR']['CFOUR_BASIS']['value'] = 'SPECIAL'
         options['CFOUR']['CFOUR_SPHERICAL']['value'] = puream
+
+        options['CFOUR']['CFOUR_BASIS']['clobber'] = True
+        options['CFOUR']['CFOUR_SPHERICAL']['clobber'] = True
 
         return text, options
 

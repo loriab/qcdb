@@ -5,6 +5,7 @@ from pdict import PreservingDict
 from periodictable import *
 from molecule import Molecule
 from orient import OrientMols
+from options import conv_float2negexp
 
 
 def harvest_output(outtext):
@@ -62,16 +63,9 @@ def harvest_outfile_pass(outtext):
     # Process NRE
     mobj = re.search(r'^\s+' + r'(?:Nuclear repulsion energy :)' + r'\s+' + NUMBER + r'\s+a\.u\.\s*$',
         outtext, re.MULTILINE)
-
     if mobj:
         print('matched nre')
         psivar['NUCLEAR REPULSION ENERGY'] = mobj.group(1)
-#        # Coordinates for atom-only calc
-#        if float(mobj.group(1)) < 1.0E-6:
-#            print('matched atom')
-#            # Dinky Molecule and the element's invented TODO
-#            molxyz = '1 bohr\n\n%s 0.0 0.0 0.0\n' % ('H')
-#            psivar_coord = Molecule.init_with_xyz(molxyz, no_com=True, no_reorient=True, contentsNotFilename=True)
 
     # Process SCF
     mobj = re.search(
@@ -264,7 +258,6 @@ def harvest_outfile_pass(outtext):
         outtext, re.MULTILINE | re.DOTALL)
     if mobj:
         print('matched cc with full %s iterating %s' % (mobj.group('fullCC'), mobj.group('iterCC')))
-        #print mobj.group(1), mobj.group(2), mobj.group(3), mobj.group(4)
         psivar['%s CORRELATION ENERGY' % (mobj.group('iterCC'))] = mobj.group(3)
         psivar['%s TOTAL ENERGY' % (mobj.group('iterCC'))] = mobj.group(4)
 
@@ -308,7 +301,6 @@ def harvest_outfile_pass(outtext):
         outtext, re.MULTILINE | re.DOTALL)
     if mobj:
         print('matched ccsd(t) lamb')
-        #print mobj.group(1), mobj.group(2)
         psivar['CCSD TOTAL ENERGY'] = mobj.group(1)
         psivar['(T) CORRECTION ENERGY'] = Decimal(mobj.group(2)) - Decimal(mobj.group(1))
         psivar['CCSD(T) CORRELATION ENERGY'] = Decimal(mobj.group(2)) - psivar['SCF TOTAL ENERGY']
@@ -385,7 +377,6 @@ def harvest_outfile_pass(outtext):
             molxyz += '%s %16s %16s %16s\n' % (lline[0], lline[-3], lline[-2], lline[-1])
         # Rather a dinky Molecule as no ghost, charge, or multiplicity
         psivar_coord = Molecule.init_with_xyz(molxyz, no_com=True, no_reorient=True, contentsNotFilename=True)
-        #print molxyz
 
     # Process atom geometry
     mobj = re.search(
@@ -404,7 +395,6 @@ def harvest_outfile_pass(outtext):
         outtext, re.MULTILINE)
     if mobj:
         print('matched error')
-        print mobj.group(1), mobj.group(2)
         psivar['CFOUR ERROR CODE'] = mobj.group(2)
 
     # Process CURRENT energies (TODO: needs better way)
@@ -428,6 +418,10 @@ def harvest_outfile_pass(outtext):
 #       ('%s CORRELATION ENERGY' % (mobj.group('fullCC')) in psivar):
 #        psivar['CURRENT CORRELATION ENERGY'] = psivar['%s CORRELATION ENERGY' % (mobj.group('fullCC')]
 #        psivar['CURRENT ENERGY'] = psivar['%s TOTAL ENERGY' % (mobj.group('fullCC')]
+
+    if 'CC2 TOTAL ENERGY' in psivar and 'CC2 CORRELATION ENERGY' in psivar:
+        psivar['CURRENT CORRELATION ENERGY'] = psivar['CC2 CORRELATION ENERGY']
+        psivar['CURRENT ENERGY'] = psivar['CC2 TOTAL ENERGY']
 
     if 'CCSD TOTAL ENERGY' in psivar and 'CCSD CORRELATION ENERGY' in psivar:
         psivar['CURRENT CORRELATION ENERGY'] = psivar['CCSD CORRELATION ENERGY']
@@ -478,14 +472,10 @@ def harvest(p4Mol, c4out, **largs):
     #   opt with mol thru molecule {}   p4Mol   grdMol   p4Mol && outMol && grdMol   p4Mol <-- grdMol
 
     if outMol:
-#        try:
         if grdMol:
-#            print 'grdMol', grdMol
             if abs(outMol.nuclear_repulsion_energy() - grdMol.nuclear_repulsion_energy()) > 1.0e-3:
                 raise ValidationError("""Cfour outfile (NRE: %f) inconsistent with Cfour GRD (NRE: %f).""" % \
                         (outMol.nuclear_repulsion_energy(), grdMol.nuclear_repulsion_energy()))
-#        except:
-#            print 'ack'
         if p4Mol:
             if abs(outMol.nuclear_repulsion_energy() - p4Mol.nuclear_repulsion_energy()) > 1.0e-3:
                 raise ValidationError("""Cfour outfile (NRE: %f) inconsistent with Psi4 input (NRE: %f).""" % \
@@ -493,95 +483,44 @@ def harvest(p4Mol, c4out, **largs):
     else:
         raise ValidationError("""No coordinate information extracted from Cfour output.""")
 
-#    try:
-    print '    <<<   [1] P4-MOL   >>>'
-    if p4Mol:
-        p4Mol.print_out_in_bohr()
-    print '    <<<   [2] C4-OUT-MOL   >>>'
-    if outMol:
-        outMol.print_out_in_bohr()
-    print '    <<<   [3] C4-GRD-MOL   >>>'
-    if grdMol:
-        grdMol.print_out_in_bohr()
-#    except UnboundLocalError:
-#        pass
+#    print '    <<<   [1] P4-MOL   >>>'
+#    if p4Mol:
+#        p4Mol.print_out_in_bohr()
+#    print '    <<<   [2] C4-OUT-MOL   >>>'
+#    if outMol:
+#        outMol.print_out_in_bohr()
+#    print '    <<<   [3] C4-GRD-MOL   >>>'
+#    if grdMol:
+#        grdMol.print_out_in_bohr()
 
     # Set up array reorientation object
     if p4Mol and grdMol:
         p4c4 = OrientMols(p4Mol, grdMol)
-        print p4c4
+        #print p4c4
         oriCoord = p4c4.transform_coordinates2(grdMol)
         oriGrad = p4c4.transform_gradient(grdGrad)
     elif p4Mol and outMol:
         p4c4 = OrientMols(p4Mol, outMol)
-        print p4c4
+        #print p4c4
         oriCoord = p4c4.transform_coordinates2(outMol)
         oriGrad = None
     elif outMol:
         oriCoord = None
         oriGrad = None
 
-    print '    <<<   [4] C4-ORI-MOL   >>>'
-    if oriCoord is not None:
-        for item in oriCoord:
-            print('       %16.8f %16.8f %16.8f' % (item[0], item[1], item[2]))
-
-    print '    <<<   [1] C4-GRD-GRAD   >>>'
-    if grdGrad is not None:
-        for item in grdGrad:
-            print('       %16.8f %16.8f %16.8f' % (item[0], item[1], item[2]))
-    print '    <<<   [2] C4-ORI-GRAD   >>>'
-    if oriGrad is not None:
-        for item in oriGrad:
-            print('       %16.8f %16.8f %16.8f' % (item[0], item[1], item[2]))
-
-
-
-
-#    p4c4 = OrientMols(p4Mol, grdMol)
-#    print p4c4
-#    print p4c4.transform_coordinates2(grdMol)
-#    print 'pre grad'
-#    oriGrad = p4c4.transform_gradient(grdGrad)
-#    print 'post grad'
-
-
-
-
-
-
-
-    #p4mol                             c4mol
-    #mol.atom_map_and_orient_from_cfour(newmol)
-
-
-
-#    if not p4Mol and not grdMol:
-#        pass
-#    elif not p4Mol and grdMol:
-#        if abs(outMol.nuclear_repulsion_energy() - grdMol.nuclear_repulsion_energy()) > 1.0e-3:
-#            raise ValidationError("""Cfour outfile (NRE: %f) inconsistent with Cfour GRD (NRE: %f).""" % \
-#                (outMol.nuclear_repulsion_energy(), grdMol.nuclear_repulsion_energy()))
-#        pass
-#    elif p4Mol and not grdMol:
-#        if abs(outMol.nuclear_repulsion_energy() - p4Mol.nuclear_repulsion_energy()) > 1.0e-3:
-#            raise ValidationError("""Cfour outfile (NRE: %f) inconsistent with Psi4 input (NRE: %f).""" % \
-#                (outMol.nuclear_repulsion_energy(), p4Mol.nuclear_repulsion_energy()))
-#        pass
-#    elif p4Mol and grdMol:
-#        if (abs(outMol.nuclear_repulsion_energy() - grdMol.nuclear_repulsion_energy()) > 1.0e-3) or \
-#           (abs(outMol.nuclear_repulsion_energy() - p4Mol.nuclear_repulsion_energy()) > 1.0e-3):
-#            raise ValidationError("""Cfour outfile (NRE: %f) inconsistent with Cfour GRD (NRE: %f) or Psi4 input (NRE: %f).""" % \
-#                (outMol.nuclear_repulsion_energy(), grdMol.nuclear_repulsion_energy(), p4Mol.nuclear_repulsion_energy()))
-#        pass
-#    else:
-#        raise ValidationError("""Inexplicable pattern of Psi4 molecule and Cfour GRD information.""")
-
-
-
-
-    #p4mol                             c4mol
-    #mol.atom_map_and_orient_from_cfour(newmol)
+#    print '    <<<   [4] C4-ORI-MOL   >>>'
+#    if oriCoord is not None:
+#        for item in oriCoord:
+#            print('       %16.8f %16.8f %16.8f' % (item[0], item[1], item[2]))
+#
+#    print '    <<<   [1] C4-GRD-GRAD   >>>'
+#    if grdGrad is not None:
+#        for item in grdGrad:
+#            print('       %16.8f %16.8f %16.8f' % (item[0], item[1], item[2]))
+#    print '    <<<   [2] C4-ORI-GRAD   >>>'
+#    if oriGrad is not None:
+#        for item in oriGrad:
+#            print('       %16.8f %16.8f %16.8f' % (item[0], item[1], item[2]))
 
     if oriGrad:
         retGrad = oriGrad
@@ -615,7 +554,7 @@ def harvest_GRD(grd):
     mol = Molecule.init_with_xyz(molxyz, no_com=True, no_reorient=True, contentsNotFilename=True)
 
     return mol, grad
-    
+
 
 def harvest_FCM(fcm):
     """Parses the contents *fcm* of the Cfour FCMFINAL file into a hessian array.
@@ -639,51 +578,8 @@ def harvest_FCM(fcm):
 
     return None if empty else hess
 
-#def cfour_harvest_files(mol, grd=None, fcmfinal=None):
-#    """
-#    grad = []
-#
-#    if grd:
-#        grd = grd.splitlines()
-#        Nat = int(grd[0].split()[0])
-#        molxyz = '%d bohr\n\n' % (Nat)
-#        for at in range(Nat):
-#            molxyz += grd[at + 1] + '\n'
-#            lline = grd[at + 1 + Nat].split()
-#            grad.append([float(lline[-3]), float(lline[-2]), float(lline[-1])])
-#
-#        newmol = Molecule.init_with_xyz(molxyz, no_com=True, no_reorient=True, contentsNotFilename=True)
-#        newmol.print_out()
-#
-#        mol.atom_map_and_orient_from_cfour(newmol)
-#
-#def cfour_harvest_GRD(outtext):
-#    """Function to
-#
-#    """
-#    atoms = []
-#    coord = []
-#    grad = []
-#
-#    outtext = outtext.splitlines()
-#    Nat = int(outtext[0].split()[0])
-#    xyzstring = '%d bohr\n\n' % (Nat)
-#    for at in range(Nat):
-#        lline = outtext[at + 1].split()
-#        atoms.append(float(lline[0]))
-#        coord.append([float(lline[-3]), float(lline[-2]), float(lline[-1])])
-#        xyzstring += outtext[at + 1] + '\n'
-#    for at in range(Nat):
-#        lline = outtext[at + 1 + Nat].split()
-#        if abs(float(lline[0]) - atoms[at]) > 1.0E-6:
-#            raise qcdb.exceptions.ValidationError("""Inconsistent CFOUR GRD file.""")
-#        grad.append([float(lline[-3]), float(lline[-2]), float(lline[-1])])
-#
-#    newmol = Molecule.init_with_xyz(xyzstring, no_com=True, no_reorient=True, contentsNotFilename=True)
-#    newmol.print_out()
 
-
-def cfour_memory(mem):
+def muster_memory(mem):
     """Transform input *mem* in MB into psi4-type options for cfour.
 
     """
@@ -694,36 +590,117 @@ def cfour_memory(mem):
     options['CFOUR']['CFOUR_MEMORY_SIZE']['value'] = int(mem)
     options['CFOUR']['CFOUR_MEM_UNIT']['value'] = 'MB'
 
+    for item in options['CFOUR']:
+        options['CFOUR'][item]['clobber'] = True
     return text, options
 
+#   Ways of modifying a computation
+#   global:     set global c-side option
+#   local:      set local c-side option
+#   kwarg:      set kwarg
+#   i-local:    set global=local c-side option to an interface module
+#   ro-def:     code uses default entirely specified by read_options
+#   module-def: code uses default that is complex mixture of read_options settings
+#   i-def:      interfaced code uses defaults not entirely expressed in read_options
+#   driver-def: driver code sets complex defaults
+#
+#   Pure psi4 operation
+#   kwarg ~= local > global > driver-def > module-def > ro-def
+#
+#   Interfaced psi4 operation
+#   kwarg ~= i-local > local > global > driver-def > i-def
 
-def cfour_calclevel(dertype):
-    """
+#   P4 infrastructure replacing interfaced infrastructure (mol, basis, mem) where unavoidable overlap in how things are specified (mult in mol{} vs keyword) is treated as a clobber & complain if conflict VS P4 infrastructure as an aliased/convenient leak into interfaced infrastructure (psi) and is strictly no clobber or complain.
+
+
+def muster_psi4options(opt):
+    """Translate psi4 keywords *opt* that have been explicitly set into
+    their Cfour counterparts. Since explicitly set Cfour module keyword
+    values will always be used preferentially to these inferred from
+    psi4, the 'clobber' property is set to False.
+
     """
     text = ''
+    options = collections.defaultdict(lambda: collections.defaultdict(dict))
+
+    if 'GLOBALS' in opt:
+        if 'PUREAM' in opt['GLOBALS']:
+            options['CFOUR']['CFOUR_SPHERICAL']['value'] = \
+                opt['MINTS']['PUREAM']['value']
+
+    if 'SCF' in opt:
+        if 'REFERENCE' in opt['SCF']:
+            options['CFOUR']['CFOUR_REFERENCE']['value'] = \
+                {'RHF': 'RHF',
+                 'UHF': 'UHF',
+                 'ROHF': 'ROHF'}[opt['SCF']['REFERENCE']['value']]
+
+        if 'D_CONVERGENCE' in opt['SCF']:
+            options['CFOUR']['CFOUR_SCF_CONV']['value'] = \
+                conv_float2negexp(opt['SCF']['D_CONVERGENCE']['value'])
+
+        if 'MAXITER' in opt['SCF']:
+            options['CFOUR']['CFOUR_SCF_MAXCYC']['value'] = \
+                opt['SCF']['MAXITER']['value']
+
+        if 'DAMPING_PERCENTAGE' in opt['SCF']:
+            options['CFOUR']['CFOUR_SCF_DAMPING']['value'] = \
+                int(10 * opt['SCF']['DAMPING_PERCENTAGE']['value'])
+
+    for item in options['CFOUR']:
+        options['CFOUR'][item]['clobber'] = False
+    return text, options
+
+# Philosophy break:
+#   Specification options
+#   Massaging options
+
+#   * No program's defaults should be tampered with w/o provokation
+
+#   want all defaults applied to all programs, so p4 scf_conv is 5 and c4 scf_conv is 5
+#   want separate regimes, so conv 6 covers all the p4 parts and cfour_conv = 8 covers the c4 parts
+#   want mixture, so basis gets applied to c4 but others don't
+#   first case, when options specified explicitly
+
+#   [scf][d_convergence]    [cfour][cfour_scf_conv]     what happens?
+#   8 from opt()            7 by default
+#   6 from set {...}        7 by default                6 (guideline that psi4 format converts when clear)
+#   8 from opt()            5 from set {...}            5 (local trumps)
+#   6 from set {...}        5 from set {...}            5 (local trumps)
+#
+#   energy(name)            [cfour][cfour_calc_level]
+#   c4-scf                  SCF by default
+#   c4-scf                  CCSD from set {...}
+
+
+def muster_modelchem(name, dertype):
+    """Transform calculation method *name* and derivative level *dertype*
+    into options for cfour. While deliberately requested pieces,
+    generally |cfour__cfour_deriv_level| and |cfour__cfour_calc_level|,
+    are set to complain if contradicted ('clobber' set to True), other
+    'recommended' settings, like |cfour__cfour_cc_program|, can be
+    countermanded by keywords in input file ('clobber' set to False).
+
+    """
+    text = ''
+    lowername = name.lower()
     options = collections.defaultdict(lambda: collections.defaultdict(dict))
 
     if dertype == 0:
-        pass
+        if lowername == 'cfour':
+            pass  # permit clean operation of sandwich mode
+        else:
+            options['CFOUR']['CFOUR_DERIV_LEVEL']['value'] = 'ZERO'
     elif dertype == 1:
         options['CFOUR']['CFOUR_DERIV_LEVEL']['value'] = 'FIRST'
+    elif dertype == 2:
+        options['CFOUR']['CFOUR_DERIV_LEVEL']['value'] = 'SECOND'
     else:
-        print('bad dertype')
-        exit()
+        raise ValidationError("""Requested Cfour dertype %d is not available.""" % (dertype))
 
-    return text, options
-
-
-def cfour_method(name):
-    """Function to
-
-    """
-    lowername = name.lower()
-    text = ''
-
-    options = collections.defaultdict(lambda: collections.defaultdict(dict))
-
-    if lowername == 'c4-scf':
+    if lowername == 'cfour':
+        pass
+    elif lowername == 'c4-scf':
         options['CFOUR']['CFOUR_CALC_LEVEL']['value'] = 'SCF'
 
     elif lowername == 'c4-mp2':
@@ -738,6 +715,9 @@ def cfour_method(name):
     elif lowername == 'c4-mp4':
         options['CFOUR']['CFOUR_CALC_LEVEL']['value'] = 'MP4'
 
+    elif lowername == 'c4-cc2':
+        options['CFOUR']['CFOUR_CALC_LEVEL']['value'] = 'CC2'
+
     elif lowername == 'c4-ccsd':
         options['CFOUR']['CFOUR_CALC_LEVEL']['value'] = 'CCSD'
         options['CFOUR']['CFOUR_CC_PROGRAM']['value'] = 'ECC'
@@ -751,6 +731,18 @@ def cfour_method(name):
 
     elif lowername == 'c4-ccsdt':
         options['CFOUR']['CFOUR_CALC_LEVEL']['value'] = 'CCSDT'
+        options['CFOUR']['CFOUR_CC_PROGRAM']['value'] = 'ECC'
+
+    else:
+        raise ValidationError("""Requested Cfour computational methods %d is not available.""" % (lowername))
+
+    # Set clobbering
+    if 'CFOUR_DERIV_LEVEL' in options['CFOUR']:
+        options['CFOUR']['CFOUR_DERIV_LEVEL']['clobber'] = True
+    if 'CFOUR_CALC_LEVEL' in options['CFOUR']:
+        options['CFOUR']['CFOUR_CALC_LEVEL']['clobber'] = True
+    if 'CFOUR_CC_PROGRAM' in options['CFOUR']:
+        options['CFOUR']['CFOUR_CC_PROGRAM']['clobber'] = False
 
     return text, options
 
@@ -767,6 +759,7 @@ def cfour_list():
     val.append('c4-mp3')
     val.append('c4-mp4(sdq)')
     val.append('c4-mp4')
+    val.append('c4-cc2')
     val.append('c4-ccsd')
     val.append('c4-cc3')
     val.append('c4-ccsd(t)')
@@ -786,6 +779,7 @@ def cfour_gradient_list():
     val.append('c4-mp3')
     val.append('c4-mp4(sdq)')
     val.append('c4-mp4')
+    val.append('c4-cc2')
     val.append('c4-ccsd')
     val.append('c4-cc3')
     val.append('c4-ccsd(t)')
@@ -824,6 +818,10 @@ def cfour_psivar_list():
                         'c4-mp3corl': 'MP3 CORRELATION ENERGY',
                    'c4-mp4(sdq)corl': 'MP4(SDQ) CORRELATION ENERGY',
                         'c4-mp4corl': 'MP4(SDTQ) CORRELATION ENERGY'}
+    VARH['c4-cc2'] = {
+                         'c4-scftot': 'SCF TOTAL ENERGY',
+                        'c4-mp2corl': 'MP2 CORRELATION ENERGY',
+                        'c4-cc2corl': 'CC2 CORRELATION ENERGY'}
     VARH['c4-ccsd'] = {
                          'c4-scftot': 'SCF TOTAL ENERGY',
                         'c4-mp2corl': 'MP2 CORRELATION ENERGY',

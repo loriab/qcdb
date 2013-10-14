@@ -40,14 +40,6 @@ def format_option_for_cfour(opt, val):
     elif (opt == 'CFOUR_BASIS') and (val.upper() in ['SVP', 'DZP', 'TZP', 'TZP2P', 'QZ2P', 'PZ3D2F', '13S9P4D3F']):
         text += str(val.lower())
 
-    # Transform convergence options to order-of-magnitude
-#    elif (opt.upper() in ['CFOUR_BRUCK_CONV', 'CFOUR_CC_CONV', 'CFOUR_CIS_CONV', 
-#        'CFOUR_CONVERGENCE', 'CFOUR_CPHF_CONVER', 'CFOUR_ESTATE_CONV', 
-#        'CFOUR_GEO_CONV', 'CFOUR_LINEQ_CONV', 'CFOUR_SCF_CONV']):
-#        print val, math.log10(val)
-#        text += str(-1 * math.log10(val))
-#        print 'asdf', val, text
-
     # No Transform
     else:
         text += str(val)
@@ -84,19 +76,38 @@ def reconcile_options(full, partial):
     agreement, balks if *full* and *partial* conflict. Returns *full*.
 
     """
-    for okey, oval in partial.items():
-        for ikey, ival in oval.items():
-            if full[okey][ikey]['has_changed']:
-                if full[okey][ikey]['value'] != ival['value']:
-                    raise ValidationError("""Option %s value `%s` set by options block incompatible with value `%s` in memory/molecule/psi4options block.""" %
-                        (ikey, full[okey][ikey]['value'], ival['value']))
+    try:
+        for module, modopts in partial.items():
+            for kw, kwprop in modopts.items():
+                if full[module][kw]['has_changed']:
+                    if full[module][kw]['value'] != kwprop['value']:
+                        if 'clobber' in kwprop and kwprop['clobber']:
+                            raise ValidationError("""
+    Option %s value `%s` set by options block incompatible with
+    value `%s` in memory/molecule/command/psi4options block.""" %
+                                (kw, full[module][kw]['value'], kwprop['value']))
+                        else:
+                            # kw in full is touched, conflicts with value in partial,
+                            #   but value in partial is recommended, not required, no change
+                            pass
+                    else:
+                        # kw in full is touched, but in agreement with value in partial, no change
+                        pass
                 else:
-                    # kw in full is touched, but in agreement with value in partial, no change
-                    full[okey][ikey]['has_changed'] = True
-            else:
-                # If kw in full is untouched, overwrite it with value in partial
-                full[okey][ikey]['value'] = ival['value']
-                full[okey][ikey]['has_changed'] = True
-                #print 'Overwriting %s with %s' % (ikey, ival['value'])
+                    # If kw in full is untouched, overwrite it with value in partial
+                    full[module][kw]['value'] = kwprop['value']
+                    full[module][kw]['has_changed'] = True
+                    #print '@P4C4 Overwriting %s with %s' % (kw, kwprop['value'])
+
+    except KeyError as e:  # not expected but want to trap
+        raise ValidationError("""Unexpected KeyError reconciling keywords: %s.""" % (repr(e)))
 
     return full
+
+
+def conv_float2negexp(val):
+    """Returns the least restrictive negative exponent of the power 10
+    that would achieve the floating point convergence criterium *val*.
+
+    """
+    return -1 * int(math.floor(math.log(val, 10)))

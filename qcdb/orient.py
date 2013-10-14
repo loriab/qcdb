@@ -122,9 +122,10 @@ class OrientMols(object):
 
         # Find degrees of freedom among axis exchanges
         rotor = p4mol.rotor_type()
-        if rotor != c4mol.rotor_type():
-            raise ValidationError("""molPermanent (%s) and molChangeable (%s) of different rotor types.""" % \
-                (rotor, c4mol.rotor_type()))
+#        if rotor != c4mol.rotor_type():
+#            raise ValidationError("""molPermanent (%s) and molChangeable (%s) of different rotor types.""" % \
+#                (rotor, c4mol.rotor_type()))
+        # TODO: is this safe? differences in masses of ghost atoms can cause different rotor types
         if rotor == 'RT_ATOM':
             freebytop = []
         elif rotor == 'RT_LINEAR':                 # 0  <  IB == IC      inf > B == C
@@ -206,7 +207,7 @@ class OrientMols(object):
                 Patm = Pwhite[0]
                 sameElem = [at for at in range(Nat) if ((c4mol.symbol(at) == p4mol.symbol(Patm)) or (c4mol.symbol(at) == 'GH'))]
                 allowed = list(set(sameElem) & set(Cwhite))
-    
+
                 for Catm in allowed:
                     if all([abs(Cgeom[Catm][ax] - Pgeom[Patm][ax]) < COORD_ZERO for ax in range(3)]):
                         mapMat[Patm] = Catm
