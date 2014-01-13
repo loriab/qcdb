@@ -388,3 +388,49 @@ class OrientMols(object):
 #            print('       %16.8f %16.8f %16.8f' % (item[0], item[1], item[2]))
 
         return arr
+
+    def transform_elementlist(self, elem):
+        """Applies to *elem* the transformation appropriate to bring a
+        list of atomic numbers in *molChangeable* orientation into
+        *molPermanent* orientation. In particular, applies a row exchange
+        to place it in the atom ordering.
+
+        """
+        elem2 = []
+        for at in range(self.Pmol.natom()):
+            elem2.append(elem[self.Catommap[at]])
+        return elem2
+
+    def transform_vector(self, vec):
+        """Applies to *vec* the transformation appropriate to bring a
+        vector in *molChangeable* orientation into *molPermanent*
+        orientation. In particular, applies a rotation to place it
+        in the inertial frame, a column exchange and phasing to place
+        it in the axis system, and a rotation to remove it from the
+        inertial frame.
+
+        """
+        vec = [vec]  # hack since vecutil handles matrices, not vectors
+
+        #coord.rotate(self.Crotate)
+        vec2 = mult(vec, self.Crotate)
+        vec = vec2
+        #print "Rotate"
+        #for item in vec:
+        #    print('       %16.8f %16.8f %16.8f' % (item[0], item[1], item[2]))
+
+        #coord.rotate(self.Cexchflip)
+        vec2 = mult(vec, self.Cexchflip)
+        vec = vec2
+        #print "ExchFlip"
+        #for item in vec:
+        #    print('       %16.8f %16.8f %16.8f' % (item[0], item[1], item[2]))
+
+        #coord.rotate(transpose(self.Protate))
+        vec2 = mult(vec, transpose(self.Protate))
+        vec = vec2
+        #print "P4 Rotate"
+        #for item in vec:
+        #    print('       %16.8f %16.8f %16.8f' % (item[0], item[1], item[2]))
+
+        return vec[0]

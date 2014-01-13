@@ -1,5 +1,6 @@
 import re
 import collections
+import struct
 from decimal import Decimal
 from pdict import PreservingDict
 from periodictable import *
@@ -9,9 +10,9 @@ from options import conv_float2negexp
 
 
 def harvest_output(outtext):
-    """
-    Function to separate portions of a CFOUR output file *outtest*,
+    """Function to separate portions of a CFOUR output file *outtest*,
     divided by xjoda.
+
     """
     pass_psivar = []
     pass_coord = []
@@ -45,8 +46,9 @@ def harvest_output(outtext):
 
 
 def harvest_outfile_pass(outtext):
-    """
-    Function to read CFOUR output file *outtext* and parse important quantum chemical information from it in
+    """Function to read CFOUR output file *outtext* and parse important
+    quantum chemical information from it in
+
     """
     psivar = PreservingDict()
     psivar_coord = None
@@ -556,6 +558,54 @@ def harvest_GRD(grd):
     return mol, grad
 
 
+def harvest_zmat(zmat):
+    """Parses the contents of the Cfour ZMAT file into array and
+    coordinate information. The coordinate info is converted into a
+    rather dinky Molecule (no fragment, but does read charge, mult,
+    unit). Return qcdb.Molecule. Written for findif zmat* where
+    geometry always Cartesian and Bohr.
+
+    """
+    zmat = zmat.splitlines()[1:]  # skip comment line
+    Nat = 0
+    readCoord = True
+    isBohr = ''
+    charge = 0
+    mult = 1
+    molxyz = ''
+    cgeom = []
+    for line in zmat:
+        #print Nat, readCoord, line
+        if line.strip() == '':
+            readCoord = False
+        elif readCoord:
+            lline = line.split()
+            molxyz += line + '\n'
+            Nat += 1
+        else:
+            if line.find('CHARGE') > -1:
+                idx = line.find('CHARGE')
+                charge = line[idx + 7:]
+                idxc = charge.find(',')
+                if idxc > -1:
+                    charge = charge[:idxc]
+                charge = int(charge)
+            if line.find('MULTIPLICITY') > -1:
+                idx = line.find('MULTIPLICITY')
+                mult = line[idx + 13:]
+                idxc = mult.find(',')
+                if idxc > -1:
+                    mult = mult[:idxc]
+                mult = int(mult)
+            if line.find('UNITS=BOHR') > -1:
+                isBohr = ' bohr'
+
+    molxyz = '%d%s\n%d %d\n' % (Nat, isBohr, charge, mult) + molxyz
+    mol = Molecule.init_with_xyz(molxyz, no_com=True, no_reorient=True, contentsNotFilename=True)
+
+    return mol
+
+
 def harvest_FCM(fcm):
     """Parses the contents *fcm* of the Cfour FCMFINAL file into a hessian array.
 
@@ -726,7 +776,8 @@ def muster_modelchem(name, dertype):
         options['CFOUR']['CFOUR_CALC_LEVEL']['value'] = 'CC3'
 
     elif lowername == 'c4-ccsd(t)':
-        options['CFOUR']['CFOUR_CALC_LEVEL']['value'] = 'CCSD(T)'
+        #options['CFOUR']['CFOUR_CALC_LEVEL']['value'] = 'CCSD(T)'
+        options['CFOUR']['CFOUR_CALC_LEVEL']['value'] = 'CCSD[T]'
         options['CFOUR']['CFOUR_CC_PROGRAM']['value'] = 'ECC'
 
     elif lowername == 'c4-ccsdt':
@@ -842,3 +893,92 @@ def cfour_psivar_list():
                       'c4-ccsdtcorl': 'CCSDT CORRELATION ENERGY'}
 
     return VARH
+
+
+def format_fjobarc(fje, fjelem, fjcoord, fjgrd, map, fjdip):
+    """Takes the key results from a gradient computation (energy *fje*,
+    element Z list *fjelem*, coordinates *fjcoord*, gradient *fjgrd*,
+    dipole *fjdip*, and atom ordering *map*) and writes a string *fja*
+    that exactly mimics the contents of a Cfour FJOBARC file.
+
+    """
+    fja = 'TOTENERG\n'
+    fja += '%15d%15d\n' % (struct.unpack("ii", struct.pack("d", fje)))
+    fja += 'COORD\n'
+    Nat = len(fjcoord)
+    flatcoord = []
+    for at in range(Nat):
+        for xyz in range(3):
+            flatcoord.append(fjcoord[map[at]][xyz])
+        #flatcoord.append(fjcoord[map[at]][0])
+        #flatcoord.append(fjcoord[map[at]][1])
+        #flatcoord.append(fjcoord[map[at]][2])
+    for idx in range(len(flatcoord)):
+        if abs(flatcoord[idx]) < 1.0E-14:  # TODO
+            flatcoord[idx] = 0.0
+        fja += '%15d%15d' % (struct.unpack("ii", struct.pack("d", flatcoord[idx])))
+        if idx % 2 == 1:
+            fja += '\n'
+    if len(flatcoord) % 2 == 1:
+        fja += '\n'
+    fja += 'MAP2ZMAT\n'
+    for idx in range(Nat):
+        fja += '%15d%15d' % (struct.unpack("ii", struct.pack("l", map[idx] + 1)))
+        if idx % 2 == 1:
+            fja += '\n'
+    if Nat % 2 == 1:
+        fja += '\n'
+    fja += 'GRD FILE\n'
+    fja += '%5d%20.10f\n' % (Nat, 0.0)
+    for at in range(Nat):
+        fja += '%20.10f%20.10f%20.10f%20.10f\n' % (fjelem[at], fjcoord[at][0], fjcoord[at][1], fjcoord[at][2])
+    for at in range(Nat):
+        fja += '%20.10f%20.10f%20.10f%20.10f\n' % (fjelem[at], fjgrd[at][0], fjgrd[at][1], fjgrd[at][2])
+    fja += 'DIPOL FILE\n'
+    fja += '%20.10f%20.10f%20.10f\n' % (fjdip[0], fjdip[1], fjdip[2])
+
+    return fja
+
+
+def backtransform_grad(p4Mol, c4Mol, p4Grd, p4Dip):
+    """Here, p4Mol and p4Grd need to be turned into the native Cfour
+    orientation embodied by c4Mol. Currently for vpt2.
+
+    """
+    # Set up array reorientation object
+    p4c4 = OrientMols(c4Mol, p4Mol)  # opposite than usual
+    print p4c4
+    oriCoord = p4c4.transform_coordinates2(p4Mol)
+    oriGrad = p4c4.transform_gradient(p4Grd)
+    p4Elem = []
+    for at in range(p4Mol.natom()):
+        p4Elem.append(p4Mol.Z(at))
+    oriElem = p4c4.transform_elementlist(p4Elem)
+    oriElemMap = p4c4.Catommap
+    oriDip = p4c4.transform_vector(p4Dip)
+
+    #print '    <<<   Input C4 Mol   >>>'
+    #c4Mol.print_out()
+    #print '    <<<   Input P4 Mol   >>>'
+    #p4Mol.print_out()
+    #print '    <<<   Input P4 Grad   >>>'
+    #if p4Grd is not None:
+    #    for item in p4Grd:
+    #        print('       %16.8f %16.8f %16.8f' % (item[0], item[1], item[2]))
+    #print '    <<<   Rotated P4 Coord   >>>'
+    #if oriCoord is not None:
+    #    for item in oriCoord:
+    #        print('       %16.8f %16.8f %16.8f' % (item[0], item[1], item[2]))
+    #print '    <<<   Rotated P4 Elem   >>>'
+    #if oriElem is not None:
+    #    for item in oriElem :
+    #        print('       %16.8f' % (item))
+    #print '    <<<   Rotated P4 Dip  >>>'
+    #if oriDip is not None:
+    #    print('       %16.8f %16.8f %16.8f' % (oriDip[0], oriDip[1], oriDip[2]))
+    #print '    <<<   Rotated P4 Grad   >>>'
+    #if oriGrad is not None:
+    #    for item in oriGrad:
+    #        print('       %16.8f %16.8f %16.8f' % (item[0], item[1], item[2]))
+
+    return oriElem, oriCoord, oriGrad, oriElemMap, oriDip
