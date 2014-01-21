@@ -26,6 +26,8 @@ import struct
 from decimal import Decimal
 from pdict import PreservingDict
 from periodictable import *
+from physconst import *
+from exceptions import *
 from molecule import Molecule
 from orient import OrientMols
 from options import conv_float2negexp
@@ -488,12 +490,17 @@ def harvest(p4Mol, c4out, **largs):
     else:
         fcmHess = None
 
+    if 'DIPOL' in largs:
+        dipolDip = harvest_DIPOL(largs['DIPOL'])
+    else:
+        dipolDip = None
+
     # Reconcile the coordinate information: several cases
-    #   Case                            p4Mol   GRD      Check consistency           Apply orientation?
-    #   sp with mol thru cfour {}       None    None              outMol             N.C.
-    #   opt with mol thru cfour {}      None    grdMol            outMol && grdMol   N.C.
-    #   sp with mol thru molecule {}    p4Mol   None     p4Mol && outMol             p4Mol <-- outMol
-    #   opt with mol thru molecule {}   p4Mol   grdMol   p4Mol && outMol && grdMol   p4Mol <-- grdMol
+    #   Case                            p4Mol   GRD      Check consistency           Apply orientation?     ReturnMol (1-19-2014)
+    #   sp with mol thru cfour {}       None    None              outMol             N.C.                   outMol
+    #   opt with mol thru cfour {}      None    grdMol            outMol && grdMol   N.C.                   grdMol
+    #   sp with mol thru molecule {}    p4Mol   None     p4Mol && outMol             p4Mol <-- outMol       p4Mol (same as input arg)
+    #   opt with mol thru molecule {}   p4Mol   grdMol   p4Mol && outMol && grdMol   p4Mol <-- grdMol       p4Mol (same as input arg)
 
     if outMol:
         if grdMol:
@@ -520,18 +527,20 @@ def harvest(p4Mol, c4out, **largs):
     # Set up array reorientation object
     if p4Mol and grdMol:
         p4c4 = OrientMols(p4Mol, grdMol)
-        #print p4c4
         oriCoord = p4c4.transform_coordinates2(grdMol)
         oriGrad = p4c4.transform_gradient(grdGrad)
+        oriDip = None if dipolDip is None else p4c4.transform_vector(dipolDip)
     elif p4Mol and outMol:
         p4c4 = OrientMols(p4Mol, outMol)
-        #print p4c4
         oriCoord = p4c4.transform_coordinates2(outMol)
         oriGrad = None
+        oriDip = None if dipolDip is None else p4c4.transform_vector(dipolDip)
     elif outMol:
         oriCoord = None
         oriGrad = None
+        oriDip = None if dipolDip is None else dipolDip
 
+#    print p4c4
 #    print '    <<<   [4] C4-ORI-MOL   >>>'
 #    if oriCoord is not None:
 #        for item in oriCoord:
@@ -546,6 +555,14 @@ def harvest(p4Mol, c4out, **largs):
 #        for item in oriGrad:
 #            print('       %16.8f %16.8f %16.8f' % (item[0], item[1], item[2]))
 
+
+    retMol = None if p4Mol else grdMol
+
+    if oriDip:
+        outPsivar['CURRENT DIPOLE X'] = str(oriDip[0] * psi_dipmom_au2debye)
+        outPsivar['CURRENT DIPOLE Y'] = str(oriDip[1] * psi_dipmom_au2debye)
+        outPsivar['CURRENT DIPOLE Z'] = str(oriDip[2] * psi_dipmom_au2debye)
+
     if oriGrad:
         retGrad = oriGrad
     elif grdGrad:
@@ -553,7 +570,7 @@ def harvest(p4Mol, c4out, **largs):
     else:
         retGrad = None
 
-    return outPsivar, retGrad
+    return outPsivar, retGrad, retMol
 
 
 def harvest_GRD(grd):
@@ -597,7 +614,6 @@ def harvest_zmat(zmat):
     molxyz = ''
     cgeom = []
     for line in zmat:
-        #print Nat, readCoord, line
         if line.strip() == '':
             readCoord = False
         elif readCoord:
@@ -649,6 +665,18 @@ def harvest_FCM(fcm):
             fcm.append([float(lline[0]), float(lline[1]), float(lline[2])])
 
     return None if empty else hess
+
+
+def harvest_DIPOL(dipol):
+    """Parses the contents *dipol* of the Cfour DIPOL file into a dipol vector.
+
+    """
+    dipol = dipol.splitlines()
+    lline = dipol[0].split()
+    dip = [float(lline[0]), float(lline[1]), float(lline[2])]
+
+    #return None if empty else dip
+    return dip
 
 
 def muster_memory(mem):
@@ -917,24 +945,23 @@ def cfour_psivar_list():
     return VARH
 
 
-def format_fjobarc(fje, fjelem, fjcoord, fjgrd, map, fjdip):
-    """Takes the key results from a gradient computation (energy *fje*,
-    element Z list *fjelem*, coordinates *fjcoord*, gradient *fjgrd*,
-    dipole *fjdip*, and atom ordering *map*) and writes a string *fja*
+#def backtransform(chgeMol, permMol, chgeGrad=None, chgeDip=None):
+#def format_fjobarc(fje, fjelem, fjcoord, fjgrd, map, fjdip):
+def format_fjobarc(energy, map, elem, coordinates, gradient, dipole):
+    """Takes the key results from a gradient computation (*energy*,
+    element Z list *elem*, *coordinates*, *gradient*,
+    *dipole*, and atom ordering *map*) and writes a string *fja*
     that exactly mimics the contents of a Cfour FJOBARC file.
 
     """
     fja = 'TOTENERG\n'
-    fja += '%15d%15d\n' % (struct.unpack("ii", struct.pack("d", fje)))
+    fja += '%15d%15d\n' % (struct.unpack("ii", struct.pack("d", energy)))
     fja += 'COORD\n'
-    Nat = len(fjcoord)
+    Nat = len(coordinates)
     flatcoord = []
     for at in range(Nat):
         for xyz in range(3):
-            flatcoord.append(fjcoord[map[at]][xyz])
-        #flatcoord.append(fjcoord[map[at]][0])
-        #flatcoord.append(fjcoord[map[at]][1])
-        #flatcoord.append(fjcoord[map[at]][2])
+            flatcoord.append(coordinates[map[at]][xyz])
     for idx in range(len(flatcoord)):
         if abs(flatcoord[idx]) < 1.0E-14:  # TODO
             flatcoord[idx] = 0.0
@@ -953,54 +980,100 @@ def format_fjobarc(fje, fjelem, fjcoord, fjgrd, map, fjdip):
     fja += 'GRD FILE\n'
     fja += '%5d%20.10f\n' % (Nat, 0.0)
     for at in range(Nat):
-        fja += '%20.10f%20.10f%20.10f%20.10f\n' % (fjelem[at], fjcoord[at][0], fjcoord[at][1], fjcoord[at][2])
+        fja += '%20.10f%20.10f%20.10f%20.10f\n' % (elem[at], coordinates[at][0], coordinates[at][1], coordinates[at][2])
     for at in range(Nat):
-        fja += '%20.10f%20.10f%20.10f%20.10f\n' % (fjelem[at], fjgrd[at][0], fjgrd[at][1], fjgrd[at][2])
+        fja += '%20.10f%20.10f%20.10f%20.10f\n' % (elem[at], gradient[at][0], gradient[at][1], gradient[at][2])
     fja += 'DIPOL FILE\n'
-    fja += '%20.10f%20.10f%20.10f\n' % (fjdip[0], fjdip[1], fjdip[2])
+    fja += '%20.10f%20.10f%20.10f\n' % (dipole[0], dipole[1], dipole[2])
 
     return fja
 
 
-def backtransform_grad(p4Mol, c4Mol, p4Grd, p4Dip):
-    """Here, p4Mol and p4Grd need to be turned into the native Cfour
-    orientation embodied by c4Mol. Currently for vpt2.
+def backtransform(chgeMol, permMol, chgeGrad=None, chgeDip=None):
+    """Here, *chgeMol* and *chgeGrd* need to be turned into the native Cfour
+    orientation embodied by *permMol*. Currently for vpt2.
 
     """
     # Set up array reorientation object
-    p4c4 = OrientMols(c4Mol, p4Mol)  # opposite than usual
-    print p4c4
-    oriCoord = p4c4.transform_coordinates2(p4Mol)
-    oriGrad = p4c4.transform_gradient(p4Grd)
+    p4c4 = OrientMols(permMol, chgeMol)  # opposite than usual
+    oriCoord = p4c4.transform_coordinates2(chgeMol)
     p4Elem = []
-    for at in range(p4Mol.natom()):
-        p4Elem.append(p4Mol.Z(at))
+    for at in range(chgeMol.natom()):
+        p4Elem.append(chgeMol.Z(at))
     oriElem = p4c4.transform_elementlist(p4Elem)
     oriElemMap = p4c4.Catommap
-    oriDip = p4c4.transform_vector(p4Dip)
 
-    #print '    <<<   Input C4 Mol   >>>'
-    #c4Mol.print_out()
-    #print '    <<<   Input P4 Mol   >>>'
-    #p4Mol.print_out()
-    #print '    <<<   Input P4 Grad   >>>'
-    #if p4Grd is not None:
-    #    for item in p4Grd:
-    #        print('       %16.8f %16.8f %16.8f' % (item[0], item[1], item[2]))
-    #print '    <<<   Rotated P4 Coord   >>>'
-    #if oriCoord is not None:
-    #    for item in oriCoord:
-    #        print('       %16.8f %16.8f %16.8f' % (item[0], item[1], item[2]))
-    #print '    <<<   Rotated P4 Elem   >>>'
-    #if oriElem is not None:
-    #    for item in oriElem :
-    #        print('       %16.8f' % (item))
-    #print '    <<<   Rotated P4 Dip  >>>'
-    #if oriDip is not None:
-    #    print('       %16.8f %16.8f %16.8f' % (oriDip[0], oriDip[1], oriDip[2]))
-    #print '    <<<   Rotated P4 Grad   >>>'
-    #if oriGrad is not None:
-    #    for item in oriGrad:
-    #        print('       %16.8f %16.8f %16.8f' % (item[0], item[1], item[2]))
+    oriGrad = None if chgeGrad is None else p4c4.transform_gradient(chgeGrad)
+    oriDip = None if chgeDip is None else p4c4.transform_vector(chgeDip)
 
-    return oriElem, oriCoord, oriGrad, oriElemMap, oriDip
+    if chgeGrad and chgeDip:
+        return oriElemMap, oriElem, oriCoord, oriGrad, oriDip
+    else:
+        return oriElemMap, oriElem, oriCoord
+
+
+#def backtransform_grad(p4Mol, c4Mol, p4Grd, p4Dip):
+#    """Here, p4Mol and p4Grd need to be turned into the native Cfour
+#    orientation embodied by c4Mol. Currently for vpt2.
+#
+#    """
+#    # Set up array reorientation object
+#    p4c4 = OrientMols(c4Mol, p4Mol)  # opposite than usual
+#    oriCoord = p4c4.transform_coordinates2(p4Mol)
+#    oriGrad = p4c4.transform_gradient(p4Grd)
+#    p4Elem = []
+#    for at in range(p4Mol.natom()):
+#        p4Elem.append(p4Mol.Z(at))
+#    oriElem = p4c4.transform_elementlist(p4Elem)
+#    oriElemMap = p4c4.Catommap
+#    oriDip = p4c4.transform_vector(p4Dip)
+#
+#    #print p4c4
+#    #print '    <<<   Input C4 Mol   >>>'
+#    #c4Mol.print_out()
+#    #print '    <<<   Input P4 Mol   >>>'
+#    #p4Mol.print_out()
+#    #print '    <<<   Input P4 Grad   >>>'
+#    #if p4Grd is not None:
+#    #    for item in p4Grd:
+#    #        print('       %16.8f %16.8f %16.8f' % (item[0], item[1], item[2]))
+#    #print '    <<<   Rotated P4 Coord   >>>'
+#    #if oriCoord is not None:
+#    #    for item in oriCoord:
+#    #        print('       %16.8f %16.8f %16.8f' % (item[0], item[1], item[2]))
+#    #print '    <<<   Rotated P4 Elem   >>>'
+#    #if oriElem is not None:
+#    #    for item in oriElem :
+#    #        print('       %16.8f' % (item))
+#    #print '    <<<   Rotated P4 Dip  >>>'
+#    #if oriDip is not None:
+#    #    print('       %16.8f %16.8f %16.8f' % (oriDip[0], oriDip[1], oriDip[2]))
+#    #print '    <<<   Rotated P4 Grad   >>>'
+#    #if oriGrad is not None:
+#    #    for item in oriGrad:
+#    #        print('       %16.8f %16.8f %16.8f' % (item[0], item[1], item[2]))
+#
+#    return oriElemMap, oriElem, oriCoord, oriGrad, oriDip
+#    #return oriElem, oriCoord, oriGrad, oriElemMap, oriDip
+
+
+def jajo2mol(jajodic):
+    """Returns a Molecule from entries in dictionary *jajodic* extracted
+    from JAINDX and JOBARC.
+
+    """
+    map = jajodic['MAP2ZMAT']
+    elem = jajodic['ATOMCHRG']
+    coord = jajodic['COORD   ']
+    Nat = len(elem)
+
+    molxyz = '%d bohr\n\n' % (Nat)
+    # TODO chgmult, though not really necessary for reorientation
+    for at in range(Nat):
+        posn = map[at] - 1
+        el = 'GH' if elem[posn] == 0 else z2el[elem[posn]]
+        posn *= 3
+        molxyz += '%s %21.15f %21.15f %21.15f\n' % (el, coord[posn], coord[posn + 1], coord[posn + 2])
+    mol = Molecule.init_with_xyz(molxyz, no_com=True, no_reorient=True, contentsNotFilename=True)
+
+    return mol
