@@ -33,6 +33,7 @@ from dbproc import *
 from options import *
 from qcformat import *
 import cfour
+import jajo
 from orient import OrientMols
 
 # Load items that are useful to access from an input file
