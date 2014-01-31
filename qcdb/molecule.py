@@ -352,6 +352,9 @@ class Molecule(LibmintsMolecule):
         options['CFOUR']['CFOUR_BASIS']['clobber'] = True
         options['CFOUR']['CFOUR_SPHERICAL']['clobber'] = True
 
+        options['CFOUR']['CFOUR_BASIS']['superclobber'] = True
+        options['CFOUR']['CFOUR_SPHERICAL']['superclobber'] = True
+
         return text, options
 
     def format_molecule_for_cfour_old(self):

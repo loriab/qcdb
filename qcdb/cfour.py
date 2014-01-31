@@ -780,6 +780,8 @@ def muster_modelchem(name, dertype):
     are set to complain if contradicted ('clobber' set to True), other
     'recommended' settings, like |cfour__cfour_cc_program|, can be
     countermanded by keywords in input file ('clobber' set to False).
+    Occasionally, want these pieces to actually overcome keywords in
+    input file ('superclobber' set to True).
 
     """
     text = ''
@@ -840,8 +842,10 @@ def muster_modelchem(name, dertype):
     # Set clobbering
     if 'CFOUR_DERIV_LEVEL' in options['CFOUR']:
         options['CFOUR']['CFOUR_DERIV_LEVEL']['clobber'] = True
+        options['CFOUR']['CFOUR_DERIV_LEVEL']['superclobber'] = True
     if 'CFOUR_CALC_LEVEL' in options['CFOUR']:
         options['CFOUR']['CFOUR_CALC_LEVEL']['clobber'] = True
+        options['CFOUR']['CFOUR_CALC_LEVEL']['superclobber'] = True
     if 'CFOUR_CC_PROGRAM' in options['CFOUR']:
         options['CFOUR']['CFOUR_CC_PROGRAM']['clobber'] = False
 
