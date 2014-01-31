@@ -126,8 +126,8 @@ def harvest_outfile_pass(outtext):
         outtext, re.MULTILINE)
     if mobj:
         print('matched mp2r')
-        psivar['MP2 SAME-SPIN ENERGY'] = 2 * Decimal(mobj.group(1))
-        psivar['MP2 OPPOSITE-SPIN ENERGY'] = mobj.group(2)
+        psivar['MP2 SAME-SPIN CORRELATION ENERGY'] = 2 * Decimal(mobj.group(1))
+        psivar['MP2 OPPOSITE-SPIN CORRELATION ENERGY'] = mobj.group(2)
         psivar['MP2 CORRELATION ENERGY'] = 2 * Decimal(mobj.group(1)) + Decimal(mobj.group(2))
         psivar['MP2 TOTAL ENERGY'] = mobj.group(4)
 
@@ -140,8 +140,8 @@ def harvest_outfile_pass(outtext):
         outtext, re.MULTILINE)
     if mobj:
         print('matched mp2u')
-        psivar['MP2 SAME-SPIN ENERGY'] = Decimal(mobj.group(1)) + Decimal(mobj.group(2))
-        psivar['MP2 OPPOSITE-SPIN ENERGY'] = mobj.group(3)
+        psivar['MP2 SAME-SPIN CORRELATION ENERGY'] = Decimal(mobj.group(1)) + Decimal(mobj.group(2))
+        psivar['MP2 OPPOSITE-SPIN CORRELATION ENERGY'] = mobj.group(3)
         psivar['MP2 CORRELATION ENERGY'] = Decimal(mobj.group(1)) + \
             Decimal(mobj.group(2)) + Decimal(mobj.group(3))
         psivar['MP2 TOTAL ENERGY'] = mobj.group(5)
@@ -156,8 +156,8 @@ def harvest_outfile_pass(outtext):
         outtext, re.MULTILINE)
     if mobj:
         print('matched mp2ro')
-        psivar['MP2 SAME-SPIN ENERGY'] = Decimal(mobj.group(1)) + Decimal(mobj.group(2))
-        psivar['MP2 OPPOSITE-SPIN ENERGY'] = mobj.group(3)
+        psivar['MP2 SAME-SPIN CORRELATION ENERGY'] = Decimal(mobj.group(1)) + Decimal(mobj.group(2))
+        psivar['MP2 OPPOSITE-SPIN CORRELATION ENERGY'] = mobj.group(3)
         psivar['MP2 SINGLES ENERGY'] = mobj.group(4)
         psivar['MP2 CORRELATION ENERGY'] = Decimal(mobj.group(1)) + \
             Decimal(mobj.group(2)) + Decimal(mobj.group(3)) + Decimal(mobj.group(4))
@@ -343,8 +343,8 @@ def harvest_outfile_pass(outtext):
         outtext, re.MULTILINE | re.DOTALL)
     if mobj:  # PRINT=2 to get SCS-CC components
         print('matched scscc')
-        psivar['%s SAME-SPIN ENERGY' % (mobj.group('iterCC'))] = Decimal(mobj.group(3)) + Decimal(mobj.group(4))
-        psivar['%s OPPOSITE-SPIN ENERGY' % (mobj.group('iterCC'))] = mobj.group(5)
+        psivar['%s SAME-SPIN CORRELATION ENERGY' % (mobj.group('iterCC'))] = Decimal(mobj.group(3)) + Decimal(mobj.group(4))
+        psivar['%s OPPOSITE-SPIN CORRELATION ENERGY' % (mobj.group('iterCC'))] = mobj.group(5)
         psivar['%s CORRELATION ENERGY' % (mobj.group('iterCC'))] = mobj.group(6)
 
     mobj = re.search(
@@ -361,8 +361,8 @@ def harvest_outfile_pass(outtext):
         outtext, re.MULTILINE | re.DOTALL)
     if mobj:  # PRINT=2 to get SCS components
         print('matched scscc2')
-        psivar['%s SAME-SPIN ENERGY' % (mobj.group('iterCC'))] = Decimal(mobj.group(3)) + Decimal(mobj.group(4))
-        psivar['%s OPPOSITE-SPIN ENERGY' % (mobj.group('iterCC'))] = mobj.group(5)
+        psivar['%s SAME-SPIN CORRELATION ENERGY' % (mobj.group('iterCC'))] = Decimal(mobj.group(3)) + Decimal(mobj.group(4))
+        psivar['%s OPPOSITE-SPIN CORRELATION ENERGY' % (mobj.group('iterCC'))] = mobj.group(5)
         psivar['%s CORRELATION ENERGY' % (mobj.group('iterCC'))] = mobj.group(6)
 
     # Process gradient
@@ -828,6 +828,7 @@ def muster_modelchem(name, dertype):
         options['CFOUR']['CFOUR_CALC_LEVEL']['value'] = 'CC3'
 
     elif lowername == 'c4-ccsd(t)':
+        # Can't use (T) b/c bug in xsymcor lops it off
         #options['CFOUR']['CFOUR_CALC_LEVEL']['value'] = 'CCSD(T)'
         options['CFOUR']['CFOUR_CALC_LEVEL']['value'] = 'CCSD[T]'
         options['CFOUR']['CFOUR_CC_PROGRAM']['value'] = 'ECC'
