@@ -104,7 +104,15 @@ def reconcile_options(full, partial):
                 if full[module][kw]['has_changed']:
                     if full[module][kw]['value'] != kwprop['value']:
                         if 'clobber' in kwprop and kwprop['clobber']:
-                            raise ValidationError("""
+                            if 'superclobber' in kwprop and kwprop['superclobber']:
+                                # kw in full is touched, conflicts with value in partial,
+                                #   but value in partial is paramount, overwrite full with
+                                #   value in partial
+                                full[module][kw]['value'] = kwprop['value']
+                                full[module][kw]['has_changed'] = True
+                                #print '@P4C4 Overwriting %s with %s' % (kw, kwprop['value'])
+                            else:
+                                raise ValidationError("""
     Option %s value `%s` set by options block incompatible with
     value `%s` in memory/molecule/command/psi4options block.""" %
                                 (kw, full[module][kw]['value'], kwprop['value']))
