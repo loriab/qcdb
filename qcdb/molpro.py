@@ -277,137 +277,136 @@ qcmtdIN = {
 #
 #    ],
 }
-"""
-'dft-sapt-shift': [
 
-         # this is written in an inflexible way (fixed basis, functional) so that it is computed
-         #  only once, then used when writing DFT-SAPT inputs, which we'll be more flexible with
-
-         print $handle "basis={\n";
-         print $handle "set,orbital; default,aug-cc-pVQZ\n";
-         print $handle "set,jkfit;   default,avqz/jkfit\n";
-         print $handle "set,dflhf;   default,avqz/jkfit\n";
-         print $handle "}\n";
-
-         if    ($handle eq "M1OUT") { $charge = $cgmp{CHGmol1}; $spin = $cgmp{MLPmol1} - 1; }
-         elsif ($handle eq "M2OUT") { $charge = $cgmp{CHGmol2}; $spin = $cgmp{MLPmol2} - 1; }
-
-         print $handle "\ngdirect\n";
-         print $handle "{df-ks,pbex,pw91c,lhf; dftfac,0.75,1.0,0.25}\n";
-         print $handle "basis=tzvpp\n";
-         print $handle "{ks,pbe0; orbprint,0}\n";
-         print $handle "eeneut=energy\n";
-         $charge += 1;
-         $spin += 1;
-         print $handle "SET,CHARGE=$charge\nSET,SPIN=$spin\n";
-         print $handle "{ks,pbe0}\n";
-         print $handle "eecat=energy\n";
-         print $handle "eeie=eecat-eeneut\n";
-         print $handle "show[1,20f20.12],ee*,ce*,te*\n";
-         print $handle "show[1,60f20.12],_E*\n";
-    ]
-'dft-sapt': [
-
-         if ( ($asyA eq '') || ($asyB eq '') ) {
-            print "ERROR: asymptotic correction not defined for one or more monomers in index $system.\n";
-            close(DIOUT);
-            unlink("$pathDIOUT");
-         }
-
-         print $handle "gdirect\n";
-         print $handle "ca=2101.2; cb=2102.2\n\n";
-
-         $spin = $cgmp{MLPmol1} - 1;
-         print $handle "SET,CHARGE=$cgmp{CHGmol1}\nSET,SPIN=$spin\ndummy";
-         foreach $at (@monoBreal) { print $handle ",$at"; }
-         print $handle "\n{df-ks,pbex,pw91c,lhf,df_basis=dflhf,basis_coul=jkfitb,basis_exch=jkfitb; dftfac,0.75,1.0,0.25; asymp,$asyA; save,\$ca}\n";
-         print $handle "eehfa=energy; sapt; monomerA\n\n";
-
-         $spin = $cgmp{MLPmol2} - 1;
-         print $handle "SET,CHARGE=$cgmp{CHGmol2}\nSET,SPIN=$spin\ndummy";
-         foreach $at (@monoAreal) { print $handle ",$at"; }
-         print $handle "\n{df-ks,pbex,pw91c,lhf,df_basis=dflhf,basis_coul=jkfitb,basis_exch=jkfitb; dftfac,0.75,1.0,0.25; asymp,$asyB; save,\$cb}\n";
-         print $handle "eehfb=energy; sapt; monomerB\n\n";
-
-         $spin = $cgmp{MLPsyst} - 1;
-         print $handle "SET,CHARGE=$cgmp{CHGsyst}\nSET,SPIN=$spin\n";
-         print $handle "{sapt,sapt_level=3; intermol,ca=\$ca,cb=\$cb,icpks=0,fitlevel=3,nlexfac=0.0\n";
-         print $handle "dfit,basis_coul=jkfit,basis_exch=jkfit,basis_mp2=mp2fit,cfit_scf=3}\n";
-         print $handle "eeelst=E1pol\n";
-         print $handle "eeexch=E1ex\n";
-         print $handle "eeind=E2ind\n";
-         print $handle "eeexind=E2exind\n";
-         print $handle "eedisp=E2disp\n";
-         print $handle "eeexdisp=E2exdisp\n\n";
-
-    ]
-'dft-sapt-pbe0ac': [
-
-         if ( ($asyA eq '') || ($asyB eq '') ) {
-            print "ERROR: asymptotic correction not defined for one or more monomers in index $system.\n";
-            close(DIOUT);
-            unlink("$pathDIOUT");
-         }
-
-         print $handle "ca=2101.2; cb=2102.2\n\n";
-
-         $spin = $cgmp{MLPmol1} - 1;
-         print $handle "SET,CHARGE=$cgmp{CHGmol1}\nSET,SPIN=$spin\ndummy";
-         foreach $at (@monoBreal) { print $handle ",$at"; }
-         print $handle "\n{ks,pbe0; asymp,$asyA; save,\$ca}\n";
-         print $handle "eehfa=energy; sapt; monomerA\n\n";
-
-         $spin = $cgmp{MLPmol2} - 1;
-         print $handle "SET,CHARGE=$cgmp{CHGmol2}\nSET,SPIN=$spin\ndummy";
-         foreach $at (@monoAreal) { print $handle ",$at"; }
-         print $handle "\n{ks,pbe0; asymp,$asyB; save,\$cb}\n";
-         print $handle "eehfb=energy; sapt; monomerB\n\n";
-
-         $spin = $cgmp{MLPsyst} - 1;
-         print $handle "SET,CHARGE=$cgmp{CHGsyst}\nSET,SPIN=$spin\n";
-         print $handle "{sapt; intermol,ca=\$ca,cb=\$cb,icpks=0}\n";
-         print $handle "eeelst=E1pol\n";
-         print $handle "eeexch=E1ex\n";
-         print $handle "eeind=E2ind\n";
-         print $handle "eeexind=E2exind\n";
-         print $handle "eedisp=E2disp\n";
-         print $handle "eeexdisp=E2exdisp\n\n";
-    ]
-'dft-sapt-pbe0acalda': [
-
-         if ( ($asyA eq '') || ($asyB eq '') ) {
-            print "ERROR: asymptotic correction not defined for one or more monomers in index $system.\n";
-            close(DIOUT);
-            unlink("$pathDIOUT");
-         }
-
-         print $handle "ca=2101.2; cb=2102.2\n\n";
-
-         $spin = $cgmp{MLPmol1} - 1;
-         print $handle "SET,CHARGE=$cgmp{CHGmol1}\nSET,SPIN=$spin\ndummy";
-         foreach $at (@monoBreal) { print $handle ",$at"; }
-         print $handle "\n{ks,pbe0; asymp,$asyA; save,\$ca}\n";
-         print $handle "eehfa=energy; sapt; monomerA\n\n";
-
-         $spin = $cgmp{MLPmol2} - 1;
-         print $handle "SET,CHARGE=$cgmp{CHGmol2}\nSET,SPIN=$spin\ndummy";
-         foreach $at (@monoAreal) { print $handle ",$at"; }
-         print $handle "\n{ks,pbe0; asymp,$asyB; save,\$cb}\n";
-         print $handle "eehfb=energy; sapt; monomerB\n\n";
-
-         $spin = $cgmp{MLPsyst} - 1;
-         print $handle "SET,CHARGE=$cgmp{CHGsyst}\nSET,SPIN=$spin\n";
-         print $handle "{sapt,sapt_level=3; intermol,ca=\$ca,cb=\$cb,icpks=0,fitlevel=3,nlexfac=0.0\n";
-         print $handle "dfit,basis_coul=jkfit,basis_exch=jkfit,basis_mp2=mp2fit,cfit_scf=3}\n";
-         print $handle "eeelst=E1pol\n";
-         print $handle "eeexch=E1ex\n";
-         print $handle "eeind=E2ind\n";
-         print $handle "eeexind=E2exind\n";
-         print $handle "eedisp=E2disp\n";
-         print $handle "eeexdisp=E2exdisp\n\n";
-
-         print $handle "show[1,20f20.12],ee*,ce*,te*\n";
-         print $handle "show[1,60f20.12],_E*\n";
-      }
-
-"""
+#'dft-sapt-shift': [
+#
+#         # this is written in an inflexible way (fixed basis, functional) so that it is computed
+#         #  only once, then used when writing DFT-SAPT inputs, which we'll be more flexible with
+#
+#         print $handle "basis={\n";
+#         print $handle "set,orbital; default,aug-cc-pVQZ\n";
+#         print $handle "set,jkfit;   default,avqz/jkfit\n";
+#         print $handle "set,dflhf;   default,avqz/jkfit\n";
+#         print $handle "}\n";
+#
+#         if    ($handle eq "M1OUT") { $charge = $cgmp{CHGmol1}; $spin = $cgmp{MLPmol1} - 1; }
+#         elsif ($handle eq "M2OUT") { $charge = $cgmp{CHGmol2}; $spin = $cgmp{MLPmol2} - 1; }
+#
+#         print $handle "\ngdirect\n";
+#         print $handle "{df-ks,pbex,pw91c,lhf; dftfac,0.75,1.0,0.25}\n";
+#         print $handle "basis=tzvpp\n";
+#         print $handle "{ks,pbe0; orbprint,0}\n";
+#         print $handle "eeneut=energy\n";
+#         $charge += 1;
+#         $spin += 1;
+#         print $handle "SET,CHARGE=$charge\nSET,SPIN=$spin\n";
+#         print $handle "{ks,pbe0}\n";
+#         print $handle "eecat=energy\n";
+#         print $handle "eeie=eecat-eeneut\n";
+#         print $handle "show[1,20f20.12],ee*,ce*,te*\n";
+#         print $handle "show[1,60f20.12],_E*\n";
+#    ]
+#'dft-sapt': [
+#
+#         if ( ($asyA eq '') || ($asyB eq '') ) {
+#            print "ERROR: asymptotic correction not defined for one or more monomers in index $system.\n";
+#            close(DIOUT);
+#            unlink("$pathDIOUT");
+#         }
+#
+#         print $handle "gdirect\n";
+#         print $handle "ca=2101.2; cb=2102.2\n\n";
+#
+#         $spin = $cgmp{MLPmol1} - 1;
+#         print $handle "SET,CHARGE=$cgmp{CHGmol1}\nSET,SPIN=$spin\ndummy";
+#         foreach $at (@monoBreal) { print $handle ",$at"; }
+#         print $handle "\n{df-ks,pbex,pw91c,lhf,df_basis=dflhf,basis_coul=jkfitb,basis_exch=jkfitb; dftfac,0.75,1.0,0.25; asymp,$asyA; save,\$ca}\n";
+#         print $handle "eehfa=energy; sapt; monomerA\n\n";
+#
+#         $spin = $cgmp{MLPmol2} - 1;
+#         print $handle "SET,CHARGE=$cgmp{CHGmol2}\nSET,SPIN=$spin\ndummy";
+#         foreach $at (@monoAreal) { print $handle ",$at"; }
+#         print $handle "\n{df-ks,pbex,pw91c,lhf,df_basis=dflhf,basis_coul=jkfitb,basis_exch=jkfitb; dftfac,0.75,1.0,0.25; asymp,$asyB; save,\$cb}\n";
+#         print $handle "eehfb=energy; sapt; monomerB\n\n";
+#
+#         $spin = $cgmp{MLPsyst} - 1;
+#         print $handle "SET,CHARGE=$cgmp{CHGsyst}\nSET,SPIN=$spin\n";
+#         print $handle "{sapt,sapt_level=3; intermol,ca=\$ca,cb=\$cb,icpks=0,fitlevel=3,nlexfac=0.0\n";
+#         print $handle "dfit,basis_coul=jkfit,basis_exch=jkfit,basis_mp2=mp2fit,cfit_scf=3}\n";
+#         print $handle "eeelst=E1pol\n";
+#         print $handle "eeexch=E1ex\n";
+#         print $handle "eeind=E2ind\n";
+#         print $handle "eeexind=E2exind\n";
+#         print $handle "eedisp=E2disp\n";
+#         print $handle "eeexdisp=E2exdisp\n\n";
+#
+#    ]
+#'dft-sapt-pbe0ac': [
+#
+#         if ( ($asyA eq '') || ($asyB eq '') ) {
+#            print "ERROR: asymptotic correction not defined for one or more monomers in index $system.\n";
+#            close(DIOUT);
+#            unlink("$pathDIOUT");
+#         }
+#
+#         print $handle "ca=2101.2; cb=2102.2\n\n";
+#
+#         $spin = $cgmp{MLPmol1} - 1;
+#         print $handle "SET,CHARGE=$cgmp{CHGmol1}\nSET,SPIN=$spin\ndummy";
+#         foreach $at (@monoBreal) { print $handle ",$at"; }
+#         print $handle "\n{ks,pbe0; asymp,$asyA; save,\$ca}\n";
+#         print $handle "eehfa=energy; sapt; monomerA\n\n";
+#
+#         $spin = $cgmp{MLPmol2} - 1;
+#         print $handle "SET,CHARGE=$cgmp{CHGmol2}\nSET,SPIN=$spin\ndummy";
+#         foreach $at (@monoAreal) { print $handle ",$at"; }
+#         print $handle "\n{ks,pbe0; asymp,$asyB; save,\$cb}\n";
+#         print $handle "eehfb=energy; sapt; monomerB\n\n";
+#
+#         $spin = $cgmp{MLPsyst} - 1;
+#         print $handle "SET,CHARGE=$cgmp{CHGsyst}\nSET,SPIN=$spin\n";
+#         print $handle "{sapt; intermol,ca=\$ca,cb=\$cb,icpks=0}\n";
+#         print $handle "eeelst=E1pol\n";
+#         print $handle "eeexch=E1ex\n";
+#         print $handle "eeind=E2ind\n";
+#         print $handle "eeexind=E2exind\n";
+#         print $handle "eedisp=E2disp\n";
+#         print $handle "eeexdisp=E2exdisp\n\n";
+#    ]
+#'dft-sapt-pbe0acalda': [
+#
+#         if ( ($asyA eq '') || ($asyB eq '') ) {
+#            print "ERROR: asymptotic correction not defined for one or more monomers in index $system.\n";
+#            close(DIOUT);
+#            unlink("$pathDIOUT");
+#         }
+#
+#         print $handle "ca=2101.2; cb=2102.2\n\n";
+#
+#         $spin = $cgmp{MLPmol1} - 1;
+#         print $handle "SET,CHARGE=$cgmp{CHGmol1}\nSET,SPIN=$spin\ndummy";
+#         foreach $at (@monoBreal) { print $handle ",$at"; }
+#         print $handle "\n{ks,pbe0; asymp,$asyA; save,\$ca}\n";
+#         print $handle "eehfa=energy; sapt; monomerA\n\n";
+#
+#         $spin = $cgmp{MLPmol2} - 1;
+#         print $handle "SET,CHARGE=$cgmp{CHGmol2}\nSET,SPIN=$spin\ndummy";
+#         foreach $at (@monoAreal) { print $handle ",$at"; }
+#         print $handle "\n{ks,pbe0; asymp,$asyB; save,\$cb}\n";
+#         print $handle "eehfb=energy; sapt; monomerB\n\n";
+#
+#         $spin = $cgmp{MLPsyst} - 1;
+#         print $handle "SET,CHARGE=$cgmp{CHGsyst}\nSET,SPIN=$spin\n";
+#         print $handle "{sapt,sapt_level=3; intermol,ca=\$ca,cb=\$cb,icpks=0,fitlevel=3,nlexfac=0.0\n";
+#         print $handle "dfit,basis_coul=jkfit,basis_exch=jkfit,basis_mp2=mp2fit,cfit_scf=3}\n";
+#         print $handle "eeelst=E1pol\n";
+#         print $handle "eeexch=E1ex\n";
+#         print $handle "eeind=E2ind\n";
+#         print $handle "eeexind=E2exind\n";
+#         print $handle "eedisp=E2disp\n";
+#         print $handle "eeexdisp=E2exdisp\n\n";
+#
+#         print $handle "show[1,20f20.12],ee*,ce*,te*\n";
+#         print $handle "show[1,60f20.12],_E*\n";
+#      }
+#

@@ -72,8 +72,8 @@ def format_option_for_cfour(opt, val):
 def prepare_options_for_cfour(options):
     """Function to take the full snapshot of the liboptions object
     encoded in dictionary *options*, find the options directable toward
-    Cfour (options['CFOUR']['CFOUR_*']) that aren't default, then write
-    a *CFOUR deck with those options.
+    Cfour (options['CFOUR']['CFOUR_**']) that aren't default, then write
+    a CFOUR deck with those options.
 
     """
     text = ''
