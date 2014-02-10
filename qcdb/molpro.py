@@ -115,7 +115,7 @@ qcmtdIN = {
 'ccsd(t)-f12': [
     'rhf',
     'eehf=energy',
-    'ccsd(t)-f12',
+    'ccsd(t)-f12,df_basis=mp2fit,df_basis_exch=jkfitb,ri_basis=jkfitb',
     'eemp2=emp2',
     'cemp2=eemp2-eehf',
     'eemp3=emp3',

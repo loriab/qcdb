@@ -26,6 +26,7 @@ import sys
 import math
 import os
 import re
+import importlib
 
 qcdbpkg_path = os.path.dirname(__file__)
 sys.path.append(qcdbpkg_path + '/../')
@@ -106,7 +107,8 @@ while not user_obedient:
 
 # Load module for QC program
 try:
-    qcmod = __import__(qcprog)
+#    qcmod = __import__(qcprog)
+    qcmod = importlib.import_module('qcdb.' + qcprog)
 except ImportError:
     print('\nPython module for QC program %s failed to load\n\n' % (qcprog))
     print('\nSearch path that was tried:\n')
@@ -292,7 +294,7 @@ else:
 temp = []
 for rxn in HRXN:
     temp.append(database.ACTV['%s-%s' % (dbse, rxn)])
-    #temp.append(database.ACTV_CP['%s-%s' % (dbse, rxn)])
+    temp.append(database.ACTV_CP['%s-%s' % (dbse, rxn)])
 HSYS = qcdb.drop_duplicates(temp)
 #print 'HSYS', HSYS
 

@@ -56,6 +56,14 @@ class Molecule(LibmintsMolecule):
         text += self.save_string_for_psi4()
         return text
 
+#    def __getstate__(self):
+#        print 'im being pickled'
+#        return self.__dict__
+
+    def __setstate__(self, d):
+        #print 'im being unpickled with these values', d
+        self.__dict__ = d
+
     @classmethod
     def init_with_xyz(cls, xyzfilename, no_com=False, no_reorient=False, contentsNotFilename=False):
         """Pull information from an XYZ file. No fragment info detected.
@@ -256,7 +264,7 @@ class Molecule(LibmintsMolecule):
         """
 
         """
-        factor = 1.0 if self.PYunits() == 'Angstrom' else psi_bohr2angstroms
+        factor = 1.0 if self.PYunits == 'Angstrom' else psi_bohr2angstroms
         # TODO keep fix_or?
         self.fix_orientation(True)
         self.PYmove_to_com = False
