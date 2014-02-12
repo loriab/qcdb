@@ -70,3 +70,14 @@ class ParsingValidationError(QcdbException):
         QcdbException.__init__(self, msg)
         self.msg = msg
         print('\nQcdbException: %s\n\n' % (msg))
+
+
+class FragmentCountError(QcdbException):
+    """Error called molecule has wrong number of fragments for method.
+    Prints error message *msg* to standard output stream.
+
+    """
+    def __init__(self, msg):
+        QcdbException.__init__(self, msg)
+        self.msg = msg
+        #print('\nQcdbException: %s\n\n' % (msg))

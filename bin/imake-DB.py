@@ -27,12 +27,13 @@ import math
 import os
 import re
 import importlib
+import collections
 
 qcdbpkg_path = os.path.dirname(__file__)
 sys.path.append(qcdbpkg_path + '/../')
 import qcdb
 import qcdb.basislist
-import qcdb.exceptions
+from qcdb.exceptions import *
 sys.path.append(qcdbpkg_path + '/../databases')
 
 # load docstring info from database files (doesn't actually import database modules)
@@ -51,7 +52,7 @@ print """
 # query database name
 module_choices = dict(zip([x.upper() for x in DBdocstrings.keys()], DBdocstrings.keys()))
 
-print 'n Choose your database.'
+print '\n Choose your database.'
 for item in module_choices.keys():
     print '    %-12s   %s' % ('[' + module_choices[item] + ']', DBdocstrings[module_choices[item]]['general'][0].lstrip(" |"))
 print '\n'
@@ -90,34 +91,31 @@ while not user_obedient:
 # query qc program
 print """
  Choose your quantum chemistry program.
-    [qchem]
-    [molpro]
-    [psi4]         writes Q-Chem input files sufficient
-    [nwchem]
-    [xyz]          writes basic xyz files only
+    #[qchem]
+    [molpro]       writes Molpro input files
+    [psi4]         writes Psi4 input files
+    #[nwchem]
+    #[xyz]          writes basic xyz files only
 """
 
 user_obedient = False
 while not user_obedient:
     temp = raw_input('    qcprog = ').strip()
-    if temp.lower() in ['qchem', 'molpro', 'psi4', 'nwchem', 'xyz']:
+    if temp.lower() in ['molpro', 'psi4']:
         qcprog = temp.lower()
         user_obedient = True
 
-
 # Load module for QC program
 try:
-#    qcmod = __import__(qcprog)
     qcmod = importlib.import_module('qcdb.' + qcprog)
 except ImportError:
     print('\nPython module for QC program %s failed to load\n\n' % (qcprog))
     print('\nSearch path that was tried:\n')
     print(", ".join(map(str, sys.path)))
-    raise qcdb.exceptions.ValidationError("Python module loading problem for QC program " + str(qcprog))
+    raise ValidationError("Python module loading problem for QC program " + str(qcprog))
 else:
     print qcmod
     qcmtdIN = qcmod.qcmtdIN
-
 
 # query quantum chemical method(s)
 method_choices = dict(zip([x.upper() for x in qcmtdIN.keys()], qcmtdIN.keys()))
@@ -141,6 +139,8 @@ while not user_obedient:
             methods = []
             break
 
+# set up options dict
+options = collections.defaultdict(lambda: collections.defaultdict(dict))
 
 # query basis set(s)
 print """
@@ -169,7 +169,6 @@ while not user_obedient:
                 user_obedient = False
                 break
 
-
 # query castup preference
 print """
  Do cast up from smaller basis set?
@@ -179,7 +178,7 @@ user_obedient = False
 while not user_obedient:
     castup = qcdb.query_yes_no('    castup [F] = ', False)
     user_obedient = True
-
+options['SCF']['BASIS_GUESS']['value'] = castup
 
 # query directory prefix
 print """
@@ -195,7 +194,6 @@ while not user_obedient:
     if temp.isalnum():
         dirprefix = temp
         user_obedient = True
-
 
 # query memory
 print """
@@ -219,7 +217,7 @@ except ImportError:
     print('\nPython module for database %s failed to load\n\n' % (db_name))
     print('\nSearch path that was tried:\n')
     print(", ".join(map(str, sys.path)))
-    raise qcdb.exceptions.ValidationError("Python module loading problem for database " + str(db_name))
+    raise ValidationError("Python module loading problem for database " + str(db_name))
 else:
     dbse = database.dbse
     HRXN = database.HRXN
@@ -286,17 +284,15 @@ else:
                 try:
                     temp.append(getattr(database, 'HRXN_' + item))
                 except AttributeError:
-                    raise qcdb.exceptions.ValidationError('Special subset \'%s\' not available for database %s.' % (item, db_name))
+                    raise ValidationError('Special subset \'%s\' not available for database %s.' % (item, db_name))
     HRXN = qcdb.drop_duplicates(temp)
-#print 'HRXN', HRXN
 
-# TODO: choose ACTV or merge ACTV
+# assemble reagent list from reaction list
 temp = []
 for rxn in HRXN:
     temp.append(database.ACTV['%s-%s' % (dbse, rxn)])
     temp.append(database.ACTV_CP['%s-%s' % (dbse, rxn)])
 HSYS = qcdb.drop_duplicates(temp)
-#print 'HSYS', HSYS
 
 # commence the file-writing loop
 tdir = '-'.join([dirprefix, dbse, qcprog])
@@ -306,6 +302,7 @@ except OSError:
     print 'Warning: directory %s already present.' % (tdir)
 
 for basis in bases:
+    options['GLOBALS']['BASIS']['value'] = basis
     basdir = qcdb.basislist.sanitize_basisname(basis)
     basdir = re.sub('-', '', basdir)
 
@@ -322,38 +319,26 @@ for basis in bases:
         # TODO: forcing c1 symm skipped - still needed for xdm and molpro
 
         for system in HSYS:
-            sfile = tdir + '/' + subdir + '/' + system + '.' + fext
-            infile = open(sfile, 'w')
-
             # QC program may reorient but at least input file geometry will match database
             GEOS[system].fix_orientation(True)
             GEOS[system].PYmove_to_com = False
-            GEOS[system].tagline = TAGL[system]
+            GEOS[system].tagline = 'index %s label %s' % (system, TAGL[system])
             GEOS[system].update_geometry()
 
-            if qcprog == 'molpro':
-                #import molpro
-                #ins = molpro.MolproIn(memory, method, basis, GEOS[system], system, castup)
-                #infile.write(ins.format_infile_string())
-                infile.write(qcmod.MolproIn(memory, method, basis, GEOS[system], system, castup).format_infile_string())
+            dertype = 0
 
-            elif qcprog == 'psi4':
-                infile.write(qcmod.Psi4In(memory, method, basis, GEOS[system], system, castup).format_infile_string())
+            try:
+                if qcprog == 'molpro':
+                    infile = qcmod.MolproIn(memory, method, basis, GEOS[system], system, castup).format_infile_string()
 
-#            # write start of file and comment line
-#            if qcprog == 'qchem':
-#                infile.write('$comment\n%s %s\n$end\n\n' % (system, TAGL[system]))
-#            elif qcprog == 'psi4':
-#                infile.write('# %s %s\n\n' % (system, TAGL[system]))
-#            elif qcprog == 'nwchem':
-#                infile.write('echo\ntitle "%s %s"\n\n' % (system, TAGL[system]))
-#            elif qcprog == 'xyz':
-#                pass
-#
-#            # write molecule section
-#            if qcprog == 'xyz':
-#                infile.write(GEOS[system].save_string_xyz())
-#            elif qcprog == 'psi4':
-#                infile.write(GEOS[system].format_molecule_for_psi4())
+                elif qcprog == 'psi4':
+                    infile = qcmod.Psi4In(memory, GEOS[system], method, dertype, options).format_infile_string()
 
-            infile.close()
+            except FragmentCountError:
+                pass
+                # We're passing ACTV rgt list for SAPT methods so this error is to be expected
+
+            else:
+                sfile = tdir + '/' + subdir + '/' + system + '.' + fext
+                with open(sfile, 'w') as handle:
+                    handle.write(infile)
