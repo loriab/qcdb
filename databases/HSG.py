@@ -49,6 +49,9 @@ dbse = 'HSG'
 HRXN = range(1, 22)
 HRXN_SM = [6, 15]
 HRXN_LG = [14]
+HB = [4, 5, 21]
+MX = [6, 9, 10, 11]
+DD = [1, 2, 3, 7, 8, 12, 13, 14, 15, 16, 17, 18, 19, 20]
 
 # <<< Chemical Systems Involved >>>
 RXNM = {}     # reaction matrix of reagent contributions per reaction

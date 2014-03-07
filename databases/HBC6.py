@@ -46,6 +46,7 @@
   - ``'FaOOFaON'`` dissociation curve for formic acid- formamide complex
   - ``'FaONFaNN'`` dissociation curve for formamide- formamidine complex
   - ``'FaOOFaNN'`` dissociation curve for formic acid- formamidine complex
+  - ``'5min'`` five points on each dissociation curve incl. and surrounding equilibrium
 
 """
 import re
@@ -75,6 +76,12 @@ for d in dist:
 temp = [FaOOFaOO, FaONFaON, FaNNFaNN, FaOOFaON, FaONFaNN, FaOOFaNN]
 HRXN = sum(temp, [])
 
+HRXN_5MIN = ['FaOOFaOO-3.4', 'FaOOFaOO-3.5', 'FaOOFaOO-3.6', 'FaOOFaOO-3.7', 'FaOOFaOO-3.8',
+             'FaONFaON-3.8', 'FaONFaON-3.9', 'FaONFaON-4.0', 'FaONFaON-4.1', 'FaONFaON-4.2',
+             'FaNNFaNN-3.9', 'FaNNFaNN-4.0', 'FaNNFaNN-4.1', 'FaNNFaNN-4.2', 'FaNNFaNN-4.3',
+             'FaOOFaON-3.6', 'FaOOFaON-3.7', 'FaOOFaON-3.8', 'FaOOFaON-3.9', 'FaOOFaON-4.0',
+             'FaONFaNN-3.8', 'FaONFaNN-3.9', 'FaONFaNN-4.0', 'FaONFaNN-4.1', 'FaONFaNN-4.2',
+             'FaOOFaNN-3.6', 'FaOOFaNN-3.7', 'FaOOFaNN-3.8']
 HRXN_SM = ['FaOOFaOO-8.0', 'FaOOFaON-5.0']
 HRXN_LG = ['FaNNFaNN-3.6']
 HRXN_EQ = ['FaOOFaOO-3.6', 'FaONFaON-4.0', 'FaNNFaNN-4.1', 'FaOOFaON-3.8', 'FaONFaNN-4.0', 'FaOOFaNN-3.6']
@@ -2873,9 +2880,10 @@ units angstrom
 # <<< Derived Geometry Strings >>>
 for rxn in HRXN:
     GEOS['%s-%s-monoA-unCP' % (dbse, rxn)] = GEOS['%s-%s-dimer' % (dbse, rxn)].extract_fragments(1)
-    GEOS['%s-%s-monoB-unCP' % (dbse, rxn)] = GEOS['%s-%s-dimer' % (dbse, rxn)].extract_fragments(2)
     GEOS['%s-%s-monoA-CP'   % (dbse, rxn)] = GEOS['%s-%s-dimer' % (dbse, rxn)].extract_fragments(1, 2)
-    GEOS['%s-%s-monoB-CP'   % (dbse, rxn)] = GEOS['%s-%s-dimer' % (dbse, rxn)].extract_fragments(2, 1)
+    if rxn in sum([FaOOFaON, FaONFaNN, FaOOFaNN], []):
+        GEOS['%s-%s-monoB-unCP' % (dbse, rxn)] = GEOS['%s-%s-dimer' % (dbse, rxn)].extract_fragments(2)
+        GEOS['%s-%s-monoB-CP'   % (dbse, rxn)] = GEOS['%s-%s-dimer' % (dbse, rxn)].extract_fragments(2, 1)
 
 #########################################################################
 

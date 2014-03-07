@@ -55,6 +55,11 @@
   - ``'PyPy_T3'`` dissociation curve for pyridine dimer, t-shaped
   - ``'BzBz_PD32'`` dissociation curve for benzene dimer, parallel displaced by 3.2A
   - ``'BzBz_PD36'`` dissociation curve for benzene dimer, parallel displaced by 3.6A
+  - ``'5min'`` five points on each dissociation curve incl. and surrounding equilibrium
+  - ``'MX'`` mixed-influence systems
+  - ``'DD'`` dispersion-dominated systems
+  - ``'MXDDPP'`` pi-pi-type mixed and dispersion systems
+  - ``'MXDDNP'`` non-pi-pi-type mixed and dispersion systems
 
 """
 import re
@@ -117,10 +122,24 @@ for d in dist:
 temp = [BzBz_S, BzBz_T, BzBz_PD34, BzH2S, BzMe, MeMe, PyPy_S2, PyPy_T3, BzBz_PD32, BzBz_PD36]
 HRXN = sum(temp, [])
 
+HRXN_5MIN = ['BzBz_S-3.7', 'BzBz_S-3.8', 'BzBz_S-3.9', 'BzBz_S-4.0', 'BzBz_S-4.1',
+             'BzBz_T-4.8', 'BzBz_T-4.9', 'BzBz_T-5.0', 'BzBz_T-5.1', 'BzBz_T-5.2',
+             'BzBz_PD34-1.6', 'BzBz_PD34-1.7', 'BzBz_PD34-1.8', 'BzBz_PD34-1.9', 'BzBz_PD34-2.0',
+             'BzH2S-3.6', 'BzH2S-3.7', 'BzH2S-3.8', 'BzH2S-3.9', 'BzH2S-4.0',
+             'BzMe-3.6', 'BzMe-3.7', 'BzMe-3.8', 'BzMe-3.9', 'BzMe-4.0',
+             'MeMe-3.4', 'MeMe-3.5', 'MeMe-3.6', 'MeMe-3.7', 'MeMe-3.8',
+             'PyPy_S2-3.5', 'PyPy_S2-3.6', 'PyPy_S2-3.7', 'PyPy_S2-3.8', 'PyPy_S2-3.9',
+             'PyPy_T3-4.7', 'PyPy_T3-4.8', 'PyPy_T3-4.9', 'PyPy_T3-5.0', 'PyPy_T3-5.1',
+             'BzBz_PD32-1.7', 'BzBz_PD32-1.8', 'BzBz_PD32-1.9', 'BzBz_PD32-2.0', 'BzBz_PD32-2.2',
+             'BzBz_PD36-1.5', 'BzBz_PD36-1.6', 'BzBz_PD36-1.7', 'BzBz_PD36-1.8', 'BzBz_PD36-1.9']
 HRXN_SM = ['BzMe-6.0', 'MeMe-5.0']
 HRXN_LG = ['BzBz_T-5.0']
 HRXN_EQ = ['BzBz_S-3.9', 'BzBz_T-5.0', 'BzBz_PD34-1.8', 'BzH2S-3.8', 'BzMe-3.8',
            'MeMe-3.6', 'PyPy_S2-3.7', 'PyPy_T3-4.9', 'BzBz_PD32-1.9', 'BzBz_PD36-1.7']
+MX = sum([BzH2S, PyPy_T3, BzBz_PD32], [])
+DD = sum([BzBz_S, BzBz_T, BzBz_PD34, BzMe, MeMe, PyPy_S2, BzBz_PD36], [])
+MXDDPP = sum([BzBz_S, BzBz_PD34, PyPy_S2, BzBz_PD32, BzBz_PD36], [])
+MXDDNP = sum([BzBz_T, BzH2S, BzMe, MeMe, PyPy_T3], [])
 
 # <<< Chemical Systems Involved >>>
 RXNM = {}     # reaction matrix of reagent contributions per reaction
@@ -1122,7 +1141,8 @@ units angstrom
 # <<< Derived Geometry Strings >>>
 for rxn in HRXN:
     GEOS['%s-%s-monoA-CP'   % (dbse, rxn)] = GEOS['%s-%s-dimer' % (dbse, rxn)].extract_fragments(1, 2)
-    GEOS['%s-%s-monoB-CP'   % (dbse, rxn)] = GEOS['%s-%s-dimer' % (dbse, rxn)].extract_fragments(2, 1)
+    if rxn in sum([BzBz_T, BzH2S, BzMe, PyPy_T3], []):
+        GEOS['%s-%s-monoB-CP'   % (dbse, rxn)] = GEOS['%s-%s-dimer' % (dbse, rxn)].extract_fragments(2, 1)
 
 #########################################################################
 
