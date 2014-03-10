@@ -28,13 +28,17 @@ __version__ = '0.1'
 __author__ = 'Lori A. Burns'
 
 # Load Python modules
-from molecule import *
+#from molecule import *
+from molecule import Molecule
 from dbproc import *
 from options import *
 from qcformat import *
 import cfour
 import jajo
 from orient import OrientMols
+#from dbwrap import *
+from dbwrap import Database, FourDatabases #, ReactionDatum, Reagent, Reaction
+
 
 # Load items that are useful to access from an input file
 from psiutil import *
