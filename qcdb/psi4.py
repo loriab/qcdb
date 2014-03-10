@@ -29,7 +29,7 @@ import qcformat
 import options
 
 
-class Psi4In(qcformat.InputFormat2):
+class Infile(qcformat.InputFormat2):
 
     def __init__(self, mem, mol, mtd, der, opt):
         qcformat.InputFormat2.__init__(self, mem, mol, mtd, der, opt)
@@ -179,6 +179,16 @@ def muster_modelchem(name, dertype):
         options['SAPT']['DO_MBPT_DISP']['value'] = True
         text += """sapt2+3(ccd)')\n\n"""
 
+    elif lowername == 'df-b97-d3':
+        options['SCF']['SCF_TYPE']['value'] = 'df'
+        options['SCF']['DFT_SPHERICAL_POINTS']['value'] = 302
+        options['SCF']['DFT_RADIAL_POINTS']['value'] = 100
+        text += """b97-d3')\n\n"""
+
+    elif lowername == 'ccsd-polarizability':
+        options['GLOBALS']['FREEZE_CORE']['value'] = True
+        text = """property('ccsd', properties=['polarizability'])\n\n"""
+
     else:
         raise ValidationError("""Requested Cfour computational methods %d is not available.""" % (lowername))
 
@@ -196,12 +206,14 @@ def muster_modelchem(name, dertype):
 
 procedures = {
     'energy': {
+        'df-b97-d3'     : muster_modelchem,
         'mp2'           : muster_modelchem,
         'df-mp2'        : muster_modelchem,
         'sapt0'         : muster_modelchem,
         'sapt2+'        : muster_modelchem,
         'sapt2+(3)'     : muster_modelchem,
         'sapt2+3(ccd)'  : muster_modelchem,
+        'ccsd-polarizability'  : muster_modelchem,
     }
 }
 

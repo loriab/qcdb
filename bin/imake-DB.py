@@ -93,6 +93,7 @@ print """
  Choose your quantum chemistry program.
     #[qchem]
     [molpro]       writes Molpro input files
+    [molpro2]      writes Molpro input files
     [psi4]         writes Psi4 input files
     #[nwchem]
     #[xyz]          writes basic xyz files only
@@ -101,7 +102,7 @@ print """
 user_obedient = False
 while not user_obedient:
     temp = raw_input('    qcprog = ').strip()
-    if temp.lower() in ['molpro', 'psi4']:
+    if temp.lower() in ['molpro', 'psi4', 'molpro2']:
         qcprog = temp.lower()
         user_obedient = True
 
@@ -331,8 +332,8 @@ for basis in bases:
                 if qcprog == 'molpro':
                     infile = qcmod.MolproIn(memory, method, basis, GEOS[system], system, castup).format_infile_string()
 
-                elif qcprog == 'psi4':
-                    infile = qcmod.Psi4In(memory, GEOS[system], method, dertype, options).format_infile_string()
+                elif qcprog == 'psi4' or qcprog == 'molpro2':
+                    infile = qcmod.Infile(memory, GEOS[system], method, dertype, options).format_infile_string()
 
             except FragmentCountError:
                 pass
