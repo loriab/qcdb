@@ -57,6 +57,12 @@ def scale(v, d):
     return [d * v[i] for i in range(len(v))]
 
 
+def naivemult(v, u):
+    """Compute by-element multiplication of vectors *v* and *u*."""
+    if len(u) != len(v):
+        raise ValidationError('naivemult() only defined for vectors of same length \n')
+    return [u[i] * v[i] for i in range(len(v))]
+
 def normalize(v):
     """Compute normalized vector *v*."""
     vmag = norm(v)

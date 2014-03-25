@@ -53,16 +53,16 @@ class Molecule(LibmintsMolecule):
     def __str__(self):
         text = """  ==> qcdb Molecule %s <==\n\n""" % (self.name())
         text += """   => %s <=\n\n""" % (self.tagline)
-        text += self.save_string_for_psi4()
+        text += self.create_psi4_string_from_molecule()
         return text
 
 #    def __getstate__(self):
 #        print 'im being pickled'
 #        return self.__dict__
 
-    def __setstate__(self, d):
-        #print 'im being unpickled with these values', d
-        self.__dict__ = d
+#    def __setstate__(self, d):
+#        print 'im being unpickled with these values', d
+#        self.__dict__ = d
 
     @classmethod
     def init_with_xyz(cls, xyzfilename, no_com=False, no_reorient=False, contentsNotFilename=False):

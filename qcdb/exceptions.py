@@ -81,3 +81,22 @@ class FragmentCountError(QcdbException):
         QcdbException.__init__(self, msg)
         self.msg = msg
         #print('\nQcdbException: %s\n\n' % (msg))
+
+class BasisSetFileNotFound(QcdbException):
+    """
+
+    """
+    def __init__(self, msg, filen, line):
+        QcdbException.__init__(self, msg)
+        self.msg = msg
+        print('\nQcdbException BasisSetFileNotFound: %s\n\n' % (msg))
+
+class BasisSetNotFound(QcdbException):
+    """
+
+    """
+    def __init__(self, msg):
+        QcdbException.__init__(self, msg)
+        self.msg = msg
+        print('\nQcdbException BasisSetNotFound: %s\n\n' % (msg))
+

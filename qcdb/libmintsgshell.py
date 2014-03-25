@@ -1,6 +1,60 @@
 """Class to
 
 """
+import math
+
+#MAX_IOFF = 30000
+#extern size_t ioff[MAX_IOFF];
+#
+#MAX_DF = 500
+#extern double df[MAX_DF];
+#
+#MAX_BC = 20
+#extern double bc[MAX_BC][MAX_BC];
+#
+#MAX_FAC = 100
+#extern double fac[MAX_FAC];
+#
+#
+#MAX_DF = 500
+#extern double df[MAX_DF];
+#
+## Globals
+#size_t ioff[MAX_IOFF];
+#double df[MAX_DF];
+#double bc[MAX_BC][MAX_BC];
+#double fac[MAX_FAC];
+#
+#def Wavefunction_initialize_singletons():
+#    done = False
+#
+#    if done:
+#        return
+#
+#    ioff[0] = 0;
+#    for (size_t i=1; i<MAX_IOFF; ++i)
+#        ioff[i] = ioff[i-1] + i;
+#
+#    df[0] = 1.0;
+#    df[1] = 1.0;
+#    df[2] = 1.0;
+#    for (int i=3; i<MAX_DF; ++i)
+#        df[i] = (i-1)*df[i-2];
+#
+#    for (int i=0; i<MAX_BC; ++i)
+#        for (int j=0; j<=i; ++j)
+#            bc[i][j] = combinations(i, j);
+#
+#    fac[0] = 1.0;
+#    for (int i=1; i<MAX_FAC; ++i)
+#        fac[i] = i*fac[i-1];
+#
+#    done = True
+
+
+def df(n):
+    """Gives the double factorial of *i*"""
+    return 1.0 if n <= 0 else 1.0 * n * df(n - 2)
 
 
 def INT_NCART(am):
@@ -24,7 +78,10 @@ def INT_NFUNC(pu, am):
     #define INT_NFUNC(pu,am) ((pu)?INT_NPURE(am):INT_NCART(am))
 
     """
-    return INT_NPURE(am) if pu else INT_NCART(am)
+    if pu == 'Cartesian' or pu == False:
+        return INT_NCART(am)
+    else:
+        return INT_NPURE(am)
 
 
 def INT_CARTINDEX(am, i, j):
@@ -78,16 +135,16 @@ class ShellInfo(object):
     def __init__(self, am, c, e, pure, nc, center, start, pt='Normalized'):
         # Angular momentum
         self.l = am
-        # Flag for pure angular momentum
+        # Flag for pure angular momentum (Cartesian = 0, Pure = 1)
         self.puream = pure
         # Exponents (of length nprimitives_)
-        self.exp = e
+        self.PYexp = e
         # Contraction coefficients (of length nprimitives_)
-        self.coef = c
+        self.PYcoef = c
         # ERD normalized contraction coefficients (of length nprimitives_)
-        self.erd_coef
+        self.PYerd_coef = []
         # Original (un-normalized) contraction coefficients (of length nprimitives)
-        self.original_coef = [c[n] for n in range(len(c))]
+        self.PYoriginal_coef = [c[n] for n in range(len(c))]
         # Atom number this shell goes to. Needed when indexing integral derivatives.
         self.nc = nc
         # Atomic center number in the Molecule
@@ -95,9 +152,9 @@ class ShellInfo(object):
         #
         self.start = start
         # How many cartesian functions? (1=s, 3=p, 6=d, ...)
-        self.ncartesian = INT_NCART(self.l)
+        self.PYncartesian = INT_NCART(self.l)
         # How many functions? (1=s, 3=p, 5/6=d, ...) * Dependent on the value of puream_
-        self.nfunction = INT_NFUNC(self.puream, self.l)
+        self.PYnfunction = INT_NFUNC(self.puream, self.l)
 
         # Compute the normalization constants
         if pt == 'Unnormalized':
@@ -111,9 +168,9 @@ class ShellInfo(object):
 
         """
         tmp1 = self.l + 1.5
-        g = 2.0 * self.exp[p]
+        g = 2.0 * self.PYexp[p]
         z = pow(g, tmp1)
-        return math.sqrt((pow(2.0, self.l) * z) / (math.pi * math.sqrt(math.pi) * df[2 * self.l]))
+        return math.sqrt((pow(2.0, self.l) * z) / (math.pi * math.sqrt(math.pi) * df(2 * self.l)))
 
     def contraction_normalization(self):
         """Normalizes an entire contraction set. Applies the normalization to the coefficients
@@ -123,18 +180,18 @@ class ShellInfo(object):
         e_sum = 0.0
         for i in range(self.nprimitive()):
             for j in range(self.nprimitive()):
-                g = self.exp[i] + self.exp[j]
+                g = self.PYexp[i] + self.PYexp[j]
                 z = pow(g, self.l + 1.5)
-                e_sum += self.coef[i] * self.coef[j] / z
+                e_sum += self.PYcoef[i] * self.PYcoef[j] / z
 
-        tmp = ((2.0 * math.pi / (2.0 / math.sqrt(math.pi))) * df[2 * self.l]) / pow(2.0, self.l)
+        tmp = ((2.0 * math.pi / (2.0 / math.sqrt(math.pi))) * df(2 * self.l)) / pow(2.0, self.l)
         try:
             norm = math.sqrt(1.0 / (tmp * e_sum))
         except ZeroDivisionError:
-            self.coef[i] = [1.0 for i in range(self.nprimitive())]
+            self.PYcoef[i] = [1.0 for i in range(self.nprimitive())]
         # Set the normalization
         for i in range(self.nprimitive()):
-            self.coef[i] *= norm
+            self.PYcoef[i] *= norm
 
     def normalize_shell(self):
         """Handles calling primitive_normalization and
@@ -143,20 +200,20 @@ class ShellInfo(object):
         """
         for i in range(self.nprimitive()):
             normalization = self.primitive_normalization(i)
-            self.coef[i] *= normalization
+            self.PYcoef[i] *= normalization
         self.contraction_normalization()
 
     def erd_normalize_shell(self):
         """
 
         """
-        self.erd_coef = []
+        self.PYerd_coef = []
         tsum = 0.0
         for j in range(self.nprimitive()):
-            for k in range(j):
-                a1 = self.exp[j]
-                a2 = self.exp[k]
-                temp = self.original_coef(j) * self.original_coef(k)
+            for k in range(j + 1):
+                a1 = self.PYexp[j]
+                a2 = self.PYexp[k]
+                temp = self.PYoriginal_coef[j] * self.PYoriginal_coef[k]
                 temp2 = self.l + 1.5
                 temp3 = 2.0 * math.sqrt(a1 * a2) / (a1 + a2)
                 temp3 = pow(temp3, temp2)
@@ -166,26 +223,26 @@ class ShellInfo(object):
                     tsum += temp
         prefac = 1.0
         if self.l > 1:
-            prefac = pow(2.0, 2 * self.l) / df[2 * self.l]
+            prefac = pow(2.0, 2 * self.l) / df(2 * self.l)
         norm = math.sqrt(prefac / tsum)
         for j in range(self.nprimitive()):
-            self.erd_coef.append(self.original_coef[j] * norm)
+            self.PYerd_coef.append(self.PYoriginal_coef[j] * norm)
 
     def copy(self, nc=None, c=None):
         """Make a copy of the ShellInfo"""
         if nc is not None and c is not None:
-            return ShellInfo(self.l, self.original_coef, self.exp,
-                GaussianType[self.puream], nc, c,
+            return ShellInfo(self.l, self.PYoriginal_coef, self.PYexp,
+                self.puream, nc, c,
                 self.start, 'Unnormalized')
         else:
-            return ShellInfo(self.l, self.original_coef, self.exp,
-                GaussianType[self.puream], self.nc, self.center,
+            return ShellInfo(self.l, self.PYoriginal_coef, self.PYexp,
+                self.puream, self.nc, self.center,
                 self.start, 'Unnormalized')
         # better to just deepcopy?
 
     def nprimitive(self):
         """The number of primitive Gaussians"""
-        return len(self.exp)
+        return len(self.PYexp)
 
     def nfunction(self):
         """Total number of basis functions"""
@@ -193,7 +250,7 @@ class ShellInfo(object):
 
     def ncartesian(self):
         """Total number of functions if this shell was Cartesian"""
-        return self.ncartesian
+        return self.PYncartesian
 
     def am(self):
         """The angular momentum of the given contraction"""
@@ -209,11 +266,11 @@ class ShellInfo(object):
 
     def is_cartesian(self):
         """Returns true if contraction is Cartesian"""
-        return not self.puream
+        return True if self.puream == 'Cartesian' else False
 
     def is_pure(self):
         """Returns true if contraction is pure"""
-        return self.puream
+        return True if self.puream == 'Pure' else False
 
     def center(self):
         """Returns the center of the Molecule this shell is on"""
@@ -225,39 +282,47 @@ class ShellInfo(object):
 
     def exp(self, prim):
         """Returns the exponent of the given primitive"""
-        return self.exp[prim]
+        return self.PYexp[prim]
 
     def coef(self, pi):
         """Return coefficient of pi'th primitive"""
-        return self.coef[pi]
+        return self.PYcoef[pi]
 
     def erd_coef(self, pi):
         """Return ERD normalized coefficient of pi'th primitive"""
-        return self.erd_coef[pi]
+        return self.PYerd_coef[pi]
 
     def original_coef(self, pi):
         """Return unnormalized coefficient of pi'th primitive"""
-        return self.original_coef[pi]
+        return self.PYoriginal_coef[pi]
 
     def exps(self):
         """Returns the exponent of the given primitive"""
-        return self.exp
+        return self.PYexp
 
     def coefs(self):
         """Return coefficient of pi'th primitive and ci'th contraction"""
-        return self.coef
+        return self.PYcoef
 
     def original_coefs(self):
         """Return unnormalized coefficient of pi'th primitive and ci'th contraction"""
-        return self.original_coef
+        return self.PYoriginal_coef
 
-    def print(self, outfile):
+    def pyprint(self, outfile=None):
         """Print out the shell"""
-        text = """    %c %3d 1.00\n""" % (AMCHAR(), self.nprimitive())
+        text = """    %c %3d 1.00\n""" % (self.AMCHAR(), self.nprimitive())
         for K in range(self.nprimitive()):
-            text += """               %20.8f %20.8f\n""" % (self.exp[K], self.original_coef[K])
-        with open(outfile, mode='w') as handle:
-            handle.write(text)
+            text += """               %20.8f %20.8f\n""" % (self.PYexp[K], self.PYoriginal_coef[K])
+
+        if outfile is None:
+            return text
+        else:
+            with open(outfile, mode='w') as handle:
+                handle.write(text)
+
+    def __str__(self):
+        """String representation of shell"""
+        return self.pyprint(outfile=None)
 
     def normalize(self, l, m, n):
         """Normalize the angular momentum component"""
@@ -270,6 +335,47 @@ class ShellInfo(object):
     def set_function_index(self, i):
         """Set basis function index where this shell starts."""
         self.start = i
+
+
+class GaussianShell(ShellInfo):
+    """Class with same information as :py:class:`ShellInfo`. In C++,
+    class uses more efficient data structures, but in Python differences
+    minimal.
+
+    """
+
+    def __init__(self, am, nprimitive, oc, c, ec, e, pure, nc, center, start):
+        """
+        *  @param am Angular momentum.
+        *  @param pure Pure spherical harmonics, or Cartesian.
+        *  @param oc An array of contraction coefficients.
+        *  @param c An array of normalized contraction coefficients.
+        *  @param ec An array of ERD normalized contraction coefficients.
+        *  @param e An array of exponent values.
+        *  @param pure an enum describing whether this shell uses pure or Cartesian functions.
+        *  @param nc The atomic center that this shell is located on. Must map back to the correct atom in the owning BasisSet molecule_. Used in integral derivatives for indexing.
+        *  @param center The x, y, z position of the shell. This is passed to reduce the number of calls to the molecule.
+        *  @param start The starting index of the first function this shell provides. Used to provide starting positions in matrices.
+        *  @param pt Is the shell already normalized?
+
+        """
+        self.l = am
+        self.PYnprimitive = nprimitive
+        self.puream = pure
+        self.PYexp = e
+        self.PYoriginal_coef = oc
+        self.PYcoef = c
+        self.PYerd_coef = ec
+        self.nc = nc
+        self.center = center
+        self.start = start
+        self.PYncartesian = INT_NCART(self.l)
+        self.PYnfunction = INT_NFUNC(self.puream, self.l)
+
+    def nprimitive(self):
+        """The number of primitive Gaussians"""
+        return self.PYnprimitive
+
 
 
 #GaussianShell(0, nprimitive_,
@@ -285,17 +391,3 @@ class ShellInfo(object):
 #    &uexponents_[prim_count], puream, center, xyz_, bf_count)
 #
 #ShellInfo(am, contractions, exponents, gaussian_type, 0, center, 0, Unnormalized)
-#
-#    def constuctGS(self, am, nprimitive, oc, c, ec, e, pure, nc, center, start):
-#        self.l = am
-#        self.nprimitive = nprimitive
-#        self.puream = pure
-#        self.exp = e
-#        self.original_coef = oc
-#        self.coef = c
-#        self.erd_coef = ec
-#        self.nc = nc
-#        self.center = center
-#        self.start = start
-#        self.ncartesian = INT_NCART(self.l)
-#        self.nfunction = INT_NFUNC(self.puream, self.l)
