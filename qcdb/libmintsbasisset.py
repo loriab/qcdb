@@ -1,6 +1,8 @@
 import os
+import re
 import collections
 from exceptions import *
+from psiutil import search_file
 from molecule import Molecule
 from libmintsgshell import GaussianShell
 from libmintsbasissetparser import Gaussian94BasisSetParser
@@ -30,8 +32,6 @@ class BasisSet(object):
         self.name = None
         # Array of gaussian shells
         self.shells = None
-        # vector of shells numbers sorted in acending AM order.
-        #self.sorted_ao_shell_list  # appears only in defunct refresh
         # Molecule object.
         self.molecule = None
 
@@ -169,26 +169,30 @@ class BasisSet(object):
         uoriginal_coefs = []
         uerd_coefs = []
         self.n_uprimitive = 0
-        for basis_iterfirst, basis_itersecond in shell_map.items():
-            basis = basis_iterfirst
+        for basisfirst, basissecond in shell_map.items():
+            basis = basisfirst
             symbol_map = shell_map[basis]
             primitive_start[basis] = {}
             primitive_end[basis] = {}
-            for symbol_iterfirst, symbol_itersecond in symbol_map.items():
-                symbol = symbol_iterfirst
-                shells = symbol_map[symbol]
-                primitive_start[basis][symbol] = self.n_uprimitive
+            for symbolfirst, symbolsecond in symbol_map.items():
+                #symbol = symbolfirst
+                #shells = symbol_map[symbol]
+                #primitive_start[basis][symbol] = self.n_uprimitive
+                label = symbolfirst
+                shells = symbol_map[label]
+                primitive_start[basis][label] = self.n_uprimitive
                 for i in range(len(shells)):
                     shell = shells[i]
                     #print shell
                     for prim in range(shell.nprimitive()):
                         uexps.append(shell.exp(prim))
-                        #print basis_iterfirst, symbol_iterfirst, i, prim, shell.exp(prim), len(uexps)
+                        #print basisfirst, symbolfirst, i, prim, shell.exp(prim), len(uexps)
                         ucoefs.append(shell.coef(prim))
                         uoriginal_coefs.append(shell.original_coef(prim))
                         uerd_coefs.append(shell.erd_coef(prim))
                         self.n_uprimitive += 1
-                primitive_end[basis][symbol] = self.n_uprimitive
+                #primitive_end[basis][symbol] = self.n_uprimitive
+                primitive_end[basis][label] = self.n_uprimitive
 
         #print 'prim_stt', primitive_start
         #print 'prim_end', primitive_end
@@ -202,8 +206,10 @@ class BasisSet(object):
         for n in range(natom):
             atom = self.molecule.atom_entry(n)
             basis = atom.basisset(role)
-            symbol = atom.symbol()
-            shells = shell_map[basis][symbol]
+            #symbol = atom.symbol()
+            #shells = shell_map[basis][symbol]
+            label = atom.label()
+            shells = shell_map[basis][label]
             for i in range(len(shells)):
                 shell = shells[i]
                 nprim = shell.nprimitive()
@@ -253,10 +259,14 @@ class BasisSet(object):
         for n in range(natom):
             atom = self.molecule.atom_entry(n)
             basis = atom.basisset(role)
-            symbol = atom.symbol()
-            shells = shell_map[basis][symbol]
-            ustart = primitive_start[basis][symbol]
-            uend = primitive_end[basis][symbol]
+            #symbol = atom.symbol()
+            #shells = shell_map[basis][symbol]
+            #ustart = primitive_start[basis][symbol]
+            #uend = primitive_end[basis][symbol]
+            label = atom.label()
+            shells = shell_map[basis][label]
+            ustart = primitive_start[basis][label]
+            uend = primitive_end[basis][label]
             nshells = len(shells)
             self.center_to_nshell[n] = nshells
             self.center_to_shell[n] = shell_count
@@ -615,16 +625,16 @@ class BasisSet(object):
         if level < 1:
             return
         elif level == 1:
-            text = self.pyprint(out)
+            text = self.pyprint(out=None)
         elif level == 2:
-            text = self.print_summary(out)
+            text = self.print_summary(out=None)
         elif level > 2:
-            text = self.print_detail(out)
+            text = self.print_detail(out=None)
 
         if out is None:
             print text
         else:
-            with open(outfile, mode='w') as handle:
+            with open(out, mode='w') as handle:
                 handle.write(text)
 
     def pyprint(self, out=None):
@@ -705,7 +715,7 @@ class BasisSet(object):
         if out is None:
             return text
         else:
-            with open(outfile, mode='w') as handle:
+            with open(out, mode='w') as handle:
                 handle.write(text)
 
     def print_detail(self, out=None):
@@ -735,7 +745,7 @@ class BasisSet(object):
         if out is None:
             return text
         else:
-            with open(outfile, mode='w') as handle:
+            with open(out, mode='w') as handle:
                 handle.write(text)
 
     def print_detail_cfour(self, out=None):
@@ -815,16 +825,20 @@ class BasisSet(object):
                         text += """%10.7f """ % (coef_per_am[am][bf * len(exp_per_am[am]) + ep])
                     text += '\n'
                 text += '\n'
-        return text
+
+        if out is None:
+            return text
+        else:
+            with open(out, mode='w') as handle:
+                handle.write(text)
 
     def refresh(self):
-        """Refresh internal basis set data. Useful if someone has pushed to shells_.
-        *  Pushing to shells_ happens in the BasisSetParsers, so the parsers will
-        *  call refresh().
+        """Refresh internal basis set data. Useful if someone has pushed
+        to shells_. Pushing to shells_ happens in the BasisSetParsers, so
+        the parsers will call refresh(). This function is now defunct.
 
         """
-        # TODO check really just pass
-        pass
+        raise FeatureNotImplemented('BasisSet::refresh')
 
     def nshell_on_center(self, i):
         """Return the number of shells on a given center."""
@@ -1017,7 +1031,6 @@ class BasisSet(object):
         ##return make_pair(labels, new_basis)
         #return new_basis
 
-
 #        self.name = None
 ##        self.shells = None
 ##        self.molecule = None
@@ -1057,103 +1070,58 @@ class BasisSet(object):
         # Update geometry in molecule, if there is a problem an exception is thrown.
         mol.update_geometry()
 
-        # TODO
-        # For each one try to load the basis set
-        #std::string psiPath = PSIOManager::shared_object()->get_default_path() +
-        #    ":" + Process::environment("PSIPATH");
+        # Paths to search for gbs files
+        basisPath = ':'.join([os.path.abspath(x) for x in os.environ.get('PSIPATH', '').split(':')]) + \
+            ':' + os.path.abspath(os.environ.get('PSIDATADIR')) + '/basis'
+            # TODO: submission dir, #psi4.Process.environment["PSIDATADIR"] + '/basis' + ':' + psi4.psi_top_srcdir() + '/lib/basis'
+            #std::string psiPath = PSIOManager::shared_object()->get_default_path() +
+            # somehow the calling dir is included, i'm not seeing how
 
         # Map of GaussianShells
-        #  basis           atom        gaussian shells
-        #typedef map<string, map<string, vector<ShellInfo> > > map_ssv;  # map_ssv[basis][atom] = [ShellInfo]
-        #typedef map<string, vector<ShellInfo> > map_sv;                 # map_sv[atom] = [ShellInfo]
-        #map_ssv basis_atom_shell;
-        basis_atom_shell = collections.OrderedDict()
+        basis_atom_shell = collections.OrderedDict()  # basis_atom_shell[str(basis)][str(atom)] = GaussianShells(shells)
+        names = collections.OrderedDict()  # names[str(basis)] = int(found)
 
-        #map<string, int> names;         # names[string] = int
-        names = collections.OrderedDict()
-
-        #for atom in range(mol.natom()):
-        #    print mol.atom_entry(atom).everything()
         for atom in range(mol.natom()):
-
-            symbol = mol.atom_entry(atom).symbol()
-            basisname = mol.atom_entry(atom).basisset(role)
-
-            if basisname == '':
-                raise ValidationError("""BasisSet::construct: No basis set specified for %s and %s.""" %
+            symbol = mol.atom_entry(atom).symbol()  # O, He
+            label = mol.atom_entry(atom).label()  # O3, C_Drot, He
+            try:
+                basisname = mol.atom_entry(atom).basisset(role)
+            except KeyError:
+                raise BasisSetNotDefined("""BasisSet::construct: No basis set specified for %s and %s.""" %
                     (symbol, role))
 
             names[basisname] = 1
-
             # Add basisname, symbol to the list by clearing the vector.
             if basisname not in basis_atom_shell:
                 basis_atom_shell[basisname] = collections.OrderedDict()
-            basis_atom_shell[basisname][symbol] = []
+            basis_atom_shell[basisname][label] = []
 
         for basisfirst, basissecond in basis_atom_shell.items():
-            print "Working on basis %s\n" % (basisfirst)
-#            not_found = True
-#            user_list = []
-#
-#            for tok_iter in psiPath.split(':'):
-#                psiPathWithBasis = tok_iter + '/' + self.make_filename(basisfirst)
-#                print 'file', psiPathWithBasis
-#                try:
-#                    parser.load_file(psiPathWithBasis)
-#                    user_list.insert(0, psiPathWithBasis)
-#                except BasisSetFileNotFound, e:
-#                    pass
-#
-#            for user_file in user_list:
-#                # TODO
-#                #boost::filesystem::path bf_path;
-#                #bf_path = boost::filesystem::system_complete(user_file);
-#                # Load in the basis set and remove it from atomsymbol_to_basisname
-#                files = parser.load_file(bfpath)
-#
-#                for atomfirst, atomsecond in basissecond.items():
-#                    symbol = atomfirst
-#
-#                    # Don't even look, if this has already been found
-#                    if len(basis_atom_shell[basisfirst][symbol]) != 0:
-#                        continue
-#
-#                    try:
-#                        # Need to wrap this is a try catch block
-#                        basis_atom_shell[basisfirst][symbol] = parser.parse(symbol, files)
-#
-#                        text += "  Basis set %s for %s read from %s\n" % \
-#                            (basisfirst, symbol, user_file)
-#                        not_found = False
-#                    except BasisSetNotFound, e:
-#                        # This is thrown when load_file fails
-#                        text += "  Unable to find %s for %s in %s.\n" % \
-#                            (basisfirst, symbol, user_file)
-#                        not_found = True
-
             filename = cls.make_filename(basisfirst)
-            path = os.getenv('PSIDATADIR')
-            lines = []
+            fullfilename = search_file(filename, basisPath)
 
-            try:
-                # Don't even look, if this has already been found
-                for atomfirst, atomsecond in basissecond.items():
-                    symbol = atomfirst
-                    # Don't bother looking if we've already found this
-                    if len(atomsecond) == 0:
-                        if len(lines) == 0:
-                            lines = parser.load_file(path + '/basis/' + filename)
-                        # If not found this will throw...let it.
-                        basis_atom_shell[basisfirst][symbol] = parser.parse(symbol, lines)
-                        #print 'BS construct: ', basis_atom_shell[basisfirst][symbol]
-            except BasisSetFileNotFound, e:
-                raise ValidationError("  Unable to load %s from the default Psi4 basis set library." % (filename))
+            if fullfilename is None:
+                print '\nBasis set file %s failed to load\n\n' % (filename)
+                print '\nSearch path that was tried:\n'
+                print ', '.join(map(str, basisPath.split(':')))
+                raise BasisSetFileNotFound('Basis set file loading problem for ' + (filename))
+
+            lines = parser.load_file(fullfilename)
+            for atomfirst, atomsecond in basissecond.items():
+                label = atomfirst
+                symbol = re.split('\d|_', label)[0]
+
+                # Tries to find basis for label (e.g., N88) in basis. Failing that,
+                #   tries to find basis for symbol (e.g., N) in basis.
+                try:
+                    basis_atom_shell[basisfirst][label] = parser.parse(label, lines)
+                except BasisSetNotFound:
+                    if label == symbol:
+                        raise BasisSetNotFound
+                    else:
+                        basis_atom_shell[basisfirst][label] = parser.parse(symbol, lines)
 
         basisset = BasisSet(role, mol, basis_atom_shell)
-
-        #TODO ACS is this still needed?
-        # This step is very important. Without it the basis set is useless.
-        basisset.refresh()
 
         basisset.name = ''
         for name in names:
@@ -1197,12 +1165,12 @@ class BasisSet(object):
         return basisname
 
     def get_ao_sorted_shell(self, i):
-        """Returns the value of the sorted shell list."""
-        return self.sorted_ao_shell_list[i]
+        """Returns the value of the sorted shell list. Defunct"""
+        raise FeatureNotImplemented('BasisSet::get_ao_sorted_shell')
 
     def get_ao_sorted_list(self):
-        """Returns the vector of sorted shell list."""
-        return self.sorted_ao_shell_list
+        """Returns the vector of sorted shell list. Defunct"""
+        raise FeatureNotImplemented('BasisSet::get_ao_sorted_list')
 
     def compute_phi(self, phi_ao, x, y, z):
         """Returns the values of the basis functions at a point"""
@@ -1317,24 +1285,6 @@ def shell_sorter_am(d1, d2):
 #}
 
 
-
-
-
-
-
-
-
-
-
-
-
-#
-#
-#
-#
-#
-#
-#
 #
 #
 #//boost::shared_ptr<SOBasisSet> BasisSet::zero_so_basis_set(const boost::shared_ptr<IntegralFactory>& factory)
@@ -1344,97 +1294,6 @@ def shell_sorter_am(d1, d2):
 #//    return sozero;
 #//}
 #
-#
-#
-#
-#void BasisSet::refresh()
-#{
-#    //TODO FIXME!!!
-#//    // Reset data to initial values
-#//    nprimitive_ = 0;
-#//    nao_ = 0;
-#//    nbf_ = 0;
-#//    max_am_ = 0;
-#//    max_nprimitive_ = 0;
-#//    puream_ = false;
-#
-#//    shell_first_basis_function_.clear(); shell_first_basis_function_.resize(nshell(), 0);
-#//    shell_first_ao_.clear();             shell_first_ao_.resize(nshell(), 0);
-#//    shell_center_.clear();               shell_center_.resize(nshell(), 0);
-#//    function_center_.clear();
-#//    center_to_nshell_.clear();           center_to_nshell_.resize(molecule_->natom(), 0);
-#//    center_to_shell_.clear();            center_to_shell_.resize(molecule_->natom(), 0);
-#//    center_to_shell_[0] = 0;
-#
-#//    int current_center = 0;
-#
-#//    for (int i=0; i<nshell(); ++i) {
-#//        shell_center_[i]   = shells_[i].ncenter();
-#//        shell_first_ao_[i] = nao_;
-#//        shell_first_basis_function_[i] = nbf_;
-#//        shells_[i].set_function_index(nbf_);
-#
-#//        center_to_nshell_[shell_center_[i]]++;
-#//        if (current_center != shell_center_[i]) {
-#//            center_to_shell_[shell_center_[i]] = i;
-#//            current_center = shell_center_[i];
-#//        }
-#
-#//        nprimitive_ += shells_[i].nprimitive();
-#//        nao_        += shells_[i].ncartesian();
-#//        nbf_        += shells_[i].nfunction();
-#
-#//        for (int m = 0; m < shells_[i].nfunction(); m++) {
-#//            function_center_.push_back(shells_[i].ncenter());
-#//        }
-#
-#//        if (max_am_ < shells_[i].am())
-#//            max_am_ = shells_[i].am();
-#
-#//        if (max_nprimitive_ < shells_[i].nprimitive())
-#//            max_nprimitive_ = shells_[i].nprimitive();
-#
-#//        if (puream_ == false && shells_[i].is_pure())
-#//            puream_ = true;
-#//    }
-#
-#//    function_to_shell_.resize(nbf());
-#//    int ifunc = 0;
-#//    for (int i=0; i<nshell(); ++i) {
-#//        int nfun = shells_[i].nfunction();
-#//        for (int j=0; j<nfun; ++j) {
-#//            function_to_shell_[ifunc] = i;
-#//            ifunc++;
-#//        }
-#//    }
-#//    ao_to_shell_.resize(nao());
-#//    ifunc = 0;
-#//    for (int i=0; i<nshell(); ++i) {
-#//        int nfun = shells_[i].ncartesian();
-#//        for (int j=0; j<nfun; ++j) {
-#//            ao_to_shell_[ifunc] = i;
-#//            ifunc++;
-#//        }
-#//    }
-#
-#//    // Create a map that has a key/value pair
-#//    // The key is the angular momentum function of the shell arranged in decending order
-#//    // The value is the actual shell number
-#//    typedef std::pair<int, int> am_to_shell_pair;
-#//    std::multimap< int, int, std::less<int> > am_to_shell_list;
-#//    for (int i=0; i < shells_.size(); i++) {
-#//        am_to_shell_list.insert(am_to_shell_pair(shells_[i].nfunction(), i));
-#//    }
-#//    // This puts the sorted shell values into the sorted_shell_list_ vector
-#//    // This can be used by the integral iterator to look up the value of the sorted shells
-#//    std::multimap< int, int, std::less<int> >::iterator it;
-#//    sorted_ao_shell_list_.clear();
-#//    for (it=am_to_shell_list.begin(); it != am_to_shell_list.end(); it++) {
-#//        //std::cout << "sorted shell size = " << it->first <<
-#//        //        "\t, which belongs to shell number " << it->second << std::endl;
-#//        sorted_ao_shell_list_.push_back(it->second);
-#//    }
-#}
 #
 #
 #

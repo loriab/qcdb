@@ -86,7 +86,7 @@ class BasisSetFileNotFound(QcdbException):
     """
 
     """
-    def __init__(self, msg, filen, line):
+    def __init__(self, msg):
         QcdbException.__init__(self, msg)
         self.msg = msg
         print('\nQcdbException BasisSetFileNotFound: %s\n\n' % (msg))
@@ -95,8 +95,18 @@ class BasisSetNotFound(QcdbException):
     """
 
     """
+    def __init__(self, msg, silent=False):
+        QcdbException.__init__(self, msg)
+        self.msg = msg
+        if not silent:
+            print('\nQcdbException BasisSetNotFound: %s\n\n' % (msg))
+
+class BasisSetNotDefined(QcdbException):
+    """
+
+    """
     def __init__(self, msg):
         QcdbException.__init__(self, msg)
         self.msg = msg
-        print('\nQcdbException BasisSetNotFound: %s\n\n' % (msg))
+        print('\nQcdbException BasisSetNotDefined: %s\n\n' % (msg))
 
