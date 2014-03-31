@@ -157,10 +157,13 @@ class VariableValue(CoordValue):
 
 
 class CoordEntry(object):
-    """Class to
+    """Class to store all the attributes associated with an atom, not the
+    larger Molecule. Specialized into CartesianEntry and ZMatrixEntry.
 
     """
+
     def __init__(self, entry_number, Z, charge, mass, symbol, label="", basis=None):
+        """Constructor"""
         # Order in full atomic list
         self.PYentry_number = entry_number
         # Whether the coordinates have been computed
@@ -180,7 +183,6 @@ class CoordEntry(object):
         # Is this a ghost atom?
         self.ghosted = False
         # Different types of basis sets that can be assigned to this atom.
-        # option name, basis name
         self.PYbasissets = basis if basis is not None else collections.OrderedDict()
 
     @staticmethod
@@ -240,7 +242,8 @@ class CoordEntry(object):
         for bas in self.PYbasissets:
             try:
                 tmp = other.PYbasissets[bas]
-            except ValueError:
+            #except ValueError:
+            except KeyError:
                 # This basis was never defined for the other atom
                 return False
             if self.PYbasissets[bas] != other.PYbasissets[bas]:
@@ -309,7 +312,9 @@ class CoordEntry(object):
 
     def everything(self):
         print '\nCoordEntry\n  Entry Number = %d\n  Computed = %s\n  Z = %d\n  Charge = %f\n  Mass = %f\n  Symbol = %s\n  Label = %s\n  Ghosted = %s\n  Coordinates = %s\n  Basissets = %s\n\n' % \
-            (self.entry_number(), self.is_computed(), self.Z(), self.charge(), self.mass(), self.symbol(), self.label(), self.is_ghosted(), self.coordinates, self.PYbasissets) #'' if self.PYbasissets is None else self.PYbasissets)
+            (self.entry_number(), self.is_computed(), self.Z(), self.charge(),
+            self.mass(), self.symbol(), self.label(), self.is_ghosted(),
+            self.coordinates, self.PYbasissets)
 
 
 class CartesianEntry(CoordEntry):
@@ -397,8 +402,12 @@ class ZMatrixEntry(CoordEntry):
 
     """
 
-    def __init__(self, entry_number, Z, charge, mass, symbol, label, basis=None, \
-        rto=None, rval=0, ato=None, aval=0, dto=None, dval=0):
+    #def __init__(self, entry_number, Z, charge, mass, symbol, label, basis=None, \
+    #    rto=None, rval=0, ato=None, aval=0, dto=None, dval=0):
+    #    CoordEntry.__init__(self, entry_number, Z, charge, mass, symbol, label, basis)
+    def __init__(self, entry_number, Z, charge, mass, symbol, label, \
+        rto=None, rval=0, ato=None, aval=0, dto=None, dval=0, basis=None):
+        """Constructor"""  # note that pos'n of basis arg changed from libmints
         CoordEntry.__init__(self, entry_number, Z, charge, mass, symbol, label, basis)
         self.rto = rto
         self.rval = rval

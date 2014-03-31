@@ -12,19 +12,20 @@ class Gaussian94BasisSetParser(object):
     """
 
     def __init__(self, forced_puream=None):
+        """Constructor"""
         # If the parser needs to force spherical or cartesian (e.g., loading old guess)
         self.force_puream_or_cartesian = False if forced_puream is None else True
         # Is the forced value to use puream?  (Otherwise force Cartesian).
         self.forced_is_puream = False if forced_puream is None else forced_puream
+        # string filename
+        self.filename = None
 
     def load_file(self, filename, basisname=None):
-        """Load and return the file to be used by parse.
-        Return only portion of file related to *basisname* if specified.
-        *  @param basisname If specified only return only lines that pertain to that basis name. (for multi-basisset files)
-        *                   Otherwise return the entire file is basisname="".
+        """Load and return the file to be used by parse.  Return only
+        portion of *filename* pertaining to *basisname* if specified (for
+        multi-basisset files) otherwise entire file as list of strings.
 
         """
-#        print 'BSP: load_file: called with file', filename, 'with basis', basisname
         # string filename
         self.filename = filename
 
@@ -60,6 +61,7 @@ class Gaussian94BasisSetParser(object):
             if given_basisname and basis_separator.match(text):
                 if basisname == basis_separator.match(text).group(1):
                     found_basisname = True
+
         return lines
 
     def parse(self, symbol, dataset):
@@ -149,8 +151,7 @@ class Gaussian94BasisSetParser(object):
                 found = False
                 if symbol in [x.upper() for x in what]:
                     found = True
-                    print """Symbol %10s loaded from entry %10s line %5d file %s""" % \
-                        (symbol, atom_array.match(line).group(1).strip(), lineno, self.filename)
+                    msg = """line %5d""" % (lineno)
 
                     # Read in the next line
                     line = lines[lineno]
@@ -241,6 +242,8 @@ class Gaussian94BasisSetParser(object):
                     break
 
         if not found:
-            raise BasisSetNotFound("Gaussian94BasisSetParser::parser: Unable to find the basis set for %s in %s" % (symbol, self.filename), silent=True)
+            #raise BasisSetNotFound("Gaussian94BasisSetParser::parser: Unable to find the basis set for %s in %s" % \
+            #   (symbol, self.filename), silent=True)
+            return None, None
 
-        return shell_list
+        return shell_list, msg

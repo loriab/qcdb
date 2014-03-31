@@ -1,11 +1,14 @@
 import os
 import re
 import collections
+import string
+import itertools
 from exceptions import *
 from psiutil import search_file
 from molecule import Molecule
 from libmintsgshell import GaussianShell
 from libmintsbasissetparser import Gaussian94BasisSetParser
+from basislist import corresponding_basis
 
 
 class BasisSet(object):
@@ -86,17 +89,13 @@ class BasisSet(object):
         # The flattened list of Cartesian coordinates for each atom
         self.xyz = None
 
-        for item in args:
-            print type(item)
+        # Divert to constructor functions
         if len(args) == 0:
             self.constructor_zero_ao_basis()
         elif len(args) == 3 and \
             isinstance(args[0], basestring) and \
             isinstance(args[1], Molecule) and \
             isinstance(args[2], collections.OrderedDict):
-            #isinstance(args[0], Gaussian94BasisSetParser) and \
-            #isinstance(args[1], Molecule) and \
-            #isinstance(args[2], basestring):
             self.constructor_role_mol_shellmap(*args)
         elif len(args) == 2:
             # TODO typecheck
@@ -157,9 +156,7 @@ class BasisSet(object):
 
         natom = self.molecule.natom()
 
-        # These will tell us where the primitives for [basis][symbol] start and end, in the compact array
-        #std::map<std::string, std::map<std::string, int > >  primitive_start;
-        #std::map<std::string, std::map<std::string, int > >  primitive_end;
+        # These will tell us where the primitives for [basis][symbol] start and end in the compact array
         primitive_start = {}
         primitive_end = {}
 
@@ -175,12 +172,9 @@ class BasisSet(object):
             primitive_start[basis] = {}
             primitive_end[basis] = {}
             for symbolfirst, symbolsecond in symbol_map.items():
-                #symbol = symbolfirst
-                #shells = symbol_map[symbol]
-                #primitive_start[basis][symbol] = self.n_uprimitive
-                label = symbolfirst
-                shells = symbol_map[label]
-                primitive_start[basis][label] = self.n_uprimitive
+                label = symbolfirst  # symbol --> label
+                shells = symbol_map[label]  # symbol --> label
+                primitive_start[basis][label] = self.n_uprimitive  # symbol --> label
                 for i in range(len(shells)):
                     shell = shells[i]
                     #print shell
@@ -206,10 +200,8 @@ class BasisSet(object):
         for n in range(natom):
             atom = self.molecule.atom_entry(n)
             basis = atom.basisset(role)
-            #symbol = atom.symbol()
-            #shells = shell_map[basis][symbol]
-            label = atom.label()
-            shells = shell_map[basis][label]
+            label = atom.label()  # symbol --> label
+            shells = shell_map[basis][label]  # symbol --> label
             for i in range(len(shells)):
                 shell = shells[i]
                 nprim = shell.nprimitive()
@@ -259,14 +251,10 @@ class BasisSet(object):
         for n in range(natom):
             atom = self.molecule.atom_entry(n)
             basis = atom.basisset(role)
-            #symbol = atom.symbol()
-            #shells = shell_map[basis][symbol]
-            #ustart = primitive_start[basis][symbol]
-            #uend = primitive_end[basis][symbol]
-            label = atom.label()
-            shells = shell_map[basis][label]
-            ustart = primitive_start[basis][label]
-            uend = primitive_end[basis][label]
+            label = atom.label()  # symbol --> label
+            shells = shell_map[basis][label]  # symbol --> label
+            ustart = primitive_start[basis][label]  # symbol --> label
+            uend = primitive_end[basis][label]  # symbol --> label
             nshells = len(shells)
             self.center_to_nshell[n] = nshells
             self.center_to_shell[n] = shell_count
@@ -325,16 +313,6 @@ class BasisSet(object):
 
         """
         raise FeatureNotImplemented('BasisSet::build')
-        #static boost::shared_ptr<BasisSet> build(boost::shared_ptr<Molecule> molecule, const std::vector<ShellInfo> &shells);
-        #{
-        #    //TODO fixme!!!
-        #    boost::shared_ptr<BasisSet> basis(new BasisSet());
-        #//    basis->molecule_ = molecule;
-        #//    basis->shells_ = shells;
-        #//    basis->refresh();
-        #
-        #    return basis;
-        #}
 
     def constructor_basisset_center(self, bs, center):
         """
@@ -675,10 +653,7 @@ class BasisSet(object):
         text += """    Atom   Type   All Primitives // Shells:\n"""
         text += """   ------ ------ --------------------------\n"""
 
-        print self.molecule.natom()
-        self.molecule.print_out()
         for A in range(self.molecule.natom()):
-
             nprims = [0] * (self.PYmax_am + 1)
             nunique = [0] * (self.PYmax_am + 1)
             nshells = [0] * (self.PYmax_am + 1)
@@ -856,6 +831,10 @@ class BasisSet(object):
 
         """
         raise FeatureNotImplemented('BasisSet::atomic_basis_set')
+        #boost::shared_ptr<BasisSet> BasisSet::atomic_basis_set(int center)
+        #{
+        #    return boost::shared_ptr<BasisSet>(new BasisSet(this, center));
+        #}
 
     @staticmethod
     def zero_ao_basis_set(cls):
@@ -1058,6 +1037,149 @@ class BasisSet(object):
 #        self.xyz = None
 
     @classmethod
+    def constructplus(cls, parser, mol, role, deffit=None):
+        """Returns a new BasisSet object configured from the *mol*
+        Molecule object for *role* (generally a Psi4 keyword: BASIS,
+        DF_BASIS_SCF, etc.). Fails utterly if a basis has not been set for
+        *role* for every atom in *mol*, unless *deffit* is set (JFIT,
+        JKFIT, or RIFIT), whereupon empty atoms are assigned to *role*
+        from the :py:class:`~BasisFamily`.
+
+        """
+        # Update geometry in molecule, if there is a problem an exception is thrown.
+        mol.update_geometry()
+        print 'CD: mol from user:'
+        mol.print_out()
+
+        # Paths to search for gbs files: here + PSIPATH + library
+        libraryPath = ':' + os.path.abspath(os.environ.get('PSIDATADIR', '')) + '/basis'
+        basisPath = os.path.abspath('.') + \
+            ':' + ':'.join([os.path.abspath(x) for x in os.environ.get('PSIPATH', '').split(':')]) + \
+            libraryPath
+
+        # Validate deffit for role
+        univdef = {'JFIT': 'def2-qzvpp-jfit',
+                   'JKFIT': 'def2-qzvpp-jkfit',
+                   'RIFIT': 'def2-qzvpp-ri'}
+        if deffit is not None:
+            if deffit not in univdef.keys():
+                raise ValidationError("""BasisSet::constructplus: deffit argument invalid: %s""" % (deffit))
+
+        # Map of GaussianShells
+        basis_atom_shell = collections.OrderedDict()
+        names = {}
+        summary = []
+
+        for at in range(mol.natom()):
+            symbol = mol.atom_entry(at).symbol()  # O, He
+            label = mol.atom_entry(at).label()  # O3, C_Drot, He
+            basdict = mol.atom_entry(at).basissets()  # {'BASIS': 'sto-3g', 'DF_BASIS_MP2': 'cc-pvtz-ri'}
+
+            # Establish search parameters for what/where basis entries suitable for atom
+            seek = {}
+            try:
+                requested_basname = basdict[role]
+            except KeyError:
+                if role == 'BASIS' or deffit is None:
+                    raise BasisSetNotDefined("""BasisSet::constructplus: No basis set specified for %s and %s.""" %
+                        (symbol, role))
+                else:
+                    # No auxiliary basis set for atom, so try darnedest to find one.
+                    #   This involves querying the BasisFamily for default and
+                    #   default-default and finally the universal default (defined
+                    #   in this function). Since user hasn't indicated any specifics,
+                    #   look only in Psi4's library and for symbol only, not label.
+                    tmp = []
+                    tmp.append(corresponding_basis(basdict['BASIS'], deffit))
+                    tmp.append(corresponding_basis(basdict['BASIS'], deffit + '-DEFAULT'))
+                    tmp.append(univdef[deffit])
+                    seek['basis'] = filter(None, tmp)
+                    seek['entry'] = [symbol]
+                    seek['path'] = libraryPath
+            else:
+                # User (I hope ... dratted has_changed) has set basis for atom,
+                #   so look only for basis (don't try defaults), look for label (N88)
+                #   or symbol (N) (in that order; don't want to restrict use of atom
+                #   labels to basis set spec), look everywhere (don't just look
+                #   in library)
+                seek['basis'] = [requested_basname]
+                seek['entry'] = [symbol] if symbol == label else [label, symbol]
+                seek['path'] = basisPath
+
+            # Search through paths, bases, entries
+            for bas in seek['basis']:
+
+                # Seek first bas.gbs file in path, else skip to next bas
+                filename = cls.make_filename(bas)
+                fullfilename = search_file(filename, seek['path'])
+                if fullfilename is None:
+                    continue
+
+                # Store contents so not reloading files
+                if fullfilename not in names:
+                    names[fullfilename] = parser.load_file(fullfilename)
+                lines = names[fullfilename]
+
+                for entry in seek['entry']:
+
+                    # Seek entry in lines, else skip to next entry
+                    shells, msg = parser.parse(entry, lines)
+                    if shells is None:
+                        continue
+
+                    # Found!
+                    if bas not in basis_atom_shell:
+                        basis_atom_shell[bas] = collections.OrderedDict()
+                    basis_atom_shell[bas][label] = shells
+                    mol.set_basis_by_number(at + 1, bas, role=role)
+                    summary.append("""entry %10s %s file %s""" % (entry, msg, fullfilename))
+                    break
+
+                # Break from outer loop if inner loop breaks
+                else:
+                    continue
+                break
+
+            else:
+                # Ne'er found :-(
+                text2 = """  Shell Entries: %s\n""" % (seek['entry'])
+                text2 += """  Basis Sets: %s\n""" % (seek['basis'])
+                text2 += """  File Path: %s\n""" % (', '.join(map(str, seek['path'].split(':'))))
+                raise BasisSetNotFound('BasisSet::construct: Unable to find a basis set for atom %d for role %s among:\n%s' % \
+                    (at + 1, role, text2))
+
+        basisset = BasisSet(role, mol, basis_atom_shell)
+
+#        basisset.name = ''
+#        for name in names:
+#            basisset.name += name + ' + '
+#        if basisset.name.endswith(' + '):
+#            basisset.name = basisset.name[:-3]
+
+        # Summary printing
+        tmp = collections.defaultdict(list)
+        for at, v in enumerate(summary):
+            tmp[v].append(at + 1)
+        tmp2 = collections.OrderedDict()
+        maxsats = 0
+        for item in sorted(tmp.values()):
+            for msg, ats in tmp.items():
+                if item == ats:
+                    G = (list(x) for _, x in itertools.groupby(ats, lambda x, c=itertools.count(): next(c) - x))
+                    sats = ", ".join("-".join(map(str, (g[0], g[-1])[:len(g)])) for g in G)
+                    maxsats = max(maxsats, len(sats))
+                    tmp2[sats] = msg
+        text = """  ==> Loading Basis Set <==\n\n"""
+        text += """  Role: %s\n""" % (role)
+        text += """  Basis Set: %s\n""" % (basisset.name)
+        for ats, msg in tmp2.items():
+            text += """    atoms %s %s\n""" % (string.ljust(ats, width=maxsats), msg)
+
+## TODO handle basis sets on strings from basis {}
+        print text
+        return basisset
+
+    @classmethod
     def construct(cls, parser, mol, role):
         """Returns a new BasisSet object.
         * Returns a new BasisSet object configured with the provided Molecule object.
@@ -1070,16 +1192,26 @@ class BasisSet(object):
         # Update geometry in molecule, if there is a problem an exception is thrown.
         mol.update_geometry()
 
-        # Paths to search for gbs files
-        basisPath = ':'.join([os.path.abspath(x) for x in os.environ.get('PSIPATH', '').split(':')]) + \
-            ':' + os.path.abspath(os.environ.get('PSIDATADIR')) + '/basis'
+        # Paths to search for gbs files: here + PSIPATH + library
+        basisPath = os.path.abspath('.') + \
+            ':' + ':'.join([os.path.abspath(x) for x in os.environ.get('PSIPATH', '').split(':')]) + \
+            ':' + os.path.abspath(os.environ.get('PSIDATADIR', '')) + '/basis'
+
+        #psiPath = os.environ.get('PSIPATH', None)
+        #if psiPath is not None and len(psiPath) != 0:
+        #    basisPath += ':'.join([os.path.abspath(x) for x in psiPath.split(':')]) + ':'  # PSIPATH
             # TODO: submission dir, #psi4.Process.environment["PSIDATADIR"] + '/basis' + ':' + psi4.psi_top_srcdir() + '/lib/basis'
             #std::string psiPath = PSIOManager::shared_object()->get_default_path() +
-            # somehow the calling dir is included, i'm not seeing how
+            # 1. current dir 2. fraglib 3. other places.
+
+        # paths for file: string-from-input > . > PSIPATH > lib
+        # tags: label > symbol
+        # orbital basisnames: given
+        # fitting basisnames (per-atom): given --or-- basdef > defdef
 
         # Map of GaussianShells
-        basis_atom_shell = collections.OrderedDict()  # basis_atom_shell[str(basis)][str(atom)] = GaussianShells(shells)
-        names = collections.OrderedDict()  # names[str(basis)] = int(found)
+        basis_atom_shell = collections.OrderedDict()
+        names = collections.OrderedDict()
 
         for atom in range(mol.natom()):
             symbol = mol.atom_entry(atom).symbol()  # O, He
@@ -1106,6 +1238,7 @@ class BasisSet(object):
                 print ', '.join(map(str, basisPath.split(':')))
                 raise BasisSetFileNotFound('Basis set file loading problem for ' + (filename))
 
+# TODO handle basis sets on strings from basis {}
             lines = parser.load_file(fullfilename)
             for atomfirst, atomsecond in basissecond.items():
                 label = atomfirst
@@ -1203,25 +1336,20 @@ class BasisSet(object):
 
             ao += INT_NCART(am)
 
-#    /** Concatenates two basis sets together into a new basis without reordering anything.
-#     *  Unless you know what you're doing, you should use the '+' operator instead of
-#     *  this method.
-#     */
-#    BasisSet concatenate(const BasisSet& b) const;
+    def concatenate(self, b):
+        """Concatenates two basis sets together into a new basis without
+        reordering anything. Unless you know what you're doing, you should
+        use the '+' operator instead of this method. Appears defunct.
 
-#    boost::shared_ptr<BasisSet> concatenate(const boost::shared_ptr<BasisSet>& b) const;
+        """
+        raise FeatureNotImplemented('BasisSet::concatenate')
 
-#    /** Concatenates two basis sets together into a new basis without reordering anything.
-#     *  Unless you know what you're doing, you should use the '+' operator instead of
-#     *  this method.
-#     */
-#    //static boost::shared_ptr<BasisSet> concatenate(const boost::shared_ptr<BasisSet>& a, const boost::shared_ptr<BasisSet>& b);
+    def add(self, b):
+        """Adds this plus another basis set and returns the result.
+        Equivalent to the '+' operator. Appears defunct.
 
-#    /** Adds this plus another basis set and returns the result. Equivalent to the '+' operator.
-#     */
-#    BasisSet add(const BasisSet& b) const;
-
-#    boost::shared_ptr<BasisSet> add(const boost::shared_ptr<BasisSet>& b) const;
+        """
+        raise FeatureNotImplemented('BasisSet::add')
 
 #    // BasisSet friends
 #    friend class Gaussian94BasisSetParser;
@@ -1233,14 +1361,18 @@ class BasisSet(object):
 #        return boost::shared_ptr<BasisSet>(new BasisSet(*a.get() + *b.get()));
 #    }
 
+#    /** Concatenates two basis sets together into a new basis without reordering anything.
+#     *  Unless you know what you're doing, you should use the '+' operator instead of
+#     *  this method.
+#     */
+#    //static boost::shared_ptr<BasisSet> concatenate(const boost::shared_ptr<BasisSet>& a, const boost::shared_ptr<BasisSet>& b);
+
 
 def shell_sorter_ncenter(d1, d2):
-    #GaussianShell& d1, const GaussianShell& d2)
     return d1.ncenter() < d2.ncenter()
 
 
 def shell_sorter_am(d1, d2):
-    #const GaussianShell& d1, const GaussianShell& d2)
     return d1.am() < d2.am()
 
 #BasisSet operator +(const BasisSet& a, const BasisSet& b) {
@@ -1278,101 +1410,5 @@ def shell_sorter_am(d1, d2):
 #    return temp;
 #}
 
-#inline
 #boost::shared_ptr<BasisSet> operator +(const boost::shared_ptr<BasisSet>& a, const boost::shared_ptr<BasisSet>& b) {
 #    return boost::shared_ptr<BasisSet>(new BasisSet(*a.get() + *b.get()));
-#}
-#}
-
-
-#
-#
-#//boost::shared_ptr<SOBasisSet> BasisSet::zero_so_basis_set(const boost::shared_ptr<IntegralFactory>& factory)
-#//{
-#//    boost::shared_ptr<BasisSet> zero = BasisSet::zero_ao_basis_set();
-#//    boost::shared_ptr<SOBasisSet> sozero(new SOBasisSet(zero, factory));
-#//    return sozero;
-#//}
-#
-#
-#
-#
-#boost::shared_ptr<BasisSet> BasisSet::atomic_basis_set(int center)
-#{
-#    return boost::shared_ptr<BasisSet>(new BasisSet(this, center));
-#}
-#
-#
-#BasisSet BasisSet::concatenate(const BasisSet& b) const {
-#
-#    BasisSet temp;
-#//TODO fixme!!!
-##if 0
-#    temp.name_ = name_ + " + " + b.name_;
-#    temp.molecule_ = molecule();
-#
-#    // Copy a's shells to temp
-#    temp.shells_ = shells_;
-#
-#    // Append b's shells to temp
-#    temp.shells_.insert(temp.shells_.end(), b.shells_.begin(), b.shells_.end());
-#
-#    // Call refresh to regenerate center_to_shell and center_to_nshell
-#    temp.refresh();
-##endif
-#    return temp;
-#}
-#
-#boost::shared_ptr<BasisSet> BasisSet::concatenate(const boost::shared_ptr<BasisSet>& b) const {
-#    return boost::shared_ptr<BasisSet>(new BasisSet(concatenate(*b.get())));
-#}
-#
-#BasisSet BasisSet::add(const BasisSet& b) const {
-#
-#    BasisSet temp;
-#//TODO fixme!!
-##if 0
-#    temp.name_ = name_ + " + " + b.name_;
-#    temp.molecule_ = molecule();
-#
-#    // Copy a's shells to temp
-#//    temp.shells_ = shells_;
-#
-#    // Append b's shells to temp
-#//    std::vector<GaussianShell>::const_iterator iter = b.shells_.begin();
-#//    for (; iter != b.shells_.end(); iter++)
-#//        temp.shells_.push_back(*iter);
-#
-#//    temp.shells_.insert(temp.shells_.end(), b.shells_.begin(), b.shells_.end());
-#
-#    // Loop over atoms
-#    for (int atom=0; atom<molecule()->natom(); ++atom) {
-#        for (int shella=0; shella<nshell_on_center(atom); ++shella)
-#            temp.shells_.push_back(shell(atom, shella));
-#
-#        for (int shellb=0; shellb<b.nshell_on_center(atom); ++shellb)
-#            temp.shells_.push_back(b.shell(atom, shellb));
-#    }
-#
-#    // Call refresh to regenerate center_to_shell and center_to_nshell
-#    temp.refresh();
-#
-#    // Sort by center number
-#//    std::sort(temp.shells_.begin(), temp.shells_.end(), shell_sorter_ncenter);
-#
-#    // Call refresh to regenerate center_to_shell and center_to_nshell
-#//    temp.refresh();
-#
-#    // Sort by AM in each center
-#//    for (int atom=0; atom < temp.molecule_->natom(); ++atom) {
-#//        std::sort(temp.shells_.begin()+temp.center_to_shell_[atom],
-#//                  temp.shells_.begin()+temp.center_to_shell_[atom]+temp.center_to_nshell_[atom],
-#//                  shell_sorter_am);
-#//    }
-##endif
-#    return temp;
-#}
-#
-#boost::shared_ptr<BasisSet> BasisSet::add(const boost::shared_ptr<BasisSet>& b) const {
-#    return boost::shared_ptr<BasisSet>(new BasisSet(add(*b.get())));
-#}
