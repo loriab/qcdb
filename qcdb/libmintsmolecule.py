@@ -349,7 +349,7 @@ class LibmintsMolecule(object):
         return self.atoms[atom].symbol()
 
     def label(self, atom):
-        """Returns the original label of the atom (0-indexed) as given in the input file (C2, H4).
+        """Returns the original label of the atom (0-indexed) as given in the input file (C2, H4). (0-indexed)
 
         >>> print H2OH2O.label(4)
         H3
@@ -423,7 +423,7 @@ class LibmintsMolecule(object):
         return self.full_atoms[atom].mass()
 
     def fsymbol(self, atom):
-        """Returns the cleaned up label of the atom (C2 => C, H4 = H) (includes dummies)
+        """Returns the cleaned up label of the atom (C2 => C, H4 = H) (includes dummies) (0-indexed)
 
         >>> print H2OH2O.fsymbol(4)
         O
@@ -1576,6 +1576,7 @@ class LibmintsMolecule(object):
             #self.print_full()
 
         # Recompute point group of the molecule, so the symmetry info is updated to the new frame
+            self.set_point_group()  # ack, only half using this TODO
 # TODO        self.set_point_group(self.find_point_group())
 # TODO        self.set_full_point_group()
 
@@ -1639,21 +1640,33 @@ class LibmintsMolecule(object):
         """ **NYI** Computes nuclear repulsion energy second derivatives"""
         raise FeatureNotImplemented('Molecule::nuclear_repulsion_energy_deriv2')  # FINAL
 
-    def set_basis_all_atoms(self, name, type="BASIS"):
-        """ **NYI** Assigns basis *name* to all atoms."""
-        raise FeatureNotImplemented('Molecule::set_basis_all_atoms')  # FINAL
+    def set_basis_all_atoms(self, name, role="BASIS"):
+        """Assigns basis *name* to all atoms."""
+        uc = name.upper()
+        if uc in ['SPECIAL', 'GENERAL', 'CUSTOM']:
+            # These aren't really basis set specifications, just return.
+            return
+        for atom in self.full_atoms:
+            atom.set_basisset(name, role)
 
-    def set_basis_by_symbol(self, symbol, name, type="BASIS"):
-        """ **NYI** Assigns basis *name* to all *symbol* atoms."""
-        raise FeatureNotImplemented('Molecule::set_basis_by_symbol')  # FINAL
+    def set_basis_by_symbol(self, symbol, name, role="BASIS"):
+        """Assigns basis *name* to all *symbol* atoms."""
+        for atom in self.full_atoms:
+            if symbol == atom.symbol():
+                atom.set_basisset(name, role)
 
-    def set_basis_by_number(self, number, name, type="BASIS"):
-        """ **NYI** Assigns basis *name* to atom number *number* (1-indexed, includes dummies)."""
-        raise FeatureNotImplemented('Molecule::set_basis_by_number')  # FINAL
+    def set_basis_by_number(self, number, name, role="BASIS"):
+        """Assigns basis *name* to atom number *number* (1-indexed, includes dummies)."""
+        if number > self.nallatom():  #TODO libmints error >=
+            raise ValidationError("Molecule::set_basis_by_number: Basis specified for atom %d, but there are only %d atoms in this molecule." % \
+                (number, self.natom()))
+        self.full_atoms[number - 1].set_basisset(name, role)
 
-    def set_basis_by_label(self, label, name, type="BASIS"):
-        """ **NYI** Assigns basis *name* to all atoms with *label*."""
-        raise FeatureNotImplemented('Molecule::set_basis_by_label')  # FINAL
+    def set_basis_by_label(self, label, name, role="BASIS"):
+        """Assigns basis *name* to all atoms with *label*."""
+        for atom in self.full_atoms:
+            if label.upper() == atom.label():
+                atom.set_basisset(name, role)
 
     def nfrozen_core(self, depth=False):
         """Number of frozen core for molecule given freezing state.
@@ -1957,15 +1970,30 @@ class LibmintsMolecule(object):
 
     def has_symmetry_element(self, op, tol=DEFAULT_SYM_TOL):
         """ **NYI** Whether molecule satisfies the vector symmetry operation *op* """
-        raise FeatureNotImplemented('Molecule::has_symmetry_element')  # FINAL SYMM
+        #raise FeatureNotImplemented('Molecule::has_symmetry_element')  # FINAL SYMM
+        for i in range(self.natom()):
+            result = naivemult(self.xyz(i), op)
+            atom = self.atom_at_position2(result, tol)
+
+            if atom != -1:
+                if not self.atoms[atom].is_equivalent_to(self.atoms[i]):
+                    return False
+            else:
+                return False
+        return True
 
     def point_group(self):
         """ **NYI** Returns the point group (object) if set"""
         raise FeatureNotImplemented('Molecule::point_group')  # FINAL SYMM
 
-    def set_point_group(self, pg):
+    #def set_point_group(self, pg):
+    def set_point_group(self):
         """ **NYI** Set the point group to object *pg* """
-        raise FeatureNotImplemented('Molecule::set_point_group')  # FINAL SYMM
+        #raise FeatureNotImplemented('Molecule::set_point_group')  # FINAL SYMM
+        # ack, ignorming the pg TODO
+        #self.pg = pg
+        # Call this here, the programmer will forget to call it, as I have many times.
+        self.form_symmetry_information()
 
     def set_full_point_group(self, tol=FULL_PG_TOL):
         """ **NYI** Determine and set FULL point group"""
@@ -2408,14 +2436,29 @@ class LibmintsMolecule(object):
 
     def release_symmetry_information(self):
         """ **NYI** Release symmetry information"""
-        raise FeatureNotImplemented('Molecule::release_symmetry_information')  # FINAL SYMM
+        #raise FeatureNotImplemented('Molecule::release_symmetry_information')  # FINAL SYMM
+        self.PYnunique = 0
+        self.equiv = 0
+        self.nequiv = 0
+        self.PYatom_to_unique = 0
 
     def form_symmetry_information(self, tol=DEFAULT_SYM_TOL):
         """ **NYI** Initialize molecular specific symmetry information.
         Uses the point group object obtain by calling point_group()
 
         """
-        raise FeatureNotImplemented('Molecule::form_symmetry_information')  # FINAL SYMM
+        #raise FeatureNotImplemented('Molecule::form_symmetry_information')  # FINAL SYMM
+        # This implementation is incomplete! only copied for C1! TODO!
+
+        self.nequiv = [0] * self.natom()
+        self.atom_to_unique = [0] * self.natom()
+        self.equiv = [[] for i in range(self.natom())]
+
+        self.PYnunique = self.natom()
+        for i in range(self.natom()):
+            self.nequiv[i] = 1
+            self.equiv[i].append(i)
+            self.atom_to_unique[i] = i
 
     def sym_label(self):
         """ **NYI** Returns the symmetry label"""
@@ -2473,42 +2516,55 @@ class LibmintsMolecule(object):
 
     def nunique(self):
         """ **NYI** Return the number of unique atoms."""
-        #w#return PYnunique
-        raise FeatureNotImplemented('Molecule::nunique')  # FINAL SYMM
+        return self.PYnunique
+        #raise FeatureNotImplemented('Molecule::nunique')  # FINAL SYMM
 
     def unique(self, iuniq):
         """ **NYI** Returns the overall number of the iuniq'th unique atom."""
-        #w#return self.equiv[iuniq][0]
-        raise FeatureNotImplemented('Molecule::unique')  # FINAL SYMM
+        return self.equiv[iuniq][0]
+        #raise FeatureNotImplemented('Molecule::unique')  # FINAL SYMM
 
     def nequivalent(self, iuniq):
         """ **NYI** Returns the number of atoms equivalent to iuniq."""
-        #w#return self.nequiv[iuniq]
-        raise FeatureNotImplemented('Molecule::nequivalent')  # FINAL SYMM
+        return self.nequiv[iuniq]
+        #raise FeatureNotImplemented('Molecule::nequivalent')  # FINAL SYMM
 
     def equivalent(self, iuniq, j):
         """ **NYI** Returns the j'th atom equivalent to iuniq."""
-        #w#return self.equiv[iuniq][j]
-        raise FeatureNotImplemented('Molecule::equivalent')  # FINAL SYMM
+        return self.equiv[iuniq][j]
+        #raise FeatureNotImplemented('Molecule::equivalent')  # FINAL SYMM
 
     def atom_to_unique(self, iatom):
         """ **NYI** Converts an atom number to the number of its generating unique atom.
         The return value is in [0, nunique).
 
         """
-        #w#return PYatom_to_unique[iatom]
-        raise FeatureNotImplemented('Molecule::atom_to_unique')  # FINAL SYMM
+        return PYatom_to_unique[iatom]
+        #raise FeatureNotImplemented('Molecule::atom_to_unique')  # FINAL SYMM
 
     def atom_to_unique_offset(self, iatom):
         """ **NYI** Converts an atom number to the offset of this atom
         in the list of generated atoms. The unique atom itself is allowed offset 0.
 
         """
-        raise FeatureNotImplemented('Molecule::atom_to_unique_offset')  # FINAL SYMM
+        #raise FeatureNotImplemented('Molecule::atom_to_unique_offset')  # FINAL SYMM
+        iuniq = self.atom_to_unique[iatom]
+        nequiv = self.nequiv[iuniq]
+        for i in range(nequiv):
+            if self.equiv[iuniq][i] == iatom:
+                return i
+        raise ValidationError("Molecule::atom_to_unique_offset: I should've found the atom requested...but didn't.")
+        return -1
 
     def max_nequivalent(self):
         """  **NYI** Returns the maximum number of equivalent atoms."""
-        raise FeatureNotImplemented('Molecule::max_nequivalent')  # FINAL SYMM
+        #raise FeatureNotImplemented('Molecule::max_nequivalent')  # FINAL SYMM
+        mmax = 0
+        for i in range(self.nunique()):
+            if mmax < self.nequivalent(i):
+                mmax = self.nequivalent(i)
+        return mmax
+
 
 
 
