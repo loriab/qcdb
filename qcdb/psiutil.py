@@ -57,6 +57,30 @@ def compare_values(expected, computed, digits, label):
     _success(label)
 
 
+def compare_integers(expected, computed, label):
+    """Function to compare two integers. Prints :py:func:`util.success`
+    when value *computed* matches value *expected*.
+    Performs a system exit on failure. Used in input files in the test suite.
+
+    """
+    if (expected != computed):
+        print("\t%s: computed value (%d) does not match (%d)." % (label, computed, expected))
+        sys.exit(1)
+    _success(label)
+
+
+def compare_strings(expected, computed, label):
+    """Function to compare two strings. Prints :py:func:`util.success`
+    when string *computed* exactly matches string *expected*.
+    Performs a system exit on failure. Used in input files in the test suite.
+
+    """
+    if(expected != computed):
+        print("\t%s: computed value (%s) does not match (%s)." % (label, computed, expected))
+        sys.exit(1)
+    _success(label)
+
+
 def compare_matrices(expected, computed, digits, label):
     """Function to compare two matrices. Prints :py:func:`util.success`
     when elements of matrix *computed* match elements of matrix *expected* to

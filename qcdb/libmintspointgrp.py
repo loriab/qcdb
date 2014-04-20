@@ -2,8 +2,6 @@ from exceptions import *
 from vecutil import *
 
 #
-# pointgrp.h
-#
 # Additional modifications made by Justin Turney <jturney@ccqc.uga.edu>
 # for use in PSI4.
 #
@@ -85,46 +83,41 @@ PointGroups = {
     }
 
 
-def similar(bits, sim, cnt):
-    """
+# changed signature from def similar(bits, sim, cnt):
+def similar(bits):
+    """From *bits* of a directionalized point group, returns array of
+    bits of all directions.
 
     """
-    #void similar(unsigned char bits, unsigned char* sim, char& cnt)
-    cs = (CsX, CsY, CsZ)
-    c2v = (C2vZ, C2vY, C2vX)
-    c2h = (C2hZ, C2hY, C2hX)
-    c2 = (C2Z, C2Y, C2X)
-    d2h = (D2h, 0, 0)
-    d2 = (D2, 0, 0)
-    ci = (Ci, 0, 0)
-    c1 = (C1, 0, 0)
+    cs = [PointGroups['CsX'], PointGroups['CsY'], PointGroups['CsZ']]
+    c2v = [PointGroups['C2vZ'], PointGroups['C2vY'], PointGroups['C2vX']]
+    c2h = [PointGroups['C2hZ'], PointGroups['C2hY'], PointGroups['C2hX']]
+    c2 = [PointGroups['C2Z'], PointGroups['C2Y'], PointGroups['C2X']]
+    d2h = [PointGroups['D2h']]
+    d2 = [PointGroups['D2']]
+    ci = [PointGroups['Ci']]
+    c1 = [PointGroups['C1']]
 
-    if bits in ['CsX', 'CsY', 'CsZ']:
+    if bits in cs:
         sim = cs
-        cnt = 3
-    elif bits in ['C2vZ', 'C2vY', 'C2vX']:
+    elif bits in c2v:
         sim = c2v
-        cnt = 3
-    elif bits in ['C2hZ', 'C2hY', 'C2hX']:
+    elif bits in c2h:
         sim = c2h
-        cnt = 3
-    elif bits in ['C2Z', 'C2Y', 'C2X']:
+    elif bits in c2:
         sim = c2
-        cnt = 3
-    elif bits == 'D2h':
+    elif bits in d2h:
         sim = d2h
-        cnt = 1
-    elif bits == 'Ci':
+    elif bits in ci:
         sim = ci
-        cnt = 1
-    elif bits == 'C1':
+    elif bits in c1:
         sim = c1
-        cnt = 1
-    elif bits == 'D2':
+    elif bits in d2:
         sim = d2
-        cnt = 1
     else:
         raise ValidationError('PointGroups::similar: Should not have reached here.')
+
+    return sim, len(sim)
 
 
 class SymmetryOperation(object):
@@ -307,7 +300,6 @@ class SymmetryOperation(object):
         """Set equal to a clockwise rotation by 2pi/n or theta degrees"""
 
         if isinstance(theta, int):
-            print theta
             theta = 2.0 * math.pi if theta == 0 else 2.0 * math.pi / theta
         ctheta = math.cos(theta)
         stheta = math.sin(theta)
@@ -768,9 +760,9 @@ class IrreducibleRepresentation(object):
 
         """
         if i is None:
-            dr = x1 % self.degen  # dr should be int TODO
-            dc = x1 / self.degen  # dc should be int TODO
-            print 'need to be int', dr, dc
+            dr = x1 % self.degen  # dr should be int; always seems to be
+            dc = x1 / self.degen  # dc should be int; always seems to be
+            #print 'need to be int', dr, dc
             i = x2
             x1 = dr
             x2 = dc
