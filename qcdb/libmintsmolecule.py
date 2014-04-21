@@ -582,7 +582,8 @@ class LibmintsMolecule(object):
         orient = re.compile(r'^\s*(no_reorient|noreorient)\s*$', re.IGNORECASE)
         com = re.compile(r'^\s*(no_com|nocom)\s*$', re.IGNORECASE)
         symmetry = re.compile(r'^\s*symmetry[\s=]+(\w+)\s*$', re.IGNORECASE)
-        atom = re.compile(r'^\s*(@?[A-Z]{1,2})\s*', re.IGNORECASE)
+        ATOM = '((([A-Z]{1,3})_\w+)|(([A-Z]{1,3})\d*))'  # match 'C', 'al', 'p88', 'p_pass' not 'Ofail', 'h99_text'  # good, but unused
+        atom = re.compile(r'^(?:(?P<gh1>@)|(?P<gh2>Gh\())?(?P<label>(?P<symbol>[A-Z]{1,3})(?:(_\w+)|(\d+))?)(?(gh2)\))$', re.IGNORECASE)
         cgmp = re.compile(r'^\s*(-?\d+)\s+(\d+)\s*$')
         frag = re.compile(r'^\s*--\s*$')
         variable = re.compile(r'^\s*(\w+)\s*=\s*(-?\d+\.\d+|-?\d+\.|-?\.\d+|-?\d+|tda)\s*$', re.IGNORECASE)
@@ -616,10 +617,7 @@ class LibmintsMolecule(object):
 
             # handle symmetry
             elif symmetry.match(line):
-                tempSymm = symmetry.match(line).group(1)
-                temp2 = re.sub('[23456789]', 'n', tempSymm).upper()
-                if temp2 in (item.upper() for item in self.FullPointGroupList):
-                    self.PYsymmetry_from_input = tempSymm
+                self.PYsymmetry_from_input = symmetry.match(line).group(1).lower()
 
             # handle variables
             elif variable.match(line):
@@ -651,8 +649,10 @@ class LibmintsMolecule(object):
                 ifrag += 1
                 glines.append(line)
 
-            elif atom.match(line):
+            elif atom.match(line.split()[0].strip()):
                 glines.append(line)
+            else:
+                raise ValidationError('Molecule::create_molecule_from_string: Unidentifiable line in geometry specification: %s' % (line))
 
         # catch last default fragment cgmp
         try:
@@ -678,24 +678,18 @@ class LibmintsMolecule(object):
                 tempfrag = []
 
             # handle atom markers
-            elif atom.match(line):
+            else:
                 entries = re.split(r'\s+|\s*,\s*', line.strip())
-                atomLabel = entries[0]
+                atomm = atom.match(line.split()[0].strip().upper())
+                atomLabel = atomm.group('label')
+                atomSym = atomm.group('symbol')
 
-                # handle ghost atoms
-                ghostAtom = False
-                if ghost.match(atomLabel):
-                    # We don't know whether the @C or Gh(C) notation matched.  Do a quick check.
-                    atomLabel = ghost.match(atomLabel).group(2) if not ghost.match(atomLabel).group(1) \
-                        else ghost.match(atomLabel).group(1)
-                    ghostAtom = True
-
-                # Save the actual atom symbol (H1 => H)
-                atomSym = re.split('(\d+)', atomLabel)[0].upper()
+                # We don't know whether the @C or Gh(C) notation matched. Do a quick check.
+                ghostAtom = False if (atomm.group('gh1') is None and atomm.group('gh2') is None) else True
 
                 # Check that the atom symbol is valid
                 if not atomSym in el2z:
-                    raise ValidationError('Illegal atom symbol in geometry specification: %s' % (atomSym))
+                    raise ValidationError('Molecule::create_molecule_from_string: Illegal atom symbol in geometry specification: %s' % (atomSym))
 
                 zVal = el2z[atomSym]
                 charge = float(zVal)
