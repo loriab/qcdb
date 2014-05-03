@@ -155,7 +155,7 @@ while not user_obedient:
     temp = raw_input('    bases = ').strip()
     ltemp = temp.split()
     for item in ltemp:
-        btemp = qcdb.basislist.corresponding_orbital(item)
+        btemp = qcdb.basislist.corresponding_basis(item, role='BASIS')
         if btemp:
             bases.append(btemp)
             user_obedient = True

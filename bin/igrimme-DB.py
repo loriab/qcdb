@@ -27,13 +27,13 @@ import math
 import os
 import re
 import string
-qcdbpkg_path = os.path.expanduser('~loriab/linux/qcdb')
-sys.path.append(qcdbpkg_path)
+
+qcdbpkg_path = os.path.dirname(__file__)
+sys.path.append(qcdbpkg_path + '/../')
 import qcdb
 import qcdb.basislist
-sys.path.append(qcdbpkg_path + '/databases')
-import qcdb.exceptions
-
+from qcdb.exceptions import *
+sys.path.append(qcdbpkg_path + '/../databases')
 
 # load docstring info from database files (doesn't actually import database modules)
 DBdocstrings = qcdb.dictify_database_docstrings()
@@ -51,7 +51,7 @@ print """
 # query database name
 module_choices = dict(zip([x.upper() for x in DBdocstrings.keys()], DBdocstrings.keys()))
 
-print 'n Choose your database.'
+print '\n Choose your database.'
 for item in module_choices.keys():
     print '    %-12s   %s' % ('[' + module_choices[item] + ']', DBdocstrings[module_choices[item]]['general'][0].lstrip(" |"))
 print '\n',
@@ -150,7 +150,7 @@ for func in functionals:
 
         # catch if this is an invalid functional-dashlvl before run database
         try:
-            h2.grimme_dash(func=func, dashlvl=variant)
+            h2.run_dftd3(func=func, dashlvl=variant)
         except qcdb.ValidationError:
             print 'No output or files will be generated.'
             continue
@@ -182,7 +182,7 @@ for func in functionals:
             # compute correction for rgts and rxn
             for rgt in ACTV[index]:
                 GEOS[rgt].update_geometry()
-                DASHCORR[rgt], temp = GEOS[rgt].grimme_dash(func=func, dashlvl=variant)
+                DASHCORR[rgt], temp = GEOS[rgt].run_dftd3(func=func, dashlvl=variant)
             IEDASH = sum([RXNM[index][rgt] * DASHCORR[rgt] for rgt in ACTV[index]]) * qcdb.psi_hartree2kcalmol
 
             # print main results

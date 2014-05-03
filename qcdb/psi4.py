@@ -185,6 +185,18 @@ def muster_modelchem(name, dertype):
         options['SCF']['DFT_RADIAL_POINTS']['value'] = 100
         text += """b97-d3')\n\n"""
 
+    elif lowername == 'df-wb97x-d':
+        options['SCF']['SCF_TYPE']['value'] = 'df'
+        options['SCF']['DFT_SPHERICAL_POINTS']['value'] = 302
+        options['SCF']['DFT_RADIAL_POINTS']['value'] = 100
+        text += """wb97x-d')\n\n"""
+
+    elif lowername == 'df-b3lyp-d3':
+        options['SCF']['SCF_TYPE']['value'] = 'df'
+        options['SCF']['DFT_SPHERICAL_POINTS']['value'] = 302
+        options['SCF']['DFT_RADIAL_POINTS']['value'] = 100
+        text += """b3lyp-d3')\n\n"""
+
     elif lowername == 'ccsd-polarizability':
         options['GLOBALS']['FREEZE_CORE']['value'] = True
         text = """property('ccsd', properties=['polarizability'])\n\n"""
@@ -207,6 +219,8 @@ def muster_modelchem(name, dertype):
 procedures = {
     'energy': {
         'df-b97-d3'     : muster_modelchem,
+        'df-wb97x-d'    : muster_modelchem,
+        'df-b3lyp-d3'   : muster_modelchem,
         'mp2'           : muster_modelchem,
         'df-mp2'        : muster_modelchem,
         'sapt0'         : muster_modelchem,
