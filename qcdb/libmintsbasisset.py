@@ -29,7 +29,7 @@ class BasisSet(object):
 
     def __init__(self, *args):
 
-        # <<< Basis BasisSet Information >>>
+        # <<< Basic BasisSet Information >>>
 
         # The name of this basis set (e.g. "BASIS", "RI BASIS")
         self.name = None
@@ -53,7 +53,7 @@ class BasisSet(object):
         # The maximum angular momentum
         self.PYmax_am = None
         # The maximum number of primitives in a shell
-        self.max_nprimitive = None
+        self.PYmax_nprimitive = None
         # Whether the basis set is uses spherical basis functions or not
         self.puream = None
 
@@ -92,16 +92,30 @@ class BasisSet(object):
         # Divert to constructor functions
         if len(args) == 0:
             self.constructor_zero_ao_basis()
+        elif len(args) == 2 and \
+            isinstance(args[0], BasisSet) and \
+            isinstance(args[1], int):
+            self.constructor_basisset_center(*args)
         elif len(args) == 3 and \
             isinstance(args[0], basestring) and \
             isinstance(args[1], Molecule) and \
             isinstance(args[2], collections.OrderedDict):
             self.constructor_role_mol_shellmap(*args)
-        elif len(args) == 2:
-            # TODO typecheck
-            self.constructor_basisset_center(args)
         else:
             raise ValidationError('BasisSet::constructor: Inappropriate configuration of constructor arguments')
+
+    # <<< Methods for Construction >>>
+
+    def initialize_singletons(self):
+        """Initialize singleton values that are shared by all basis set objects."""
+        # Populate the exp_ao arrays
+        for l in range(self.LIBINT_MAX_AM):
+            for i in range(l + 1):
+                x = l - i
+                for j in range(i + 1):
+                    y = i - j
+                    z = j
+                    self.exp_ao[l].append([x, y, z])
 
     def constructor_zero_ao_basis(self):
         """Constructs a zero AO basis set"""
@@ -134,7 +148,7 @@ class BasisSet(object):
         self.center_to_shell = [0]
         self.puream = False
         self.PYmax_am = 0
-        self.max_nprimitive = 1
+        self.PYmax_nprimitive = 1
         self.xyz = [0.0, 0.0, 0.0]
         self.name = '(Empty Basis Set)'
         self.shells = []
@@ -143,18 +157,21 @@ class BasisSet(object):
             self.uexponents, 'Cartesian', 0, self.xyz, 0))
 
     def constructor_role_mol_shellmap(self, role, mol, shell_map):
-        """
+        """The most commonly used constructor. Extracts basis set name for *role*
+        from each atom of *mol*, looks up basis and role entries in the
+        *shell_map* dictionary, retrieves the GaussianShell objects and returns
+        the BasisSet.
 
         """
         self.molecule = mol
         self.name = role
+        self.xyz = self.molecule.geometry()  # not used in libmints but this seems to be the intent
+        natom = self.molecule.natom()
 
         # Singletons
         if not self.initialized_shared:
             self.initialize_singletons()
         self.initialized_shared = True
-
-        natom = self.molecule.natom()
 
         # These will tell us where the primitives for [basis][symbol] start and end in the compact array
         primitive_start = {}
@@ -177,22 +194,15 @@ class BasisSet(object):
                 primitive_start[basis][label] = self.n_uprimitive  # symbol --> label
                 for i in range(len(shells)):
                     shell = shells[i]
-                    #print shell
                     for prim in range(shell.nprimitive()):
                         uexps.append(shell.exp(prim))
-                        #print basisfirst, symbolfirst, i, prim, shell.exp(prim), len(uexps)
                         ucoefs.append(shell.coef(prim))
                         uoriginal_coefs.append(shell.original_coef(prim))
                         uerd_coefs.append(shell.erd_coef(prim))
                         self.n_uprimitive += 1
-                #primitive_end[basis][symbol] = self.n_uprimitive
-                primitive_end[basis][label] = self.n_uprimitive
-
-        #print 'prim_stt', primitive_start
-        #print 'prim_end', primitive_end
+                primitive_end[basis][label] = self.n_uprimitive  # symbol --> label
 
         # Count basis functions, shells and primitives
-        self.n_uprimitive = 0
         self.n_shells = 0
         self.PYnprimitive = 0
         self.PYnao = 0
@@ -205,7 +215,6 @@ class BasisSet(object):
             for i in range(len(shells)):
                 shell = shells[i]
                 nprim = shell.nprimitive()
-                self.n_uprimitive += nprim
                 self.PYnprimitive += nprim
                 self.n_shells += 1
                 self.PYnao += shell.ncartesian()
@@ -221,9 +230,7 @@ class BasisSet(object):
         self.ucoefficients = [0.0] * self.n_uprimitive
         self.uoriginal_coefficients = [0.0] * self.n_uprimitive
         self.uerd_coefficients = [0.0] * self.n_uprimitive
-        for i in range(len(uexps)):  # TODO change from libmints
-        #for i in range(self.n_uprimitive):
-            #print i, self.n_uprimitive, len(self.uexponents), len(uexps)
+        for i in range(self.n_uprimitive):
             self.uexponents[i] = uexps[i]
             self.ucoefficients[i] = ucoefs[i]
             self.uoriginal_coefficients[i] = uoriginal_coefs[i]
@@ -238,16 +245,15 @@ class BasisSet(object):
         self.shell_center = [0] * self.n_shells
         self.center_to_nshell = [0] * natom
         self.center_to_shell = [0] * natom
-        self.xyz = [0.0] * 3 * natom
 
         # Now loop over all atoms, and point to the appropriate unique data
         shell_count = 0
         ao_count = 0
         bf_count = 0
-        xyz_ptr = self.xyz  # TODO
+        xyz_ptr = [0.0, 0.0, 0.0]  # libmints seems to be always passing GaussianShell zeros, so following suit
         self.puream = False
         self.PYmax_am = 0
-        self.max_nprimitive = 0
+        self.PYmax_nprimitive = 0
         for n in range(natom):
             atom = self.molecule.atom_entry(n)
             basis = atom.basisset(role)
@@ -265,17 +271,10 @@ class BasisSet(object):
                 self.shell_first_basis_function[shell_count] = bf_count
                 shell_nprim = thisshell.nprimitive()
                 am = thisshell.am()
-                self.max_nprimitive = max(shell_nprim, self.max_nprimitive)
+                self.PYmax_nprimitive = max(shell_nprim, self.PYmax_nprimitive)
                 self.PYmax_am = max(am, self.PYmax_am)
                 self.shell_center[shell_count] = n
-                puream = 'Pure' if thisshell.is_pure() else 'Cartesian'
                 self.puream = thisshell.is_pure()
-                #if puream:
-                #    self.puream = True
-                self.puream = thisshell.is_pure()
-                #print 'PUREAM: ', puream, self.puream
-                #print "atom %d basis %s shell %d nprim %d atom_nprim %d" % \
-                #    (n, basis, i, shell_nprim, atom_nprim)
                 tst = ustart + atom_nprim
                 tsp = ustart + atom_nprim + shell_nprim
                 self.shells[shell_count] = GaussianShell(am, shell_nprim,
@@ -283,7 +282,8 @@ class BasisSet(object):
                     self.ucoefficients[tst:tsp],
                     self.uerd_coefficients[tst:tsp],
                     self.uexponents[tst:tsp],
-                    puream, n, xyz_ptr, bf_count)
+                    'Pure' if self.puream else 'Cartesian',
+                    n, xyz_ptr, bf_count)
                 for thisbf in range(thisshell.nfunction()):
                     self.function_to_shell[bf_count] = shell_count
                     self.function_center[bf_count] = n
@@ -293,13 +293,6 @@ class BasisSet(object):
                     ao_count += 1
                 atom_nprim += shell_nprim
                 shell_count += 1
-
-            # TODO huh?
-            #xyz = self.molecule.xyz(n)
-            #xyz_ptr[0] = xyz[0];
-            #xyz_ptr[1] = xyz[1];
-            #xyz_ptr[2] = xyz[2];
-            #xyz_ptr += 3;
 
             if atom_nprim != uend - ustart:
                 raise ValidationError("Problem with nprimitive in basis set construction!")
@@ -483,7 +476,7 @@ class BasisSet(object):
         *  @return Maximum number of primitives.
 
         """
-        return self.max_nprimitive
+        return self.PYmax_nprimitive
 
     def nshell(self):
         """Number of shells.
@@ -806,6 +799,8 @@ class BasisSet(object):
         else:
             with open(out, mode='w') as handle:
                 handle.write(text)
+
+    # <<< Misc. Methods >>>
 
     def refresh(self):
         """Refresh internal basis set data. Useful if someone has pushed
@@ -1351,6 +1346,14 @@ class BasisSet(object):
         """
         raise FeatureNotImplemented('BasisSet::add')
 
+    @staticmethod
+    def shell_sorter_ncenter(d1, d2):
+        return d1.ncenter() < d2.ncenter()
+
+    @staticmethod
+    def shell_sorter_am(d1, d2):
+        return d1.am() < d2.am()
+
 #    // BasisSet friends
 #    friend class Gaussian94BasisSetParser;
 #    friend BasisSet operator +(const BasisSet& a, const BasisSet& b);
@@ -1366,14 +1369,6 @@ class BasisSet(object):
 #     *  this method.
 #     */
 #    //static boost::shared_ptr<BasisSet> concatenate(const boost::shared_ptr<BasisSet>& a, const boost::shared_ptr<BasisSet>& b);
-
-
-def shell_sorter_ncenter(d1, d2):
-    return d1.ncenter() < d2.ncenter()
-
-
-def shell_sorter_am(d1, d2):
-    return d1.am() < d2.am()
 
 #BasisSet operator +(const BasisSet& a, const BasisSet& b) {
 #    if (a.molecule() != b.molecule()) {
