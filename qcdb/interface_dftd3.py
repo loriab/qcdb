@@ -210,9 +210,9 @@ def run_dftd3(self, func=None, dashlvl=None, dashparam=None, dertype=None):
         psi_dashdderiv.set(dashdderiv)
 
     # Print program output to file if verbose
-    verbose = psi4.get_option('SCF', 'PRINT') if isP4regime else 2  #TODO
+    verbose = psi4.get_option('SCF', 'PRINT') if isP4regime else 2  # TODO
     if verbose >= 3:
-        
+
         text = '\n  ==> DFTD3 Output <==\n'
         text += out
         if dertype != 0:

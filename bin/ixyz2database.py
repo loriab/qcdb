@@ -156,7 +156,7 @@ BINDRGT = {}
 
 print "\n%-25s %6s %6s %6s %6s %6s\t\t%s\n" % ("system", "CHGsyst", "MLPsyst", "Natom", "Nmol1", "Nmol2", "Fragmentation Pattern")
 
-for xyzfile in glob.glob('*.' + fext):
+for xyzfile in sorted(glob.glob('*.' + fext) + glob.glob('*.p4m')):
 
     # ascertain system name and open file
     system = os.path.splitext(xyzfile)[0]
