@@ -604,6 +604,34 @@ class Database(object):
 
         print """Database %s: Wavefunction results loaded""" % (self.dbse)
 
+    def load_dhdft(self, modname=None, funcname='load_dhdft', pythonpath=None):
+        """Loads qcdb.ReactionDatums from module *modname* function
+        *funcname* (which default to self.dbse + '_dhdft'
+        and 'load_dhdft').
+ 
+        """
+        if pythonpath is not None:
+            sys.path.insert(0, pythonpath)
+        else:
+            sys.path.append(os.path.dirname(__file__) + '/../data')
+        try:
+            pt2mod = __import__(self.dbse + '_dhdft') if modname is None else __import__(modname)
+        except ImportError:
+            if modname is None:
+                print """DH-DFT data unavailable for database %s.\n""" % (self.dbse)
+                return
+            else:
+                print '\nPython module for database data %s failed to load\n\n' % (modname)
+                print '\nSearch path that was tried:\n'
+                print ", ".join(map(str, sys.path))
+                raise ValidationError("Python module loading problem for database data " + str(modname))
+        try:
+            getattr(pt2mod, funcname)(self)
+        except AttributeError:
+            raise ValidationError("Python module missing function %s for loading data " % (str(funcname)))
+ 
+        print """Database %s: DH-DFT results loaded""" % (self.dbse)
+
     def load_subsets(self, modname='subsetgenerator', pythonpath=None):
         """Loads subsets from all functions in module *modname*.
 
@@ -722,6 +750,7 @@ class FourDatabases(object):
 
         # load up data and definitions
         self.load_pt2()
+        self.load_dhdft()
         self.load_subsets()
         self.define_supersubsets()
 
@@ -733,6 +762,15 @@ class FourDatabases(object):
         self.nbc1.load_pt2()
         self.hbc1.load_pt2()
         self.hsg.load_pt2()
+
+    def load_dhdft(self):
+        """Load qcdb.ReactionDatum results from standard location.
+
+        """
+        self.s22.load_dhdft()
+        self.nbc1.load_dhdft()
+        self.hbc1.load_dhdft()
+        self.hsg.load_dhdft()
 
     def load_subsets(self):
         """Load subsets from standard generators.
