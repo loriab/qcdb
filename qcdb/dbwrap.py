@@ -529,7 +529,7 @@ class Database(object):
 
     def compute_statistics(self, modelchem, benchmark='default', sset='default', failoninc=True, verbose=False, returnindiv=False):
         """For full database or subset *sset*, computes many error
-        statistics between *modelchem* and *benchmark* model
+        statistics between single *modelchem* and *benchmark* model
         chemistries. Returns error if model chemistries are missing
         for any reaction in subset unless *failoninc* set to False,
         whereupon returns partial statistics. Returns dictionary of
@@ -659,18 +659,15 @@ class Database(object):
         *benchmark* for all available subsets and return dictionary of same.
 
         """
-        # compute errors
         errors = collections.OrderedDict()
         for ss in self.sset.keys():
             errors[ss] = self.compute_statistics(modelchem, benchmark=benchmark, sset=ss, failoninc=failoninc, verbose=verbose)
-        # present errors
         print """\n  ==> %s %s Errors <==""" % (self.dbse, modelchem)
         print """%20s        %5s  %4s   %6s %6s    %6s""" % \
             ('', 'ME', 'STDE', 'MAE', 'MA%E', 'MA%BE')
         for ss in errors.keys():
             if any(errors[ss].values()):
                 print """%20s    %42s""" % (ss, format_errors(errors[ss]))
-        # return errors
         return errors
 
     def analyze_modelchems(self, modelchem, benchmark='default', failoninc=True, verbose=False):
@@ -680,13 +677,11 @@ class Database(object):
 
         """
         pre, suf, mid = string_contrast(modelchem)
-        # compute errors
         errors = collections.OrderedDict()
         for ss in self.sset.keys():
             errors[ss] = collections.OrderedDict()
             for mc in modelchem:
                 errors[ss][mc] = self.compute_statistics(mc, benchmark=benchmark, sset=ss, failoninc=failoninc, verbose=verbose)
-        # present errors
         print """\n  ==> %s %s[]%s Errors <==""" % (self.dbse, pre, suf)
         print """%20s        %5s  %4s   %6s %6s    %6s""" % \
             ('', 'ME', 'STDE', 'MAE', 'MA%E', 'MA%BE')
@@ -695,15 +690,14 @@ class Database(object):
                 print """   => %s <= """ % (ss)
                 for mc in modelchem:
                     print """%20s    %42s""" % (mid[modelchem.index(mc)], format_errors(errors[ss][mc]))
-        # return errors
         return errors
 
     def plot_modelchems(self, modelchem, benchmark='default', sset='default', failoninc=True, verbose=False, color='sapt'):
-        """Computes individual errors and summary statistics for *modelchem*
-        versus *benchmark* over subset *sset*.  Thread *color* can be 'rgb' for
-        old coloring, a color name or 'sapt' for spectrum coloring.  Prepares
-        thread diagram instructions and either executes them if matplotlib
-        available (Canopy) or prints them.
+        """Computes individual errors and summary statistics for each model
+        chemistry in array *modelchem* versus *benchmark* over subset *sset*.
+        Thread *color* can be 'rgb' for old coloring, a color name or 'sapt'
+        for spectrum coloring. Prepares thread diagram instructions and
+        either executes them if matplotlib available (Canopy) or prints them.
 
         """
         pre, suf, mid = string_contrast(modelchem)
@@ -713,8 +707,10 @@ class Database(object):
         for mc in modelchem:
             errors[mc], indiv[mc] = self.compute_statistics(mc, benchmark=benchmark,
                 sset=sset, failoninc=failoninc, verbose=verbose, returnindiv=True)
+        print 'ERRORS', errors
         # repackage
-        dbdat = [{'dbse': self.dbse, 'sys': str(rxn), 'color': self.hrxn[rxn].color, 'data': [indiv[mc][rxn][0] for mc in modelchem]} for rxn in self.sset[sset].keys()]
+        dbdat = [{'sys': str(rxn), 'color': self.hrxn[rxn].color,
+            'data': [indiv[mc][rxn][0] for mc in modelchem]} for rxn in self.sset[sset].keys()]
         title = self.dbse + ' ' + pre + '[]' + suf
         mae = [errors[mc]['mae'] for mc in modelchem]
         mapbe = [100 * errors[mc]['mapbe'] for mc in modelchem]
@@ -729,6 +725,8 @@ class Database(object):
         else:
             # if running from Canopy, call mpl directly
             mpl.thread(dbdat, color=color, title=title, labels=mid, mae=mae, mape=mapbe)
+            print """mpl.thread(%s,\n    color='%s',\n    title='%s',\n    labels=%s,\n    mae=%s,\n    mape=%s)\n\n""" % \
+                (dbdat, color, title, mid, mae, mapbe)
 
 
 class FourDatabases(object):
@@ -747,12 +745,15 @@ class FourDatabases(object):
         self.hsg = Database('HSG')
         # subset assembly pattern
         self.sset = collections.OrderedDict()
+        # assembly pattern for transspecies modelchems
+        self.mc = {}
 
         # load up data and definitions
         self.load_pt2()
         self.load_dhdft()
         self.load_subsets()
         self.define_supersubsets()
+        self.define_supermodelchems()
 
     def load_pt2(self):
         """Load qcdb.ReactionDatum results from standard location.
@@ -800,152 +801,191 @@ class FourDatabases(object):
         self.sset['pp-5min'] = ['mxddpp', 'mxddpp-5min', None, None]
         self.sset['np-5min'] = ['mxddnp', 'mxddnp-5min', None, 'mxdd']
 
-    def analyze_modelchem(self, modelchem, benchmark='default', failoninc=True, verbose=False):
+    def define_supermodelchems(self):
         """
 
         """
-        errors = collections.OrderedDict()
-        errors['S22'] = self.s22.analyze_modelchem(modelchem, benchmark=benchmark, failoninc=failoninc, verbose=verbose)
-        errors['NBC1'] = self.nbc1.analyze_modelchem(modelchem, benchmark=benchmark, failoninc=failoninc, verbose=verbose)
-        errors['HBC1'] = self.hbc1.analyze_modelchem(modelchem, benchmark=benchmark, failoninc=failoninc, verbose=verbose)
-        errors['HSG'] = self.hsg.analyze_modelchem(modelchem, benchmark=benchmark, failoninc=failoninc, verbose=verbose)
-        errors['DB4'] = collections.OrderedDict()
+        self.mc['CCSD-CP-adz'] = ['CCSD-CP-adz', 'CCSD-CP-hadz', 'CCSD-CP-adz', 'CCSD-CP-hadz']
+        self.mc['CCSD-CP-atz'] = ['CCSD-CP-atz', 'CCSD-CP-hatz', 'CCSD-CP-atz', 'CCSD-CP-hatz']
+        self.mc['CCSD-CP-adtz'] = ['CCSD-CP-adtz', 'CCSD-CP-hadtz', 'CCSD-CP-adtz', 'CCSD-CP-hadtz']
+        self.mc['CCSD-CP-adtzadz'] = ['CCSD-CP-adtzadz', 'CCSD-CP-adtzhadz', 'CCSD-CP-adtzadz', 'CCSD-CP-adtzhadz']
+        self.mc['CCSD-CP-atzadz'] = ['CCSD-CP-atzadz', 'CCSD-CP-atzhadz', 'CCSD-CP-atzadz', 'CCSD-CP-atzhadz']
+        self.mc['CCSD-CP-atqzadz'] = ['CCSD-CP-atqzadz', 'CCSD-CP-atqzhadz', 'CCSD-CP-atqzadz', 'CCSD-CP-atqzhadz']
+        self.mc['CCSD-CP-atzadtz'] = ['CCSD-CP-atzadtz', 'CCSD-CP-atzhadtz', 'CCSD-CP-atzadtz', 'CCSD-CP-atzhadtz']
+        self.mc['CCSD-CP-atqzadtz'] = ['CCSD-CP-atqzadtz', 'CCSD-CP-atqzhadtz', 'CCSD-CP-atqzadtz', 'CCSD-CP-atqzhadtz']
+        self.mc['CCSD-CP-atqzatz'] = ['CCSD-CP-atqzatz', 'CCSD-CP-atqzhatz', 'CCSD-CP-atqzatz', 'CCSD-CP-atqzhatz']
 
-        for ss, arr in self.sset.items():
-            args = []
-            if arr[0] is not None:
-                args.append(errors['S22'][arr[0]])
-            if arr[1] is not None:
-                args.append(errors['NBC1'][arr[1]])
-            if arr[2] is not None:
-                args.append(errors['HBC1'][arr[2]])
-            if arr[3] is not None:
-                args.append(errors['HSG'][arr[3]])
-            errors['DB4'][ss] = average_errors(*args)
+        self.mc['SCSCCSD-CP-adz'] = ['SCSCCSD-CP-adz', 'SCSCCSD-CP-hadz', 'SCSCCSD-CP-adz', 'SCSCCSD-CP-hadz']
+        self.mc['SCSCCSD-CP-atz'] = ['SCSCCSD-CP-atz', 'SCSCCSD-CP-hatz', 'SCSCCSD-CP-atz', 'SCSCCSD-CP-hatz']
+        self.mc['SCSCCSD-CP-adtz'] = ['SCSCCSD-CP-adtz', 'SCSCCSD-CP-hadtz', 'SCSCCSD-CP-adtz', 'SCSCCSD-CP-hadtz']
+        self.mc['SCSCCSD-CP-adtzadz'] = ['SCSCCSD-CP-adtzadz', 'SCSCCSD-CP-adtzhadz', 'SCSCCSD-CP-adtzadz', 'SCSCCSD-CP-adtzhadz']
+        self.mc['SCSCCSD-CP-atzadz'] = ['SCSCCSD-CP-atzadz', 'SCSCCSD-CP-atzhadz', 'SCSCCSD-CP-atzadz', 'SCSCCSD-CP-atzhadz']
+        self.mc['SCSCCSD-CP-atqzadz'] = ['SCSCCSD-CP-atqzadz', 'SCSCCSD-CP-atqzhadz', 'SCSCCSD-CP-atqzadz', 'SCSCCSD-CP-atqzhadz']
+        self.mc['SCSCCSD-CP-atzadtz'] = ['SCSCCSD-CP-atzadtz', 'SCSCCSD-CP-atzhadtz', 'SCSCCSD-CP-atzadtz', 'SCSCCSD-CP-atzhadtz']
+        self.mc['SCSCCSD-CP-atqzadtz'] = ['SCSCCSD-CP-atqzadtz', 'SCSCCSD-CP-atqzhadtz', 'SCSCCSD-CP-atqzadtz', 'SCSCCSD-CP-atqzhadtz']
+        self.mc['SCSCCSD-CP-atqzatz'] = ['SCSCCSD-CP-atqzatz', 'SCSCCSD-CP-atqzhatz', 'SCSCCSD-CP-atqzatz', 'SCSCCSD-CP-atqzhatz']
 
-        print """\n  ==> %s %s Errors <==""" % ('DB4', modelchem)
-        print """%20s    %42s%42s%42s%42s%42s""" % \
-            ('', '=> DB4 <=', '=> S22 <=', '=> NBC1 <=', '=> HBC1 <=', '=> HSG <=')
-        print """%20s        %5s  %4s   %6s %6s    %6s""" % \
-            ('', 'ME', 'STDE', 'MAE', 'MA%E', 'MA%BE')
-        for ss, arr in self.sset.items():
-            print """%20s    %42s%42s%42s%42s%42s""" % (ss, format_errors(errors['DB4'][ss]),
-                '' if arr[0] is None else format_errors(errors['S22'][arr[0]]),
-                '' if arr[1] is None else format_errors(errors['NBC1'][arr[1]]),
-                '' if arr[2] is None else format_errors(errors['HBC1'][arr[2]]),
-                '' if arr[3] is None else format_errors(errors['HSG'][arr[3]]))
+        self.mc['SCSMICCSD-CP-adz'] = ['SCSMICCSD-CP-adz', 'SCSMICCSD-CP-hadz', 'SCSMICCSD-CP-adz', 'SCSMICCSD-CP-hadz']
+        self.mc['SCSMICCSD-CP-atz'] = ['SCSMICCSD-CP-atz', 'SCSMICCSD-CP-hatz', 'SCSMICCSD-CP-atz', 'SCSMICCSD-CP-hatz']
+        self.mc['SCSMICCSD-CP-adtz'] = ['SCSMICCSD-CP-adtz', 'SCSMICCSD-CP-hadtz', 'SCSMICCSD-CP-adtz', 'SCSMICCSD-CP-hadtz']
+        self.mc['SCSMICCSD-CP-adtzadz'] = ['SCSMICCSD-CP-adtzadz', 'SCSMICCSD-CP-adtzhadz', 'SCSMICCSD-CP-adtzadz', 'SCSMICCSD-CP-adtzhadz']
+        self.mc['SCSMICCSD-CP-atzadz'] = ['SCSMICCSD-CP-atzadz', 'SCSMICCSD-CP-atzhadz', 'SCSMICCSD-CP-atzadz', 'SCSMICCSD-CP-atzhadz']
+        self.mc['SCSMICCSD-CP-atqzadz'] = ['SCSMICCSD-CP-atqzadz', 'SCSMICCSD-CP-atqzhadz', 'SCSMICCSD-CP-atqzadz', 'SCSMICCSD-CP-atqzhadz']
+        self.mc['SCSMICCSD-CP-atzadtz'] = ['SCSMICCSD-CP-atzadtz', 'SCSMICCSD-CP-atzhadtz', 'SCSMICCSD-CP-atzadtz', 'SCSMICCSD-CP-atzhadtz']
+        self.mc['SCSMICCSD-CP-atqzadtz'] = ['SCSMICCSD-CP-atqzadtz', 'SCSMICCSD-CP-atqzhadtz', 'SCSMICCSD-CP-atqzadtz', 'SCSMICCSD-CP-atqzhadtz']
+        self.mc['SCSMICCSD-CP-atqzatz'] = ['SCSMICCSD-CP-atqzatz', 'SCSMICCSD-CP-atqzhatz', 'SCSMICCSD-CP-atqzatz', 'SCSMICCSD-CP-atqzhatz']
+
+        self.mc['CCSDT-CP-adz'] = ['CCSDT-CP-adz', 'CCSDT-CP-hadz', 'CCSDT-CP-adz', 'CCSDT-CP-hadz']
+        self.mc['CCSDT-CP-atz'] = ['CCSDT-CP-atz', 'CCSDT-CP-hatz', 'CCSDT-CP-atz', 'CCSDT-CP-hatz']
+        self.mc['CCSDT-CP-adtz'] = ['CCSDT-CP-adtz', 'CCSDT-CP-hadtz', 'CCSDT-CP-adtz', 'CCSDT-CP-hadtz']
+        self.mc['CCSDT-CP-adtzadz'] = ['CCSDT-CP-adtzadz', 'CCSDT-CP-adtzhadz', 'CCSDT-CP-adtzadz', 'CCSDT-CP-adtzhadz']
+        self.mc['CCSDT-CP-atzadz'] = ['CCSDT-CP-atzadz', 'CCSDT-CP-atzhadz', 'CCSDT-CP-atzadz', 'CCSDT-CP-atzhadz']
+        self.mc['CCSDT-CP-atqzadz'] = ['CCSDT-CP-atqzadz', 'CCSDT-CP-atqzhadz', 'CCSDT-CP-atqzadz', 'CCSDT-CP-atqzhadz']
+        self.mc['CCSDT-CP-atzadtz'] = ['CCSDT-CP-atzadtz', 'CCSDT-CP-atzhadtz', 'CCSDT-CP-atzadtz', 'CCSDT-CP-atzhadtz']
+        self.mc['CCSDT-CP-atqzadtz'] = ['CCSDT-CP-atqzadtz', 'CCSDT-CP-atqzhadtz', 'CCSDT-CP-atqzadtz', 'CCSDT-CP-atqzhadtz']
+        self.mc['CCSDT-CP-atqzatz'] = ['CCSDT-CP-atqzatz', 'CCSDT-CP-atqzhatz', 'CCSDT-CP-atqzatz', 'CCSDT-CP-atqzhatz']
 
     def analyze_modelchems(self, modelchem, benchmark='default', failoninc=True, verbose=False):
-        """
+        """Print out nicely formatted summary statistics for every model
+        chemistry in array *modelchem* versus *benchmark* for every
+        registered subset.
 
         """
-        pre, suf, mid = string_contrast(modelchem)
         # compute errors
-        errors = collections.OrderedDict()
-        errors['S22'] = self.s22.analyze_modelchems(modelchem, benchmark=benchmark, failoninc=failoninc, verbose=verbose)
-        errors['NBC1'] = self.nbc1.analyze_modelchems(modelchem, benchmark=benchmark, failoninc=failoninc, verbose=verbose)
-        errors['HBC1'] = self.hbc1.analyze_modelchems(modelchem, benchmark=benchmark, failoninc=failoninc, verbose=verbose)
-        errors['HSG'] = self.hsg.analyze_modelchems(modelchem, benchmark=benchmark, failoninc=failoninc, verbose=verbose)
-        errors['DB4'] = collections.OrderedDict()
-        for ss, arr in self.sset.items():
-            errors['DB4'][ss] = collections.OrderedDict()
-            for mc in modelchem:
-                args = []
-                if arr[0] is not None:
-                    args.append(errors['S22'][arr[0]][mc])
-                if arr[1] is not None:
-                    args.append(errors['NBC1'][arr[1]][mc])
-                if arr[2] is not None:
-                    args.append(errors['HBC1'][arr[2]][mc])
-                if arr[3] is not None:
-                    args.append(errors['HSG'][arr[3]][mc])
-                errors['DB4'][ss][mc] = average_errors(*args)
+        errors = {}
+        for mc in modelchem:
+            errors[mc] = {}
+            for ss in self.sset.keys():
+                errors[mc][ss] = self.compute_statistics(mc, benchmark=benchmark, sset=ss,
+                    failoninc=failoninc, verbose=verbose, returnindiv=False)
         # present errors
+        pre, suf, mid = string_contrast(modelchem)
         print """\n  ==> %s %s[]%s Errors <==""" % ('DB4', pre, suf)
         print """%20s    %42s%42s%42s%42s%42s""" % \
             ('', '=> DB4 <=', '=> S22 <=', '=> NBC1 <=', '=> HBC1 <=', '=> HSG <=')
         print """%20s        %5s  %4s   %6s %6s    %6s""" % \
             ('', 'ME', 'STDE', 'MAE', 'MA%E', 'MA%BE')
-        for ss, arr in self.sset.items():
+        for ss in self.sset.keys():
             print """   => %s <= """ % (ss)
             for mc in modelchem:
+                tmpdb = errors[mc][ss]
                 print """%20s    %42s%42s%42s%42s%42s""" % (mid[modelchem.index(mc)],
-                    format_errors(errors['DB4'][ss][mc]),
-                    '' if arr[0] is None else format_errors(errors['S22'][arr[0]][mc]),
-                    '' if arr[1] is None else format_errors(errors['NBC1'][arr[1]][mc]),
-                    '' if arr[2] is None else format_errors(errors['HBC1'][arr[2]][mc]),
-                    '' if arr[3] is None else format_errors(errors['HSG'][arr[3]][mc]))
+                    format_errors(errors[mc][ss]['DB4']),
+                    '' if tmpdb['S22'] is None else format_errors(tmpdb['S22']),
+                    '' if tmpdb['NBC1'] is None else format_errors(tmpdb['NBC1']),
+                    '' if tmpdb['HBC1'] is None else format_errors(tmpdb['HBC1']),
+                    '' if tmpdb['HSG'] is None else format_errors(tmpdb['HSG']))
 
-    def plot_modelchems(self, modelchem, benchmark='default', sset='default', failoninc=True, verbose=False, color='sapt'):
-        """Computes individual errors and summary statistics for *modelchem*
-        versus *benchmark* over subset *sset* over all four databases. Thread
-        *color* can be 'rgb' for old coloring, a color name or 'sapt' for spectrum
-        coloring.  Prepares thread diagram instructions and either executes them
-        if matplotlib available (Canopy) or prints them.
+    def plot_bars(self, modelchem, benchmark='default', sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'], failoninc=True, verbose=False):
+        """Prepares 'grey bars' diagram for each model chemistry in array
+        *modelchem* versus *benchmark* over all four databases. A wide bar
+        is plotted with three smaller bars, corresponding to the 'mae'
+        summary statistic of the four subsets in *sset*. Prepares bars
+        diagram instructions and either executes them if matplotlib
+        available (Canopy) or prints them.
+
+        """
+        # compute errors
+        errors = {}
+        for mc in modelchem:
+            errors[mc] = {}
+            for ss in sset:
+                errors[mc][ss] = self.compute_statistics(mc, benchmark=benchmark, sset=ss,
+                    failoninc=failoninc, verbose=verbose, returnindiv=False)
+        # repackage
+        pre, suf, mid = string_contrast(modelchem)
+        dbdat = [{'mc': mid[modelchem.index(mc)], 'data': [errors[mc][ss]['DB4']['mae'] for ss in sset]} for mc in modelchem]
+        title = '4DB ' + pre + '[]' + suf
+        # generate matplotlib instructions and call or print
+        try:
+            import mpl
+            import matplotlib.pyplot as plt
+        except ImportError:
+            # if not running from Canopy, print line to execute from Canopy
+            print """mpl.bar(%s,\n    title='%s')\n\n""" % (dbdat, title)
+        else:
+            # if running from Canopy, call mpl directly
+            mpl.bar(dbdat, title=title)
+
+    def compute_statistics(self, modelchem, benchmark='default', sset='default', failoninc=True, verbose=False, returnindiv=False):
+        """Computes summary statistics and, if *returnindiv* True,
+        individual errors for single model chemistry *modelchem* versus
+        *benchmark* over subset *sset* over all four databases.
+        Particularly, imposes cross-database definitions for sset and
+        modelchem.
 
         """
         pre, suf, mid = string_contrast(modelchem)
-        # compute errors
+        if modelchem in self.mc.keys():
+            lmc = self.mc[modelchem]
+        else:
+            lmc = [modelchem, modelchem, modelchem, modelchem]
+        if sset in self.sset.keys():
+            lss = self.sset[sset]
+        else:
+            lss = [sset, sset, sset, sset]
+
         errors = collections.OrderedDict()
         indiv = collections.OrderedDict()
+        errors['S22'], indiv['S22'] = (None, None) if lss[0] is None else self.s22.compute_statistics(lmc[0], sset=lss[0],
+            benchmark=benchmark, failoninc=failoninc, verbose=verbose, returnindiv=True)
+        errors['NBC1'], indiv['NBC1'] = (None, None) if lss[1] is None else self.nbc1.compute_statistics(lmc[1], sset=lss[1],
+            benchmark=benchmark, failoninc=failoninc, verbose=verbose, returnindiv=True)
+        errors['HBC1'], indiv['HBC1'] = (None, None) if lss[2] is None else self.hbc1.compute_statistics(lmc[2], sset=lss[2],
+            benchmark=benchmark, failoninc=failoninc, verbose=verbose, returnindiv=True)
+        errors['HSG'], indiv['HSG'] = (None, None) if lss[3] is None else self.hsg.compute_statistics(lmc[3], sset=lss[3],
+            benchmark=benchmark, failoninc=failoninc, verbose=verbose, returnindiv=True)
+
+        args = []
+        if lss[0] is not None:
+            args.append(errors['S22'])
+        if lss[1] is not None:
+            args.append(errors['NBC1'])
+        if lss[2] is not None:
+            args.append(errors['HBC1'])
+        if lss[3] is not None:
+            args.append(errors['HSG'])
+        errors['DB4'] = average_errors(*args)
+
+        if returnindiv:
+            return errors, indiv
+        else:
+            return errors
+
+    def plot_modelchems(self, modelchem, benchmark='default', sset='default', failoninc=True, verbose=False, color='sapt'):
+        """Computes individual errors and summary statistics for each
+        model chemistry in array *modelchem* versus *benchmark* over
+        subset *sset* over all four databases. Thread *color* can be 'rgb'
+        for old coloring, a color name or 'sapt' for spectrum coloring.
+        Prepares thread diagram instructions and either executes them if
+        matplotlib available (Canopy) or prints them.
+
+        """
+        # compute errors
         errors = {}
         indiv = {}
-        sset = sset.lower()
-        indiv['S22'] = {} #collections.OrderedDict()
-        indiv['NBC1'] = {} #collections.OrderedDict()
-        indiv['HBC1'] = {} #collections.OrderedDict()
-        indiv['HSG'] = {} #collections.OrderedDict()
         for mc in modelchem:
-#            indiv[mc] = {}
-            args = []
-            if self.sset[sset][0] is not None:
-                tmpe, indiv['S22'][mc] = self.s22.compute_statistics(mc, benchmark=benchmark,
-                    sset=self.sset[sset][0], failoninc=failoninc, verbose=verbose, returnindiv=True)
-                args.append(tmpe)
-            if self.sset[sset][1] is not None:
-                tmpe, indiv['NBC1'][mc] = self.nbc1.compute_statistics(mc, benchmark=benchmark,
-                    sset=self.sset[sset][1], failoninc=failoninc, verbose=verbose, returnindiv=True)
-                args.append(tmpe)
-            if self.sset[sset][2] is not None:
-                tmpe, indiv['HBC1'][mc] = self.hbc1.compute_statistics(mc, benchmark=benchmark,
-                    sset=self.sset[sset][2], failoninc=failoninc, verbose=verbose, returnindiv=True)
-                args.append(tmpe)
-            if self.sset[sset][3] is not None:
-                tmpe, indiv['HSG'][mc] = self.hsg.compute_statistics(mc, benchmark=benchmark,
-                    sset=self.sset[sset][3], failoninc=failoninc, verbose=verbose, returnindiv=True)
-                args.append(tmpe)
-            errors[mc] = average_errors(*args)
-
+            errors[mc], indiv[mc] = self.compute_statistics(mc, benchmark=benchmark, sset=sset,
+                failoninc=failoninc, verbose=verbose, returnindiv=True)
         # repackage
         dbdat = []
-        if self.sset[sset][0] is not None:
-            for rxn in self.s22.sset[self.sset[sset][0]].keys():
-                dbdat.append({'dbse': 'S22',
-                              'sys': str(rxn),
-                              'color': self.s22.hrxn[rxn].color,
-                              'data': [indiv['S22'][mc][rxn][0] for mc in modelchem]}) 
-        if self.sset[sset][1] is not None:
-            for rxn in self.nbc1.sset[self.sset[sset][1]].keys():
-                dbdat.append({'dbse': 'NBC1',
-                              'sys': str(rxn),
-                              'color': self.nbc1.hrxn[rxn].color,
-                              'data': [indiv['NBC1'][mc][rxn][0] for mc in modelchem]}) 
-        if self.sset[sset][2] is not None:
-            for rxn in self.hbc1.sset[self.sset[sset][2]].keys():
-                dbdat.append({'dbse': 'HBC1',
-                              'sys': str(rxn),
-                              'color': self.hbc1.hrxn[rxn].color,
-                              'data': [indiv['HBC1'][mc][rxn][0] for mc in modelchem]}) 
-        if self.sset[sset][3] is not None:
-            for rxn in self.hsg.sset[self.sset[sset][3]].keys():
-                dbdat.append({'dbse': 'HSG',
-                              'sys': str(rxn),
-                              'color': self.hsg.hrxn[rxn].color,
-                              'data': [indiv['HSG'][mc][rxn][0] for mc in modelchem]}) 
-#        dbdat = [{'dbse': self.dbse, 'sys': str(rxn), 'data': [indiv[mc][rxn][0] for mc in modelchem]} for rxn in self.sset[sset].keys()]
+        for db in indiv[modelchem[0]].keys():
+            if indiv[modelchem[0]][db] is not None:
+                for rxn, orxn in indiv[modelchem[0]][db].items():
+                    if db == 'S22':
+                        lcolor = self.s22.hrxn[rxn].color
+                    elif db == 'NBC1':
+                        lcolor = self.nbc1.hrxn[rxn].color
+                    elif db == 'HBC1':
+                        lcolor = self.hbc1.hrxn[rxn].color
+                    elif db == 'HSG':
+                        lcolor = self.hsg.hrxn[rxn].color
+                    dbdat.append({'sys': str(rxn), 'color': lcolor,
+                        'data': [indiv[mc][db][rxn][0] for mc in modelchem]})
+        pre, suf, mid = string_contrast(modelchem)
         title = '4DB-' + sset + ' ' + pre + '[]' + suf
-        mae = [errors[mc]['mae'] for mc in modelchem]
-        mapbe = [100 * errors[mc]['mapbe'] for mc in modelchem]
+        mae = [errors[mc]['DB4']['mae'] for mc in modelchem]
+        mapbe = [100 * errors[mc]['DB4']['mapbe'] for mc in modelchem]
         # generate matplotlib instructions and call or print
         try:
             import mpl
@@ -957,3 +997,133 @@ class FourDatabases(object):
         else:
             # if running from Canopy, call mpl directly
             mpl.thread(dbdat, color=color, title=title, labels=mid, mae=mae, mape=mapbe)
+
+    def plot_flat(self, modelchem, benchmark='default', sset='default', failoninc=True, verbose=False, color='sapt', xlimit=4.0, view=True):
+        """Computes individual errors and summary statistics for single
+        model chemistry *modelchem* versus *benchmark* over
+        subset *sset* over all four databases. Thread *color* can be 'rgb'
+        for old coloring, a color name or 'sapt' for spectrum coloring.
+        Prepares flat diagram instructions and either executes them if
+        matplotlib available (Canopy) or prints them.
+
+        """
+        # compute errors
+        errors = {}
+        indiv = {}
+        mc = modelchem
+        errors[mc], indiv[mc] = self.compute_statistics(mc, benchmark=benchmark, sset=sset,
+            failoninc=failoninc, verbose=verbose, returnindiv=True)
+        # repackage
+        dbdat = []
+        for db in indiv[mc].keys():
+            if indiv[mc][db] is not None:
+                for rxn, orxn in indiv[mc][db].items():
+                    if db == 'S22':
+                        lcolor = self.s22.hrxn[rxn].color
+                    elif db == 'NBC1':
+                        lcolor = self.nbc1.hrxn[rxn].color
+                    elif db == 'HBC1':
+                        lcolor = self.hbc1.hrxn[rxn].color
+                    elif db == 'HSG':
+                        lcolor = self.hsg.hrxn[rxn].color
+                    dbdat.append({'sys': str(rxn), 'color': lcolor,
+                        'data': [indiv[mc][db][rxn][0]]})
+        pre, suf, mid = string_contrast(mc)
+        title = '4DB-' + sset + ' ' + pre + '[]' + suf
+        mae = errors[mc]['DB4']['mae']
+        mapbe = 100 * errors[mc]['DB4']['mapbe']
+        # generate matplotlib instructions and call or print
+        try:
+            import mpl
+            import matplotlib.pyplot as plt
+        except ImportError:
+            # if not running from Canopy, print line to execute from Canopy
+            print """mpl.flat(%s,\n    color='%s',\n    title='%s',\n    mae=%s,\n    mape=%s,\n    xlimit=%s,\n    view=%s)\n\n""" % \
+                (dbdat, color, mc, mae, mapbe, xlimit, view)
+        else:
+            # if running from Canopy, call mpl directly
+            mpl.flat(dbdat, color=color, title=mc, mae=mae, mape=mapbe, xlimit=xlimit, view=view)
+
+    def plot_usual_flats(self):
+        """Generate pieces for inclusion into tables for PT2 paper."""
+
+        #self.plot_flat('MP2-CP-adz', sset='tt-5min')
+        #asdf.s22.hrxn[2].data.keys()
+        #temp = ['SCSMP2-CP-aqz', 'SCSMP2-CP-a5z', 'SCSMP2-CP-atqz', 'SCSMP2-CP-aq5z', 'SCSMP2F12-CP-adz', 'SCSMP2F12-CP-atz', 'SCSMP2F12-CP-aqz', 'SCSMP2F12-CP-adtz']
+
+        for mc in sorted(self.s22.hrxn[2].data.keys()):
+            if mc not in ['S220', 'S22A', 'S22B']:
+                self.plot_flat(mc, sset='tt-5min', xlimit=4.0, view=False)
+
+    def plot_usual_bars(self):
+        """Generate pieces for grey bars figure for PT2 paper."""
+
+        # Fig. bars (a)
+        self.plot_bars(['MP2-CP-adz', 'MP2-CP-atz', 'MP2-CP-adtz',
+            'MP2-CP-aqz', 'MP2-CP-atqz', 'MP2-CP-a5z', 'MP2-CP-aq5z'])
+        self.plot_bars(['SCSMP2-CP-adz', 'SCSMP2-CP-atz',
+            'SCSMP2-CP-adtz', 'SCSMP2-CP-aqz', 'SCSMP2-CP-atqz',
+            'SCSMP2-CP-a5z', 'SCSMP2-CP-aq5z'])
+        self.plot_bars(['SCSNMP2-CP-adz', 'SCSNMP2-CP-atz',
+            'SCSNMP2-CP-adtz', 'SCSNMP2-CP-aqz', 'SCSNMP2-CP-atqz',
+            'SCSNMP2-CP-a5z', 'SCSNMP2-CP-aq5z'])
+        self.plot_bars(['SCSMIMP2-CP-atz', 'SCSMIMP2-CP-atz',
+            'SCSMIMP2-CP-adtz', 'SCSMIMP2-CP-aqz', 'SCSMIMP2-CP-atqz'])
+        self.plot_bars(['SCSMIMP2-CP-tz', 'SCSMIMP2-CP-tz',
+            'SCSMIMP2-CP-dtz', 'SCSMIMP2-CP-qz', 'SCSMIMP2-CP-tqz'])
+        self.plot_bars(['DWMP2-CP-adz', 'DWMP2-CP-atz', 'DWMP2-CP-adtz',
+            'DWMP2-CP-aqz', 'DWMP2-CP-atqz', 'DWMP2-CP-a5z', 'DWMP2-CP-aq5z'])
+        self.plot_bars(['MP2C-CP-adz', 'MP2C-CP-adtzadz',
+            'MP2C-CP-atqzadz', 'MP2C-CP-aq5zadz', 'MP2C-CP-atz',
+            'MP2C-CP-atqzatz', 'MP2C-CP-aq5zatz', 'MP2C-CP-adtz',
+            'MP2C-CP-atqzadtz', 'MP2C-CP-aqz', 'MP2C-CP-atqz'])
+
+        # Fig. bars (b)
+        self.plot_bars(['MP3-CP-adz', 'MP3-CP-adtzadz', 'MP3-CP-atqzadz',
+            'MP3-CP-atz', 'MP3-CP-atqzatz', 'MP3-CP-adtz', 'MP3-CP-atqzadtz'])
+        self.plot_bars(['MP25-CP-adz', 'MP25-CP-adtzadz', 'MP25-CP-atqzadz',
+            'MP25-CP-atz', 'MP25-CP-atqzatz', 'MP25-CP-adtz', 'MP25-CP-atqzadtz'])
+        self.plot_bars(['CCSD-CP-adz', 'CCSD-CP-adtzadz', 'CCSD-CP-atqzadz',
+            'CCSD-CP-atz', 'CCSD-CP-atqzatz', 'CCSD-CP-adtz', 'CCSD-CP-atqzadtz'])
+        self.plot_bars(['SCSCCSD-CP-adz', 'SCSCCSD-CP-adtzadz',
+            'SCSCCSD-CP-atqzadz', 'SCSCCSD-CP-atz', 'SCSCCSD-CP-atqzatz',
+            'SCSCCSD-CP-adtz', 'SCSCCSD-CP-atqzadtz'])
+        self.plot_bars(['SCSMICCSD-CP-adz', 'SCSMICCSD-CP-adtzadz',
+            'SCSMICCSD-CP-atqzadz', 'SCSMICCSD-CP-atz', 'SCSMICCSD-CP-atqzatz',
+            'SCSMICCSD-CP-adtz', 'SCSMICCSD-CP-atqzadtz'])
+        self.plot_bars(['CCSDT-CP-adz', 'CCSDT-CP-adtzadz',
+            'CCSDT-CP-atqzadz', 'CCSDT-CP-atz', 'CCSDT-CP-atqzatz',
+            'CCSDT-CP-adtz', 'CCSDT-CP-atqzadtz'])
+
+        # Fig. bars (c)
+        self.plot_bars(['MP2F12-CP-adz', 'MP2F12-CP-atz', 'MP2F12-CP-adtz',
+            'MP2F12-CP-aqz', 'MP2F12-CP-atqz'])
+        self.plot_bars(['SCSMP2F12-CP-adz', 'SCSMP2F12-CP-atz',
+            'SCSMP2F12-CP-adtz', 'SCSMP2F12-CP-aqz', 'SCSMP2F12-CP-atqz'])
+        self.plot_bars(['SCSNMP2F12-CP-adz', 'SCSNMP2F12-CP-atz',
+            'SCSNMP2F12-CP-adtz', 'SCSNMP2F12-CP-aqz',
+            'SCSNMP2F12-CP-atqz'])
+        self.plot_bars(['SCSMIMP2F12-CP-atz', 'SCSMIMP2F12-CP-atz',
+            'SCSMIMP2F12-CP-adtz', 'SCSMIMP2F12-CP-aqz',
+            'SCSMIMP2F12-CP-atqz'])
+        self.plot_bars(['SCSMIMP2F12-CP-tz', 'SCSMIMP2F12-CP-tz', 'SCSMIMP2F12-CP-dtz'])
+        self.plot_bars(['DWMP2F12-CP-adz', 'DWMP2F12-CP-atz',
+            'DWMP2F12-CP-adtz', 'DWMP2F12-CP-aqz', 'DWMP2F12-CP-atqz'])
+        self.plot_bars(['MP2CF12-CP-adz', 'MP2CF12-CP-adtzadz',
+            'MP2CF12-CP-atqzadz', 'MP2CF12-CP-atz', 'MP2CF12-CP-atqzatz',
+            'MP2CF12-CP-adtz', 'MP2CF12-CP-atqzadtz', 'MP2CF12-CP-aqz',
+            'MP2CF12-CP-atqz'])
+
+        # Fig. bars (d)
+        self.plot_bars(['CCSDAF12-CP-adz', 'CCSDAF12-CP-adtzadz', 'CCSDAF12-CP-atqzadz'])
+        self.plot_bars(['CCSDBF12-CP-adz', 'CCSDBF12-CP-adtzadz', 'CCSDBF12-CP-atqzadz'])
+        self.plot_bars(['SCSCCSDAF12-CP-adz', 'SCSCCSDAF12-CP-adtzadz', 'SCSCCSDAF12-CP-atqzadz'])
+        self.plot_bars(['SCSCCSDBF12-CP-adz', 'SCSCCSDBF12-CP-adtzadz', 'SCSCCSDBF12-CP-atqzadz'])
+        self.plot_bars(['SCMICCSDAF12-CP-adz', 'SCMICCSDAF12-CP-adtzadz', 'SCMICCSDAF12-CP-atqzadz'])
+        self.plot_bars(['SCMICCSDBF12-CP-adz', 'SCMICCSDBF12-CP-adtzadz', 'SCMICCSDBF12-CP-atqzadz'])
+        self.plot_bars(['CCSDTAF12-CP-adz', 'CCSDTAF12-CP-adtzadz', 'CCSDTAF12-CP-atqzadz'])
+        self.plot_bars(['CCSDTBF12-CP-adz', 'CCSDTBF12-CP-adtzadz', 'CCSDTBF12-CP-atqzadz'])
+        self.plot_bars(['DWCCSDTF12-CP-adz', 'DWCCSDTF12-CP-adtzadz', 'DWCCSDTF12-CP-atqzadz'])
+
+# print certain statistic for all 4 db and summary and indev sys if min or max
+#asdf.analyze_modelchems(['CCSD-CP-adz', 'CCSD-CP-adtzadz', 'CCSD-CP-atqzadz', 'CCSD-CP-atz', 'CCSD-CP-atqzatz', 'CCSD-CP-adtz', 'CCSD-CP-atqzadtz'])
