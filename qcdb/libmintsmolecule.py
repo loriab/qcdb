@@ -82,11 +82,11 @@ class LibmintsMolecule(object):
         self.PYname = 'default'
         # The molecular charge
         self.PYmolecular_charge = 0
-        # Whether the charge was given by the user  UNUSED
+        # Whether the charge was given by the user
         self.PYcharge_specified = False
         # The multiplicity (defined as 2Ms + 1)
         self.PYmultiplicity = 1
-        # Whether the multiplicity was specified by the user  UNUSED
+        # Whether the multiplicity was specified by the user
         self.PYmultiplicity_specified = False
         # The units used to define the geometry
         self.PYunits = 'Angstrom'
@@ -1178,6 +1178,8 @@ class LibmintsMolecule(object):
         False
 
         """
+        #if self.all_variables
+        #print 'vstr', vstr, 'all_variables', self.all_variables, (vstr.upper() in self.all_variables), '\n'
         return True if vstr.upper() in self.all_variables else False
 
     def get_variable(self, vstr):
@@ -1205,6 +1207,51 @@ class LibmintsMolecule(object):
             # Update geometry might have added some atoms, delete them to be safe.
             self.atoms = []
         # TODO outfile
+
+#    def __setattr__(self, name, value):
+#        """Function to overload setting attributes to allow geometry
+#        variable assigment as if member data.
+#
+#        """
+#        try:
+#            if name.upper() in self.__dict__['all_variables']:
+#                self.set_variable(name, value)
+#            else:
+#                self.__dict__[name] = value
+#        except KeyError:
+#            self.__dict__[name] = value
+#
+#    def __getattr__(self, name):
+#        """Function to overload accessing attribute contents to allow
+#        retrivial geometry variable values as if member data.
+#
+#        """
+##        #if not name in self.__dict__:
+##        if not name in self.__dict__['__dict__']:
+##            if object.__getattribute__(self, 'is_variable')(name):
+##                return object.__getattribute__(self, 'get_variable')(name)
+##            else:
+##                raise AttributeError
+##        else:
+##            #return self.__dict__[name]
+##            return self.__dict__['__dict__'][name]
+#
+##        if name in self.__dict__:
+##            return self.__dict__[name]
+##        elif '__dict__' in self.__dict__ and name in self.__dict__['__dict__']:
+##            return self.__dict__['__dict__'][name]
+##        elif object.__getattribute__(self, 'is_variable')(name):
+##            return object.__getattribute__(self, 'get_variable')(name)
+##        else:
+##            raise AttributeError
+#
+#        if not name in self.__dict__:
+#            if object.__getattribute__(self, 'is_variable')(name):
+#                return object.__getattribute__(self, 'get_variable')(name)
+#            else:
+#                raise AttributeError
+#        else:
+#            return self.__dict__[name]
 
     def __setattr__(self, name, value):
         """Function to overload setting attributes to allow geometry
