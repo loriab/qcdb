@@ -34,7 +34,7 @@ class Infile(qcformat.InputFormat2):
     def __init__(self, mem, mol, mtd, der, opt):
         qcformat.InputFormat2.__init__(self, mem, mol, mtd, der, opt)
 
-        print self.method, self.molecule.nactive_fragments()
+        #print self.method, self.molecule.nactive_fragments()
         if ('sapt' in self.method or 'mp2c' in self.method) and self.molecule.nactive_fragments() != 2:
             raise FragmentCountError("""Requested molecule has %d, not 2, fragments.""" % (self.molecule.nactive_fragments()))
 
@@ -64,8 +64,8 @@ class Infile(qcformat.InputFormat2):
         text = ''
     
         for opt, val in self.options['BASIS'].items():
-                print opt, val['value']
-                print molpro_basissets.altbasis.keys()
+                #print opt, val['value']
+                #print molpro_basissets.altbasis.keys()
                 if not text:
                     text += """basis={\n"""
                 try:
