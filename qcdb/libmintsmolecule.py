@@ -2066,6 +2066,7 @@ class LibmintsMolecule(object):
         order n in Cn. 0 for atoms or infinity.
 
         """
+        verbose = 1  # TODO
         # Get cartesian geometry and put COM at origin
         geom = self.geometry()
         com = self.center_of_mass()
@@ -2076,18 +2077,21 @@ class LibmintsMolecule(object):
 
         # Get rotor type
         rotor = self.rotor_type(tol)
-        print """  Rotor type                       : %s""" % (rotor)
+        if verbose > 2:
+            print """  Rotor type                       : %s""" % (rotor)
 
         # Get the D2h point group from Jet and Ed's code: c1 ci c2 cs d2 c2v c2h d2h
         #   and ignore the user-specified subgroup in this case.
         pg = self.find_highest_point_group(tol)
         d2h_subgroup = pg.symbol()
-        print """  D2h_subgroup                     : %s""" % (self.point_group().symbol())
+        if verbose > 2:
+            print """  D2h_subgroup                     : %s""" % (self.point_group().symbol())
 
         # Check inversion
         v3_zero = [0.0, 0.0, 0.0]
         op_i = self.has_inversion(v3_zero, tol)
-        print """  Inversion symmetry               : %s""" % ('yes' if op_i else 'no')
+        if verbose > 2:
+            print """  Inversion symmetry               : %s""" % ('yes' if op_i else 'no')
 
         x_axis = [1, 0, 0]
         y_axis = [0, 1, 0]
@@ -2110,7 +2114,8 @@ class LibmintsMolecule(object):
                 # Oh has a S4 and should be oriented properly already.
                 test_mat = matrix_3d_rotation(geom, z_axis, math.pi / 2.0, True)
                 op_symm = equal_but_for_row_order(geom, test_mat, tol)
-                print """  S4z                              : %s""" % ('yes' if op_symm else 'no')
+                if verbose > 2:
+                    print """  S4z                              : %s""" % ('yes' if op_symm else 'no')
 
                 if op_symm:
                     self.full_pg = 'Oh'
@@ -2164,7 +2169,8 @@ class LibmintsMolecule(object):
             ev_list = zip(I_evals, transpose(I_evecs))  # eigenvectors are cols of I_evecs
             ev_list.sort(key=lambda tup: tup[0], reverse=False)
             I_evals, I_evecs = zip(*ev_list)  # sorted eigenvectors are now rows of I_evecs
-            print """  I_evals: %15.10lf %15.10lf %15.10lf""" % (I_evals[0], I_evals[1], I_evals[2])
+            if verbose > 2:
+                print """  I_evals: %15.10lf %15.10lf %15.10lf""" % (I_evals[0], I_evals[1], I_evals[2])
 
             unique_axis = 1
             if abs(I_evals[0] - I_evals[1]) < tol:
@@ -2187,20 +2193,24 @@ class LibmintsMolecule(object):
             if abs(phi) > 1.0e-14:
                 rot_axis = cross(z_axis, old_axis)  # right order?
                 test_mat = matrix_3d_rotation(geom, rot_axis, phi, False)
-                print """  Rotating by %lf to get principal axis on z-axis ...""" % (phi)
+                if verbose > 2:
+                    print """  Rotating by %lf to get principal axis on z-axis ...""" % (phi)
                 geom = [row[:] for row in test_mat]
 
-            print """  Geometry to analyze - principal axis on z-axis:"""
-            for at in range(self.natom()):
-                print "%20.15lf %20.15lf %20.15lf" % (geom[at][0], geom[at][1], geom[at][2])
-            print "\n"
+            if verbose > 2:
+                print """  Geometry to analyze - principal axis on z-axis:"""
+                for at in range(self.natom()):
+                    print "%20.15lf %20.15lf %20.15lf" % (geom[at][0], geom[at][1], geom[at][2])
+                print "\n"
 
             # Determine order Cn and Sn of principal axis.
             Cn_z = matrix_3d_rotation_Cn(geom, z_axis, False, tol)
-            print """  Highest rotation axis (Cn_z)     : %d""" % (Cn_z)
+            if verbose > 2:
+                print """  Highest rotation axis (Cn_z)     : %d""" % (Cn_z)
 
             Sn_z = matrix_3d_rotation_Cn(geom, z_axis, True, tol)
-            print """  Rotation axis (Sn_z)             : %d""" % (Sn_z)
+            if verbose > 2:
+                print """  Rotation axis (Sn_z)             : %d""" % (Sn_z)
 
             # Check for sigma_h (xy plane).
             op_sigma_h = False
@@ -2213,7 +2223,8 @@ class LibmintsMolecule(object):
                         break
             else:
                 op_sigma_h = True
-            print """  sigma_h                          : %s""" % ('yes' if op_sigma_h else 'no')
+            if verbose > 2:
+                print """  sigma_h                          : %s""" % ('yes' if op_sigma_h else 'no')
 
             # Rotate one off-axis atom to the yz plane and check for sigma_v's.
             for at in range(self.natom()):
@@ -2238,7 +2249,8 @@ class LibmintsMolecule(object):
             is_D = False
             if abs(phi) > 1.0e-14:
                 test_mat = matrix_3d_rotation(geom, z_axis, phi, False)
-                print "  Rotating by %8.3e to get atom %d in yz-plane ..." % (phi, pivot_atom_i + 1)
+                if verbose > 2:
+                    print "  Rotating by %8.3e to get atom %d in yz-plane ..." % (phi, pivot_atom_i + 1)
                 geom = [row[:] for row in test_mat]
 
             # Check for sigma_v (yz plane).
@@ -2253,12 +2265,13 @@ class LibmintsMolecule(object):
             else:
             #if at == self.natom():
                 op_sigma_v = True
-            print """  sigma_v                          : %s""" % ('yes' if op_sigma_v else 'no')
+            if verbose > 2:
+                print """  sigma_v                          : %s""" % ('yes' if op_sigma_v else 'no')
 
-            print """  geom to analyze - one atom in yz plane:"""
-            for at in range(self.natom()):
-                print "%20.15lf %20.15lf %20.15lf" % (geom[at][0], geom[at][1], geom[at][2])
-            print "\n"
+                print """  geom to analyze - one atom in yz plane:"""
+                for at in range(self.natom()):
+                    print "%20.15lf %20.15lf %20.15lf" % (geom[at][0], geom[at][1], geom[at][2])
+                print "\n"
 
             # Check for perpendicular C2's.
             # Loop through pairs of atoms to find c2 axis candidates.
@@ -2286,7 +2299,8 @@ class LibmintsMolecule(object):
                     # Do the thorough check for C2.
                     if matrix_3d_rotation_Cn(geom, axis, False, tol, 2) == 2:
                         is_D = True
-            print """  perp. C2's                       : %s""" % ('yes' if is_D else 'no')
+            if verbose > 2:
+                print """  perp. C2's                       : %s""" % ('yes' if is_D else 'no')
 
             # Now assign point groups!  Sn first.
             if Sn_z == 2 * Cn_z and not is_D:
