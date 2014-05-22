@@ -22,8 +22,9 @@
 
 import os
 import re
-import math
 import copy
+import math
+import collections
 from periodictable import *
 from physconst import *
 from vecutil import *
@@ -930,6 +931,9 @@ class LibmintsMolecule(object):
                 text += """    %8s%4s """ % (self.symbol(i), "" if self.Z(i) else "(Gh)")
                 for j in range(3):
                     text += """  %17.12f""" % (geom[j])
+                #text += """ %12s""" % (self.label(i))
+                #text += """  %s""" % (self.atoms[i].basissets())
+                #text += """SHELL  %s""" % (self.atoms[i].shells())
                 text += "\n"
             text += "\n"
         else:
@@ -1085,9 +1089,9 @@ class LibmintsMolecule(object):
                     if self.fragment_types[fr] == 'Absent':
                         text += "    %-8s" % ("X")
                     elif self.fZ(at) or self.fsymbol(at) == "X":
-                        text += "    %-8s" % (self.fsymbol(at))
+                        text += "    %-8s" % (self.flabel(at))
                     else:
-                        text += "    %-8s" % ("Gh(" + self.fsymbol(at) + ")")
+                        text += "    %-8s" % ("Gh(" + self.flabel(at) + ")")
                     text += "    %s" % (self.full_atoms[at].print_in_input_format())
             text += "\n"
 
@@ -1698,21 +1702,35 @@ class LibmintsMolecule(object):
     def set_basis_by_symbol(self, symbol, name, role="BASIS"):
         """Assigns basis *name* to all *symbol* atoms."""
         for atom in self.full_atoms:
-            if symbol == atom.symbol():
+            if symbol.upper() == atom.symbol():
                 atom.set_basisset(name, role)
 
+    def clear_basis_all_atoms(self):
+        """Remove all basis information from atoms."""
+        for atom in self.full_atoms:
+            atom.PYbasissets = collections.OrderedDict()
+
     def set_basis_by_number(self, number, name, role="BASIS"):
-        """Assigns basis *name* to atom number *number* (1-indexed, includes dummies)."""
-        if number > self.nallatom():  #TODO libmints error >=
+        """Assigns basis *name* to atom number *number* (0-indexed, excludes dummies)."""
+        # change from libmints to 0-indexing and to real/ghost numbering, dummies not included (libmints >= error)
+        if number >= self.natom():
             raise ValidationError("Molecule::set_basis_by_number: Basis specified for atom %d, but there are only %d atoms in this molecule." % \
                 (number, self.natom()))
-        self.full_atoms[number - 1].set_basisset(name, role)
+        self.atoms[number].set_basisset(name, role)
 
     def set_basis_by_label(self, label, name, role="BASIS"):
         """Assigns basis *name* to all atoms with *label*."""
         for atom in self.full_atoms:
             if label.upper() == atom.label():
                 atom.set_basisset(name, role)
+
+    def set_shell_by_number(self, number, bs, role="BASIS"):
+        """Assigns BasisSet *bs* to atom number *number* (0-indexed, excludes dummies)."""
+        self.lock_frame = False
+        if number >= self.natom():
+            raise ValidationError("Molecule::set_shell_by_number: Basis specified for atom %d, but there are only %d atoms in this molecule." % \
+                (number, self.natom()))
+        self.atoms[number].set_shell(bs, role)
 
     def nfrozen_core(self, depth=False):
         """Number of frozen core for molecule given freezing state.
