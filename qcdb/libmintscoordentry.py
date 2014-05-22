@@ -162,7 +162,7 @@ class CoordEntry(object):
 
     """
 
-    def __init__(self, entry_number, Z, charge, mass, symbol, label="", basis=None):
+    def __init__(self, entry_number, Z, charge, mass, symbol, label="", basis=None, shells=None):
         """Constructor"""
         # Order in full atomic list
         self.PYentry_number = entry_number
@@ -184,6 +184,8 @@ class CoordEntry(object):
         self.ghosted = False
         # Different types of basis sets that can be assigned to this atom.
         self.PYbasissets = basis if basis is not None else collections.OrderedDict()
+        # Actual one-atom BasisSet attached to this atom
+        self.PYshells = shells if shells is not None else collections.OrderedDict()
 
     @staticmethod
     def r(a1, a2):
@@ -228,8 +230,8 @@ class CoordEntry(object):
 
     def is_equivalent_to(self, other):
         """Whether this atom has the same mass and ghost status as atom *other*.
-        Unlike the libmints version, this does not compare basisset assignment.
-        Now it shall.
+        Also compares basis set assignment down to nbf(), has_puream() level
+        with code borrowed from Robert M. Parrish's SAD guess in Psi4.
 
         """
         if other.PYZ != self.PYZ:
@@ -238,17 +240,23 @@ class CoordEntry(object):
             return False
         if other.ghosted != self.ghosted:
             return False
-        #if self.PYbasissets is not None and other.PYbasissets is not None:
-        for bas in self.PYbasissets:
-            try:
-                tmp = other.PYbasissets[bas]
-            #except ValueError:
-            except KeyError:
-                # This basis was never defined for the other atom
-                return False
-            if self.PYbasissets[bas] != other.PYbasissets[bas]:
-                # The basis sets are different
-                return False
+        if other.PYshells is not None and self.PYshells is not None:
+            for bas in self.PYshells:  # do we instead care only about orbital basis?
+                if bas in other.PYshells:
+                    if other.PYshells[bas].nbf() != self.PYshells[bas].nbf():
+                        return False
+                    if other.PYshells[bas].nshell() != self.PYshells[bas].nshell():
+                        return False
+                    if other.PYshells[bas].nprimitive() != self.PYshells[bas].nprimitive():
+                        return False
+                    if other.PYshells[bas].max_am() != self.PYshells[bas].max_am():
+                        return False
+                    if other.PYshells[bas].max_nprimitive() != self.PYshells[bas].max_nprimitive():
+                        return False
+                    if other.PYshells[bas].has_puream() != self.PYshells[bas].has_puream():
+                        return False
+                else:
+                    raise ValidationError("""Basis set %s set for one and not other. This shouldn't happen. Investigate.""" % (bas))
         return True
 
     def is_ghosted(self):
@@ -310,11 +318,37 @@ class CoordEntry(object):
         """Returns basisset to atom map"""
         return self.PYbasissets
 
+    def set_shell(self, bs, key='BASIS'):
+        """Set the shells for this atom
+        * @param key Keyword from input file, basis, ri_basis, etc.
+        * @param bs BasisSet
+
+        """
+        self.PYshells[key] = bs
+
+    def shell(self, key='BASIS'):
+        """Returns the shells for the provided type.
+        * @param type Keyword from input file.
+        * @returns the value from input.
+
+        """
+        try:
+            return self.PYshells[key]
+        except (ValueError, KeyError):
+            raise ValidationError('CoordEntry::shells: Shells not set for %s and type of %s' % \
+                (self.PYlabel, key))
+
+    def shells(self):
+        """Returns shells sets to atom map"""
+        return self.PYshells
+
     def everything(self):
-        print '\nCoordEntry\n  Entry Number = %d\n  Computed = %s\n  Z = %d\n  Charge = %f\n  Mass = %f\n  Symbol = %s\n  Label = %s\n  Ghosted = %s\n  Coordinates = %s\n  Basissets = %s\n\n' % \
+        print '\nCoordEntry\n  Entry Number = %d\n  Computed = %s\n  Z = %d\n  Charge = %f\n  Mass = %f\n  Symbol = %s\n  Label = %s\n  Ghosted = %s\n  Coordinates = %s\n  Basissets = %s\n\n  Shells = %s\n\n' % \
             (self.entry_number(), self.is_computed(), self.Z(), self.charge(),
             self.mass(), self.symbol(), self.label(), self.is_ghosted(),
-            self.coordinates, self.PYbasissets)
+            self.coordinates, self.PYbasissets, self.PYshells.keys())
+        for bs in self.PYshells.keys():
+            print self.PYshells[bs].print_by_level(level=2)
 
 
 class CartesianEntry(CoordEntry):
@@ -323,8 +357,8 @@ class CartesianEntry(CoordEntry):
 
     """
 
-    def __init__(self, entry_number, Z, charge, mass, symbol, label, x, y, z, basis=None):
-        CoordEntry.__init__(self, entry_number, Z, charge, mass, symbol, label, basis)
+    def __init__(self, entry_number, Z, charge, mass, symbol, label, x, y, z, basis=None, shells=None):
+        CoordEntry.__init__(self, entry_number, Z, charge, mass, symbol, label, basis, shells)
         self.x = x
         self.y = y
         self.z = z
@@ -402,13 +436,10 @@ class ZMatrixEntry(CoordEntry):
 
     """
 
-    #def __init__(self, entry_number, Z, charge, mass, symbol, label, basis=None, \
-    #    rto=None, rval=0, ato=None, aval=0, dto=None, dval=0):
-    #    CoordEntry.__init__(self, entry_number, Z, charge, mass, symbol, label, basis)
     def __init__(self, entry_number, Z, charge, mass, symbol, label, \
-        rto=None, rval=0, ato=None, aval=0, dto=None, dval=0, basis=None):
+        rto=None, rval=0, ato=None, aval=0, dto=None, dval=0, basis=None, shells=None):
         """Constructor"""  # note that pos'n of basis arg changed from libmints
-        CoordEntry.__init__(self, entry_number, Z, charge, mass, symbol, label, basis)
+        CoordEntry.__init__(self, entry_number, Z, charge, mass, symbol, label, basis, shells)
         self.rto = rto
         self.rval = rval
         self.ato = ato
