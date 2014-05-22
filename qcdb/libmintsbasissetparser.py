@@ -6,8 +6,8 @@ from libmintsgshell import *
 
 class Gaussian94BasisSetParser(object):
     """Class for parsing basis sets from a text file in Gaussian 94
-    format.  Translated directly from Psi4 libmints class by Justin M.
-    Turney and Andrew C. Simmonett
+    format. Translated directly from the Psi4 libmints class written
+    by Justin M. Turney and Andrew C. Simmonett.
 
     """
 

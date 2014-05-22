@@ -37,6 +37,7 @@ import jajo
 from orient import OrientMols
 from dbwrap import Database, FourDatabases  # , ReactionDatum, Reagent, Reaction
 from libmintspointgrp import SymmetryOperation, PointGroup
+from libmintsbasisset import BasisSet
 
 # Load items that are useful to access from an input file
 from psiutil import *

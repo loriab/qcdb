@@ -65,8 +65,11 @@ class BasisFamily(object):
         text = ''
         text += """  ==> %s Family <==\n\n""" % (self.ornate)
         text += """  Orbital basis:        %s\n""" % (self.orbital)
-        text += """  JK auxiliary basis:   %s\n""" % (self.jkfit)
-        text += """  MP2 auxiliary basis:  %s\n""" % (self.rifit)
+        #text += """  JK auxiliary basis:   %s\n""" % (self.jkfit)
+        #text += """  MP2 auxiliary basis:  %s\n""" % (self.rifit)
+        text += """  JK auxiliary basis:   %s  Def: %s\n""" % (self.jkfit, self.jkdef)
+        text += """  J auxiliary basis:    %s  Def: %s\n""" % (self.jfit, self.jdef)
+        text += """  MP2 auxiliary basis:  %s  Def: %s\n""" % (self.rifit, self.ridef)
         text += """  DUAL auxiliary basis: %s\n""" % (self.dualfit)
         text += """\n"""
         return text
@@ -105,6 +108,27 @@ class BasisFamily(object):
 
         """
         self.jfit = sanitize_basisname(fit)
+
+    def add_jfit_default(self, fit):
+        """Function to add basis *fit* as associated fitting basis
+        member *jdef* to a BasisFamily object.
+
+        """
+        self.jdef = sanitize_basisname(fit)
+
+    def add_jkfit_default(self, fit):
+        """Function to add basis *fit* as associated fitting basis
+        member *jkdef* to a BasisFamily object.
+
+        """
+        self.jkdef = sanitize_basisname(fit)
+
+    def add_rifit_default(self, fit):
+        """Function to add basis *fit* as associated fitting basis
+        member *ridef* to a BasisFamily object.
+
+        """
+        self.ridef = sanitize_basisname(fit)
 
 
 def sanitize_basisname(name):
