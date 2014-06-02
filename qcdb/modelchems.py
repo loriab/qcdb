@@ -101,6 +101,8 @@ _tlist = [
     BasisSet('hatqz',      fullname='heavy-aug-cc-pVTQZ'),
     BasisSet('atqz',       fullname='aug-cc-pVTQZ'),
     BasisSet('aq5z',       fullname='aug-cc-pVQ5Z'),
+    BasisSet('a6z',        fullname='aug-cc-pV6Z'),
+    BasisSet('a56z',       fullname='aug-cc-pV56Z'),
     BasisSet('atzdz',      fullname='[aTZ; D:DZ]', latex="""[aTZ; $\delta$:DZ]"""),
     BasisSet('adtzdz',     fullname='[aDTZ; D:DZ]', latex="""[aDTZ; $\delta$:DZ]"""),
     BasisSet('atqzdz',     fullname='[aTQZ; D:DZ]', latex="""[aTQZ; $\delta$:DZ]"""),
