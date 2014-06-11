@@ -201,6 +201,19 @@ def muster_modelchem(name, dertype):
         options['GLOBALS']['FREEZE_CORE']['value'] = True
         text = """property('ccsd', properties=['polarizability'])\n\n"""
 
+    elif lowername == 'mrccsdt(q)':
+        options['SCF']['SCF_TYPE']['value'] = 'pk'
+        options['GLOBALS']['FREEZE_CORE']['value'] = True
+        options['GLOBALS']['NAT_ORBS']['value'] = True  # needed by mrcc but not recognized by mrcc
+        options['FNOCC']['OCC_TOLERANCE']['value'] = 6
+        text += """mrccsdt(q)')\n\n"""
+
+    elif lowername == 'c4-ccsdt(q)':
+        options['CFOUR']['CFOUR_SCF_CONV']['value'] = 11
+        options['CFOUR']['CFOUR_CC_CONV']['value'] = 10
+        options['CFOUR']['CFOUR_FROZEN_CORE']['value'] = True
+        text += """c4-ccsdt(q)')\n\n"""
+
     else:
         raise ValidationError("""Requested Cfour computational methods %d is not available.""" % (lowername))
 
@@ -228,6 +241,8 @@ procedures = {
         'sapt2+(3)'     : muster_modelchem,
         'sapt2+3(ccd)'  : muster_modelchem,
         'ccsd-polarizability'  : muster_modelchem,
+        'mrccsdt(q)'    : muster_modelchem,
+        'c4-ccsdt(q)'   : muster_modelchem,
     }
 }
 
