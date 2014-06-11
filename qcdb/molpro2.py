@@ -222,6 +222,11 @@ def muster_modelchem(name, dertype, mol):
         proc.append('ccsd(t)-f12')
         options['CCSD(T)-F12']['OPTIONS']['value'] = ',df_basis=mp2fit,df_basis_exch=jkfitb,ri_basis=jkfitb'
 
+    elif lowername == 'ccsd(t)-f12c':
+        proc.append('rhf')
+        proc.append('ccsd(t)-f12c')
+        options['CCSD(T)-F12C']['OPTIONS']['value'] = ',df_basis=mp2fit,df_basis_exch=jkfitb,ri_basis=jkfitb'
+
     elif lowername == 'mp2c':
         proc.append('gdirect')
         proc.append(mol.extract_fragments(1, 2).format_molecule_for_molpro())
@@ -261,6 +266,7 @@ procedures = {
     'energy': {
         'mp2c'           : muster_modelchem,
         'ccsd(t)-f12'    : muster_modelchem,
+        'ccsd(t)-f12c'   : muster_modelchem,
         #'sapt0'         : muster_modelchem,
         #'sapt2+'        : muster_modelchem,
         #'sapt2+(3)'     : muster_modelchem,
