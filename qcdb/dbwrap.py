@@ -608,7 +608,7 @@ class Database(object):
         """Loads qcdb.ReactionDatums from module *modname* function
         *funcname* (which default to self.dbse + '_dhdft'
         and 'load_dhdft').
- 
+
         """
         if pythonpath is not None:
             sys.path.insert(0, pythonpath)
@@ -629,8 +629,64 @@ class Database(object):
             getattr(pt2mod, funcname)(self)
         except AttributeError:
             raise ValidationError("Python module missing function %s for loading data " % (str(funcname)))
- 
+
         print """Database %s: DH-DFT results loaded""" % (self.dbse)
+
+    def load_dilabio(self, modname=None, funcname='load_dilabio', pythonpath=None):
+        """Loads qcdb.ReactionDatums from module *modname* function
+        *funcname* (which default to self.dbse + '_dilabio'
+        and 'load_dilabio').
+
+        """
+        if pythonpath is not None:
+            sys.path.insert(0, pythonpath)
+        else:
+            sys.path.append(os.path.dirname(__file__) + '/../data')
+        try:
+            pt2mod = __import__(self.dbse + '_dilabio') if modname is None else __import__(modname)
+        except ImportError:
+            if modname is None:
+                print """Dilabio data unavailable for database %s.\n""" % (self.dbse)
+                return
+            else:
+                print '\nPython module for database data %s failed to load\n\n' % (modname)
+                print '\nSearch path that was tried:\n'
+                print ", ".join(map(str, sys.path))
+                raise ValidationError("Python module loading problem for database data " + str(modname))
+        try:
+            getattr(pt2mod, funcname)(self)
+        except AttributeError:
+            raise ValidationError("Python module missing function %s for loading data " % (str(funcname)))
+
+        print """Database %s: Dilabio results loaded""" % (self.dbse)
+
+    def load_f12dilabio(self, modname=None, funcname='load_f12dilabio', pythonpath=None):
+        """Loads qcdb.ReactionDatums from module *modname* function
+        *funcname* (which default to self.dbse + '_f12dilabio'
+        and 'load_f12dilabio').
+
+        """
+        if pythonpath is not None:
+            sys.path.insert(0, pythonpath)
+        else:
+            sys.path.append(os.path.dirname(__file__) + '/../data')
+        try:
+            pt2mod = __import__(self.dbse + '_f12dilabio') if modname is None else __import__(modname)
+        except ImportError:
+            if modname is None:
+                print """F12-Dilabio data unavailable for database %s.\n""" % (self.dbse)
+                return
+            else:
+                print '\nPython module for database data %s failed to load\n\n' % (modname)
+                print '\nSearch path that was tried:\n'
+                print ", ".join(map(str, sys.path))
+                raise ValidationError("Python module loading problem for database data " + str(modname))
+        try:
+            getattr(pt2mod, funcname)(self)
+        except AttributeError:
+            raise ValidationError("Python module missing function %s for loading data " % (str(funcname)))
+
+        print """Database %s: F12-Dilabio results loaded""" % (self.dbse)
 
     def load_subsets(self, modname='subsetgenerator', pythonpath=None):
         """Loads subsets from all functions in module *modname*.
@@ -692,7 +748,7 @@ class Database(object):
                     print """%20s    %42s""" % (mid[modelchem.index(mc)], format_errors(errors[ss][mc]))
         return errors
 
-    def plot_modelchems(self, modelchem, benchmark='default', sset='default', failoninc=True, verbose=False, color='sapt'):
+    def plot_modelchems(self, modelchem, benchmark='default', sset='default', failoninc=True, verbose=False, color='sapt', xlimit=4.0):
         """Computes individual errors and summary statistics for each model
         chemistry in array *modelchem* versus *benchmark* over subset *sset*.
         Thread *color* can be 'rgb' for old coloring, a color name or 'sapt'
@@ -707,10 +763,22 @@ class Database(object):
         for mc in modelchem:
             errors[mc], indiv[mc] = self.compute_statistics(mc, benchmark=benchmark,
                 sset=sset, failoninc=failoninc, verbose=verbose, returnindiv=True)
-        print 'ERRORS', errors
+        #print 'ERRORS', errors
         # repackage
-        dbdat = [{'sys': str(rxn), 'color': self.hrxn[rxn].color,
-            'data': [indiv[mc][rxn][0] for mc in modelchem]} for rxn in self.sset[sset].keys()]
+        dbdat = []
+        for rxn in self.sset[sset].keys():
+            data = []
+            for mc in modelchem:
+                try:
+                    data.append(indiv[mc][rxn][0])
+                except KeyError, e:
+                    if failoninc:
+                        raise e
+                    else:
+                        data.append(None)
+            dbdat.append({'sys': str(rxn), 'color': self.hrxn[rxn].color, 'data': data})
+        #dbdat = [{'sys': str(rxn), 'color': self.hrxn[rxn].color,
+        #    'data': [indiv[mc][rxn][0] for mc in modelchem]} for rxn in self.sset[sset].keys()]
         title = self.dbse + ' ' + pre + '[]' + suf
         mae = [errors[mc]['mae'] for mc in modelchem]
         mapbe = [100 * errors[mc]['mapbe'] for mc in modelchem]
@@ -720,13 +788,13 @@ class Database(object):
             import matplotlib.pyplot as plt
         except ImportError:
             # if not running from Canopy, print line to execute from Canopy
-            print """mpl.thread(%s,\n    color='%s',\n    title='%s',\n    labels=%s,\n    mae=%s,\n    mape=%s)\n\n""" % \
-                (dbdat, color, title, mid, mae, mapbe)
+            print """mpl.thread(%s,\n    color='%s',\n    title='%s',\n    labels=%s,\n    mae=%s,\n    mape=%s\n    xlimit=%s)\n\n""" % \
+                (dbdat, color, title, mid, mae, mapbe, str(xlimit))
         else:
             # if running from Canopy, call mpl directly
-            mpl.thread(dbdat, color=color, title=title, labels=mid, mae=mae, mape=mapbe)
-            print """mpl.thread(%s,\n    color='%s',\n    title='%s',\n    labels=%s,\n    mae=%s,\n    mape=%s)\n\n""" % \
-                (dbdat, color, title, mid, mae, mapbe)
+            mpl.thread(dbdat, color=color, title=title, labels=mid, mae=mae, mape=mapbe, xlimit=xlimit)
+            print """mpl.thread(%s,\n    color='%s',\n    title='%s',\n    labels=%s,\n    mae=%s,\n    mape=%s\n    xlimit=%s)\n\n""" % \
+                (dbdat, color, title, mid, mae, mapbe, str(xlimit))
 
 
 class FourDatabases(object):
@@ -750,7 +818,7 @@ class FourDatabases(object):
 
         # load up data and definitions
         self.load_pt2()
-        self.load_dhdft()
+        #self.load_dhdft()
         self.load_subsets()
         self.define_supersubsets()
         self.define_supermodelchems()

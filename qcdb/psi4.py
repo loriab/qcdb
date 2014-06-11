@@ -20,6 +20,7 @@
 #@END LICENSE
 #
 
+import re
 import math
 import collections
 
@@ -27,6 +28,39 @@ from exceptions import *
 import qcformat
 #import molpro_basissets
 import options
+from pdict import PreservingDict
+
+
+def harvest_output(outtext):
+    """Function to separate portions of a PSI4 output file *outtext*.
+
+    """
+    psivar = PreservingDict()
+    psivar_coord = None
+    psivar_grad = None
+
+    NUMBER = "((?:[-+]?\\d*\\.\\d+(?:[DdEe][-+]?\\d+)?)|(?:[-+]?\\d+\\.\\d*(?:[DdEe][-+]?\\d+)?))"
+
+    # Process PsiVariables
+    mobj = re.search(r'^(?:  Variable Map:)\s*' +
+        r'^\s*(?:-+)\s*' +
+        r'^(.*?)' +
+        r'^(?:\s*?)$',
+        outtext, re.MULTILINE | re.DOTALL)
+
+    if mobj:
+        for pv in mobj.group(1).split('\n'):
+            submobj = re.search(r'^\s+' + r'"(.+?)"' + r'\s+=>\s+' + NUMBER + r'\s*$', pv)
+            if submobj:
+                psivar['%s' % (submobj.group(1))] = submobj.group(2)
+
+    # Process Completion
+    mobj = re.search(r'PSI4 exiting successfully. Buy a developer a beer!',
+        outtext, re.MULTILINE)
+    if mobj:
+        psivar['SUCCESS'] = True
+
+    return psivar, psivar_coord, psivar_grad
 
 
 class Infile(qcformat.InputFormat2):
@@ -253,4 +287,4 @@ def psi4_list():
     """Return an array of Psi4 methods with energies.
 
     """
-    return procedures['energy'].keys()
+    return sorted(procedures['energy'].keys())

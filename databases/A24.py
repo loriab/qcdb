@@ -30,11 +30,11 @@
 
 - **rlxd** ``'off'`` <erase this comment and after unless on is valid option> || ``'on'``
 
-
 - **benchmark**
 
-  - ``'<benchmark_name>'`` <Reference>.
-  - |dl| ``'<default_benchmark_name>'`` |dr| <Reference>.
+  - ``'HOBZA'`` original pub, Riley et al. JCTC 9 2151 (2013).
+  - ``'AVE'`` weighted average CP/unCP, Burns et al. JCTC 10 49 (2014).
+  - |dl| ``'CDS'`` |dr| highest extrapolated CP CCSD(T) values (aq5z or a56z).
 
 - **subset**
 
@@ -79,30 +79,86 @@ for rxn in HRXN:
 
 # <<< Reference Values [kcal/mol] >>>
 BIND = {}
-BIND['%s-%s'            % (dbse, 'ethene_Ar_C2v'         )] =    0.000
-BIND['%s-%s'            % (dbse, 'HF_HF_Cs'              )] =    0.000
-BIND['%s-%s'            % (dbse, 'ethene_formaldehyde_Cs' )] =    0.000
-BIND['%s-%s'            % (dbse, 'ethene_wat_Cs'         )] =    0.000
-BIND['%s-%s'            % (dbse, 'methane_methane_D3d'   )] =    0.000
-BIND['%s-%s'            % (dbse, 'ammmonia_methane_C3v'  )] =    0.000
-BIND['%s-%s'            % (dbse, 'methane_HF_C3v'        )] =    0.000
-BIND['%s-%s'            % (dbse, 'methane_ethene_Cs'     )] =    0.000
-BIND['%s-%s'            % (dbse, 'methane_ethane_C3'     )] =    0.000
-BIND['%s-%s'            % (dbse, 'ammonia_ammonia_C2h'   )] =    0.000
-BIND['%s-%s'            % (dbse, 'ethyne_ethyne_C2v'     )] =    0.000
-BIND['%s-%s'            % (dbse, 'ethene_ethene_C2v'     )] =    0.000
-BIND['%s-%s'            % (dbse, 'ethene_ethyne_C2v'     )] =    0.000
-BIND['%s-%s'            % (dbse, 'methane_Ar_C3v'        )] =    0.000
-BIND['%s-%s'            % (dbse, 'methane_water_Cs'      )] =    0.000
-BIND['%s-%s'            % (dbse, 'ethyne_ethyne_D2h'     )] =    0.000
-BIND['%s-%s'            % (dbse, 'borane_methane_Cs'     )] =    0.000
-BIND['%s-%s'            % (dbse, 'methane_ethane_Cs'     )] =    0.000
-BIND['%s-%s'            % (dbse, 'HCN_HCN_Cxv'           )] =    0.000
-BIND['%s-%s'            % (dbse, 'water_ammonia_Cs'      )] =    0.000
-BIND['%s-%s'            % (dbse, 'ethene_ammonia_Cs'     )] =    0.000
-BIND['%s-%s'            % (dbse, 'ethene_ethene_D2h'     )] =    0.000
-BIND['%s-%s'            % (dbse, 'formaldehyde_formaldehyde_Cs' )] =    0.000
-BIND['%s-%s'            % (dbse, 'water_water_Cs'        )] =    0.000
+# Original publication JCTC 9 2151 (2013)
+BIND_HOBZA = {}
+BIND_HOBZA['%s-%s' % (dbse,  1)] =  -6.493
+BIND_HOBZA['%s-%s' % (dbse,  2)] =  -5.006
+BIND_HOBZA['%s-%s' % (dbse,  3)] =  -4.745
+BIND_HOBZA['%s-%s' % (dbse,  4)] =  -4.581
+BIND_HOBZA['%s-%s' % (dbse,  5)] =  -3.137
+BIND_HOBZA['%s-%s' % (dbse,  6)] =  -1.654
+BIND_HOBZA['%s-%s' % (dbse,  7)] =  -0.765
+BIND_HOBZA['%s-%s' % (dbse,  8)] =  -0.663
+BIND_HOBZA['%s-%s' % (dbse,  9)] =  -4.554
+BIND_HOBZA['%s-%s' % (dbse, 10)] =  -2.557
+BIND_HOBZA['%s-%s' % (dbse, 11)] =  -1.621
+BIND_HOBZA['%s-%s' % (dbse, 12)] =  -1.524
+BIND_HOBZA['%s-%s' % (dbse, 13)] =  -1.374
+BIND_HOBZA['%s-%s' % (dbse, 14)] =  -1.090
+BIND_HOBZA['%s-%s' % (dbse, 15)] =  -0.502
+BIND_HOBZA['%s-%s' % (dbse, 16)] =  -1.485
+BIND_HOBZA['%s-%s' % (dbse, 17)] =  -0.827
+BIND_HOBZA['%s-%s' % (dbse, 18)] =  -0.607
+BIND_HOBZA['%s-%s' % (dbse, 19)] =  -0.533
+BIND_HOBZA['%s-%s' % (dbse, 20)] =  -0.405
+BIND_HOBZA['%s-%s' % (dbse, 21)] =  -0.364
+BIND_HOBZA['%s-%s' % (dbse, 22)] =   0.821
+BIND_HOBZA['%s-%s' % (dbse, 23)] =   0.934
+BIND_HOBZA['%s-%s' % (dbse, 24)] =   1.115
+# Weighted averaged reference used in JCTC 10 49 (2014)
+BIND_AVE = {}
+BIND_AVE['%s-%s' % (dbse,  1)] =  -6.502
+BIND_AVE['%s-%s' % (dbse,  2)] =  -5.007
+BIND_AVE['%s-%s' % (dbse,  3)] =  -4.758
+BIND_AVE['%s-%s' % (dbse,  4)] =  -4.569
+BIND_AVE['%s-%s' % (dbse,  5)] =  -3.131
+BIND_AVE['%s-%s' % (dbse,  6)] =  -1.633
+BIND_AVE['%s-%s' % (dbse,  7)] =  -0.761
+BIND_AVE['%s-%s' % (dbse,  8)] =  -0.669
+BIND_AVE['%s-%s' % (dbse,  9)] =  -4.520
+BIND_AVE['%s-%s' % (dbse, 10)] =  -2.560
+BIND_AVE['%s-%s' % (dbse, 11)] =  -1.618
+BIND_AVE['%s-%s' % (dbse, 12)] =  -1.520
+BIND_AVE['%s-%s' % (dbse, 13)] =  -1.376
+BIND_AVE['%s-%s' % (dbse, 14)] =  -1.088
+BIND_AVE['%s-%s' % (dbse, 15)] =  -0.505
+BIND_AVE['%s-%s' % (dbse, 16)] =  -1.484
+BIND_AVE['%s-%s' % (dbse, 17)] =  -0.831
+BIND_AVE['%s-%s' % (dbse, 18)] =  -0.610
+BIND_AVE['%s-%s' % (dbse, 19)] =  -0.534
+BIND_AVE['%s-%s' % (dbse, 20)] =  -0.397
+BIND_AVE['%s-%s' % (dbse, 21)] =  -0.347
+BIND_AVE['%s-%s' % (dbse, 22)] =   0.835
+BIND_AVE['%s-%s' % (dbse, 23)] =   0.945
+BIND_AVE['%s-%s' % (dbse, 24)] =   1.131
+# Highest extrapolated CP CCSD(T) values (q5 or 56)
+BIND_CDS = {}
+BIND_CDS['%s-%s' % (dbse,  1)] =  -6.506
+BIND_CDS['%s-%s' % (dbse,  2)] =  -5.015
+BIND_CDS['%s-%s' % (dbse,  3)] =  -4.751
+BIND_CDS['%s-%s' % (dbse,  4)] =  -4.592
+BIND_CDS['%s-%s' % (dbse,  5)] =  -3.142
+BIND_CDS['%s-%s' % (dbse,  6)] =  -1.661
+BIND_CDS['%s-%s' % (dbse,  7)] =  -0.767
+BIND_CDS['%s-%s' % (dbse,  8)] =  -0.665
+BIND_CDS['%s-%s' % (dbse,  9)] =  -4.565
+BIND_CDS['%s-%s' % (dbse, 10)] =  -2.564
+BIND_CDS['%s-%s' % (dbse, 11)] =  -1.626
+BIND_CDS['%s-%s' % (dbse, 12)] =  -1.527
+BIND_CDS['%s-%s' % (dbse, 13)] =  -1.377
+BIND_CDS['%s-%s' % (dbse, 14)] =  -1.094
+BIND_CDS['%s-%s' % (dbse, 15)] =  -0.504
+BIND_CDS['%s-%s' % (dbse, 16)] =  -1.493
+BIND_CDS['%s-%s' % (dbse, 17)] =  -0.830
+BIND_CDS['%s-%s' % (dbse, 18)] =  -0.609
+BIND_CDS['%s-%s' % (dbse, 19)] =  -0.534
+BIND_CDS['%s-%s' % (dbse, 20)] =  -0.406
+BIND_CDS['%s-%s' % (dbse, 21)] =  -0.354
+BIND_CDS['%s-%s' % (dbse, 22)] =   0.818
+BIND_CDS['%s-%s' % (dbse, 23)] =   0.930
+BIND_CDS['%s-%s' % (dbse, 24)] =   1.115
+# Set default
+BIND = BIND_CDS
 
 # <<< Comment Lines >>>
 TAGL = {}
@@ -640,3 +696,109 @@ for rxn in HRXN:
     GEOS['%s-%s-monoB-unCP' % (dbse, rxn)] = GEOS['%s-%s-dimer' % (dbse, rxn)].extract_fragments(2)
     GEOS['%s-%s-monoA-CP'   % (dbse, rxn)] = GEOS['%s-%s-dimer' % (dbse, rxn)].extract_fragments(1, 2)
     GEOS['%s-%s-monoB-CP'   % (dbse, rxn)] = GEOS['%s-%s-dimer' % (dbse, rxn)].extract_fragments(2, 1)
+
+#########################################################################
+
+# <<< Supplementary Quantum Chemical Results >>>
+DATA = {}
+# SAPT is 2+(3)/aTZ
+DATA['SAPT ELST ENERGY'] = {}
+DATA['SAPT ELST ENERGY']['A24-1'  ] = -10.9952  
+DATA['SAPT ELST ENERGY']['A24-2'  ] =  -7.8662   
+DATA['SAPT ELST ENERGY']['A24-3'  ] =  -5.9005   
+DATA['SAPT ELST ENERGY']['A24-4'  ] =  -6.3437   
+DATA['SAPT ELST ENERGY']['A24-5'  ] =  -4.7390   
+DATA['SAPT ELST ENERGY']['A24-6'  ] =  -1.3801   
+DATA['SAPT ELST ENERGY']['A24-7'  ] =  -0.9488   
+DATA['SAPT ELST ENERGY']['A24-8'  ] =  -0.6964   
+DATA['SAPT ELST ENERGY']['A24-9'  ] =  -6.5363   
+DATA['SAPT ELST ENERGY']['A24-10' ] =  -3.4520   
+DATA['SAPT ELST ENERGY']['A24-11' ] =  -1.7046   
+DATA['SAPT ELST ENERGY']['A24-12' ] =  -1.8266   
+DATA['SAPT ELST ENERGY']['A24-13' ] =  -1.6755   
+DATA['SAPT ELST ENERGY']['A24-14' ] =  -0.8553   
+DATA['SAPT ELST ENERGY']['A24-15' ] =  -0.4206   
+DATA['SAPT ELST ENERGY']['A24-16' ] =  -1.5114   
+DATA['SAPT ELST ENERGY']['A24-17' ] =  -0.3610   
+DATA['SAPT ELST ENERGY']['A24-18' ] =  -0.2355   
+DATA['SAPT ELST ENERGY']['A24-19' ] =  -0.2046   
+DATA['SAPT ELST ENERGY']['A24-20' ] =  -0.1800   
+DATA['SAPT ELST ENERGY']['A24-21' ] =  -0.2440   
+DATA['SAPT ELST ENERGY']['A24-22' ] =  -0.3588   
+DATA['SAPT ELST ENERGY']['A24-23' ] =  -0.5573   
+DATA['SAPT ELST ENERGY']['A24-24' ] =   0.1900    
+DATA['SAPT EXCH ENERGY'] = {}
+DATA['SAPT EXCH ENERGY']['A24-1'  ] =  11.4178 
+DATA['SAPT EXCH ENERGY']['A24-2'  ] =   7.7070  
+DATA['SAPT EXCH ENERGY']['A24-3'  ] =   4.1485  
+DATA['SAPT EXCH ENERGY']['A24-4'  ] =   6.1308  
+DATA['SAPT EXCH ENERGY']['A24-5'  ] =   4.5393  
+DATA['SAPT EXCH ENERGY']['A24-6'  ] =   2.5482  
+DATA['SAPT EXCH ENERGY']['A24-7'  ] =   1.4475  
+DATA['SAPT EXCH ENERGY']['A24-8'  ] =   1.0758  
+DATA['SAPT EXCH ENERGY']['A24-9'  ] =   8.5528  
+DATA['SAPT EXCH ENERGY']['A24-10' ] =   4.4582  
+DATA['SAPT EXCH ENERGY']['A24-11' ] =   2.5956  
+DATA['SAPT EXCH ENERGY']['A24-12' ] =   2.1004  
+DATA['SAPT EXCH ENERGY']['A24-13' ] =   2.3944  
+DATA['SAPT EXCH ENERGY']['A24-14' ] =   2.1490  
+DATA['SAPT EXCH ENERGY']['A24-15' ] =   0.9412  
+DATA['SAPT EXCH ENERGY']['A24-16' ] =   3.9267  
+DATA['SAPT EXCH ENERGY']['A24-17' ] =   1.2388  
+DATA['SAPT EXCH ENERGY']['A24-18' ] =   0.8834  
+DATA['SAPT EXCH ENERGY']['A24-19' ] =   0.7786  
+DATA['SAPT EXCH ENERGY']['A24-20' ] =   0.5944  
+DATA['SAPT EXCH ENERGY']['A24-21' ] =   0.7325  
+DATA['SAPT EXCH ENERGY']['A24-22' ] =   3.7451  
+DATA['SAPT EXCH ENERGY']['A24-23' ] =   4.5375  
+DATA['SAPT EXCH ENERGY']['A24-24' ] =   3.0958  
+DATA['SAPT IND ENERGY'] = {}
+DATA['SAPT IND ENERGY']['A24-1'   ] =  -3.7757 
+DATA['SAPT IND ENERGY']['A24-2'   ] =  -2.3513 
+DATA['SAPT IND ENERGY']['A24-3'   ] =  -1.5374 
+DATA['SAPT IND ENERGY']['A24-4'   ] =  -2.3488 
+DATA['SAPT IND ENERGY']['A24-5'   ] =  -0.8652 
+DATA['SAPT IND ENERGY']['A24-6'   ] =  -1.2460 
+DATA['SAPT IND ENERGY']['A24-7'   ] =  -0.3803 
+DATA['SAPT IND ENERGY']['A24-8'   ] =  -0.2697 
+DATA['SAPT IND ENERGY']['A24-9'   ] =  -2.3790 
+DATA['SAPT IND ENERGY']['A24-10'  ] =  -1.2827 
+DATA['SAPT IND ENERGY']['A24-11'  ] =  -0.4916 
+DATA['SAPT IND ENERGY']['A24-12'  ] =  -0.5454 
+DATA['SAPT IND ENERGY']['A24-13'  ] =  -0.4876 
+DATA['SAPT IND ENERGY']['A24-14'  ] =  -0.3071 
+DATA['SAPT IND ENERGY']['A24-15'  ] =  -0.1305 
+DATA['SAPT IND ENERGY']['A24-16'  ] =  -1.0811 
+DATA['SAPT IND ENERGY']['A24-17'  ] =  -0.0717 
+DATA['SAPT IND ENERGY']['A24-18'  ] =  -0.0446 
+DATA['SAPT IND ENERGY']['A24-19'  ] =  -0.0379 
+DATA['SAPT IND ENERGY']['A24-20'  ] =  -0.0277 
+DATA['SAPT IND ENERGY']['A24-21'  ] =  -0.0498 
+DATA['SAPT IND ENERGY']['A24-22'  ] =  -0.2491 
+DATA['SAPT IND ENERGY']['A24-23'  ] =  -0.2845 
+DATA['SAPT IND ENERGY']['A24-24'  ] =  -0.2110 
+DATA['SAPT DISP ENERGY'] = {}
+DATA['SAPT DISP ENERGY']['A24-1'  ] =  -3.0320 
+DATA['SAPT DISP ENERGY']['A24-2'  ] =  -2.3413 
+DATA['SAPT DISP ENERGY']['A24-3'  ] =  -1.7291 
+DATA['SAPT DISP ENERGY']['A24-4'  ] =  -1.7862 
+DATA['SAPT DISP ENERGY']['A24-5'  ] =  -2.0153 
+DATA['SAPT DISP ENERGY']['A24-6'  ] =  -1.4883 
+DATA['SAPT DISP ENERGY']['A24-7'  ] =  -0.9255 
+DATA['SAPT DISP ENERGY']['A24-8'  ] =  -0.7975 
+DATA['SAPT DISP ENERGY']['A24-9'  ] =  -4.1971 
+DATA['SAPT DISP ENERGY']['A24-10' ] =  -2.0724 
+DATA['SAPT DISP ENERGY']['A24-11' ] =  -2.0683 
+DATA['SAPT DISP ENERGY']['A24-12' ] =  -1.3085 
+DATA['SAPT DISP ENERGY']['A24-13' ] =  -1.5054 
+DATA['SAPT DISP ENERGY']['A24-14' ] =  -2.0093 
+DATA['SAPT DISP ENERGY']['A24-15' ] =  -0.8700 
+DATA['SAPT DISP ENERGY']['A24-16' ] =  -2.6413 
+DATA['SAPT DISP ENERGY']['A24-17' ] =  -1.6425 
+DATA['SAPT DISP ENERGY']['A24-18' ] =  -1.2229 
+DATA['SAPT DISP ENERGY']['A24-19' ] =  -1.0748 
+DATA['SAPT DISP ENERGY']['A24-20' ] =  -0.7567 
+DATA['SAPT DISP ENERGY']['A24-21' ] =  -0.7133 
+DATA['SAPT DISP ENERGY']['A24-22' ] =  -2.0822 
+DATA['SAPT DISP ENERGY']['A24-23' ] =  -2.3755 
+DATA['SAPT DISP ENERGY']['A24-24' ] =  -1.8418 
