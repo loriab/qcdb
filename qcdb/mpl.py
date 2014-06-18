@@ -10,6 +10,8 @@ def segment_color(argcolor, saptcolor):
     *argcolor* and particular color availibility *rxncolor*.
 
     """
+    import matplotlib as mpl
+
     # validate any sapt color
     if saptcolor is not None:
         if saptcolor < 0.0 or saptcolor > 1.0:
@@ -399,7 +401,7 @@ def thread(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None):
         xvals = rxn['data']
         toplblposn = next(item for item in xvals if item is not None)
         botlblposn = next(item for item in reversed(xvals) if item is not None)
-        clr = segment_color(color, rxn['color'] if color in rxn else None)
+        clr = segment_color(color, rxn['color'] if 'color' in rxn else None)
 
         slat = []
         for weft in range(Nweft):
