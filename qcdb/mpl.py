@@ -388,21 +388,20 @@ def thread(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None):
     plt.yticks([])
 
     # label plot and tiers
-    ax.text(-xlimit + 0.25, -0.25, title,
+    ax.text(-0.9 * xlimit, -0.25, title,
         verticalalignment='bottom', horizontalalignment='left',
         family='Times New Roman', weight='bold', fontsize=12)
     for weft in labels:
-        ax.text(-xlimit + 0.25, -(1.2 + labels.index(weft)), weft,
+        ax.text(-0.9 * xlimit, -(1.2 + labels.index(weft)), weft,
             verticalalignment='bottom', horizontalalignment='left',
             family='Times New Roman', weight='bold', fontsize=18)
 
     # plot reaction errors and threads
     for rxn in data:
+        
+        # preparation
         xvals = rxn['data']
-        toplblposn = next(item for item in xvals if item is not None)
-        botlblposn = next(item for item in reversed(xvals) if item is not None)
         clr = segment_color(color, rxn['color'] if 'color' in rxn else None)
-
         slat = []
         for weft in range(Nweft):
             slat.extend([xvals[weft], xvals[weft], None])
@@ -410,16 +409,24 @@ def thread(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None):
         for weft in range(Nweft - 1):
             thread.extend([xvals[weft], xvals[weft + 1], None])
 
+        # plotting
         ax.plot(slat, posnS, color=clr, linewidth=1.0, solid_capstyle='round')
         ax.plot(thread, posnT, color=clr, linewidth=0.5, solid_capstyle='round',
             alpha=0.3)
 
-        ax.text(toplblposn, -0.75 + 0.6 * random(), rxn['sys'],
-            verticalalignment='bottom', horizontalalignment='center',
-            family='Times New Roman', fontsize=8)
-        ax.text(botlblposn, -1 * Nweft - 0.75 + 0.6 * random(), rxn['sys'],
-            verticalalignment='bottom', horizontalalignment='center',
-            family='Times New Roman', fontsize=8)
+        # labeling
+        try:
+            toplblposn = next(item for item in xvals if item is not None)
+            botlblposn = next(item for item in reversed(xvals) if item is not None)
+        except StopIteration:
+            pass
+        else:
+            ax.text(toplblposn, -0.75 + 0.6 * random(), rxn['sys'],
+                verticalalignment='bottom', horizontalalignment='center',
+                family='Times New Roman', fontsize=8)
+            ax.text(botlblposn, -1 * Nweft - 0.75 + 0.6 * random(), rxn['sys'],
+                verticalalignment='bottom', horizontalalignment='center',
+                family='Times New Roman', fontsize=8)
 
     # plot trimmings
     if mae is not None:
