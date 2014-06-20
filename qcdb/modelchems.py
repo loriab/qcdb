@@ -131,7 +131,12 @@ _tlist = [
     BasisSet('atqzhatz',   fullname='[aTQZ; D:haTZ]', latex="""[aTQZ; $\delta$:haTZ]"""),
     BasisSet('atqzatz',    fullname='[aTQZ; D:aTZ]', latex="""[aTQZ; $\delta$:aTZ]"""),
     BasisSet('aq5zatz',    fullname='[aQ5Z; D:aTZ]', latex="""[aQ5Z; $\delta$:aTZ]"""),
-    ]
+    BasisSet('dzf12',      fullname='cc-pVDZ-F12'),
+    BasisSet('tzf12',      fullname='cc-pVTZ-F12'),
+    BasisSet('qzf12',      fullname='cc-pVQZ-F12'),
+    BasisSet('dtzf12',     fullname='cc-pVDTZ-F12'),
+    BasisSet('tqzf12',     fullname='cc-pVTQZ-F12'),
+]
 bases = {}
 for item in _tlist:
     bases[item.name] = item
