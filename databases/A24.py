@@ -53,9 +53,6 @@ dbse = 'A24'
 HRXN = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]
 HRXN_SM = [2]
 HRXN_LG = []
-HB = [1,2,3,4,5]
-MX = [6,7,8,9,10,11,12,13,16]
-DD = [14,15,17,18,19,20,21,22,23,24]
 
 # <<< Chemical Systems Involved >>>
 RXNM = {}     # reaction matrix of reagent contributions per reaction
