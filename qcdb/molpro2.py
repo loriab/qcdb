@@ -51,7 +51,10 @@ class Infile(qcformat.InputFormat2):
         options['BASIS']['ORBITAL']['value'] = self.basis
     
         if self.method in ['ccsd(t)-f12-optri']:
-            pass
+            if self.basis == 'cc-pvdz-f12':
+                options['BASIS']['JKFIT']['value'] = 'aug-cc-pvtz/jkfit'
+                options['BASIS']['JKFITC']['value'] = self.basis + '/optri'
+                options['BASIS']['MP2FIT']['value'] = 'aug-cc-pvtz/mp2fit'
         elif ('df-' in self.method) or ('f12' in self.method) or (self.method in ['mp2c', 'dft-sapt', 'dft-sapt-pbe0acalda']):
             if self.unaugbasis and self.auxbasis:
                 options['BASIS']['JKFIT']['value'] = self.auxbasis + '/jkfit'
@@ -227,7 +230,7 @@ def muster_modelchem(name, dertype, mol):
     elif lowername == 'ccsd(t)-f12-optri':
         proc.append('rhf')
         proc.append('ccsd(t)-f12')
-        #options['CCSD(T)-F12']['OPTIONS']['value'] = ',df_basis=mp2fit,df_basis_exch=jkfitb,ri_basis=jkfitb'
+        options['CCSD(T)-F12']['OPTIONS']['value'] = ',df_basis=mp2fit,df_basis_exch=jkfit,ri_basis=jkfitc'
 
     elif lowername == 'mp2c':
         proc.append('gdirect')
