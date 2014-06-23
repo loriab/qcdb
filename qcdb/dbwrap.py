@@ -96,11 +96,12 @@ def format_errors(err, mode=1):
     return text
 
 
-def string_contrast(s):
-    """From an array of strings, *s*, returns maximum common prefix
+def string_contrast(ss):
+    """From an array of strings, *ss*, returns maximum common prefix
     string, maximum common suffix string, and array of middles.
 
     """
+    s = [item + 'q' for item in ss]
     short = min(s, key=len)
     for ib in range(len(short)):
         if not all([mc[ib] == short[ib] for mc in s]):
@@ -118,7 +119,7 @@ def string_contrast(s):
 
     middle = [mc[preidx:sufidx] for mc in s]
     prefix = short[:preidx]
-    suffix = short[sufidx:]
+    suffix = short[sufidx:-1]
 
     return prefix, suffix, middle
 
