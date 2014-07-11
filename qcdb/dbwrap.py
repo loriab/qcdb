@@ -1133,6 +1133,77 @@ class FourDatabases(object):
             if mc not in ['S220', 'S22A', 'S22B']:
                 self.plot_flat(mc, sset='tt-5min', xlimit=4.0, view=False)
 
+    def plot_usual_bars_calendar(self):
+        """"""
+
+        self.plot_bars(['MP2-CP-dz', 'MP2-CP-jadz', 'MP2-CP-hadz', 'MP2-CP-adz', 
+            'MP2-CP-tz','MP2-CP-matz','MP2-CP-jatz','MP2-CP-hatz', 'MP2-CP-atz',
+            'MP2-CP-dtz', 'MP2-CP-jadtz', 'MP2-CP-hadtz', 'MP2-CP-adtz',
+            'MP2-CP-qz', 'MP2-CP-aaqz', 'MP2-CP-maqz', 'MP2-CP-jaqz', 'MP2-CP-haqz', 'MP2-CP-aqz',
+            'MP2-CP-tqz', 'MP2-CP-matqz', 'MP2-CP-jatqz', 'MP2-CP-hatqz', 'MP2-CP-atqz',
+            'MP2-CP-a5z', 'MP2-CP-aq5z'])
+        self.plot_bars(['SCSMP2-CP-dz', 'SCSMP2-CP-jadz', 'SCSMP2-CP-hadz', 'SCSMP2-CP-adz', 
+            'SCSMP2-CP-tz','SCSMP2-CP-matz','SCSMP2-CP-jatz','SCSMP2-CP-hatz', 'SCSMP2-CP-atz',
+            'SCSMP2-CP-dtz', 'SCSMP2-CP-jadtz', 'SCSMP2-CP-hadtz', 'SCSMP2-CP-adtz',
+            'SCSMP2-CP-qz', 'SCSMP2-CP-aaqz', 'SCSMP2-CP-maqz', 'SCSMP2-CP-jaqz', 'SCSMP2-CP-haqz', 'SCSMP2-CP-aqz',
+            'SCSMP2-CP-tqz', 'SCSMP2-CP-matqz', 'SCSMP2-CP-jatqz', 'SCSMP2-CP-hatqz', 'SCSMP2-CP-atqz',
+            'SCSMP2-CP-a5z', 'SCSMP2-CP-aq5z'])
+        self.plot_bars(['SCSNMP2-CP-dz', 'SCSNMP2-CP-jadz', 'SCSNMP2-CP-hadz', 'SCSNMP2-CP-adz', 
+            'SCSNMP2-CP-tz','SCSNMP2-CP-matz','SCSNMP2-CP-jatz','SCSNMP2-CP-hatz', 'SCSNMP2-CP-atz',
+            'SCSNMP2-CP-dtz', 'SCSNMP2-CP-jadtz', 'SCSNMP2-CP-hadtz', 'SCSNMP2-CP-adtz',
+            'SCSNMP2-CP-qz', 'SCSNMP2-CP-aaqz', 'SCSNMP2-CP-maqz', 'SCSNMP2-CP-jaqz', 'SCSNMP2-CP-haqz', 'SCSNMP2-CP-aqz',
+            'SCSNMP2-CP-tqz', 'SCSNMP2-CP-matqz', 'SCSNMP2-CP-jatqz', 'SCSNMP2-CP-hatqz', 'SCSNMP2-CP-atqz',
+            'SCSNMP2-CP-a5z', 'SCSNMP2-CP-aq5z'])
+        self.plot_bars([None, None, None, None,
+            'SCSMIMP2-CP-tz','SCSMIMP2-CP-matz','SCSMIMP2-CP-jatz','SCSMIMP2-CP-hatz', 'SCSMIMP2-CP-atz',
+            'SCSMIMP2-CP-dtz', 'SCSMIMP2-CP-jadtz', 'SCSMIMP2-CP-hadtz', 'SCSMIMP2-CP-adtz',
+            'SCSMIMP2-CP-qz', 'SCSMIMP2-CP-aaqz', 'SCSMIMP2-CP-maqz', 'SCSMIMP2-CP-jaqz', 'SCSMIMP2-CP-haqz', 'SCSMIMP2-CP-aqz',
+            'SCSMIMP2-CP-tqz', 'SCSMIMP2-CP-matqz', 'SCSMIMP2-CP-jatqz', 'SCSMIMP2-CP-hatqz', 'SCSMIMP2-CP-atqz',
+            None, None])
+        self.plot_bars(['DWMP2-CP-dz', 'DWMP2-CP-jadz', 'DWMP2-CP-hadz', 'DWMP2-CP-adz', 
+            'DWMP2-CP-tz','DWMP2-CP-matz','DWMP2-CP-jatz','DWMP2-CP-hatz', 'DWMP2-CP-atz',
+            'DWMP2-CP-dtz', 'DWMP2-CP-jadtz', 'DWMP2-CP-hadtz', 'DWMP2-CP-adtz',
+            'DWMP2-CP-qz', 'DWMP2-CP-aaqz', 'DWMP2-CP-maqz', 'DWMP2-CP-jaqz', 'DWMP2-CP-haqz', 'DWMP2-CP-aqz',
+            'DWMP2-CP-tqz', 'DWMP2-CP-matqz', 'DWMP2-CP-jatqz', 'DWMP2-CP-hatqz', 'DWMP2-CP-atqz',
+            'DWMP2-CP-a5z', 'DWMP2-CP-aq5z'])
+        self.plot_bars(['MP2C-CP-dz', 'MP2C-CP-jadz', 'MP2C-CP-hadz', 'MP2C-CP-adz', 
+            'MP2C-CP-tz','MP2C-CP-matz','MP2C-CP-jatz','MP2C-CP-hatz', 'MP2C-CP-atz',
+            'MP2C-CP-dtz', 'MP2C-CP-jadtz', 'MP2C-CP-hadtz', 'MP2C-CP-adtz',
+            None, None, None, None, None, 'MP2C-CP-aqz',
+            None, None, None, None, 'MP2C-CP-atqz',
+            None, None])
+        self.plot_bars(['MP2C-CP-atqzdz', 'MP2C-CP-atqzjadz', 'MP2C-CP-atqzhadz', 'MP2C-CP-atqzadz',
+            'MP2C-CP-atqztz', 'MP2C-CP-atqzmatz', 'MP2C-CP-atqzjatz', 'MP2C-CP-atqzhatz', 'MP2C-CP-atqzatz',
+            'MP2C-CP-atqzdtz', 'MP2C-CP-atqzjadtz', 'MP2C-CP-atqzhadtz', 'MP2C-CP-atqzadtz'])
+
+        self.plot_bars(['MP2F12-CP-dz', 'MP2F12-CP-jadz', 'MP2F12-CP-hadz', 'MP2F12-CP-adz', 
+            'MP2F12-CP-tz','MP2F12-CP-matz','MP2F12-CP-jatz','MP2F12-CP-hatz', 'MP2F12-CP-atz',
+            'MP2F12-CP-dtz', 'MP2F12-CP-jadtz', 'MP2F12-CP-hadtz', 'MP2F12-CP-adtz',
+            'MP2F12-CP-aqz', 'MP2F12-CP-atqz'])
+        self.plot_bars(['SCSMP2F12-CP-dz', 'SCSMP2F12-CP-jadz', 'SCSMP2F12-CP-hadz', 'SCSMP2F12-CP-adz', 
+            'SCSMP2F12-CP-tz','SCSMP2F12-CP-matz','SCSMP2F12-CP-jatz','SCSMP2F12-CP-hatz', 'SCSMP2F12-CP-atz',
+            'SCSMP2F12-CP-dtz', 'SCSMP2F12-CP-jadtz', 'SCSMP2F12-CP-hadtz', 'SCSMP2F12-CP-adtz',
+            'SCSMP2F12-CP-aqz', 'SCSMP2F12-CP-atqz'])
+        self.plot_bars(['SCSNMP2F12-CP-dz', 'SCSNMP2F12-CP-jadz', 'SCSNMP2F12-CP-hadz', 'SCSNMP2F12-CP-adz', 
+            'SCSNMP2F12-CP-tz','SCSNMP2F12-CP-matz','SCSNMP2F12-CP-jatz','SCSNMP2F12-CP-hatz', 'SCSNMP2F12-CP-atz',
+            'SCSNMP2F12-CP-dtz', 'SCSNMP2F12-CP-jadtz', 'SCSNMP2F12-CP-adtz', 'SCSNMP2F12-CP-adtz',
+            'SCSNMP2F12-CP-aqz', 'SCSNMP2F12-CP-atqz'])
+        self.plot_bars([None, None, None, None,
+            'SCSMIMP2F12-CP-tz','SCSMIMP2F12-CP-matz','SCSMIMP2F12-CP-jatz','SCSMIMP2F12-CP-hatz', 'SCSMIMP2F12-CP-atz',
+            'SCSMIMP2F12-CP-dtz', 'SCSMIMP2F12-CP-jadtz', 'SCSMIMP2F12-CP-hadtz', 'SCSMIMP2F12-CP-adtz',
+            'SCSMIMP2F12-CP-aqz', 'SCSMIMP2F12-CP-atqz'])
+        self.plot_bars(['DWMP2F12-CP-dz', 'DWMP2F12-CP-jadz', 'DWMP2F12-CP-hadz', 'DWMP2F12-CP-adz', 
+            'DWMP2F12-CP-tz','DWMP2F12-CP-matz','DWMP2F12-CP-jatz','DWMP2F12-CP-hatz', 'DWMP2F12-CP-atz',
+            'DWMP2F12-CP-dtz', 'DWMP2F12-CP-jadtz', 'DWMP2F12-CP-hadtz', 'DWMP2F12-CP-adtz',
+            'DWMP2F12-CP-aqz', 'DWMP2F12-CP-atqz'])
+        self.plot_bars(['MP2CF12-CP-dz', 'MP2CF12-CP-jadz', 'MP2CF12-CP-hadz', 'MP2CF12-CP-adz', 
+            'MP2CF12-CP-tz','MP2CF12-CP-matz','MP2CF12-CP-jatz','MP2CF12-CP-hatz', 'MP2CF12-CP-atz',
+            'MP2CF12-CP-dtz', 'MP2CF12-CP-jadtz', 'MP2CF12-CP-hadtz', 'MP2CF12-CP-adtz',
+            'MP2CF12-CP-aqz', 'MP2CF12-CP-atqz'])
+        self.plot_bars(['MP2CF12-CP-atqzdz', 'MP2CF12-CP-atqzjadz', 'MP2CF12-CP-atqzhadz', 'MP2CF12-CP-atqzadz',
+            'MP2CF12-CP-atqztz', 'MP2CF12-CP-atqzmatz', 'MP2CF12-CP-atqzjatz', 'MP2CF12-CP-atqzhatz', 'MP2CF12-CP-atqzatz',
+            'MP2CF12-CP-atqzdtz', 'MP2CF12-CP-atqzjadtz', 'MP2CF12-CP-atqzhadtz', 'MP2CF12-CP-atqzadtz'])
+
     def plot_usual_bars(self):
         """Generate pieces for grey bars figure for PT2 paper."""
 
