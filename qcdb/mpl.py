@@ -171,7 +171,7 @@ def bar(data, title=''):
     plt.xticks([])
 
     # label plot and tiers
-    ax.text(0.4, 3.8, title,
+    ax.text(0.4, 4.6, title,
         verticalalignment='bottom', horizontalalignment='left',
         family='Times New Roman', weight='bold', fontsize=12)
 
@@ -180,17 +180,18 @@ def bar(data, title=''):
 
     # plot bar sets
     for rxn in data:
-        lefts = [xval, xval + 0.025, xval + 0.065, xval + 0.105]
+        if rxn is not None:
+            lefts = [xval, xval + 0.025, xval + 0.065, xval + 0.105]
 
-        rect = ax.bar(lefts, rxn['data'], widths, linewidth=0)
-        rect[0].set_color('grey')
-        rect[1].set_color('red')
-        rect[2].set_color('green')
-        rect[3].set_color('blue')
+            rect = ax.bar(lefts, rxn['data'], widths, linewidth=0)
+            rect[0].set_color('grey')
+            rect[1].set_color('red')
+            rect[2].set_color('green')
+            rect[3].set_color('blue')
 
-        ax.text(xval + .08, 3.5, rxn['mc'],
-            verticalalignment='center', horizontalalignment='right', rotation='vertical',
-            family='Times New Roman', fontsize=8)
+            ax.text(xval + .08, 4.3, rxn['mc'],
+                verticalalignment='center', horizontalalignment='right', rotation='vertical',
+                family='Times New Roman', fontsize=8)
         xval += 0.20
 
     plt.show()
@@ -452,7 +453,9 @@ if __name__ == "__main__":
 
     more_dats = [
     {'mc':'MP2-CP-adz', 'data':[1.0, 0.8, 1.4, 1.6]},
-    {'mc':'MP2-CP-adtz', 'data':[0.6, 0.2, 0.4, 0.6]}]
+    {'mc':'MP2-CP-adtz', 'data':[0.6, 0.2, 0.4, 0.6]},
+    None,
+    {'mc':'MP2-CP-adzagain', 'data':[1.0, 0.8, 1.4, 1.6]}]
 
     bar(more_dats, title='asdf')
 

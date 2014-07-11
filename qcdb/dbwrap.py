@@ -101,7 +101,7 @@ def string_contrast(ss):
     string, maximum common suffix string, and array of middles.
 
     """
-    s = [item + 'q' for item in ss]
+    s = [item + 'q' for item in ss if item is not None]
     short = min(s, key=len)
     for ib in range(len(short)):
         if not all([mc[ib] == short[ib] for mc in s]):
@@ -117,9 +117,10 @@ def string_contrast(ss):
     else:
         sufidx = -1 * (len(short))
 
-    middle = [mc[preidx:sufidx] for mc in s]
+    miditer = iter([mc[preidx:sufidx] for mc in s])
     prefix = short[:preidx]
     suffix = short[sufidx:-1]
+    middle = ['' if mc is None else next(miditer) for mc in ss]
 
     return prefix, suffix, middle
 
@@ -957,13 +958,20 @@ class FourDatabases(object):
         # compute errors
         errors = {}
         for mc in modelchem:
-            errors[mc] = {}
-            for ss in sset:
-                errors[mc][ss] = self.compute_statistics(mc, benchmark=benchmark, sset=ss,
-                    failoninc=failoninc, verbose=verbose, returnindiv=False)
+            if mc is not None:
+                errors[mc] = {}
+                for ss in sset:
+                    errors[mc][ss] = self.compute_statistics(mc, benchmark=benchmark, sset=ss,
+                        failoninc=failoninc, verbose=verbose, returnindiv=False)
         # repackage
         pre, suf, mid = string_contrast(modelchem)
-        dbdat = [{'mc': mid[modelchem.index(mc)], 'data': [errors[mc][ss]['DB4']['mae'] for ss in sset]} for mc in modelchem]
+        #dbdat = [{'mc': mid[modelchem.index(mc)], 'data': [errors[mc][ss]['DB4']['mae'] for ss in sset]} for mc in modelchem]
+        dbdat = []
+        for mc in modelchem:
+            if mc is None:
+                dbdat.append(None)
+            else:
+                dbdat.append({'mc': mid[modelchem.index(mc)], 'data': [errors[mc][ss]['DB4']['mae'] for ss in sset]})
         title = '4DB ' + pre + '[]' + suf
         # generate matplotlib instructions and call or print
         try:
@@ -1021,7 +1029,7 @@ class FourDatabases(object):
         else:
             return errors
 
-    def plot_modelchems(self, modelchem, benchmark='default', sset='default', failoninc=True, verbose=False, color='sapt'):
+    def plot_modelchems(self, modelchem, benchmark='default', sset='default', failoninc=True, verbose=False, color='sapt', xlimit=4.0):
         """Computes individual errors and summary statistics for each
         model chemistry in array *modelchem* versus *benchmark* over
         subset *sset* over all four databases. Thread *color* can be 'rgb'
@@ -1061,11 +1069,11 @@ class FourDatabases(object):
             import matplotlib.pyplot as plt
         except ImportError:
             # if not running from Canopy, print line to execute from Canopy
-            print """mpl.thread(%s,\n    color='%s',\n    title='%s',\n    labels=%s,\n    mae=%s,\n    mape=%s)\n\n""" % \
-                (dbdat, color, title, mid, mae, mapbe)
+            print """mpl.thread(%s,\n    color='%s',\n    title='%s',\n    labels=%s,\n    mae=%s,\n    mape=%s\n    xlimit=%s)\n\n""" % \
+                (dbdat, color, title, mid, mae, mapbe, str(xlimit))
         else:
             # if running from Canopy, call mpl directly
-            mpl.thread(dbdat, color=color, title=title, labels=mid, mae=mae, mape=mapbe)
+            mpl.thread(dbdat, color=color, title=title, labels=mid, mae=mae, mape=mapbe, xlimit=xlimit)
 
     def plot_flat(self, modelchem, benchmark='default', sset='default', failoninc=True, verbose=False, color='sapt', xlimit=4.0, view=True):
         """Computes individual errors and summary statistics for single
@@ -1101,6 +1109,7 @@ class FourDatabases(object):
         title = '4DB-' + sset + ' ' + pre + '[]' + suf
         mae = errors[mc]['DB4']['mae']
         mapbe = 100 * errors[mc]['DB4']['mapbe']
+        mapbe = None
         # generate matplotlib instructions and call or print
         try:
             import mpl
