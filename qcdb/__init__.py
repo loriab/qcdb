@@ -35,7 +35,7 @@ from qcformat import *
 import cfour
 import jajo
 from orient import OrientMols
-from dbwrap import Database, FourDatabases  # , ReactionDatum, Reagent, Reaction
+from dbwrap import Database, FourDatabases, ThreeDatabases  # , ReactionDatum, Reagent, Reaction
 from libmintspointgrp import SymmetryOperation, PointGroup
 from libmintsbasisset import BasisSet
 
