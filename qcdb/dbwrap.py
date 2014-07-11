@@ -1338,6 +1338,10 @@ class ThreeDatabases(object):
         self.sset['mxdd-5min'] = ['mxdd', 'mxdd', 'mxdd']
         self.sset['pp-5min'] = ['mxddpp', 'mxddpp', 'mxddpp']
         self.sset['np-5min'] = ['mxddnp', 'mxddnp', 'mxddnp']
+        self.sset['weak'] = ['weak', 'weak', 'weak']
+        self.sset['weak_hb'] = ['weak_hb', None, 'weak_hb']
+        self.sset['weak_mx'] = ['weak_mx', 'weak_mx', 'weak_mx']
+        self.sset['weak_dd'] = ['weak_dd', 'weak_dd', 'weak_dd']
 
     def define_supermodelchems(self):
         """
