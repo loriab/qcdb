@@ -65,6 +65,11 @@ S11 = [1, 2, 3, 4, 8, 9, 10, 16, 17, 18, 19]
 WATER = [2]
 MXDDPP = [11, 12, 13, 14, 15]
 MXDDNP = [8, 9, 10, 16, 17, 18, 19, 20, 21, 22]
+weak = [1, 2, 8, 9, 10, 11, 12, 14, 16, 17, 18, 19, 20, 21]
+weak_hb = [1, 2]
+weak_mx = [16, 17, 18, 19, 21]
+weak_dd = [8, 9, 10, 11, 12, 14, 20]
+
 
 # <<< Chemical Systems Involved >>>
 RXNM = {}     # reaction matrix of reagent contributions per reaction
