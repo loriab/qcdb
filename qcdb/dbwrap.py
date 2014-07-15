@@ -798,6 +798,44 @@ class Database(object):
             print """mpl.thread(%s,\n    color='%s',\n    title='%s',\n    labels=%s,\n    mae=%s,\n    mape=%s\n    xlimit=%s)\n\n""" % \
                 (dbdat, color, title, mid, mae, mapbe, str(xlimit))
 
+    def plot_bars(self, modelchem, benchmark='default', sset=['default', 'hb', 'mx', 'dd'], failoninc=True, verbose=False):
+        """Prepares 'grey bars' diagram for each model chemistry in array
+        *modelchem* versus *benchmark* over all four databases. A wide bar
+        is plotted with three smaller bars, corresponding to the 'mae'
+        summary statistic of the four subsets in *sset*. Prepares bars
+        diagram instructions and either executes them if matplotlib
+        available (Canopy) or prints them.
+
+        """
+        # compute errors
+        errors = {}
+        for mc in modelchem:
+            if mc is not None:
+                errors[mc] = {}
+                for ss in sset:
+                    errors[mc][ss] = self.compute_statistics(mc, benchmark=benchmark, sset=ss,
+                        failoninc=failoninc, verbose=verbose, returnindiv=False)
+        # repackage
+        pre, suf, mid = string_contrast(modelchem)
+        #dbdat = [{'mc': mid[modelchem.index(mc)], 'data': [errors[mc][ss]['DB4']['mae'] for ss in sset]} for mc in modelchem]
+        dbdat = []
+        for mc in modelchem:
+            if mc is None:
+                dbdat.append(None)
+            else:
+                dbdat.append({'mc': mid[modelchem.index(mc)], 'data': [errors[mc][ss]['mae'] for ss in sset]})
+        title = self.dbse + ' ' + pre + '[]' + suf
+        # generate matplotlib instructions and call or print
+        try:
+            import mpl
+            import matplotlib.pyplot as plt
+        except ImportError:
+            # if not running from Canopy, print line to execute from Canopy
+            print """mpl.bar(%s,\n    title='%s')\n\n""" % (dbdat, title)
+        else:
+            # if running from Canopy, call mpl directly
+            mpl.bar(dbdat, title=title)
+
 
 class FourDatabases(object):
     """
