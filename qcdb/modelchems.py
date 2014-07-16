@@ -36,17 +36,19 @@ class BasisSet(QCEssential):
     """Specialization of :pyclass:`QCEssential` for basis sets.
 
     """
-    def __init__(self, name, fullname=None, latex=None, citation=None, pdfdatabase=None, comment=None, zeta=None):
+    def __init__(self, name, fullname=None, latex=None, citation=None, pdfdatabase=None, comment=None, zeta=None, build=None):
         QCEssential.__init__(self, name, fullname, latex, citation, pdfdatabase, comment)
         self.name = name.lower()
         self.zeta = zeta
+        self.build = [[self.name]] if build is None else build
 
     def __str__(self):
         text = ''
-        text += """  ==> %s BasisSet <==\n\n""" % (self.name)
+        text += """  ==> %s BasisSet Treatment <==\n\n""" % (self.name)
         text += """  Formal name:          %s\n""" % (self.fullname)
         text += """  LaTeX representation: %s\n""" % (self.latex)
         text += """  Zeta:                 %s\n""" % (self.zeta)
+        text += """  CBS build:            %s\n""" % (self.build)
         text += """  PDF database id:      %s\n""" % (self.dsdbid)
         text += """  Literature citation:  %s\n""" % (self.citation)
         text += """  Comment:              %s\n""" % (self.comment)
@@ -94,13 +96,13 @@ _tlist = [
     BasisSet('dtz',        fullname='cc-pVDTZ'),
     BasisSet('jadtz',      fullname='jun-cc-pVDTZ'),
     BasisSet('hadtz',      fullname='heavy-aug-cc-pVDTZ'),
-    BasisSet('adtz',       fullname='aug-cc-pVDTZ'),
+    BasisSet('adtz',       fullname='aug-cc-pVDTZ', build=[['adtz'], ['atz', 'adtz']]),
     BasisSet('tqz',        fullname='cc-pVTQZ'),
     BasisSet('matqz',      fullname='may-cc-pVTQZ'),
     BasisSet('jatqz',      fullname='jun-cc-pVTQZ'),
     BasisSet('hatqz',      fullname='heavy-aug-cc-pVTQZ'),
-    BasisSet('atqz',       fullname='aug-cc-pVTQZ'),
-    BasisSet('aq5z',       fullname='aug-cc-pVQ5Z'),
+    BasisSet('atqz',       fullname='aug-cc-pVTQZ', build=[['atqz'], ['aqz', 'atqz']]),
+    BasisSet('aq5z',       fullname='aug-cc-pVQ5Z', build=[['aq5z'], ['a5z', 'aq5z']]),
     BasisSet('a6z',        fullname='aug-cc-pV6Z'),
     BasisSet('a56z',       fullname='aug-cc-pV56Z'),
     BasisSet('atzdz',      fullname='[aTZ; D:DZ]', latex="""[aTZ; $\delta$:DZ]"""),
@@ -134,8 +136,8 @@ _tlist = [
     BasisSet('dzf12',      fullname='cc-pVDZ-F12'),
     BasisSet('tzf12',      fullname='cc-pVTZ-F12'),
     BasisSet('qzf12',      fullname='cc-pVQZ-F12'),
-    BasisSet('dtzf12',     fullname='cc-pVDTZ-F12'),
-    BasisSet('tqzf12',     fullname='cc-pVTQZ-F12'),
+    BasisSet('dtzf12',     fullname='cc-pVDTZ-F12', build=[['dtzf12'], ['tzf12', 'dtzf12']]),
+    BasisSet('tqzf12',     fullname='cc-pVTQZ-F12', build=[['tqzf12'], ['qzf12', 'tqzf12']]),
 ]
 bases = {}
 for item in _tlist:
@@ -188,10 +190,14 @@ _tlist = [
     Method('SCMICCSDAF12',    fullname='SCS(MI)-CCSD-F12a'),
     Method('SCMICCSDBF12',    fullname='SCS(MI)-CCSD-F12b'),
     Method('SCMICCSDCF12',    fullname='SCS(MI)-CCSD-F12c'),
-    Method('CCSDTAF12',       fullname='CCSD(T)-F12a'),
-    Method('CCSDTBF12',       fullname='CCSD(T)-F12b'),
-    Method('CCSDTCF12',       fullname='CCSD(T)-F12c'),
-    Method('DWCCSDTF12',      fullname='DW-CCSD(T)-F12'),
+    Method('CCSDTAF12',       fullname='CCSD(T**)-F12a'),
+    Method('CCSDTBF12',       fullname='CCSD(T**)-F12b'),
+    Method('CCSDTCF12',       fullname='CCSD(T**)-F12c'),
+    Method('DWCCSDTF12',      fullname='DW-CCSD(T**)-F12'),
+#        build=lambda: ['DW-CCSD(T**)-F12 TOTAL ENERGY'], 
+#        ['HF-CABS TOTAL ENERGY', 'DW-CCSD(T**)-F12 CORRELATION ENERGY'], 
+#        ['HF-CABS TOTAL ENERGY', 'MP2-F12 CORRELATION ENERGY', 'DW-CCSD(T**)-F12 CC CORRECTION ENERGY'], 
+#        ['HF-CABS TOTAL ENERGY', 'MP2-F12 CORRELATION ENERGY', 'DW-CCSD-F12 CC CORRECTION ENERGY', 'DW-(T**)-F12 CORRECTION ENERGY'])
     Method('B97D3',           fullname='B97-D3'),
     Method('B3LYPD3',         fullname='B3LYP-D3'),
     Method('wB97XD',          fullname='$\omega$B97X-D'),
