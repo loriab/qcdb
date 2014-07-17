@@ -138,6 +138,17 @@ _tlist = [
     BasisSet('qzf12',      fullname='cc-pVQZ-F12'),
     BasisSet('dtzf12',     fullname='cc-pVDTZ-F12', build=[['dtzf12'], ['tzf12', 'dtzf12']]),
     BasisSet('tqzf12',     fullname='cc-pVTQZ-F12', build=[['tqzf12'], ['qzf12', 'tqzf12']]),
+    BasisSet('Hill1_adtz', build=[['HillCC_adtz'], ['atz', 'HillCC_adtz']]),  # TODO should have None or non-xtpl first element?
+    BasisSet('Hill1_atqz', build=[['HillCC_atqz'], ['aqz', 'HillCC_atqz']]),
+    BasisSet('Hill1_aq5z', build=[['HillCC_aq5z'], ['a5z', 'HillCC_aq5z']]),
+    BasisSet('Hill1_dtzf12', build=[['HillCC_dtzf12'], ['tzf12', 'HillCC_dtzf12']]),
+    BasisSet('Hill1_tqzf12', build=[['HillCC_tqzf12'], ['qzf12', 'HillCC_tqzf12']]),
+    BasisSet('Hill2_dtzf12', build=[None, None, ['tzf12', 'HillCC_dtzf12', 'HillT_dtzf12']]),
+    BasisSet('Hill2_adtz', build=[None, None, ['atz', 'HillCC_adtz', 'HillT_adtz']]),
+    BasisSet('Hill2_tqzf12', build=[None, None, ['qzf12', 'HillCC_tqzf12', 'HillT_tqzf12']]),
+    BasisSet('Hill2_adtz', build=[None, None, ['atz', 'HillCC_adtz', 'HillT_adtz']]),
+    BasisSet('Hill2_atqz', build=[None, None, ['aqz', 'HillCC_atqz', 'HillT_atqz']]),
+    BasisSet('Hill2_aq5z', build=[None, None, ['a5z', 'HillCC_aq5z', 'HillT_aq5z']]),
 ]
 bases = {}
 for item in _tlist:
@@ -202,6 +213,9 @@ _tlist = [
     Method('B3LYPD3',         fullname='B3LYP-D3'),
     Method('wB97XD',          fullname='$\omega$B97X-D'),
     Method('M062X',           fullname='M06-2X'),
+    Method('CCSDTNSAF12', fullname='CCSD(T)-F12a'),
+    Method('CCSDTNSBF12', fullname='CCSD(T)-F12b'),
+    Method('CCSDTNSCF12', fullname='CCSD(T)-F12c'),
     ]
 
 methods = {}
