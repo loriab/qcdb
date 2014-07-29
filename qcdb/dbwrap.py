@@ -1,10 +1,12 @@
 import os
 import sys
 import math
+import itertools
 import collections
 from exceptions import *
-from modelchems import Method, BasisSet, methods, bases
+from modelchems import Method, BasisSet, Error, methods, bases, errors
 import psiutil
+import textables
 
 
 def initialize_errors(e=None, pe=None, pbe=None, extrema=True):
@@ -71,7 +73,9 @@ def format_errors(err, mode=1):
         mapbe = '  ----  ' if err['mapbe'] is None else '%6.1f\%%' % (100 * err['mapbe'])
         text = """$[%s, %s]$ %s %s %s""" % \
             (me, stde, mae, mape, mapbe)
-    elif mode == 2:
+        return text
+
+    if mode == 2:
         maxe = '----' if err['maxe'] is None else '%8.2f' % (err['maxe'])
         mine = '----' if err['mine'] is None else '%8.2f' % (err['mine'])
         me = '----' if err['me'] is None else '%+8.2f' % (err['me'])
@@ -93,7 +97,29 @@ def format_errors(err, mode=1):
         text = """min: %s%s%s\nmax: %s%s%s\nm:   %s%s%s\nma:  %s%s%s\nrms: %s%s%s\nstd: %s%s%s""" % \
             (mine, minpe, minpbe, maxe, maxpe, maxpbe, me, mpe, mpbe, \
             mae, mape, mapbe, rmse, rmspe, rmspbe, stde, stdpe, stdpbe)
-    return text
+        return text
+
+    if mode == 3:
+        sdict = collections.OrderedDict()
+        sdict['maxe'] = '' if err['maxe'] is None else '%8.2f' % (err['maxe'])
+        sdict['mine'] = '' if err['mine'] is None else '%8.2f' % (err['mine'])
+        sdict['me'] = '' if err['me'] is None else '%+8.2f' % (err['me'])
+        sdict['mae'] = '' if err['mae'] is None else '%8.2f' % (err['mae'])
+        sdict['rmse'] = '' if err['rmse'] is None else '%8.2f' % (err['rmse'])
+        sdict['stde'] = '' if err['stde'] is None else '%8.2f' % (err['stde'])
+        sdict['maxpe'] = '' if err['maxpe'] is None else '%8.1f' % (100 * err['maxpe'])
+        sdict['minpe'] = '' if err['minpe'] is None else '%8.1f' % (100 * err['minpe'])
+        sdict['mpe'] = '' if err['mpe'] is None else '%+8.1f' % (100 * err['mpe'])
+        sdict['mape'] = '' if err['mape'] is None else '%8.1f' % (100 * err['mape'])
+        sdict['rmspe'] = '' if err['rmspe'] is None else '%8.1f' % (100 * err['rmspe'])
+        sdict['stdpe'] = '' if err['stdpe'] is None else '%8.1f' % (100 * err['stdpe'])
+        sdict['maxpbe'] = '' if err['maxpbe'] is None else '%8.1f' % (100 * err['maxpbe'])
+        sdict['minpbe'] = '' if err['minpbe'] is None else '%8.1f' % (100 * err['minpbe'])
+        sdict['mpbe'] = '' if err['mpbe'] is None else '%+8.1f' % (100 * err['mpbe'])
+        sdict['mapbe'] = '' if err['mapbe'] is None else '%8.1f' % (100 * err['mapbe'])
+        sdict['rmspbe'] = '' if err['rmspbe'] is None else '%8.1f' % (100 * err['rmspbe'])
+        sdict['stdpbe'] = '' if err['stdpbe'] is None else '%8.1f' % (100 * err['stdpbe'])
+        return sdict
 
 
 def string_contrast(ss):
@@ -123,6 +149,17 @@ def string_contrast(ss):
     middle = ['' if mc is None else next(miditer) for mc in ss]
 
     return prefix, suffix, middle
+
+
+#def expand_mc(modelchem_fragments, hierarchy):
+#    """
+#
+#    """
+#    modelchems = []
+#    mc_hier = [modelchem_fragments[index] for index in hierarchy]
+#    for combo in itertools.product(*mc_hier):
+#        modelchems.append('-'.join([combo[hierarchy.index(ordinal)] for ordinal in range(len(hierarchy))]))
+#    return modelchems
 
 
 class ReactionDatum(object):
@@ -711,21 +748,21 @@ class Database(object):
 
         print """Database %s: Defined subsets loaded""" % (self.dbse)
 
-    def analyze_modelchem(self, modelchem, benchmark='default', failoninc=True, verbose=False):
-        """Compute and print error statistics for *modelchem* versus
-        *benchmark* for all available subsets and return dictionary of same.
+    #def analyze_modelchem(self, modelchem, benchmark='default', failoninc=True, verbose=False):
+    #    """Compute and print error statistics for *modelchem* versus
+    #    *benchmark* for all available subsets and return dictionary of same.
 
-        """
-        errors = collections.OrderedDict()
-        for ss in self.sset.keys():
-            errors[ss] = self.compute_statistics(modelchem, benchmark=benchmark, sset=ss, failoninc=failoninc, verbose=verbose)
-        print """\n  ==> %s %s Errors <==""" % (self.dbse, modelchem)
-        print """%20s        %5s  %4s   %6s %6s    %6s""" % \
-            ('', 'ME', 'STDE', 'MAE', 'MA%E', 'MA%BE')
-        for ss in errors.keys():
-            if any(errors[ss].values()):
-                print """%20s    %42s""" % (ss, format_errors(errors[ss]))
-        return errors
+    #    """
+    #    errors = collections.OrderedDict()
+    #    for ss in self.sset.keys():
+    #        errors[ss] = self.compute_statistics(modelchem, benchmark=benchmark, sset=ss, failoninc=failoninc, verbose=verbose)
+    #    print """\n  ==> %s %s Errors <==""" % (self.dbse, modelchem)
+    #    print """%20s        %5s  %4s   %6s %6s    %6s""" % \
+    #        ('', 'ME', 'STDE', 'MAE', 'MA%E', 'MA%BE')
+    #    for ss in errors.keys():
+    #        if any(errors[ss].values()):
+    #            print """%20s    %42s""" % (ss, format_errors(errors[ss]))
+    #    return errors
 
     def analyze_modelchems(self, modelchem, benchmark='default', failoninc=True, verbose=False):
         """Compute and print error statistics for each model chemistry in
@@ -1318,6 +1355,103 @@ class FourDatabases(object):
         self.plot_bars(['CCSDTAF12-CP-adz', 'CCSDTAF12-CP-adtzadz', 'CCSDTAF12-CP-atqzadz'])
         self.plot_bars(['CCSDTBF12-CP-adz', 'CCSDTBF12-CP-adtzadz', 'CCSDTBF12-CP-atqzadz'])
         self.plot_bars(['DWCCSDTF12-CP-adz', 'DWCCSDTF12-CP-adtzadz', 'DWCCSDTF12-CP-atqzadz'])
+
+    def table_generic(self, mtd, bas, columnplan, rowplan=['bas', 'mtd'],
+        dbse=['DB4'], opt=['CP'], err=['mae'], sset=['tt'],
+        benchmark='default', failoninc=True,
+        landscape=False, standalone=True, subjoin=True,
+        plotpath='', theme='', filename=None):
+        """Prepares dictionary of errors for all combinations of *mtd*, *opt*,
+        *bas* with respect to model chemistry *benchmark*, mindful of *failoninc*.
+        Once error dictionary is ready, it and all other arguments are passed
+        along to textables.table_generic.
+
+        """
+        # gather list of model chemistries for table
+        mcs = ['-'.join(prod) for prod in itertools.product(mtd, opt, bas)]
+
+        # compute errors
+        serrors = {}
+        for mc in mcs:
+            serrors[mc] = {}
+            for ss in self.sset.keys():
+                errblock = self.compute_statistics(mc, benchmark=benchmark, sset=ss,
+                    failoninc=failoninc, verbose=False, returnindiv=False)
+                serrors[mc][ss] = {}
+                serrors[mc][ss]['S22'] = None if errblock['S22'] is None else format_errors(errblock['S22'], mode=3)
+                serrors[mc][ss]['NBC1'] = None if errblock['NBC1'] is None else format_errors(errblock['NBC1'], mode=3)
+                serrors[mc][ss]['HBC1'] = None if errblock['HBC1'] is None else format_errors(errblock['HBC1'], mode=3)
+                serrors[mc][ss]['HSG'] = None if errblock['HSG'] is None else format_errors(errblock['HSG'], mode=3)
+                serrors[mc][ss]['DB4'] = format_errors(errblock['DB4'], mode=3)
+
+        textables.table_generic(dbse=dbse, serrors=serrors,
+            mtd=mtd, bas=bas, columnplan=columnplan, rowplan=rowplan,
+            opt=opt, err=err, sset=sset,
+            landscape=landscape, standalone=standalone, subjoin=subjoin,
+            plotpath=plotpath, theme=theme, filename=filename)
+
+    def table_merge_abbr(self, mtd, bas, opt=['CP'], err=['mae'], benchmark='default', failoninc=True, plotpath='analysis/flats/mplflat_', theme='smmerge'):
+        """Specialization of table_generic into table with minimal statistics
+        (three S22 and three overall) plus embedded slat diagram as suitable
+        for main paper. A single table is formed in sections by *bas* with
+        lines *mtd* within each section.
+
+        """
+        rowplan = ['bas', 'mtd']
+        columnplan = [
+            ['l', r"""Method \& Basis Set""", '', textables.label, {}],
+            ['d', r'S22', 'HB', textables.val, {'ss': 'hb', 'db': 'S22'}],
+            ['d', r'S22', 'MX/DD', textables.val, {'ss': 'mxdd', 'db': 'S22'}],
+            ['d', r'S22', 'TT', textables.val, {'ss': 'tt', 'db': 'S22'}],
+            ['d', r'Overall', 'HB', textables.val, {'ss': 'hb', 'db': 'DB4'}],
+            ['d', r'Overall', 'MX/DD', textables.val, {'ss': 'mxdd', 'db': 'DB4'}],
+            ['d', r'Overall', 'TT', textables.val, {'ss': 'tt', 'db': 'DB4'}],
+            ['l', r"""Error Distribution\footnotemark[1]""", r"""\includegraphics[width=6.67cm,height=3.5mm]{%s%s.pdf}""" % (plotpath, 'blank'), textables.graphics, {}],
+            ['d', r'Time', '', textables.val, {'ss': 'tt-5min', 'db': 'NBC1'}]]
+            # TODO Time column not right at all
+
+        self.table_generic(mtd=mtd, bas=bas, columnplan=columnplan, rowplan=rowplan,
+            opt=opt, err=err,
+            benchmark=benchmark, failoninc=failoninc,
+            landscape=False, standalone=True, subjoin=True,
+            plotpath=plotpath, theme=theme, filename=None)
+        # TODO: not handled: filename, TODO switch standalone
+
+    def table_merge_suppmat(self, mtd, bas, opt=['CP'], err=['mae'], benchmark='default', failoninc=True, plotpath='analysis/flats/mplflat_', theme='lgmerge'):
+        """Specialization of table_generic into table with as many statistics
+        as will fit (mostly fullcurve and a few 5min) plus embedded slat
+        diagram as suitable for supplementary material. Multiple tables are
+        formed, one for each in *bas* with lines *mtd* within each table.
+
+        """
+        rowplan = ['bas', 'mtd']
+        columnplan = [
+            ['l', r"""Method \& Basis Set""", '', textables.label, {}],
+            ['d', 'S22', 'HB', textables.val, {'ss': 'hb', 'db': 'S22'}],
+            ['d', 'S22', 'MX', textables.val, {'ss': 'mx', 'db': 'S22'}],
+            ['d', 'S22', 'DD', textables.val, {'ss': 'dd', 'db': 'S22'}],
+            ['d', 'S22', 'TT', textables.val, {'ss': 'tt', 'db': 'S22'}],
+            ['d', 'NBC10', 'MX', textables.val, {'ss': 'mx', 'db': 'NBC1'}],
+            ['d', 'NBC10', 'DD', textables.val, {'ss': 'dd', 'db': 'NBC1'}],
+            ['d', 'NBC10', 'TT', textables.val, {'ss': 'tt', 'db': 'NBC1'}],
+            ['d', 'HBC6', 'HB/TT', textables.val, {'ss': 'tt', 'db': 'HBC1'}],
+            ['d', 'HSG', 'HB', textables.val, {'ss': 'hb', 'db': 'HSG'}],
+            ['d', 'HSG', 'MX', textables.val, {'ss': 'mx', 'db': 'HSG'}],
+            ['d', 'HSG', 'DD', textables.val, {'ss': 'dd', 'db': 'HSG'}],
+            ['d', 'HSG', 'TT', textables.val, {'ss': 'tt', 'db': 'HSG'}],
+            ['d', 'Avg', 'TT ', textables.val, {'ss': 'tt', 'db': 'DB4'}],
+            ['l', r"""Error Distribution\footnotemark[1]""", r"""\includegraphics[width=6.67cm,height=3.5mm]{%s%s.pdf}""" % (plotpath, 'blank'), textables.graphics, {}],
+            ['d', 'NBC10', r"""TT\footnotemark[2]""", textables.val, {'ss': 'tt-5min', 'db': 'NBC1'}],
+            ['d', 'HBC6', r"""TT\footnotemark[2] """, textables.val, {'ss': 'tt-5min', 'db': 'HBC1'}],
+            ['d', 'Avg', r"""TT\footnotemark[2]""", textables.val, {'ss': 'tt-5min', 'db': 'DB4'}]]
+
+        self.table_generic(mtd=mtd, bas=bas, columnplan=columnplan, rowplan=rowplan,
+            opt=opt, err=err,
+            benchmark=benchmark, failoninc=failoninc,
+            landscape=False, standalone=True, subjoin=False,
+            plotpath=plotpath, theme=theme, filename=None)
+        # TODO: not handled: filename, TODO switch standalone
+
 
 class ThreeDatabases(object):
     """
