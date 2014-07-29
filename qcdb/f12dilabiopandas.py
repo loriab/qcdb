@@ -3,8 +3,8 @@ import sys
 import glob
 import math
 import collections
-sys.path.append('/Users/loriab/linux/qcdb')
-sys.path.append('/Users/loriab/linux/qcdb/databases')
+sys.path.append('C:\Users\Owner\Documents\GitHub\qcdb')
+sys.path.append('C:\Users\Owner\Documents\GitHub\qcdb\databases')
 import qcdb
 from qcdb.psivarrosetta import useme2psivar
 from qcdb.modelchems import Method, BasisSet, methods, bases
@@ -18,7 +18,7 @@ pd.set_option('display.width', 200)
 
 dbse = 'A24'
 dbobj = qcdb.Database(dbse)
-path = '/Users/loriab/linux/qcdb/data/f12dilabiousemefiles/'
+path = r"""C:\Users\Owner\Documents\f12dilabiousemefiles\usemefiles"""
 h2kc = qcdb.psi_hartree2kcalmol
     
 rawdata = collections.defaultdict(dict)
@@ -29,8 +29,10 @@ for useme in glob.glob('%s/%s*useme*' % (path, dbse)):
     #optns = '_'.join(spl[0].split('-')[2:-1])
     basis = spl[0].split('-')[-1]
     piece = '.'.join(spl[1:])
-    
+    print useme, basis, piece
     tmp = pd.read_csv('%s' % (useme), index_col=0, sep='\s+', comment='#', na_values='None', names=['rxn', 'dimer', 'monoA-CP', 'monoB-CP'])
+    print useme, basis, piece
+    print tmp.head(10)
     rawdata[basis][useme2psivar[piece]] = tmp.dropna(how='all')
 
 datazip = {}
@@ -138,7 +140,10 @@ methods['CCSDTNSAF12'] = Method('CCSDTNSAF12', fullname='CCSD(T)-F12a')
 methods['CCSDTNSBF12'] = Method('CCSDTNSBF12', fullname='CCSD(T)-F12b')
 methods['CCSDTNSCF12'] = Method('CCSDTNSCF12', fullname='CCSD(T)-F12c')
 bases['Hill2_dtzf12'] = BasisSet('Hill2_dtzf12', build=[None, None, ['tzf12', 'HillCC_dtzf12', 'HillT_dtzf12']])
-#bases['Hill2_adtz'] = BasisSet('Hill2_adtz', build=[None, None, ['atz', 'HillCC_adtz', 'HillT_adtz']])
+bases['Hill2_tqzf12'] = BasisSet('Hill2_tqzf12', build=[None, None, ['qzf12', 'HillCC_tqzf12', 'HillT_tqzf12']])
+bases['Hill2_adtz'] = BasisSet('Hill2_adtz', build=[None, None, ['atz', 'HillCC_adtz', 'HillT_adtz']])
+bases['Hill2_atqz'] = BasisSet('Hill2_atqz', build=[None, None, ['aqz', 'HillCC_atqz', 'HillT_atqz']])
+bases['Hill2_aq5z'] = BasisSet('Hill2_aq5z', build=[None, None, ['a5z', 'HillCC_aq5z', 'HillT_aq5z']])
 
 # <<< append to main DataFrame computable basis treatment quantities >>>
 
