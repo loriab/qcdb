@@ -76,6 +76,26 @@ class Method(QCEssential):
         return text
 
 
+class Error(QCEssential):
+    """Specialization of :pyclass:`QCEssential` for measures of error.
+
+    """
+    def __init__(self, name, fullname=None, latex=None, citation=None, pdfdatabase=None, comment=None):
+        QCEssential.__init__(self, name, fullname, latex, citation, pdfdatabase, comment)
+        self.name = name.lower()
+
+    def __str__(self):
+        text = ''
+        text += """  ==> %s Error Measure <==\n\n""" % (self.name)
+        text += """  Formal name:          %s\n""" % (self.fullname)
+        text += """  LaTeX representation: %s\n""" % (self.latex)
+        text += """  PDF database id:      %s\n""" % (self.dsdbid)
+        text += """  Literature citation:  %s\n""" % (self.citation)
+        text += """  Comment:              %s\n""" % (self.comment)
+        text += """\n"""
+        return text
+
+
 _tlist = [
     BasisSet('dz',         fullname='cc-pVDZ'),
     BasisSet('jadz',       fullname='jun-cc-pVDZ'),
@@ -200,10 +220,54 @@ _tlist = [
 #        ['HF-CABS TOTAL ENERGY', 'MP2-F12 CORRELATION ENERGY', 'DW-CCSD-F12 CC CORRECTION ENERGY', 'DW-(T**)-F12 CORRECTION ENERGY'])
     Method('B97D3',           fullname='B97-D3'),
     Method('B3LYPD3',         fullname='B3LYP-D3'),
-    Method('wB97XD',          fullname='$\omega$B97X-D'),
+    Method('WB97XD',          fullname='wB97X-D', latex="""$\omega$B97X-D"""),
     Method('M062X',           fullname='M06-2X'),
+    Method('B3LYPD2',         fullname='B3LYP-D2'),
+    Method('DLDFD',           fullname='dlDFD'),
+    Method('DSDPBEP86',       fullname='DSD-PBEP86'),
+    Method('LCVV10',          fullname='LC-VV10'),
+    Method('VV10',            fullname='VV10'),
+    Method('PBE02',           fullname='PBE0-2'),
+    Method('WB97X2',          fullname='wB97X-2', latex="""$\omega$B97X-2"""),
+    Method('B2PLYP',          fullname='B2PLYP'),
+    Method('B2PLYPD3',        fullname='B2PLYP-D3'),
+    Method('B3LYP',           fullname='B3LYP'),
+    Method('M052X',           fullname='M05-2X'),
+    Method('M08HX',           fullname='M08-HX'),
+    Method('M08SO',           fullname='M08-SO'),
+    Method('M11',             fullname='M11'),
+    Method('M11L',            fullname='M11L'),
+    Method('PBE',             fullname='PBE'),
+    Method('PBED3',           fullname='PBE-D3'),
+    Method('PBE0',            fullname='PBE0'),
+    Method('PBE0D3',          fullname='PBE0-D3'),
+    Method('PBE02',           fullname='PBE0-2'),
     ]
 
 methods = {}
 for item in _tlist:
     methods[item.name] = item
+
+_tlist = [
+    Error('maxe',            fullname='maxE'),
+    Error('mine',            fullname='minE'),
+    Error('me',              fullname='ME'),
+    Error('mae',             fullname='MAE'),
+    Error('rmse',            fullname='rmsE'),
+    Error('stde',            fullname='stdE'),
+    Error('maxpe',           fullname='maxPE'),
+    Error('minpe',           fullname='minPE'),
+    Error('mpe',             fullname='MPE'),
+    Error('mape',            fullname='MAPE', latex="""MA\%E"""),
+    Error('rmspe',           fullname='rmsPE'),
+    Error('stdpe',           fullname='stdPE'),
+    Error('maxpbe',          fullname='maxPBE'),
+    Error('minpbe',          fullname='minPBE'),
+    Error('mpbe',            fullname='MPBE'),
+    Error('mapbe',           fullname='MAPBE', latex="""MA\%BE"""),
+    Error('rmspbe',          fullname='rmsPBE'),
+    Error('stdpbe',          fullname='stdPBE'),
+]
+errors = {}
+for item in _tlist:
+    errors[item.name] = item
