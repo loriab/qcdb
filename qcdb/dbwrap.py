@@ -406,7 +406,6 @@ class Database(object):
             pieces.remove(item)
         oSSET['HRXN'] = database.HRXN
 
-#        self.sset = {}
         self.sset = collections.OrderedDict()
         for item in oSSET.keys():
             if item == 'HRXN_SM':
@@ -894,6 +893,7 @@ class FourDatabases(object):
         """
 
         """
+        self.sset['default'] = ['default', 'default', 'default', 'default']
         self.sset['tt'] = ['default', 'default', 'default', 'default']
         self.sset['hb'] = ['hb', None, 'default', 'hb']
         self.sset['mx'] = ['mx', 'mx', None, 'mx']
@@ -913,6 +913,8 @@ class FourDatabases(object):
         """
 
         """
+        self.mc['C2011BENCH'] = ['S22A', 'NBC100', 'HBC60', 'HSG0']
+
         self.mc['CCSD-CP-adz'] = ['CCSD-CP-adz', 'CCSD-CP-hadz', 'CCSD-CP-adz', 'CCSD-CP-hadz']
         self.mc['CCSD-CP-atz'] = ['CCSD-CP-atz', 'CCSD-CP-hatz', 'CCSD-CP-atz', 'CCSD-CP-hatz']
         self.mc['CCSD-CP-adtz'] = ['CCSD-CP-adtz', 'CCSD-CP-hadtz', 'CCSD-CP-adtz', 'CCSD-CP-hadtz']
@@ -1035,6 +1037,10 @@ class FourDatabases(object):
             lmc = self.mc[modelchem]
         else:
             lmc = [modelchem, modelchem, modelchem, modelchem]
+        if benchmark in self.mc.keys():
+            lbm = self.mc[benchmark]
+        else:
+            lbm = [benchmark, benchmark, benchmark, benchmark]
         if sset in self.sset.keys():
             lss = self.sset[sset]
         else:
@@ -1043,13 +1049,13 @@ class FourDatabases(object):
         errors = collections.OrderedDict()
         indiv = collections.OrderedDict()
         errors['S22'], indiv['S22'] = (None, None) if lss[0] is None else self.s22.compute_statistics(lmc[0], sset=lss[0],
-            benchmark=benchmark, failoninc=failoninc, verbose=verbose, returnindiv=True)
+            benchmark=lbm[0], failoninc=failoninc, verbose=verbose, returnindiv=True)
         errors['NBC1'], indiv['NBC1'] = (None, None) if lss[1] is None else self.nbc1.compute_statistics(lmc[1], sset=lss[1],
-            benchmark=benchmark, failoninc=failoninc, verbose=verbose, returnindiv=True)
+            benchmark=lbm[1], failoninc=failoninc, verbose=verbose, returnindiv=True)
         errors['HBC1'], indiv['HBC1'] = (None, None) if lss[2] is None else self.hbc1.compute_statistics(lmc[2], sset=lss[2],
-            benchmark=benchmark, failoninc=failoninc, verbose=verbose, returnindiv=True)
+            benchmark=lbm[2], failoninc=failoninc, verbose=verbose, returnindiv=True)
         errors['HSG'], indiv['HSG'] = (None, None) if lss[3] is None else self.hsg.compute_statistics(lmc[3], sset=lss[3],
-            benchmark=benchmark, failoninc=failoninc, verbose=verbose, returnindiv=True)
+            benchmark=lbm[3], failoninc=failoninc, verbose=verbose, returnindiv=True)
 
         args = []
         if lss[0] is not None:
@@ -1321,7 +1327,7 @@ class ThreeDatabases(object):
         # S22 database
         self.s22 = Database('S22')
         # A24 database
-        self.a24= Database('A24')
+        self.a24 = Database('A24')
         # HSG database
         self.hsg = Database('HSG')
         # subset assembly pattern
