@@ -1349,28 +1349,28 @@ class FourDatabases(object):
         rowplan = ['bas', 'mtd']
         columnplan = [
             ['l', r"""Method \& Basis Set""", '', textables.label, {}],
-            ['d', 'S22', 'HB', textables.val, {'ss': 'hb', 'db': 'S22'}],
-            ['d', 'S22', 'MX', textables.val, {'ss': 'mx', 'db': 'S22'}],
-            ['d', 'S22', 'DD', textables.val, {'ss': 'dd', 'db': 'S22'}],
-            ['d', 'S22', 'TT', textables.val, {'ss': 'tt', 'db': 'S22'}],
-            ['d', 'NBC10', 'MX', textables.val, {'ss': 'mx', 'db': 'NBC1'}],
-            ['d', 'NBC10', 'DD', textables.val, {'ss': 'dd', 'db': 'NBC1'}],
-            ['d', 'NBC10', 'TT', textables.val, {'ss': 'tt', 'db': 'NBC1'}],
-            ['d', 'HBC6', 'HB/TT', textables.val, {'ss': 'tt', 'db': 'HBC1'}],
-            ['d', 'HSG', 'HB', textables.val, {'ss': 'hb', 'db': 'HSG'}],
-            ['d', 'HSG', 'MX', textables.val, {'ss': 'mx', 'db': 'HSG'}],
-            ['d', 'HSG', 'DD', textables.val, {'ss': 'dd', 'db': 'HSG'}],
-            ['d', 'HSG', 'TT', textables.val, {'ss': 'tt', 'db': 'HSG'}],
-            ['d', 'Avg', 'TT ', textables.val, {'ss': 'tt', 'db': 'DB4'}],
+            ['d', 'S22', 'HB', textables.val, {'sset': 'hb', 'dbse': 'S22'}],
+            ['d', 'S22', 'MX', textables.val, {'sset': 'mx', 'dbse': 'S22'}],
+            ['d', 'S22', 'DD', textables.val, {'sset': 'dd', 'dbse': 'S22'}],
+            ['d', 'S22', 'TT', textables.val, {'sset': 'tt', 'dbse': 'S22'}],
+            ['d', 'NBC10', 'MX', textables.val, {'sset': 'mx', 'dbse': 'NBC1'}],
+            ['d', 'NBC10', 'DD', textables.val, {'sset': 'dd', 'dbse': 'NBC1'}],
+            ['d', 'NBC10', 'TT', textables.val, {'sset': 'tt', 'dbse': 'NBC1'}],
+            ['d', 'HBC6', 'HB/TT', textables.val, {'sset': 'tt', 'dbse': 'HBC1'}],
+            ['d', 'HSG', 'HB', textables.val, {'sset': 'hb', 'dbse': 'HSG'}],
+            ['d', 'HSG', 'MX', textables.val, {'sset': 'mx', 'dbse': 'HSG'}],
+            ['d', 'HSG', 'DD', textables.val, {'sset': 'dd', 'dbse': 'HSG'}],
+            ['d', 'HSG', 'TT', textables.val, {'sset': 'tt', 'dbse': 'HSG'}],
+            ['d', 'Avg', 'TT ', textables.val, {'sset': 'tt', 'dbse': 'DB4'}],
             ['l', r"""Error Distribution\footnotemark[1]""", r"""\includegraphics[width=6.67cm,height=3.5mm]{%s%s.pdf}""" % (plotpath, 'blank'), textables.graphics, {}],
-            ['d', 'NBC10', r"""TT\footnotemark[2]""", textables.val, {'ss': 'tt-5min', 'db': 'NBC1'}],
-            ['d', 'HBC6', r"""TT\footnotemark[2] """, textables.val, {'ss': 'tt-5min', 'db': 'HBC1'}],
-            ['d', 'Avg', r"""TT\footnotemark[2]""", textables.val, {'ss': 'tt-5min', 'db': 'DB4'}]]
+            ['d', 'NBC10', r"""TT\footnotemark[2]""", textables.val, {'sset': 'tt-5min', 'dbse': 'NBC1'}],
+            ['d', 'HBC6', r"""TT\footnotemark[2] """, textables.val, {'sset': 'tt-5min', 'dbse': 'HBC1'}],
+            ['d', 'Avg', r"""TT\footnotemark[2]""", textables.val, {'sset': 'tt-5min', 'dbse': 'DB4'}]]
 
         self.table_generic(mtd=mtd, bas=bas, columnplan=columnplan, rowplan=rowplan,
             opt=opt, err=err,
             benchmark=benchmark, failoninc=failoninc,
-            landscape=False, standalone=True, subjoin=False,
+            landscape=True, standalone=True, subjoin=False,
             plotpath=plotpath, theme=theme, filename=None)
         # TODO: not handled: filename, TODO switch standalone
 
