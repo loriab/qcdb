@@ -1125,11 +1125,21 @@ class FourDatabases(object):
             # if running from Canopy, call mpl directly
             mpl.flat(dbdat, color=color, title=mc, mae=mae, mape=mapbe, xlimit=xlimit, view=view)
 
-    def plot_all_flats(self):
-        """Generate pieces for inclusion into tables for PT2 paper."""
-        for mc in sorted(self.s22.hrxn[2].data.keys()):
+    def plot_all_flats(self, modelchem=None, sset='default', xlimit=4.0):
+        """Generate pieces for inclusion into tables. Supply list of
+        modelchemistries to plot from *modelchem*, otherwise defaults to
+        those available for S22-2. Can modify subset *sset* and plotting
+        range *xlimit*.
+
+        """
+        mcs = self.s22.hrxn[2].data.keys() if modelchem is None else modelchem
+        for mc in sorted(mcs):
             if mc not in ['S220', 'S22A', 'S22B']:
-                self.plot_flat(mc, sset='tt-5min', xlimit=4.0, view=False)
+                self.plot_flat(mc, sset=sset, xlimit=xlimit, view=False)
+
+    def make_pt2_flats(self):
+        """Generate pieces for inclusion into tables for PT2 paper."""
+        self.plot_all_flats(modelchem=None, sset='tt-5min', xlimit=4.0)
 
     def make_pt2_Figure_3(self):
         """Plot all the graphics needed for the calendar grey bars plot
