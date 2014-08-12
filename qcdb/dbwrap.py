@@ -614,10 +614,9 @@ class Database(object):
         else:
             return error
 
-    def load_pt2(self, modname=None, funcname='load_pt2', pythonpath=None):
+    def load_qcdata(self, modname, funcname, pythonpath=None, failoninc=True):
         """Loads qcdb.ReactionDatums from module *modname* function
-        *funcname* (which default to self.dbse + '_pt2'
-        and 'load_pt2').
+        *funcname*. Module search path can be prepended with *pythonpath*.
 
         """
         if pythonpath is not None:
@@ -625,10 +624,10 @@ class Database(object):
         else:
             sys.path.append(os.path.dirname(__file__) + '/../data')
         try:
-            pt2mod = __import__(self.dbse + '_pt2') if modname is None else __import__(modname)
+            datamodule = __import__(modname)
         except ImportError:
-            if modname is None:
-                print """Wavefunction/PT2 data unavailable for database %s.\n""" % (self.dbse)
+            if not failoninc:
+                print """%s data unavailable for database %s.\n""" % (modname, self.dbse)
                 return
             else:
                 print '\nPython module for database data %s failed to load\n\n' % (modname)
@@ -636,95 +635,25 @@ class Database(object):
                 print ", ".join(map(str, sys.path))
                 raise ValidationError("Python module loading problem for database data " + str(modname))
         try:
-            getattr(pt2mod, funcname)(self)
+            getattr(datamodule, funcname)(self)
         except AttributeError:
-            raise ValidationError("Python module missing function %s for loading data " % (str(funcname)))
+            if not failoninc:
+                print """%s %s data unavailable for database %s.\n""" % (modname, funcname, self.dbse)
+                return
+            else:
+                raise ValidationError("Python module missing function %s for loading data " % (str(funcname)))
 
-        print """Database %s: Wavefunction results loaded""" % (self.dbse)
+        print """Database %s: %s %s results loaded""" % (self.dbse, modname, funcname)
 
-    def load_dhdft(self, modname=None, funcname='load_dhdft', pythonpath=None):
-        """Loads qcdb.ReactionDatums from module *modname* function
-        *funcname* (which default to self.dbse + '_dhdft'
-        and 'load_dhdft').
+    def load_qcdata_byproject(self, project, pythonpath=None):
+        """Loads qcdb.ReactionDatums from standard location for *project*
+        :module dbse_project and function load_project. Module search path
+        can be prepended with *pythonpath*.
 
         """
-        if pythonpath is not None:
-            sys.path.insert(0, pythonpath)
-        else:
-            sys.path.append(os.path.dirname(__file__) + '/../data')
-        try:
-            pt2mod = __import__(self.dbse + '_dhdft') if modname is None else __import__(modname)
-        except ImportError:
-            if modname is None:
-                print """DH-DFT data unavailable for database %s.\n""" % (self.dbse)
-                return
-            else:
-                print '\nPython module for database data %s failed to load\n\n' % (modname)
-                print '\nSearch path that was tried:\n'
-                print ", ".join(map(str, sys.path))
-                raise ValidationError("Python module loading problem for database data " + str(modname))
-        try:
-            getattr(pt2mod, funcname)(self)
-        except AttributeError:
-            raise ValidationError("Python module missing function %s for loading data " % (str(funcname)))
-
-        print """Database %s: DH-DFT results loaded""" % (self.dbse)
-
-    def load_dilabio(self, modname=None, funcname='load_dilabio', pythonpath=None):
-        """Loads qcdb.ReactionDatums from module *modname* function
-        *funcname* (which default to self.dbse + '_dilabio'
-        and 'load_dilabio').
-
-        """
-        if pythonpath is not None:
-            sys.path.insert(0, pythonpath)
-        else:
-            sys.path.append(os.path.dirname(__file__) + '/../data')
-        try:
-            pt2mod = __import__(self.dbse + '_dilabio') if modname is None else __import__(modname)
-        except ImportError:
-            if modname is None:
-                print """Dilabio data unavailable for database %s.\n""" % (self.dbse)
-                return
-            else:
-                print '\nPython module for database data %s failed to load\n\n' % (modname)
-                print '\nSearch path that was tried:\n'
-                print ", ".join(map(str, sys.path))
-                raise ValidationError("Python module loading problem for database data " + str(modname))
-        try:
-            getattr(pt2mod, funcname)(self)
-        except AttributeError:
-            raise ValidationError("Python module missing function %s for loading data " % (str(funcname)))
-
-        print """Database %s: Dilabio results loaded""" % (self.dbse)
-
-    def load_f12dilabio(self, modname=None, funcname='load_f12dilabio', pythonpath=None):
-        """Loads qcdb.ReactionDatums from module *modname* function
-        *funcname* (which default to self.dbse + '_f12dilabio'
-        and 'load_f12dilabio').
-
-        """
-        if pythonpath is not None:
-            sys.path.insert(0, pythonpath)
-        else:
-            sys.path.append(os.path.dirname(__file__) + '/../data')
-        try:
-            pt2mod = __import__(self.dbse + '_f12dilabio') if modname is None else __import__(modname)
-        except ImportError:
-            if modname is None:
-                print """F12-Dilabio data unavailable for database %s.\n""" % (self.dbse)
-                return
-            else:
-                print '\nPython module for database data %s failed to load\n\n' % (modname)
-                print '\nSearch path that was tried:\n'
-                print ", ".join(map(str, sys.path))
-                raise ValidationError("Python module loading problem for database data " + str(modname))
-        try:
-            getattr(pt2mod, funcname)(self)
-        except AttributeError:
-            raise ValidationError("Python module missing function %s for loading data " % (str(funcname)))
-
-        print """Database %s: F12-Dilabio results loaded""" % (self.dbse)
+        mod = self.dbse + '_' + project
+        func = 'load_' + project
+        self.load_qcdata(modname=mod, funcname=func, pythonpath=pythonpath)
 
     def load_subsets(self, modname='subsetgenerator', pythonpath=None):
         """Loads subsets from all functions in module *modname*.
@@ -893,29 +822,22 @@ class FourDatabases(object):
         self.mc = {}
 
         # load up data and definitions
-        self.load_pt2()
-        #self.load_dhdft()
+        #self.load_qcdata_byproject('dft')
+        self.load_qcdata_byproject('pt2')
+        #self.load_qcdata_byproject('dhdft')
         self.load_subsets()
         self.define_supersubsets()
         self.define_supermodelchems()
 
-    def load_pt2(self):
-        """Load qcdb.ReactionDatum results from standard location.
+    def load_qcdata_byproject(self, project, pythonpath=None):
+        """Load data for *project* from standard location, modifiable by
+        *pythonpath*.
 
         """
-        self.s22.load_pt2()
-        self.nbc1.load_pt2()
-        self.hbc1.load_pt2()
-        self.hsg.load_pt2()
-
-    def load_dhdft(self):
-        """Load qcdb.ReactionDatum results from standard location.
-
-        """
-        self.s22.load_dhdft()
-        self.nbc1.load_dhdft()
-        self.hbc1.load_dhdft()
-        self.hsg.load_dhdft()
+        self.s22.load_qcdata_byproject(project, pythonpath=pythonpath)
+        self.nbc1.load_qcdata_byproject(project, pythonpath=pythonpath)
+        self.hbc1.load_qcdata_byproject(project, pythonpath=pythonpath)
+        self.hsg.load_qcdata_byproject(project, pythonpath=pythonpath)
 
     def load_subsets(self):
         """Load subsets from standard generators.
