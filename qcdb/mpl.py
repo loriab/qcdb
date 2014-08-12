@@ -399,7 +399,7 @@ def thread(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None):
 
     # plot reaction errors and threads
     for rxn in data:
-        
+
         # preparation
         xvals = rxn['data']
         clr = segment_color(color, rxn['color'] if 'color' in rxn else None)

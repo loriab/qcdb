@@ -45,7 +45,7 @@ dbse = dbobj.dbse
 rxns = ['%s-%s' % (dbse, rxn) for rxn in dbobj.hrxn.keys()]
 names = ['rxn', 'dimer', 'monoA', 'monoB']
 h2kc = qcdb.psi_hartree2kcalmol
-    
+
 rawdata = collections.defaultdict(lambda: collections.defaultdict(lambda: collections.defaultdict(dict)))
 usemeglob = glob.glob('%s/%s*useme*' % (path, dbse))
 if len(usemeglob) == 0:
@@ -100,24 +100,29 @@ df.index.names = ['bstrt', 'psivar', 'meta', 'rxn']
 
 # <<< define utility functions >>>
 
+
 def ie(rgts):
     cpmode = 'CP'
     return rgts[cpmode]['dimer'] - rgts[cpmode]['monoA'] - rgts[cpmode]['monoB']
+
 
 def ie_uncp(rgts):
     cpmode = 'unCP'
     return rgts[cpmode]['dimer'] - rgts[cpmode]['monoA'] - rgts[cpmode]['monoB']
 
+
 def ie_ave(rgts):
     return 0.5 * (rgts['CP']['dimer'] - rgts['CP']['monoA'] - rgts['CP']['monoB'] +
                   rgts['unCP']['dimer'] - rgts['unCP']['monoA'] - rgts['unCP']['monoB'])
 
+
 def categories(df, lvl):
     return sorted(set([tup[lvl] for tup in df.index.values]))
 
+
 def append_result_of_func_with_funcargs_to_master_DataFrame_atlevel_with_label(master, label, atlevel, func, funcargs):
     odr = {'psivar': [1, 3, 0, 2],
-           'bstrt': [3, 1, 0, 2]}        
+           'bstrt': [3, 1, 0, 2]}
     data_rich_args = [master.xs(pv, level=atlevel) if isinstance(pv, basestring) else pv for pv in funcargs]
     multiopt = []
     for item in data_rich_args:
@@ -147,18 +152,21 @@ def xtpl_power(args):
     power, zHI, eHI, eLO = args
     return (eHI * zHI ** power - eLO * (zHI - 1) ** power) / (zHI ** power - (zHI - 1) ** power)
 
+
 def dispersion_weighting(args):
     omega, hb_mtd, dd_mtd = args
     return omega * hb_mtd + (1.0 - omega) * dd_mtd
 
+
 def omega(args):
     alpha, beta, ratio = args
     return 0.5 * (1.0 + np.tanh(alpha + beta * ratio))
-    
+
+
 def difference(args):
     minuend, subtrahend = args
     return minuend - subtrahend
-        
+
 # <<< append to main DataFrame basic psivar equalities not explicit to useme structure >>>
 
 lvl = 'psivar'
@@ -194,8 +202,8 @@ pv0['M08-HX TOTAL ENERGY'] = {'func': sum, 'args': ['M08-HX FUNCTIONAL TOTAL ENE
 pv0['M08-SO TOTAL ENERGY'] = {'func': sum, 'args': ['M08-SO FUNCTIONAL TOTAL ENERGY']}
 pv0['M11 TOTAL ENERGY'] = {'func': sum, 'args': ['M11 FUNCTIONAL TOTAL ENERGY']}
 pv0['M11L TOTAL ENERGY'] = {'func': sum, 'args': ['M11L FUNCTIONAL TOTAL ENERGY']}
-pv0['MP2 TOTAL ENERGY'] = {'func': sum, 'args':['HF TOTAL ENERGY', 'MP2 CORRELATION ENERGY']}
-pv0['CCSD TOTAL ENERGY'] = {'func': sum, 'args':['HF TOTAL ENERGY', 'CCSD CORRELATION ENERGY']}
+pv0['MP2 TOTAL ENERGY'] = {'func': sum, 'args': ['HF TOTAL ENERGY', 'MP2 CORRELATION ENERGY']}
+pv0['CCSD TOTAL ENERGY'] = {'func': sum, 'args': ['HF TOTAL ENERGY', 'CCSD CORRELATION ENERGY']}
 
 for pvar, action in pv0.iteritems():
     try:
@@ -226,7 +234,7 @@ else:
     df_omega['monoB'] = df_omega['dimer']
     df_omega.set_index('psivar', append=True, inplace=True)
     df_omega_uncp = df_omega.copy()  # utterly wrong! TODO
-    df_omega2 = pd.concat([df_omega, df_omega_uncp], keys=['CP','unCP'], axis=1)
+    df_omega2 = pd.concat([df_omega, df_omega_uncp], keys=['CP', 'unCP'], axis=1)
     df_omega = df_omega2.copy()
     df_omega = df_omega.reorder_levels([0, 3, 1, 2])
     df_omega.index.names = ['bstrt', 'psivar', 'meta', 'rxn']
@@ -336,14 +344,17 @@ for pvar, action in pv2.iteritems():
 #HF/adtz    1    1          1           2
 #MP2/adtz   2    2          1           2
 #CC/adtz    2    3          1           2
-#CC/atqzadz 3    3          2           3 
+#CC/atqzadz 3    3          2           3
 #   stages = min(max_mtd, max_bas)
+
 
 def compute_max_bas(bas):
     return len(bases[bas].build)
-    
+
+
 def generic_bas(Nstage, bas):
     return bases[bas].build[Nstage - 1]  # 1-indexed stage counting to 0-indexed array storage
+
 
 def compute_max_mtd(stub):
     if stub in ['HFCABS', 'HF', 'SCF']:
@@ -353,6 +364,7 @@ def compute_max_mtd(stub):
     else:
         return 3
 
+
 def generic_mtd(Nstage, stub):
     if Nstage == 1:
         return ['%s TOTAL ENERGY' % (stub)]
@@ -360,13 +372,15 @@ def generic_mtd(Nstage, stub):
         return ['%s TOTAL ENERGY' % ('HF-CABS' if 'F12' in stub else 'SCF'), '%s CORRELATION ENERGY' % (stub)]
     elif Nstage == 3:
         #return ['%s TOTAL ENERGY' % ('HF-CABS' if 'F12' in stub else 'SCF'), '%s CORRELATION ENERGY' % (stub), '%s CC CORRECTION ENERGY' % (stub)]
-        return ['%s TOTAL ENERGY' % ('HF-CABS' if 'F12' in stub else 'SCF'), '%s CORRELATION ENERGY' % ('MP2-F12' if 'F12' in stub else 'MP2'), 
+        return ['%s TOTAL ENERGY' % ('HF-CABS' if 'F12' in stub else 'SCF'), '%s CORRELATION ENERGY' % ('MP2-F12' if 'F12' in stub else 'MP2'),
             '%s CC CORRECTION ENERGY' % (stub)]
+
 
 def build_from_lists(mtdlist, baslist, optlist=None):
     if optlist is None:
         optlist = [''] * len(mtdlist)
     return ie(sum([df.loc[bas].loc[pcs].loc[opt] for pcs, bas, opt in zip(mtdlist, baslist, optlist)]))
+
 
 def build(method, option, cpmode, basis):
     #print method, option, cpmode, basis
@@ -390,7 +404,6 @@ def build(method, option, cpmode, basis):
             #print df.loc[bas].loc[pcs].loc[opt].loc['A24-4']
     return func(sum([df.loc[bas].loc[pcs].loc[opt] for pcs, bas, opt in zip(mtdlist, baslist, optlist)]))
 
-
 # <<< assemble all model chemistries into columns of new DataFrame >>>
 
 rxns = ['%s-%s' % (dbse, rxn) for rxn in dbobj.hrxn.keys()]
@@ -402,36 +415,36 @@ mine.index.names = ['rxn']
 #print df.xs('adz', level='bstrt').xs('CCSD(T) CC CORRECTION ENERGY', level='psivar').xs('A24-4', level='rxn')
 
 if project == 'dft':
-    mtds = ['B3LYP', 'B3LYPD2', 'B3LYPD3', 'B2PLYP', 'B2PLYPD2', 'B2PLYPD3', 
+    mtds = ['B3LYP', 'B3LYPD2', 'B3LYPD3', 'B2PLYP', 'B2PLYPD2', 'B2PLYPD3',
             'B970', 'BP86', 'B97', 'WB97XD', 'M052X', 'M062X', 'PBE', 'PBE0', 'XYG3',
             'B970D2', 'BP86D2', 'BP86D3', 'M052XD3', 'M062XD3', 'PBED2', 'PBED3',
             'PBE0D2', 'PBE0D3', 'B97D2', 'B97D3', 'B3LYPXDM']
-    bass = ['adz', 'atz', 'dadz', 'datz', 'dz', 'tz', 'hadz', 'hatz', 
+    bass = ['adz', 'atz', 'dadz', 'datz', 'dz', 'tz', 'hadz', 'hatz',
             '6311pg_3df_2p_', '6311ppg_3df_2p_']
     opts = ['']
     cpmd = ['unCP', 'CP']
-    
+
 elif project == 'parenq':
     mtds = ['HF', 'CCSDT', 'CCSDTQ']
     bass = ['adz', 'atz', 'hadz', 'jadz', 'atz', 'adtz', 'aq5z']
     opts = ['', 'full', 'fno1e5', 'fno1e4', 'fno5e5', 'fno1e6', 'fno1e4-mrcc']
     cpmd = ['CP']
-    
+
 elif project == 'f12dilabio':
     mtds = [mtd for mtd in methods if ((mtd == 'HFCABS' or 'F12' in mtd) and ('SC' not in mtd and 'MP2C' not in mtd and 'DWMP2' not in mtd))]
-    bass = ['adz', 'atz', 'aqz', 'a5z', 'dzf12', 'tzf12', 'qzf12', 
-            'adtz', 'atqz', 'aq5z', 'dtzf12', 'tqzf12', 
+    bass = ['adz', 'atz', 'aqz', 'a5z', 'dzf12', 'tzf12', 'qzf12',
+            'adtz', 'atqz', 'aq5z', 'dtzf12', 'tqzf12',
             'hill1_adtz', 'hill1_atqz', 'hill1_aq5z', 'hill1_dtzf12', 'hill1_tqzf12']
     opts = ['']
     cpmd = ['CP']
-    
+
 elif project == 'dilabio':
     mtds = ['HF', 'MP2', 'CCSD', 'CCSDT']
-    bass = ['adz', 'atz', 'aqz', 'a5z', 'a6z', 'adtz', 'atqz', 'aq5z', 'a56z', 
+    bass = ['adz', 'atz', 'aqz', 'a5z', 'a6z', 'adtz', 'atqz', 'aq5z', 'a56z',
             'atqzadz', 'atqzatz', 'aq5zadz', 'aq5zatz']
     opts = ['']
     cpmd = ['CP', 'unCP', 'ave']
-    
+
 elif project == 'dhdft':
     mtds = ['B3LYP', 'B3LYPD3', 'B2PLYP', 'B2PLYPD3', 'B97D3', 'M052X', 'M062X',
             'DSDPBEP86', 'VV10', 'LCVV10', 'DSDPBEP86', 'PBE', 'PBED3', 'PBE0', 'PBE0D3',
@@ -453,6 +466,7 @@ for cpm in cpmd:
                     print """Error building model chemistry: empty index '%s' because missing %s""" % (mc, e)
                     pass
 
+
 def threadtheframe(modelchem, xlimit=4.0):
     dbdat = []
     for rxn in dbobj.hrxn.keys():
@@ -469,7 +483,7 @@ def threadtheframe(modelchem, xlimit=4.0):
 
 if project == 'f12dilabio':
     mine['CCSDTNSBF12-CP-hill2_adtz'] = build_from_lists(['HF-CABS TOTAL ENERGY', 'CCSD-F12B CORRELATION ENERGY', '(T)-F12AB CORRECTION ENERGY'], ['atz', 'hillcc_adtz', 'hillt_adtz'])
-    
+
 if project == 'parenq':
     # TODO these aren't actually interaction energies!
     mine['CCSDTQ-corl-CP-adz'] = build_from_lists(['CCSDT(Q) CORRELATION ENERGY'], ['adz'], ['fno1e4'])
@@ -480,7 +494,7 @@ if project == 'parenq':
     mine['CCSDT-corl-CP-atz'] = build_from_lists(['CCSD(T) CORRELATION ENERGY'], ['atz'], ['fno1e4'])
     mine['CCSD-corl-CP-atz'] = build_from_lists(['CCSD CORRELATION ENERGY'], ['atz'], ['fno1e4'])
     mine['MP2-corl-CP-atz'] = build_from_lists(['MP2 CORRELATION ENERGY'], ['atz'])
-    
+
 #print mine.columns
 #print mine['CCSDTQ-corl-CP-adz']
 #print mine['CCSDT-corl-CP-adz']
@@ -498,9 +512,6 @@ if project == 'parenq':
     #threadtheframe(minelist)
     #threadtheframe(minelistatz)
     #threadtheframe(['CCSDTQ-fno1e4-CP-adz', 'CCSDTQ-fno1e4-CP-atz', 'CCSDTQ-fno1e4-CP-adtz', 'CCSDTQ-fno1e5-CP-adtz', 'CCSDTQ-fno1e5-CP-atz', 'CCSDTQ-fno1e5-CP-adz', 'CCSDT-CP-aq5z'], xlimit=7.0)
-
-
-
 
 # <<< test cases >>>
 
@@ -527,7 +538,7 @@ for mc in mine.columns:
 
 f1.close()
 
-            
+
 # <<< collecting section >>>
 
 #print 'indexval before', sorted(set([tup[1] for tup in df.index.values]))
