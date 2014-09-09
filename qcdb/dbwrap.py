@@ -801,6 +801,41 @@ class Database(object):
             # if running from Canopy, call mpl directly
             mpl.bar(dbdat, title=title)
 
+    def plot_iowa(self, modelchem, benchmark='default', sset='default', failoninc=True, verbose=False, xlimit=2.0):
+        """Computes individual errors for single *modelchem* versus
+        *benchmark* over subset *sset*. Coloring green-to-purple with
+        maximum intensity at *xlimit*. Prepares Iowa plot instructions and
+        either executes them if matplotlib available (Canopy) or prints them.
+
+        """
+        title = self.dbse + ' ' + modelchem
+        # compute errors
+        errors, indiv = self.compute_statistics(modelchem, benchmark=benchmark,
+                sset=sset, failoninc=failoninc, verbose=verbose, returnindiv=True)
+        # repackage
+        mcdat = []
+        mclbl = []
+        for rxn in self.sset[sset].keys():
+            try:
+                mcdat.append(indiv[rxn][0])
+                mclbl.append(str(rxn))
+            except KeyError, e:
+                if failoninc:
+                    raise e
+        # generate matplotlib instructions and call or print
+        try:
+            import mpl
+            import matplotlib.pyplot as plt
+        except ImportError:
+            # if not running from Canopy, print line to execute from Canopy
+            print """mpl.iowa(%s,\n    %s,\n    title='%s',\n    xlimit=%s)\n\n""" % \
+                (mcdat, mclbl, title, str(xlimit))
+        else:
+            # if running from Canopy, call mpl directly
+            mpl.iowa(mcdat, mclbl, title=title, xlimit=xlimit)
+            #print """mpl.iowa(%s,\n    %s,\n    title='%s',\n    xlimit=%s)\n\n""" % \
+            #    (mcdat, mclbl, title, str(xlimit))
+
 
 class FourDatabases(object):
     """
