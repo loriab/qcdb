@@ -87,6 +87,7 @@ useme2psivar = {
     'ccsdtq.usemecrct': '(Q) CORRECTION ENERGY',
 
     'mp2.usemetrip': 'MP2 SAME-SPIN CORRELATION ENERGY',
+    'mp3.usemetrip': 'MP3 SAME-SPIN CORRELATION ENERGY',
     'ccsd.usemetrip': 'CCSD SAME-SPIN CORRELATION ENERGY',
 
     # <<<  F12  >>>
@@ -117,6 +118,62 @@ useme2psivar = {
     'ccsdaf12.usemetrip': 'CCSD-F12A SAME-SPIN CORRELATION ENERGY',
     'ccsdbf12.usemetrip': 'CCSD-F12B SAME-SPIN CORRELATION ENERGY',
     'ccsdcf12.usemetrip': 'CCSD-F12C SAME-SPIN CORRELATION ENERGY',
+    
+    # <<<  SAPT  >>>
+    
+    'usemesapt': None,
+    'usemedftsapt': None,
+    'usemempsapt': None,
+    #'usemempsapt': 'MP2C DISP20 ENERGY',
+
+    'mp2cDisp20': 'MP2C DISP20 ENERGY',
+ 
+    'E1pol': 'DFT-SAPT ELST10,R ENERGY',
+    'E1exch':'DFT-SAPT EXCH10 ENERGY',
+    'E1exch(S2)': 'DFT-SAPT EXCH10(S^2) ENERGY',  # ne'er used
+    'E2ind': 'DFT-SAPT IND20,R ENERGY',
+    'E2ind-exch': 'DFT-SAPT EXCH-IND20,R ENERGY',
+    'E2disp': 'DFT-SAPT DISP20 ENERGY',
+    'E2disp-exch': 'DFT-SAPT EXCH-DISP20 ENERGY',
+
+    'Elst10,r': 'SAPT ELST10,R ENERGY',
+    'Elst12,r': 'SAPT ELST12,R ENERGY',
+    'Elst13,r': 'SAPT ELST13,R ENERGY',
+    
+    'Exch10': 'SAPT EXCH10 ENERGY',
+    'Exch10(S^2)': 'SAPT EXCH10(S^2) ENERGY',
+    'Exch11(S^2)': 'SAPT EXCH11(S^2) ENERGY',
+    'Exch12(S^2)': 'SAPT EXCH12(S^2) ENERGY',
+    
+    'Ind20,r': 'SAPT IND20,R ENERGY',
+    'Exch-Ind20,r': 'SAPT EXCH-IND20,R ENERGY',
+    'Ind22': 'SAPT IND22 ENERGY',
+    'Exch-Ind22': 'SAPT EXCH-IND22 ENERGY',
+    'Ind30,r': 'SAPT IND30,R ENERGY',
+    'Exch-Ind30,r': 'SAPT EXCH-IND30,R ENERGY',
+    'Ind-Disp30': 'SAPT IND-DISP30 ENERGY',
+    'Exch-Ind-Disp30': 'SAPT EXCH-IND-DISP30 ENERGY',
+    
+    'Disp20': 'SAPT DISP20 ENERGY',
+    'Exch-Disp20': 'SAPT EXCH-DISP20 ENERGY',
+    'Disp20(OS)': 'SAPT DISP20(OS) ENERGY',
+    'Exch-Disp20(OS)': 'SAPT EXCH-DISP20(OS) ENERGY',
+    'Disp20(SS)': 'SAPT DISP20(SS) ENERGY',
+    'Exch-Disp20(SS)': 'SAPT EXCH-DISP20(SS) ENERGY', 
+    'Disp21': 'SAPT DISP21 ENERGY',
+    'Disp22(SDQ).1': 'SAPT DISP22(SDQ) ENERGY',
+    'Disp22(T).1': 'SAPT EST.DISP22(T) ENERGY',  # ne'er used
+    'Est.Disp22(T)': 'SAPT EST.DISP22(T) ENERGY',
+    'Disp2(CCD)': 'SAPT DISP2(CCD) ENERGY',
+    'Disp22(S)(CCD)': 'SAPT DISP22(S)(CCD) ENERGY',
+    'Disp22(T)(CCD)': 'SAPT DISP22(T)(CCD) ENERGY',  # ne'er used
+    'Est.Disp22(T)(CCD)': 'SAPT EST.DISP22(T)(CCD) ENERGY',
+    'Disp30': 'SAPT DISP30 ENERGY',
+    'Exch-Disp30': 'SAPT EXCH-DISP30 ENERGY',
+
+    'TotalHF': 'SAPT HF TOTAL ENERGY',
+    #'deltaHF,r(2)': None,  # ne'er used
+    #'deltaHF,r(3)': None,  # ne'er used    
     }
 
 psivar2useme = dict((v, k) for k, v in useme2psivar.iteritems())
@@ -145,4 +202,23 @@ optclue2psivar = {
                'CCSD(T) CORRELATION ENERGY', '(T) CORRECTION ENERGY',
                'CCSDT(Q) CORRELATION ENERGY', '(Q) CORRECTION ENERGY'],
     'nfc': ['B2PLYP TOTAL ENERGY', 'DSD-PBEP86 TOTAL ENERGY', 'WB97X-2 TOTAL ENERGY', 'B2PLYP-D2 TOTAL ENERGY', 'B2PLYP-D3 TOTAL ENERGY'],
+    'dfhf': ['HF-CABS TOTAL ENERGY', 'MP2-F12 TOTAL ENERGY', 'SCS-MP2-F12 TOTAL ENERGY', 'SCS(N)-MP2-F12 TOTAL ENERGY', 
+             'SCS(MI)-MP2-F12 TOTAL ENERGY', 'DW-MP2-F12 TOTAL ENERGY', 'MP2C-F12 TOTAL ENERGY',
+             'SCF TOTAL ENERGY', 'HF TOTAL ENERGY', 'MP2 TOTAL ENERGY', 'SCS-MP2 TOTAL ENERGY', 'SCS(N)-MP2 TOTAL ENERGY', 
+             'SCS(MI)-MP2 TOTAL ENERGY', 'DW-MP2 TOTAL ENERGY', 'MP2C TOTAL ENERGY'],
+    'dfmp': ['MP2-F12 CORRELATION ENERGY', 'MP2-F12 TOTAL ENERGY', 'MP2-F12 SAME-SPIN CORRELATION ENERGY',
+             'SCS-MP2-F12 CORRELATION ENERGY', 'SCS-MP2-F12 TOTAL ENERGY',
+             'SCS(N)-MP2-F12 CORRELATION ENERGY', 'SCS(N)-MP2-F12 TOTAL ENERGY', 
+             'SCS(MI)-MP2-F12 CORRELATION ENERGY', 'SCS(MI)-MP2-F12 TOTAL ENERGY',
+             'DW-MP2-F12 CORRELATION ENERGY', 'DW-MP2-F12 TOTAL ENERGY', 
+             'MP2C-F12 CORRELATION ENERGY', 'MP2C-F12 TOTAL ENERGY',
+             'MP2 CORRELATION ENERGY', 'MP2 TOTAL ENERGY', 'MP2 SAME-SPIN CORRELATION ENERGY',
+             'SCS-MP2 CORRELATION ENERGY', 'SCS-MP2 TOTAL ENERGY',
+             'SCS(N)-MP2 CORRELATION ENERGY', 'SCS(N)-MP2 TOTAL ENERGY', 
+             'SCS(MI)-MP2 CORRELATION ENERGY', 'SCS(MI)-MP2 TOTAL ENERGY',
+             'DW-MP2 CORRELATION ENERGY', 'DW-MP2 TOTAL ENERGY', 
+             'MP2C CORRELATION ENERGY', 'MP2C TOTAL ENERGY',
+             'SAPT2+DMP2 TOTAL ENERGY', 'SAPT2+(CCD)DMP2 TOTAL ENERGY',
+             'SAPT2+(3)DMP2 TOTAL ENERGY', 'SAPT2+(3)(CCD)DMP2 TOTAL ENERGY',
+             'SAPT2+3DMP2 TOTAL ENERGY', 'SAPT2+3(CCD)DMP2 TOTAL ENERGY']
     }
