@@ -41,6 +41,7 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx.ext.todo',
     'sphinx.ext.pngmath',
+    'sphinx.ext.extlinks',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -80,7 +81,7 @@ release = '0.3'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = []
+exclude_patterns = ['abbr_accents.rst']
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents.
@@ -106,6 +107,8 @@ pygments_style = 'sphinx'
 # If true, keep warnings as "system message" paragraphs in the built documents.
 #keep_warnings = False
 
+# include todo directives
+todo_include_todos = True
 
 # -- Options for HTML output ----------------------------------------------
 
@@ -271,6 +274,27 @@ texinfo_documents = [
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
 
+# Abbreviations
+rst_epilog = """
+.. |qcdb| replace:: QCDB
+.. |PSIfour| replace:: PSI4
+.. |PSIfours| replace:: PSI4's
+.. |psirc| replace:: ``~/.psi4rc``
+.. |dl| replace:: :math:`\Rightarrow`
+.. |dr| replace:: :math:`\Leftarrow`
+.. |kcalpermol| replace:: kcal mol\ :sup:`-1`
+.. |Angstrom| replace:: |AA|\ ngstr\ |o_dots|\ m
+.. |--| unicode:: U+02013 .. en dash
+   :trim:
+.. |---| unicode:: U+02014 .. em dash
+   :trim:
+.. |w---w| unicode:: U+02014 .. em dash
+.. include:: /abbr_accents.rst
+"""
+
+# Uncomment these lines for named releases
+extlinks = {'source':    ('https://github.com/cdsgroup/qcdb/blob/master/%s', 'qcdb/'),
+            'srcdb':     ('https://github.com/cdsgroup/qcdb/blob/master/databases/%s.py', '') }
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {'http://docs.python.org/': None}

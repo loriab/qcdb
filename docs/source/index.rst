@@ -7,9 +7,11 @@ Users' Manual
 =============
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
    datavis
+   canopy
+   rawdatabase
 
 Programmers' Manual
 ===================
