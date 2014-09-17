@@ -106,6 +106,7 @@ def table_generic(dbse, serrors,
           'mtd': mtd[0], 'opt': opt[0], 'bas': bas[0]}
 
     if standalone:
+        text.append(r"""""")
         text.append(r"""\documentclass[aip,jcp,preprint,superscriptaddress,floatfix]{revtex4-1}""")
         text.append(r"""\usepackage{bm}""")
         text.append(r"""\usepackage{dcolumn}""")

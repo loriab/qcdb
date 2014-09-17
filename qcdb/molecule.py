@@ -251,12 +251,14 @@ class Molecule(LibmintsMolecule):
         factor = 1.0 if self.PYunits == 'Angstrom' else psi_bohr2angstroms
 
         text = ""
+        text += '$molecule\n'
         text += '%d %d %s\n' % (self.molecular_charge(), self.multiplicity(), self.tagline)
 
         for i in range(self.natom()):
             [x, y, z] = self.atoms[i].compute()
             text += '%2s %17.12f %17.12f %17.12f\n' % ((self.symbol(i) if self.Z(i) else "Gh"), \
                 x * factor, y * factor, z * factor)
+        text += '$end\n'
         return text
         pass
 

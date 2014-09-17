@@ -530,7 +530,7 @@ class LibmintsMolecule(object):
         >>> obj.extract_subsets(1,[2,3])  # monomer A, CP-corrected if obj is tri-molecular complex
 
         """
-        return self.extract_fragments(reals, ghosts=[])
+        return self.extract_fragments(reals, ghosts=ghosts)
 
     def extract_fragments(self, reals, ghosts=[]):
         """Makes a copy of the molecule, returning a new molecule with

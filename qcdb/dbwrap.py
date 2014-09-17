@@ -238,8 +238,8 @@ class Reagent(object):
         text += """  ==> %s Reagent <==\n\n""" % (self.name)
         text += """  Tagline:              %s\n""" % (self.tagl)
         text += """  Comment:              %s\n""" % (self.comment)
-        text += """  NRE:                  %f\n""" % (self.nre)
-        text += """  Molecule:             %s\n"""
+        text += """  NRE:                  %f\n""" % (self.NRE)
+        text += """  Molecule:             \n%s""" % (self.mol.format_molecule_for_psi4())
         text += """\n"""
         return text
 
@@ -287,7 +287,7 @@ class Reaction(object):
             for rgt, coeff in rxnm.iteritems():
                 text += """       %3d  %s\n""" % (coeff, rgt.name)
         text += """  Data:\n"""
-        for label, datum in self.data.iteritems():
+        for label, datum in sorted(self.data.iteritems()):
             text += """      %8.2f  %s\n""" % (datum.value, label)
         text += """\n"""
         return text
@@ -296,18 +296,32 @@ class Reaction(object):
 class Database(object):
     """
 
+    >>> asdf = qcdb.Database('Nbc10')
     """
 
     def __init__(self, dbname, pythonpath=None):
-        # internal name of database
+        #: internal name of database
+        #:
+        #: >>> print asdf.dbse
+        #: 'NBC1'
         self.dbse = None
-        # OrderedDict of reactions/members
+        #: OrderedDict of reactions/members
+        #:
+        #: >>> print asdf.hrxn.keys()
+        #: ['BzBz_S-3.2', 'BzBz_S-3.3', ...  'BzBz_PD36-2.8', 'BzBz_PD36-3.0']
         self.hrxn = None
-        # dict of reagents/geometries
+        #: dict of reagents/geometries
+        #:
+        #: >>> print asdf.hrgt.keys()
+        #: ['NBC1-BzBz_PD32-0.8-monoA-CP', 'NBC1-BzBz_PD34-0.6-dimer', ... 'NBC1-BzBz_PD34-1.7-dimer']
         self.hrgt = None
-        # dict of defined reaction subsets
+        #: dict of defined reaction subsets.
+        #: Note that self.sset['default'] contains all the nonredundant information.
+        #:
+        #: >>> print asdf.sset.keys()
+        #: ['meme', 'mxddpp', 'bzh2s', 'large', '5min', 'bzme', 'pypy_s2', 'dd', 'mx', 'bzbz_s', 'default', 'bzbz_t', 'pypy_t3', 'bzbz_pd36', 'equilibrium', 'bzbz_pd34', 'small', 'bzbz_pd32', 'mxddnp']
         self.sset = None
-        # Note that self.sset['default'] contains all the nonredundant information.
+
         #   Removing hrxn, hrgt etc. do not reduce the size of the object.
         #   These attributes are stored for ease of access for adding qc info, etc.
 
@@ -763,6 +777,50 @@ class Database(object):
             print """mpl.thread(%s,\n    color='%s',\n    title='%s',\n    labels=%s,\n    mae=%s,\n    mape=%s\n    xlimit=%s)\n\n""" % \
                 (dbdat, color, title, mid, mae, mapbe, str(xlimit))
 
+    def plot_flat(self, modelchem, benchmark='default', sset='default', failoninc=True, verbose=False, color='sapt', xlimit=4.0, view=True):
+        """Computes individual errors and summary statistics for single
+        model chemistry *modelchem* versus *benchmark* over
+        subset *sset*. Thread *color* can be 'rgb'
+        for old coloring, a color name or 'sapt' for spectrum coloring.
+        Prepares flat diagram instructions and either executes them if
+        matplotlib available (Canopy) or prints them.
+
+        """
+        # compute errors
+        errors = {} 
+        indiv = {} 
+        mc = modelchem
+        errors[mc], indiv[mc] = self.compute_statistics(mc, benchmark=benchmark, sset=sset,
+            failoninc=failoninc, verbose=verbose, returnindiv=True)
+        # repackage
+        dbdat = [] 
+        for rxn in self.sset[sset].keys():
+            data = []
+            try:
+                data.append(indiv[mc][rxn][0])
+            except KeyError, e:
+                if failoninc:
+                    raise e
+                else:
+                    data.append(None)
+            dbdat.append({'sys': str(rxn), 'color': self.hrxn[rxn].color, 'data': data})
+        pre, suf, mid = string_contrast(mc)
+        title = self.dbse + sset + ' ' + pre + '[]' + suf
+        mae = errors[mc]['mae']
+        mapbe = 100 * errors[mc]['mapbe']
+        mapbe = None 
+        # generate matplotlib instructions and call or print
+        try: 
+            import mpl
+            import matplotlib.pyplot as plt
+        except ImportError:
+            # if not running from Canopy, print line to execute from Canopy
+            print """mpl.flat(%s,\n    color='%s',\n    title='%s',\n    mae=%s,\n    mape=%s,\n    xlimit=%s,\n    view=%s)\n\n""" % \
+                (dbdat, color, mc, mae, mapbe, xlimit, view)
+        else:
+            # if running from Canopy, call mpl directly
+            mpl.flat(dbdat, color=color, title=mc, mae=mae, mape=mapbe, xlimit=xlimit, view=view)
+
     def plot_bars(self, modelchem, benchmark='default', sset=['default', 'hb', 'mx', 'dd'], failoninc=True, verbose=False):
         """Prepares 'grey bars' diagram for each model chemistry in array
         *modelchem* versus *benchmark* over all four databases. A wide bar
@@ -836,6 +894,143 @@ class Database(object):
             #print """mpl.iowa(%s,\n    %s,\n    title='%s',\n    xlimit=%s)\n\n""" % \
             #    (mcdat, mclbl, title, str(xlimit))
 
+    def table_generic(self, mtd, bas, columnplan, rowplan=['bas', 'mtd'],
+        opt=['CP'], err=['mae'], sset=['default'],
+        benchmark='default', failoninc=True,
+        landscape=False, standalone=True, subjoin=True,
+        plotpath='', theme='', filename=None):
+        """Prepares dictionary of errors for all combinations of *mtd*, *opt*,
+        *bas* with respect to model chemistry *benchmark*, mindful of *failoninc*.
+        Once error dictionary is ready, it and all other arguments are passed
+        along to textables.table_generic.
+
+        """
+        # gather list of model chemistries for table
+        mcs = ['-'.join(prod) for prod in itertools.product(mtd, opt, bas)]
+
+        if plotpath == 'autogen':
+            plotpath = os.environ['HOME'] + os.sep + 'mplflat_'
+            for mc in mcs:
+                self.plot_flat(mc)
+            # TODO isn't going to work if sset in rowplan
+
+        # compute errors
+        serrors = {}
+        for mc in mcs:
+            serrors[mc] = {}
+            for ss in self.sset.keys():
+                errblock = self.compute_statistics(mc, benchmark=benchmark, sset=ss,
+                    failoninc=failoninc, verbose=False, returnindiv=False)
+                serrors[mc][ss] = {}
+                serrors[mc][ss][self.dbse] = format_errors(errblock, mode=3)
+
+        textables.table_generic(dbse=[self.dbse], serrors=serrors,
+            mtd=mtd, bas=bas, columnplan=columnplan, rowplan=rowplan,
+            opt=opt, err=err, sset=sset,
+            landscape=landscape, standalone=standalone, subjoin=subjoin,
+            plotpath=plotpath, theme=theme, filename=filename)
+
+    def table_simple1(self, mtd, bas, opt=['CP'], err=['mae'], benchmark='default', failoninc=True, plotpath='analysis/flats/mplflat_', theme='smmerge'):
+        """Specialization of table_generic into table with minimal statistics
+        (three S22 and three overall) plus embedded slat diagram as suitable
+        for main paper. A single table is formed in sections by *bas* with
+        lines *mtd* within each section.
+
+        """
+        rowplan = ['bas', 'mtd']
+        columnplan = [
+            ['l', r"""Method \& Basis Set""", '', textables.label, {}],
+            ['d', r'S22', 'HB', textables.val, {'sset': 'hb'}],
+            ['d', r'S22', 'MX', textables.val, {'sset': 'mx'}],
+            ['d', r'S22', 'DD', textables.val, {'sset': 'dd'}],
+            ['d', r'S22', 'TT', textables.val, {'sset': 'default'}],
+            ]
+
+        self.table_generic(mtd=mtd, bas=bas, columnplan=columnplan, rowplan=rowplan,
+            opt=opt, err=err,
+            benchmark=benchmark, failoninc=failoninc,
+            landscape=False, standalone=True, subjoin=True,
+            plotpath=plotpath, theme=theme, filename=None)
+
+
+    def table_simple2(self, mtd, bas, opt=['CP'], err=['mae'], benchmark='default', failoninc=True, plotpath='analysis/flats/mplflat_', theme='smmerge'):
+        """Specialization of table_generic into table with minimal statistics
+        (three S22 and three overall) plus embedded slat diagram as suitable
+        for main paper. A single table is formed in sections by *bas* with
+        lines *mtd* within each section.
+
+        """
+        rowplan = ['bas', 'mtd']
+        columnplan = [
+            ['l', r"""Method \& Basis Set""", '', textables.label, {}],
+            ['d', r'MAE', 'HB', textables.val, {'sset': 'hb'}],
+            ['d', r'MAE', 'MX', textables.val, {'sset': 'mx'}],
+            ['d', r'MAE', 'DD', textables.val, {'sset': 'dd'}],
+            ['d', r'MAE', 'TT', textables.val, {'sset': 'default'}],
+            ['d', r'MA\%E', 'HB', textables.val, {'sset': 'hb', 'err': 'mape'}],
+            ['d', r'MA\%E', 'MX', textables.val, {'sset': 'mx', 'err': 'mape'}],
+            ['d', r'MA\%E', 'DD', textables.val, {'sset': 'dd', 'err': 'mape'}],
+            ['d', r'MA\%E', 'TT', textables.val, {'sset': 'default', 'err': 'mape'}],
+            ['d', r'maxE', 'TT ', textables.val, {'sset': 'default', 'err': 'maxe'}],
+            ['d', r'min\%E', ' TT', textables.val, {'sset': 'default', 'err': 'minpe'}],
+            ['d', r'rmsE', 'TT ', textables.val, {'sset': 'default', 'err': 'rmse'}],
+            ['d', r'devE', ' TT', textables.val, {'sset': 'default', 'err': 'stde'}],
+            ]
+
+        self.table_generic(mtd=mtd, bas=bas, columnplan=columnplan, rowplan=rowplan,
+            opt=opt, err=err,
+            benchmark=benchmark, failoninc=failoninc,
+            landscape=False, standalone=True, subjoin=True,
+            plotpath=plotpath, theme=theme, filename=None)
+
+
+    def table_simple3(self, mtd, bas, opt=['CP'], err=['mae'], benchmark='default', failoninc=True, plotpath='analysis/flats/mplflat_', theme='smmerge'):
+        """Specialization of table_generic into table with minimal statistics
+        (three S22 and three overall) plus embedded slat diagram as suitable
+        for main paper. A single table is formed in sections by *bas* with
+        lines *mtd* within each section.
+
+        """
+        rowplan = ['err', 'bas', 'mtd']
+        columnplan = [
+            ['l', r"""Method \& Basis Set""", '', textables.label, {}],
+            ['d', r'MAE', 'HB', textables.val, {'sset': 'hb'}],
+            ['d', r'MAE', 'MX', textables.val, {'sset': 'mx'}],
+            ['d', r'MAE', 'DD', textables.val, {'sset': 'dd'}],
+            ['d', r'MAE', 'TT', textables.val, {'sset': 'default'}],
+            ]
+
+        self.table_generic(mtd=mtd, bas=bas, columnplan=columnplan, rowplan=rowplan,
+            opt=opt, err=err,
+            benchmark=benchmark, failoninc=failoninc,
+            landscape=False, standalone=True, subjoin=True,
+            plotpath=plotpath, theme=theme, filename=None)
+
+    def table_simple4(self, mtd, bas, opt=['CP'], err=['mae'], benchmark='default', failoninc=True, plotpath='analysis/flats/mplflat_', theme='smmerge'):
+        """Specialization of table_generic into table with minimal statistics
+        (three S22 and three overall) plus embedded slat diagram as suitable
+        for main paper. A single table is formed in sections by *bas* with
+        lines *mtd* within each section.
+
+        """
+        plotpath = 'autogen'  # TODO handle better
+        rowplan = ['bas', 'mtd']
+        columnplan = [
+            ['l', r"""Method \& Basis Set""", '', textables.label, {}],
+            ['d', r'S22', 'HB', textables.val, {'sset': 'hb'}],
+            ['d', r'S22', 'MX', textables.val, {'sset': 'mx'}],
+            ['d', r'S22', 'DD', textables.val, {'sset': 'dd'}],
+            ['d', r'S22', 'TT', textables.val, {'sset': 'default'}],
+            #['l', r"""Error Distribution\footnotemark[1]""", r"""\includegraphics[width=6.67cm,height=3.5mm]{%s%s.pdf}""" % (plotpath, 'blank'), textables.graphics, {}],
+            ['l', r"""Error Distribution\footnotemark[1]""", r"""""", textables.graphics, {}],
+            ]
+
+        self.table_generic(mtd=mtd, bas=bas, columnplan=columnplan, rowplan=rowplan,
+            opt=opt, err=err,
+            benchmark=benchmark, failoninc=failoninc,
+            landscape=False, standalone=True, subjoin=True,
+            plotpath=plotpath, theme=theme, filename=None)
+
 
 class FourDatabases(object):
     """
@@ -857,7 +1052,7 @@ class FourDatabases(object):
         self.mc = {}
 
         # load up data and definitions
-        #self.load_qcdata_byproject('dft')
+        self.load_qcdata_byproject('dft')
         self.load_qcdata_byproject('pt2')
         #self.load_qcdata_byproject('dhdft')
         self.load_subsets()
@@ -1367,14 +1562,14 @@ class FourDatabases(object):
         rowplan = ['bas', 'mtd']
         columnplan = [
             ['l', r"""Method \& Basis Set""", '', textables.label, {}],
-            ['d', r'S22', 'HB', textables.val, {'ss': 'hb', 'db': 'S22'}],
-            ['d', r'S22', 'MX/DD', textables.val, {'ss': 'mxdd', 'db': 'S22'}],
-            ['d', r'S22', 'TT', textables.val, {'ss': 'tt', 'db': 'S22'}],
-            ['d', r'Overall', 'HB', textables.val, {'ss': 'hb', 'db': 'DB4'}],
-            ['d', r'Overall', 'MX/DD', textables.val, {'ss': 'mxdd', 'db': 'DB4'}],
-            ['d', r'Overall', 'TT', textables.val, {'ss': 'tt', 'db': 'DB4'}],
+            ['d', r'S22', 'HB', textables.val, {'sset': 'hb', 'dbse': 'S22'}],
+            ['d', r'S22', 'MX/DD', textables.val, {'sset': 'mxdd', 'dbse': 'S22'}],
+            ['d', r'S22', 'TT', textables.val, {'sset': 'tt', 'dbse': 'S22'}],
+            ['d', r'Overall', 'HB', textables.val, {'sset': 'hb', 'dbse': 'DB4'}],
+            ['d', r'Overall', 'MX/DD', textables.val, {'sset': 'mxdd', 'dbse': 'DB4'}],
+            ['d', r'Overall', 'TT', textables.val, {'sset': 'tt', 'dbse': 'DB4'}],
             ['l', r"""Error Distribution\footnotemark[1]""", r"""\includegraphics[width=6.67cm,height=3.5mm]{%s%s.pdf}""" % (plotpath, 'blank'), textables.graphics, {}],
-            ['d', r'Time', '', textables.val, {'ss': 'tt-5min', 'db': 'NBC1'}]]
+            ['d', r'Time', '', textables.val, {'sset': 'tt-5min', 'dbse': 'NBC1'}]]
             # TODO Time column not right at all
 
         self.table_generic(mtd=mtd, bas=bas, columnplan=columnplan, rowplan=rowplan,
