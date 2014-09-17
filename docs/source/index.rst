@@ -12,6 +12,7 @@ Users' Manual
    datavis
    canopy
    rawdatabase
+   wrappeddatabase
 
 Programmers' Manual
 ===================

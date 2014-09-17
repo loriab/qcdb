@@ -24,7 +24,6 @@ sys.path.insert(0, os.path.abspath('../../'))
 sys.path.insert(0, os.path.abspath('./'))
 
 # Import Sphinx themes
-print 'SYSPATH:', sys.path
 import cloud_sptheme as csp
 import psi4_sptheme as psp
 

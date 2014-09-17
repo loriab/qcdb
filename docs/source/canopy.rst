@@ -53,3 +53,8 @@ steps. ::
    Canopy must be restarted and |qcdb| re-imported for those changes to 
    become apparent.
 
+.. note:: Canopy redefines your :envvar:`PATH`, so if you were relying 
+   on applications being found in PATH or PSIPATH and only put them in 
+   PATH, they won't be found. explicitly expand PATH in canopy or place 
+   in PSIPATH.
+

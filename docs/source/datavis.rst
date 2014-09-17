@@ -13,12 +13,6 @@ qcdb
    :undoc-members:
 
 
-dbwrap
-======
-
-.. automodule:: qcdb.dbwrap
-   :members:
-
 S22
 ===
 
