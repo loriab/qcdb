@@ -319,6 +319,8 @@ _tlist = [
     Method('CCSDTSCF12',      fullname='CCSD(T*)-F12c'),
     Method('DWCCSDTNSF12',    fullname='DW-CCSD(T)-F12'),
     Method('DWCCSDTSF12',     fullname='DW-CCSD(T*)-F12'),
+    Method('DELTQ',           fullname='d(TQ)', latex="""$\delta$(TQ)"""),  # TODO kill this once non-IE impl in reap-DB
+    Method('DEL2T',           fullname='d(T)', latex="""$\delta$(T)"""),  # TODO kill this once non-IE impl in reap-DB
     ]
 
 methods = {}

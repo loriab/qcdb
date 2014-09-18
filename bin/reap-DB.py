@@ -22,9 +22,10 @@ pd.set_option('display.width', 200)
 verbose = True
 
 # pass --> pass
-#dbse = 'A24'
-#project = 'parenq'
+dbse = 'A24'
+project = 'parenq'
 #path = r"""/Users/loriab/linux/qcdb/data/parenqusemefiles/"""
+path = r"""/Users/loriab/linux/qcdb/data/newparenq/"""
 
 # fail --> pass
 #dbse = 'S22'
@@ -296,8 +297,11 @@ pv0['M06-2X TOTAL ENERGY'] = {'func': sum, 'args': ['M06-2X FUNCTIONAL TOTAL ENE
 pv0['PBE0 TOTAL ENERGY'] = {'func': sum, 'args': ['PBE0 FUNCTIONAL TOTAL ENERGY']}
 pv0['PBE TOTAL ENERGY'] = {'func': sum, 'args': ['PBE FUNCTIONAL TOTAL ENERGY']}
 pv0['HF TOTAL ENERGY'] = {'func': sum, 'args': ['SCF TOTAL ENERGY']}
+pv0['MP3 CORRELATION ENERGY'] = {'func': difference, 'args': ['MP3 FNO CORRELATION ENERGY', 'FNO CORRECTION ENERGY']}  # TODO not checked
+pv0['CCSD CORRELATION ENERGY'] = {'func': difference, 'args': ['CCSD FNO CORRELATION ENERGY', 'FNO CORRECTION ENERGY']}  # TODO not checked
 pv0['CCSD(T) CORRELATION ENERGY'] = {'func': difference, 'args': ['CCSD(T) FNO CORRELATION ENERGY', 'FNO CORRECTION ENERGY']}
 pv0['CCSD(T) TOTAL ENERGY'] = {'func': sum, 'args': ['HF TOTAL ENERGY', 'CCSD(T) CORRELATION ENERGY']}
+pv0['CCSDT TOTAL ENERGY'] = {'func': sum, 'args': ['HF TOTAL ENERGY', 'CCSDT CORRELATION ENERGY']}
 pv0['CCSDT(Q) TOTAL ENERGY'] = {'func': sum, 'args': ['HF TOTAL ENERGY', 'CCSDT(Q) CORRELATION ENERGY']}
 pv0['VV10 TOTAL ENERGY'] = {'func': sum, 'args': ['VV10 FUNCTIONAL TOTAL ENERGY']}
 pv0['LC-VV10 TOTAL ENERGY'] = {'func': sum, 'args': ['LC-VV10 FUNCTIONAL TOTAL ENERGY']}
@@ -975,7 +979,7 @@ def build(method, option, cpmode, basis):
         print 'bass:', baslist
         print 'opts:', optlist
         for pcs, bas, opt in zip(mtdlist, baslist, optlist):
-            print df.loc[bas].loc[pcs].loc[opt].loc['BBI-150LYS-158LEU-2'] #'S22-2']
+            print df.loc[bas].loc[pcs].loc[opt].loc['A24-1'] #'BBI-150LYS-158LEU-2'] #'S22-2']
     return func(sum([df.loc[bas].loc[pcs].loc[opt] for pcs, bas, opt in zip(mtdlist, baslist, optlist)]))
 
 # <<< assemble all model chemistries into columns of new DataFrame >>>
@@ -995,9 +999,9 @@ if project == 'dft':
     cpmd = ['unCP', 'CP']
 
 elif project == 'parenq':
-    mtds = ['HF', 'CCSDT', 'CCSDTQ']
+    mtds = ['HF', 'CCSDT', 'CCSDTQ', 'CCSD', 'CCSDFULLT', 'MP2']
     bass = ['adz', 'atz', 'hadz', 'jadz', 'atz', 'adtz', 'aq5z']
-    opts = ['', 'full', 'fno1e5', 'fno1e4', 'fno5e5', 'fno1e6', 'fno1e4-mrcc']
+    opts = ['', 'full', 'fno1e5', 'fno1e4', 'fno5e5', 'fno1e6', 'fno1e4-mrcc', 'fno1e3']
     cpmd = ['CP']
 
 elif project == 'f12dilabio':
@@ -1103,6 +1107,47 @@ if project == 'f12dilabio':
     mine['CCSDTNSBF12-CP-hill2_adtz'] = build_from_lists(['HF-CABS TOTAL ENERGY', 'CCSD-F12B CORRELATION ENERGY', '(T)-F12AB CORRECTION ENERGY'], ['atz', 'hillcc_adtz', 'hillt_adtz'])
 
 if project == 'parenq':
+    mine['DELTQ-full-CP-hadz'] = mine['CCSDTQ-full-CP-hadz'] - mine['CCSDT-full-CP-hadz']
+    mine['DELTQ-full-CP-jadz'] = mine['CCSDTQ-full-CP-jadz'] - mine['CCSDT-full-CP-jadz']
+
+    mine['DELTQ-full-CP-adz'] = mine['CCSDTQ-full-CP-adz'] - mine['CCSDT-full-CP-adz']
+    mine['DELTQ-full-CP-atz'] = mine['CCSDTQ-full-CP-atz'] - mine['CCSDT-full-CP-atz']
+    mine['DELTQ-full-CP-adtz'] = mine['CCSDTQ-full-CP-adtz'] - mine['CCSDT-full-CP-adtz']
+    
+    mine['DELTQ-fno1e4-CP-adz'] = mine['CCSDTQ-fno1e4-CP-adz'] - mine['CCSDT-fno1e4-CP-adz']
+    mine['DELTQ-fno1e4-CP-atz'] = mine['CCSDTQ-fno1e4-CP-atz'] - mine['CCSDT-fno1e4-CP-atz']
+    mine['DELTQ-fno1e4-CP-adtz'] = mine['CCSDTQ-fno1e4-CP-adtz'] - mine['CCSDT-fno1e4-CP-adtz']
+
+    mine['DELTQ-fno1e5-CP-adz'] = mine['CCSDTQ-fno1e5-CP-adz'] - mine['CCSDT-fno1e5-CP-adz']
+    mine['DELTQ-fno1e5-CP-atz'] = mine['CCSDTQ-fno1e5-CP-atz'] - mine['CCSDT-fno1e5-CP-atz']
+    mine['DELTQ-fno1e5-CP-adtz'] = mine['CCSDTQ-fno1e5-CP-adtz'] - mine['CCSDT-fno1e5-CP-adtz']
+
+    #mine['DELTQ-fno1e3-CP-adz'] = mine['CCSDTQ-fno1e3-CP-adz'] - mine['CCSDT-fno1e3-CP-adz']
+    mine['DELTQ-fno1e6-CP-adz'] = mine['CCSDTQ-fno1e6-CP-adz'] - mine['CCSDT-fno1e6-CP-adz']
+    mine['DELTQ-fno5e5-CP-adz'] = mine['CCSDTQ-fno5e5-CP-adz'] - mine['CCSDT-fno5e5-CP-adz']
+
+
+    mine['DEL2T-full-CP-hadz'] = mine['CCSDT-full-CP-hadz'] - mine['MP2-full-CP-hadz']
+    mine['DEL2T-full-CP-jadz'] = mine['CCSDT-full-CP-jadz'] - mine['MP2-full-CP-jadz']
+
+    mine['DEL2T-full-CP-adz'] = mine['CCSDT-full-CP-adz'] - mine['MP2-full-CP-adz']
+    mine['DEL2T-full-CP-atz'] = mine['CCSDT-full-CP-atz'] - mine['MP2-full-CP-atz']
+    mine['DEL2T-full-CP-adtz'] = mine['CCSDT-full-CP-adtz'] - mine['MP2-full-CP-adtz']
+    
+    mine['DEL2T-fno1e4-CP-adz'] = mine['CCSDT-fno1e4-CP-adz'] - mine['MP2-fno1e4-CP-adz']
+    mine['DEL2T-fno1e4-CP-atz'] = mine['CCSDT-fno1e4-CP-atz'] - mine['MP2-fno1e4-CP-atz']
+    mine['DEL2T-fno1e4-CP-adtz'] = mine['CCSDT-fno1e4-CP-adtz'] - mine['MP2-fno1e4-CP-adtz']
+
+    mine['DEL2T-fno1e5-CP-adz'] = mine['CCSDT-fno1e5-CP-adz'] - mine['MP2-fno1e5-CP-adz']
+    mine['DEL2T-fno1e5-CP-atz'] = mine['CCSDT-fno1e5-CP-atz'] - mine['MP2-fno1e5-CP-atz']
+    mine['DEL2T-fno1e5-CP-adtz'] = mine['CCSDT-fno1e5-CP-adtz'] - mine['MP2-fno1e5-CP-adtz']
+
+    #mine['DEL2T-fno1e3-CP-adz'] = mine['CCSDT-fno1e3-CP-adz'] - mine['MP2-fno1e3-CP-adz']
+    mine['DEL2T-fno1e6-CP-adz'] = mine['CCSDT-fno1e6-CP-adz'] - mine['MP2-fno1e6-CP-adz']
+    mine['DEL2T-fno5e5-CP-adz'] = mine['CCSDT-fno5e5-CP-adz'] - mine['MP2-fno5e5-CP-adz']
+   
+if False:
+#if project == 'parenq':
     # TODO these aren't actually interaction energies!
     mine['CCSDTQ-corl-CP-adz'] = build_from_lists(['CCSDT(Q) CORRELATION ENERGY'], ['adz'], ['fno1e4'])
     mine['CCSDT-corl-CP-adz'] = build_from_lists(['CCSD(T) CORRELATION ENERGY'], ['adz'], ['fno1e4'])
