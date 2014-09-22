@@ -58,3 +58,7 @@ steps. ::
    PATH, they won't be found. explicitly expand PATH in canopy or place 
    in PSIPATH.
 
+.. note:: there are further PATH issues dealing with ipython notebook.
+   Particularly, dftd3 cant write to scratch which can be fixed by adding the home dir to the code. 
+   matplotlib routines also give problems unsolved for now.
+
