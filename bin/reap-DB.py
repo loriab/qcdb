@@ -20,17 +20,18 @@ pd.set_option('display.width', 200)
 
 #path = r"""C:\Users\Owner\Documents\f12dilabiousemefiles\usemefiles"""
 verbose = True
+homewrite = '/Users/loriab/'
 
 # pass --> pass
-dbse = 'A24'
-project = 'parenq'
-#path = r"""/Users/loriab/linux/qcdb/data/parenqusemefiles/"""
-path = r"""/Users/loriab/linux/qcdb/data/newparenq/"""
+#dbse = 'A24'
+#project = 'parenq'
+##path = r"""/Users/loriab/linux/qcdb/data/parenqusemefiles/"""
+#path = r"""/Users/loriab/linux/qcdb/data/newparenq/"""
 
 # fail --> pass
-#dbse = 'S22'
-#project = 'dft'
-#path = r"""/Users/loriab/linux/qcdb/data/dftusemefiles/"""
+dbse = 'S22'
+project = 'dft'
+path = r"""/Users/loriab/linux/qcdb/data/dftusemefiles/"""
 
 # pass --> pass
 #dbse = 'A24'
@@ -506,7 +507,8 @@ except KeyError, e:
 else:
     print 'indash'
     df_nobas = pd.concat({tup[0]: df.xs('nobas', level='bstrt') for tup in df.index.values if tup[0] != 'nobas'})
-    df_nobas.index.names = ['bstrt', 'psivar', 'rxn']
+    print df_nobas.head(50)
+    df_nobas.index.names = ['bstrt', 'psivar', 'meta', 'rxn']
     print 'postdash'
     df = df.append(df_nobas, verify_integrity=True)
 
@@ -1086,11 +1088,17 @@ for cpm in cpmd:
             for opt in opts:
                 mc = '-'.join([mtd, cpm, bas]) if opt == '' else '-'.join([mtd, opt, cpm, bas])
                 try:
-                    mine[mc] = build(mtd, opt, cpm, bas)
+                    tmp = build(mtd, opt, cpm, bas)
                     #print """Built model chemistry %s""" % (mc)
                 except KeyError, e:
                     #print """Error building rxn mc: empty '%s' b/c no %s""" % (mc, e)
                     pass
+                else:
+                    if tmp.empty or tmp.dropna(how='all').empty:
+                        #print """Empty rxn mc: empty '%s'""" % (mc)
+                        pass
+                    else:
+                        mine[mc] = tmp
 
 
 def threadtheframe(modelchem, xlimit=4.0):
@@ -1180,7 +1188,7 @@ test_pandas(h2kc, project, mine)
 
 # <<< write qcdb data loader >>>
 
-f1 = open('%s_%s.py' % (dbse, project), 'w')
+f1 = open('%s/%s_%s.py' % (homewrite, dbse, project), 'w')
 f1.write('\ndef load_%s(dbinstance):\n\n' % (project))
 
 for mc in mine.columns:
@@ -1191,12 +1199,21 @@ for mc in mine.columns:
     for rxn in dbobj.hrxn.keys():
         value = h2kc * mine[mc]['%s-%s' % (dbse, rxn)]
         if pd.isnull(value):
+            if rxn == 2:
+                print 'dropping', mc
             pass
         else:
             f1.write("""    dbinstance.add_ReactionDatum(dbse='%s', rxn=%s, method='%s', mode='%s', basis='%s', value=%.4f)\n""" %
                 (dbse, repr(rxn), method, bsse, basis, value))
 
 f1.close()
+
+# <<< write hdf5 >>>
+
+with pd.get_store('%s/%s_%s.h5' % (homewrite, dbse, project)) as handle:
+    handle['pdie'] = mine
+    print 'hdf5', handle
+
 
 
 # <<< collecting section >>>
