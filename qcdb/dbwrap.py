@@ -361,15 +361,15 @@ class Database(object):
 
         # form qcdb.Reagent objects from all defined geometries, GEOS
         oHRGT = {}
-        for rgt, mol in database.GEOS.iteritems():
-            mol.update_geometry()
-            try:
-                tagl = database.TAGL[rgt]
-            except KeyError:
-                tagl = None
-                print """Warning: TAGL missing for reagent %s""" % (rgt)
-            oHRGT[rgt] = Reagent(name=rgt, mol=mol, tagl=tagl)
-        pieces.remove('GEOS')
+#        for rgt, mol in database.GEOS.iteritems():
+#            mol.update_geometry()
+#            try:
+#                tagl = database.TAGL[rgt]
+#            except KeyError:
+#                tagl = None
+#                print """Warning: TAGL missing for reagent %s""" % (rgt)
+#            oHRGT[rgt] = Reagent(name=rgt, mol=mol, tagl=tagl)
+#        pieces.remove('GEOS')
         self.hrgt = oHRGT
 
         # form qcdb.Reaction objects from comprehensive reaction list, HRXN
@@ -410,13 +410,13 @@ class Database(object):
             pieces.remove(item)
 
         # populate reaction matrices in qcdb.Reaction objects
-        for rxn in database.HRXN:
-            dbrxn = database.dbse + '-' + str(rxn)
-            for mode, actvrxnm in oACTV.iteritems():
-                tdict = collections.OrderedDict()
-                for rgt in getattr(database, actvrxnm[0])[dbrxn]:
-                    tdict[oHRGT[rgt]] = getattr(database, actvrxnm[1])[dbrxn][rgt]
-                oHRXN[rxn].rxnm[mode] = tdict
+#        for rxn in database.HRXN:
+#            dbrxn = database.dbse + '-' + str(rxn)
+#            for mode, actvrxnm in oACTV.iteritems():
+#                tdict = collections.OrderedDict()
+#                for rgt in getattr(database, actvrxnm[0])[dbrxn]:
+#                    tdict[oHRGT[rgt]] = getattr(database, actvrxnm[1])[dbrxn][rgt]
+#                oHRXN[rxn].rxnm[mode] = tdict
 
         # TODO neglecting case of only one BIND
 
@@ -744,7 +744,6 @@ class Database(object):
         for mc in modelchem:
             errors[mc], indiv[mc] = self.compute_statistics(mc, benchmark=benchmark,
                 sset=sset, failoninc=failoninc, verbose=verbose, returnindiv=True)
-        #print 'ERRORS', errors
         # repackage
         dbdat = []
         for rxn in self.sset[sset].keys():
@@ -758,8 +757,6 @@ class Database(object):
                     else:
                         data.append(None)
             dbdat.append({'sys': str(rxn), 'color': self.hrxn[rxn].color, 'data': data})
-        #dbdat = [{'sys': str(rxn), 'color': self.hrxn[rxn].color,
-        #    'data': [indiv[mc][rxn][0] for mc in modelchem]} for rxn in self.sset[sset].keys()]
         title = self.dbse + ' ' + pre + '[]' + suf
         mae = [errors[mc]['mae'] for mc in modelchem]
         mapbe = [100 * errors[mc]['mapbe'] for mc in modelchem]
