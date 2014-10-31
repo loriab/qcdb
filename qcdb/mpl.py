@@ -337,6 +337,55 @@ def flat(data, color=None, title='', xlimit=4.0, mae=None, mape=None, view=True)
 #    plt.savefig('scratch/' + pltfile + '_trimd' + '.eps', transparent=True, format='EPS')
 
 
+def disthist(data, saveas=None, title='', xtitle='', xmin=None, xmax=None, me=None, stde=None):
+    """Saves a plot with name *saveas* with a histogram representation
+    of the reaction errors in *data*. Also plots a gaussian distribution
+    with mean *me* and standard deviation *stde*. Plot has x-range
+    *xmin* to *xmax*, x-axis label *xtitle* and overall title *title*.
+
+    """
+    import numpy as np
+    import matplotlib.pyplot as plt
+
+    def gaussianpdf(u, v, x):
+        """*u* is mean, *v* is variance, *x* is value, returns probability"""
+        return 1.0 / np.sqrt(2.0 * np.pi * v) * np.exp(-pow(x - u, 2) / 2.0 / v)
+
+    me = me if me is not None else np.mean(data)
+    stde = stde if stde is not None else np.std(data, ddof=1)
+    xmin = xmin if xmin is not None else me - 4.0 * stde
+    xmax = xmax if xmax is not None else me + 4.0 * stde
+
+    dx = (xmax - xmin) / 40.
+    nx = int(round((xmax - xmin) / dx)) + 1
+    pdfx = []
+    pdfy = []
+    for i in xrange(nx):
+        ix = xmin + i * dx
+        pdfx.append(ix)
+        pdfy.append(gaussianpdf(me, pow(stde, 2), ix))
+
+    fig, ax = plt.subplots(figsize=(8, 6))
+    plt.axvline(0.0, color='#cccc00')
+    ax1 = fig.add_subplot(111)
+    ax1.set_xlim(xmin, xmax)
+    ax1.hist(data, bins=30, range=(xmin, xmax), color='#224477', alpha=0.7)
+    ax1.set_xlabel(xtitle)
+    ax1.set_ylabel('Count')
+
+    ax2 = ax1.twinx()
+    ax2.set_xlim(xmin, xmax)
+    ax2.fill(pdfx, pdfy, color='k', alpha=0.2)
+    ax2.set_ylabel('Probability Density')
+
+    plt.title(title)
+
+    pltuid = title  # TODO not really unique
+    pltfile = expand_saveas(saveas, pltuid, def_prefix='disthist_')
+    plt.savefig(pltfile + '.png', transparent=True, bbox_inches='tight', format='PNG')
+    plt.show()
+
+
 def thread(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None):
     """Generates a tiered slat diagram between model chemistries with
     errors (or simply values) in list *data*, which is supplied as part of the
@@ -422,6 +471,246 @@ def thread(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None):
     plt.show()
 
 
+def thread_mouseover(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None, saveas=None, mousetext=None, mouselink=None, mouseimag=None, mousetitle=None):
+    """Generates a tiered slat diagram between model chemistries with
+    errors (or simply values) in list *data*, which is supplied as part of the
+    dictionary for each participating reaction, along with *dbse* and *rxn* keys
+    in argument *data*. The plot is labeled with *title* and each tier with
+    an element of *labels* and plotted at *xlimit* from the zero-line. If
+    *color* is None, slats are black, if 'sapt', colors are taken from *color*
+    key in *data* [0, 1]. Summary statistics *mae* are plotted on the
+    overbound side and relative statistics *mape* on the underbound side.
+    HTML code for mouseover if mousetext or mouselink or mouseimag specified
+    based on recipe of Andrew Dalke from
+    http://www.dalkescientific.com/writings/diary/archive/2005/04/24/interactive_html.html
+
+    """
+    import random
+    import hashlib
+    import matplotlib.pyplot as plt
+
+    # initialize tiers/wefts
+    Nweft = len(labels)
+    lenS = 0.2
+    gapT = 0.04
+    positions = range(-1, -1 * Nweft - 1, -1)
+    posnS = []
+    for weft in range(Nweft):
+        posnS.extend([positions[weft] + lenS, positions[weft] - lenS, None])
+    posnT = []
+    for weft in range(Nweft - 1):
+        posnT.extend([positions[weft] - lenS - gapT, positions[weft + 1] + lenS + gapT, None])
+    posnM = []
+
+    # initialize plot
+    fht = Nweft * 0.8
+    fig, ax = plt.subplots(figsize=(12, fht))
+    plt.subplots_adjust(left=0.01, right=0.99, hspace=0.3)
+    plt.xlim([-xlimit, xlimit])
+    plt.ylim([-1 * Nweft - 1, 0])
+    plt.yticks([])
+
+    # label plot and tiers
+    ax.text(-0.9 * xlimit, -0.25, title,
+        verticalalignment='bottom', horizontalalignment='left',
+        family='Times New Roman', weight='bold', fontsize=12)
+    for weft in labels:
+        ax.text(-0.9 * xlimit, -(1.2 + labels.index(weft)), weft,
+            verticalalignment='bottom', horizontalalignment='left',
+            family='Times New Roman', weight='bold', fontsize=18)
+
+    # plot reaction errors and threads
+    for rxn in data:
+
+        # preparation
+        xvals = rxn['data']
+        clr = segment_color(color, rxn['color'] if 'color' in rxn else None)
+        slat = []
+        for weft in range(Nweft):
+            slat.extend([xvals[weft], xvals[weft], None])
+        thread = []
+        for weft in range(Nweft - 1):
+            thread.extend([xvals[weft], xvals[weft + 1], None])
+
+        # plotting
+        ax.plot(slat, posnS, color=clr, linewidth=1.0, solid_capstyle='round')
+        ax.plot(thread, posnT, color=clr, linewidth=0.5, solid_capstyle='round', alpha=0.3)
+
+        # converting into screen coordinates for image map
+        xyscreen = ax.transData.transform(zip(xvals, positions))
+        xscreen, yscreen = zip(*xyscreen)
+        posnM.extend(zip([rxn['db']] * Nweft, [rxn['sys']] * Nweft,
+            xvals, xscreen, yscreen))
+
+        # labeling
+        try:
+            toplblposn = next(item for item in xvals if item is not None)
+            botlblposn = next(item for item in reversed(xvals) if item is not None)
+        except StopIteration:
+            pass
+        else:
+            ax.text(toplblposn, -0.75 + 0.6 * random.random(), rxn['sys'],
+                verticalalignment='bottom', horizontalalignment='center',
+                family='Times New Roman', fontsize=8)
+            ax.text(botlblposn, -1 * Nweft - 0.75 + 0.6 * random.random(), rxn['sys'],
+                verticalalignment='bottom', horizontalalignment='center',
+                family='Times New Roman', fontsize=8)
+
+    # plot trimmings
+    if mae is not None:
+        ax.plot([-x for x in mae], positions, 's', color='black')
+    if mape is not None:  # equivalent to MAE for a 10 kcal/mol IE
+        ax.plot([0.025 * x for x in mape], positions, 'o', color='black')
+
+    plt.axvline(0, color='black')
+
+    pltuid = title + '_' + hashlib.sha1(title + repr(labels) + repr(xlimit)).hexdigest()
+    pltfile = expand_saveas(saveas, pltuid, def_prefix='thread_')
+    plt.savefig(pltfile + '.png', transparent=True, format='PNG')
+    #bbox_inches='tight'
+    plt.show()
+
+    if mousetext or mouselink or mouseimag:
+
+        dpi = 80
+        img_width = fig.get_figwidth() * dpi
+        img_height = fig.get_figheight() * dpi
+
+        htmlcode = """<SCRIPT>"""
+        htmlcode += """function mouseshow(db, rxn, val) {"""
+        if mousetext or mouselink:
+            htmlcode += """   var cid = document.getElementById("cid");"""
+            if mousetext:
+                htmlcode += """   cid.innerHTML = %s;""" % (mousetext)
+            if mouselink:
+                htmlcode += """   cid.href = %s;""" % (mouselink)
+        if mouseimag:
+            htmlcode += """   var cmpd_img = document.getElementById("cmpd_img");"""
+            htmlcode += """   cmpd_img.src = %s;""" % (mouseimag)
+        htmlcode += """}"""
+        htmlcode += """</SCRIPT>"""
+
+        htmlcode += """%s <BR>""" % (mousetitle)
+        htmlcode += """Mouseover:<BR><a id="cid"></a><br>"""
+        htmlcode += """<IMG SRC="%s" ismap usemap="#points" WIDTH="%d" HEIGHT="%d">""" % \
+            (pltfile + '.png', img_width, img_height)
+        htmlcode += """<IMG ID="cmpd_img" WIDTH="%d" HEIGHT="%d">""" % (200, 160)
+        htmlcode += """<MAP name="points">"""
+
+        # generating html image map code
+        #   points sorted to avoid overlapping map areas that can overwhelm html for SSI
+        #   y=0 on top for html and on bottom for mpl, so flip the numbers
+        posnM.sort(key=lambda tup: tup[2])
+        posnM.sort(key=lambda tup: tup[3])
+        last = (0, 0)
+        for dbse, rxn, val, x, y in posnM:
+            if val is None:
+                continue
+
+            now = (int(x), int(y))
+            if now == last:
+                htmlcode += """<!-- map overlap! %s-%s %+.2f skipped -->\n""" % (dbse, rxn, val)
+            else:
+                htmlcode += """<AREA shape="rect" coords="%d,%d,%d,%d" onmouseover="javascript:mouseshow('%s', '%s', '%+.2f');">\n""" % \
+                    (x - 2, img_height - y - 20,
+                    x + 2, img_height - y + 20,
+                    dbse, rxn, val)
+                last = now
+
+        htmlcode += """</MAP>"""
+
+        return htmlcode
+
+
+#def thread_mouseover_web(pltfile, dbid, dbname, xmin, xmax, mcdats, labels, titles):
+#    """Saves a plot with name *pltfile* with a slat representation of
+#    the modelchems errors in *mcdat*. Mouseover shows geometry and error
+#    from *labels* based on recipe of Andrew Dalke from
+#    http://www.dalkescientific.com/writings/diary/archive/2005/04/24/interactive_html.html
+#
+#    """
+#    from matplotlib.backends.backend_agg import FigureCanvasAgg
+#    import matplotlib
+#    import sapt_colors
+#
+#    cmpd_width = 200
+#    cmpd_height = 160
+#
+#    nplots = len(mcdats)
+#    fht = nplots * 0.8
+#    fht = nplots * 0.8 * 1.4
+#    fig = matplotlib.figure.Figure(figsize=(12.0, fht))
+#    fig.subplots_adjust(left=0.01, right=0.99, hspace=0.3, top=0.8, bottom=0.2)
+#    img_width = fig.get_figwidth() * 80
+#    img_height = fig.get_figheight() * 80
+#
+#    htmlcode = """
+#<SCRIPT>
+#function mouseandshow(name, id, db, dbname) {
+#  var cid = document.getElementById("cid");
+#  cid.innerHTML = name;
+#  cid.href = "fragmentviewer.py?name=" + id + "&dataset=" + db;
+#  var cmpd_img = document.getElementById("cmpd_img");
+#  cmpd_img.src = dbname + "/dimers/" + id + ".png";
+#}
+#</SCRIPT>
+#
+#Distribution of Fragment Errors in Interaction Energy (kcal/mol)<BR>
+#Mouseover:<BR><a id="cid"></a><br>
+#<IMG SRC="scratch/%s" ismap usemap="#points" WIDTH="%d" HEIGHT="%d">
+#<IMG ID="cmpd_img" WIDTH="%d" HEIGHT="%d">
+#<MAP name="points">
+#""" % (pltfile, img_width, img_height, cmpd_width, cmpd_height)
+#
+#    for item in range(nplots):
+#        print '<br><br><br><br><br><br>'
+#        mcdat = mcdats[item]
+#        label = labels[item]
+#        tttle = titles[item]
+#
+#        erdat = np.array(mcdat)
+#        # No masked_array because interferes with html map
+#        #erdat = np.ma.masked_array(mcdat, mask=mask)
+#        yvals = np.ones(len(mcdat))
+#        y = np.array([sapt_colors.sapt_colors[dbname][i] for i in label])
+#
+#        ax = fig.add_subplot(nplots, 1, item + 1)
+#        sc = ax.scatter(erdat, yvals, c=y, s=3000, marker="|", cmap=matplotlib.cm.jet, vmin=0, vmax=1)
+#        ax.set_title(tttle, fontsize=8)
+#        ax.set_yticks([])
+#        lp = ax.plot([0, 0], [0.9, 1.1], color='#cccc00', lw=2)
+#        ax.set_ylim([0.95, 1.05])
+#        ax.text(xmin + 0.3, 1.0, stats(erdat), fontsize=7, family='monospace', verticalalignment='center')
+#        if item + 1 == nplots:
+#            ax.set_xticks([-12.0, -8.0, -4.0, -2.0, -1.0, 0.0, 1.0, 2.0, 4.0, 8.0, 12.0])
+#            for tick in ax.xaxis.get_major_ticks():
+#                tick.tick1line.set_markersize(0)
+#                tick.tick2line.set_markersize(0)
+#        else:
+#            ax.set_xticks([])
+#        ax.set_frame_on(False)
+#        ax.set_xlim([xmin, xmax])
+#
+#        # Convert the data set points into screen space coordinates
+#        #xyscreencoords = ax.transData.transform(zip(erdat, yvals))
+#        xyscreencoords = ax.transData.transform(zip(erdat, yvals))
+#        xcoords, ycoords = zip(*xyscreencoords)
+#
+#        # HTML image coordinates have y=0 on the top.  Matplotlib
+#        # has y=0 on the bottom.  We'll need to flip the numbers
+#        for cid, x, y, er in zip(label, xcoords, ycoords, erdat):
+#            htmlcode += """<AREA shape="rect" coords="%d,%d,%d,%d" onmouseover="javascript:mouseandshow('%s %+.2f', '%s', %s, '%s');">\n""" % \
+#                (x - 2, img_height - y - 20, x + 2, img_height - y + 20, cid, er, cid, dbid, dbname)
+#
+#    htmlcode += "</MAP>\n"
+#    canvas = FigureCanvasAgg(fig)
+#    canvas.print_figure('scratch/' + title, dpi=80, transparent=True)
+#
+#    #plt.savefig('mplflat_' + title + '.pdf', bbox_inches='tight', transparent=True, format='PDF')
+#    #plt.savefig(os.environ['HOME'] + os.sep + 'mplflat_' + title + '.pdf', bbox_inches='tight', transparent=T    rue, format='PDF')
+#
+#    return htmlcode
+
 
 def composition_tile(db, aa1, aa2):
     """Takes dictionary *db* of label, error pairs and amino acids *aa1*
@@ -456,7 +745,6 @@ def iowa(mcdat, mclbl, title='', xlimit=2.0):
     import numpy as np
     import matplotlib
     import matplotlib.pyplot as plt
-    #from matplotlib.axes import Subplot
 
     aa = ['ARG', 'HIE', 'LYS', 'ASP', 'GLU', 'SER', 'THR', 'ASN', 'GLN', 'CYS', 'MET', 'GLY', 'ALA', 'VAL', 'ILE', 'LEU', 'PRO', 'PHE', 'TYR', 'TRP']
     #aa = ['ILE', 'LEU', 'ASP', 'GLU', 'PHE']
