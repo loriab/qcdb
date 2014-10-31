@@ -733,6 +733,14 @@ class Database(object):
         else:
             return sorted(set.intersection(*mcs))
 
+    def benchmark(self):
+        """
+
+        """
+        return self.hrxn.itervalues().next().benchmark
+        # TODO all rxns have same bench in db module so all have same here in obj
+        #   but the way things stored in Reactions, this doesn't have to be so
+
     def load_subsets(self, modname='subsetgenerator', pythonpath=None):
         """Loads subsets from all functions in module *modname*.
 
