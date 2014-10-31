@@ -1,6 +1,10 @@
 import os
 import sys
 import math
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 import itertools
 import collections
 from exceptions import *
@@ -701,6 +705,20 @@ class Database(object):
                         rxn = int(rxn)
                     self.hrxn[rxn].data[mc] = ReactionDatum.library_modelchem(dbse=dbse, rxn=rxn,
                         method=method, mode=bsse, basis=basis, value=df[dbrxn])
+
+    @staticmethod
+    def load_pickled(dbname, path=None):
+        """
+
+        """
+        if path is None:
+            path = os.path.dirname(__file__) + '/../data'
+        picklefile = os.path.abspath(path) + os.sep + dbname + '.pickle'
+        if not os.path.isfile(picklefile):
+            raise ValidationError("Pickle file for loading database data from file %s does not exist" % (picklefile))
+        with open(picklefile, 'rb') as handle:
+            instance = pickle.load(handle)
+        return instance
 
     def available_modelchems(self, union=True):
         """Returns all the labels of model chemistries that have been
