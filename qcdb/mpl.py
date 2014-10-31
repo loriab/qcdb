@@ -3,6 +3,31 @@ any particular qcdb data structures but can be called with basic
 arguments.
 
 """
+import os
+#import matplotlib
+#matplotlib.use('Agg')
+
+
+def expand_saveas(saveas, def_filename, def_path=os.path.abspath(os.curdir), def_prefix=''):
+    """Analyzes string *saveas* to see if it contains information on
+    path to save file, name to save file, both or neither (*saveas*
+    ends in '/' to indicate directory only) (able to expand '.'). A full
+    absolute filename is returned, lacking only file extension. Based on
+    analysis of missing parts of *saveas*, path information from *def_path*
+    and/or filename information from *def_prefix* + *def_filename* is
+    inserted. *def_prefix* is intended to be something like 'mplthread_'
+    to identify the type of figure.
+
+    """
+    defname = def_prefix + def_filename.replace(' ', '_')
+    if saveas is None:
+        pth = def_path
+        fil = defname
+    else:
+        pth, fil = os.path.split(saveas)
+        pth = pth if pth != '' else def_path
+        fil = fil if fil != '' else defname
+    return os.path.join(os.path.abspath(pth), fil)
 
 
 def segment_color(argcolor, saptcolor):
@@ -10,7 +35,7 @@ def segment_color(argcolor, saptcolor):
     *argcolor* and particular color availibility *rxncolor*.
 
     """
-    import matplotlib as mpl
+    import matplotlib
 
     # validate any sapt color
     if saptcolor is not None:
@@ -22,13 +47,13 @@ def segment_color(argcolor, saptcolor):
         if rxncolor is None:
             clr = 'grey'
         elif saptcolor is not None:
-            clr = mpl.cm.jet(saptcolor)
+            clr = matplotlib.cm.jet(saptcolor)
         else:
             clr = rxncolor
     elif argcolor == 'sapt':
         # sapt color from rxn if available
         if saptcolor is not None:
-            clr = mpl.cm.jet(saptcolor)
+            clr = matplotlib.cm.jet(saptcolor)
         else:
             clr = 'grey'
     elif argcolor == 'rgb':
@@ -49,104 +74,104 @@ def segment_color(argcolor, saptcolor):
     return clr
 
 
-def oldthread(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None):
-    """Generates a tiered slat diagram between model chemistries with
-    errors in list *data*, which is supplied as part of the dictionary for
-    each participating reaction, along with *dbse* and *rxn* keys in
-    argument *data*. The plot is labeled with *title* and each tier with
-    an element of *labels* and plotted at *xlimit* from the zero-line. If
-    *color* is None, slats are black, if 'sapt', colors are taken from
-    sapt_colors module. Summary statistics *mae* are plotted on the
-    overbound side and relative statistics *mape* on the underbound side.
-
-    """
-    from random import random
-    import matplotlib.pyplot as plt
-    import matplotlib as mpl
-    #import sapt_colors
-
-    Nweft = len(labels)
-    positions = range(-1, -1 * Nweft - 1, -1)
-
-    # initialize plot
-    fig, ax = plt.subplots(figsize=(12, 7))
-    plt.xlim([-xlimit, xlimit])
-    plt.ylim([-1 * Nweft - 1, 0])
-    plt.yticks([])
-
-    # label plot and tiers
-    ax.text(-xlimit + 0.25, -0.25, title,
-        verticalalignment='bottom', horizontalalignment='left',
-        family='Times New Roman', weight='bold', fontsize=12)
-    for weft in labels:
-        ax.text(-xlimit + 0.25, -(1.2 + labels.index(weft)), weft,
-            verticalalignment='bottom', horizontalalignment='left',
-            family='Times New Roman', weight='bold', fontsize=18)
-
-    # plot reaction errors and threads
-    for rxn in data:
-        xvals = rxn['data']
-        toplblposn = next(item for item in xvals if item is not None)
-        botlblposn = next(item for item in reversed(xvals) if item is not None)
-
-        # validate any sapt color
-        try:
-            rxn['color'] *= 1.0
-        except (KeyError, TypeError):
-            saptcolor = None
-        else:
-            if rxn['color'] >= 0.0 and rxn['color'] <= 1.0:
-                saptcolor = rxn['color']
-            else:
-                saptcolor = None
-
-        if color is None:
-            # no color argument, so take from rxn
-            if rxn['color'] is None:
-                clr = 'grey'
-            elif saptcolor is not None:
-                clr = mpl.cm.jet(saptcolor)
-            else:
-                clr = rxn['color']
-        elif color == 'sapt':
-            # sapt color from rxn if available
-            if saptcolor is not None:
-                clr = mpl.cm.jet(saptcolor)
-            else:
-                clr = 'grey'
-        elif color == 'rgb':
-            # HB/MX/DD sapt color from rxn if available
-            if saptcolor is not None:
-                if saptcolor < 0.333:
-                    clr = 'blue'
-                elif saptcolor < 0.667:
-                    clr = 'green'
-                else:
-                    clr = 'red'
-            else:
-                clr = 'grey'
-        else:
-            # color argument is name of mpl color
-            clr = color
-
-        ax.plot(xvals, positions, '-', color=clr)
-        ax.plot(xvals, positions, '|', color=clr, markersize=10.0)
-
-        ax.text(toplblposn, -0.75 + 0.6 * random(), rxn['sys'],
-            verticalalignment='bottom', horizontalalignment='center',
-            family='Times New Roman', fontsize=8)
-        ax.text(botlblposn, -1 * Nweft - 0.75 + 0.6 * random(), rxn['sys'],
-            verticalalignment='bottom', horizontalalignment='center',
-            family='Times New Roman', fontsize=8)
-
-    # plot trimmings
-    if mae is not None:
-        ax.plot([-x for x in mae], positions, 's', color='black')
-    if mape is not None:  # equivalent to MAE for a 10 kcal/mol interaction energy
-        ax.plot([0.025 * x for x in mape], positions, 'o', color='black')
-
-    plt.axvline(0, color='black')
-    plt.show()
+#def oldthread(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None):
+#    """Generates a tiered slat diagram between model chemistries with
+#    errors in list *data*, which is supplied as part of the dictionary for
+#    each participating reaction, along with *dbse* and *rxn* keys in
+#    argument *data*. The plot is labeled with *title* and each tier with
+#    an element of *labels* and plotted at *xlimit* from the zero-line. If
+#    *color* is None, slats are black, if 'sapt', colors are taken from
+#    sapt_colors module. Summary statistics *mae* are plotted on the
+#    overbound side and relative statistics *mape* on the underbound side.
+#
+#    """
+#    from random import random
+#    import matplotlib.pyplot as plt
+#    import matplotlib as mpl
+#    #import sapt_colors
+#
+#    Nweft = len(labels)
+#    positions = range(-1, -1 * Nweft - 1, -1)
+#
+#    # initialize plot
+#    fig, ax = plt.subplots(figsize=(12, 7))
+#    plt.xlim([-xlimit, xlimit])
+#    plt.ylim([-1 * Nweft - 1, 0])
+#    plt.yticks([])
+#
+#    # label plot and tiers
+#    ax.text(-xlimit + 0.25, -0.25, title,
+#        verticalalignment='bottom', horizontalalignment='left',
+#        family='Times New Roman', weight='bold', fontsize=12)
+#    for weft in labels:
+#        ax.text(-xlimit + 0.25, -(1.2 + labels.index(weft)), weft,
+#            verticalalignment='bottom', horizontalalignment='left',
+#            family='Times New Roman', weight='bold', fontsize=18)
+#
+#    # plot reaction errors and threads
+#    for rxn in data:
+#        xvals = rxn['data']
+#        toplblposn = next(item for item in xvals if item is not None)
+#        botlblposn = next(item for item in reversed(xvals) if item is not None)
+#
+#        # validate any sapt color
+#        try:
+#            rxn['color'] *= 1.0
+#        except (KeyError, TypeError):
+#            saptcolor = None
+#        else:
+#            if rxn['color'] >= 0.0 and rxn['color'] <= 1.0:
+#                saptcolor = rxn['color']
+#            else:
+#                saptcolor = None
+#
+#        if color is None:
+#            # no color argument, so take from rxn
+#            if rxn['color'] is None:
+#                clr = 'grey'
+#            elif saptcolor is not None:
+#                clr = mpl.cm.jet(saptcolor)
+#            else:
+#                clr = rxn['color']
+#        elif color == 'sapt':
+#            # sapt color from rxn if available
+#            if saptcolor is not None:
+#                clr = mpl.cm.jet(saptcolor)
+#            else:
+#                clr = 'grey'
+#        elif color == 'rgb':
+#            # HB/MX/DD sapt color from rxn if available
+#            if saptcolor is not None:
+#                if saptcolor < 0.333:
+#                    clr = 'blue'
+#                elif saptcolor < 0.667:
+#                    clr = 'green'
+#                else:
+#                    clr = 'red'
+#            else:
+#                clr = 'grey'
+#        else:
+#            # color argument is name of mpl color
+#            clr = color
+#
+#        ax.plot(xvals, positions, '-', color=clr)
+#        ax.plot(xvals, positions, '|', color=clr, markersize=10.0)
+#
+#        ax.text(toplblposn, -0.75 + 0.6 * random(), rxn['sys'],
+#            verticalalignment='bottom', horizontalalignment='center',
+#            family='Times New Roman', fontsize=8)
+#        ax.text(botlblposn, -1 * Nweft - 0.75 + 0.6 * random(), rxn['sys'],
+#            verticalalignment='bottom', horizontalalignment='center',
+#            family='Times New Roman', fontsize=8)
+#
+#    # plot trimmings
+#    if mae is not None:
+#        ax.plot([-x for x in mae], positions, 's', color='black')
+#    if mape is not None:  # equivalent to MAE for a 10 kcal/mol interaction energy
+#        ax.plot([0.025 * x for x in mape], positions, 'o', color='black')
+#
+#    plt.axvline(0, color='black')
+#    plt.show()
 
 
 def bar(data, title=''):
@@ -162,7 +187,6 @@ def bar(data, title=''):
     #"""
     from random import random
     import matplotlib.pyplot as plt
-    import matplotlib as mpl
 
     # initialize plot, fix dimensions for consistent Illustrator import
     fig, ax = plt.subplots(figsize=(12, 7))
@@ -194,8 +218,9 @@ def bar(data, title=''):
                 family='Times New Roman', fontsize=8)
         xval += 0.20
 
+    plt.savefig('bar_' + title + '.pdf', bbox_inches='tight', transparent=True, format='PDF')
     plt.show()
-    plt.savefig('mplbar_' + title + '.pdf', bbox_inches='tight', transparent=True, format='PDF')
+    #print os.environ['HOME'] + os.sep + 'mplbar_' + title + '.pdf'
 
 
 def flat(data, color=None, title='', xlimit=4.0, mae=None, mape=None, view=True):
@@ -211,7 +236,6 @@ def flat(data, color=None, title='', xlimit=4.0, mae=None, mape=None, view=True)
     """
     from random import random
     import matplotlib.pyplot as plt
-    import matplotlib as mpl
 
     Nweft = 1
     positions = range(-1, -1 * Nweft - 1, -1)
@@ -235,58 +259,18 @@ def flat(data, color=None, title='', xlimit=4.0, mae=None, mape=None, view=True)
     # plot reaction errors and threads
     for rxn in data:
         xvals = rxn['data']
-
-        # validate any sapt color
-        try:
-            rxn['color'] *= 1.0
-        except (KeyError, TypeError):
-            saptcolor = None
-        else:
-            if rxn['color'] >= 0.0 and rxn['color'] <= 1.0:
-                saptcolor = rxn['color']
-            else:
-                saptcolor = None
-
-        if color is None:
-            # no color argument, so take from rxn
-            if rxn['color'] is None:
-                clr = 'grey'
-            elif saptcolor is not None:
-                clr = mpl.cm.jet(saptcolor)
-            else:
-                clr = rxn['color']
-        elif color == 'sapt':
-            # sapt color from rxn if available
-            if saptcolor is not None:
-                clr = mpl.cm.jet(saptcolor)
-            else:
-                clr = 'grey'
-        elif color == 'rgb':
-            # HB/MX/DD sapt color from rxn if available
-            if saptcolor is not None:
-                if saptcolor < 0.333:
-                    clr = 'blue'
-                elif saptcolor < 0.667:
-                    clr = 'green'
-                else:
-                    clr = 'red'
-            else:
-                clr = 'grey'
-        else:
-            # color argument is name of mpl color
-            clr = color
+        clr = segment_color(color, rxn['color'] if 'color' in rxn else None)
 
         ax.plot(xvals, positions, '|', color=clr, markersize=13.0)
 
     # plot trimmings
     if mae is not None:
-        #ax.plot(-1 * mae, positions, 's', color='black', markersize=18.0)
         plt.axvline(-1 * mae, color='black', linewidth=12)
     if mape is not None:  # equivalent to MAE for a 10 kcal/mol interaction energy
         ax.plot(0.025 * mape, positions, 'o', color='black', markersize=15.0)
 
+    plt.savefig('flat_' + title + '.pdf', transparent=True, format='PDF')  # bbox_inches='tight'
     plt.show()
-    plt.savefig('mplflat_' + title + '.pdf', bbox_inches='tight', transparent=True, format='PDF')
     if not view:
         plt.close()
 
@@ -366,7 +350,6 @@ def thread(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None):
     """
     from random import random
     import matplotlib.pyplot as plt
-    import matplotlib as mpl
 
     # initialize tiers/wefts
     Nweft = len(labels)
@@ -471,19 +454,19 @@ def iowa(mcdat, mclbl, title='', xlimit=2.0):
 
     """
     import numpy as np
+    import matplotlib
     import matplotlib.pyplot as plt
-    #import matplotlib as mpl
-    from matplotlib.axes import Subplot
+    #from matplotlib.axes import Subplot
 
-    aa = ['ARG','HIE','LYS','ASP','GLU','SER','THR','ASN','GLN','CYS','MET','GLY','ALA','VAL','ILE','LEU','PRO','PHE','TYR','TRP']
+    aa = ['ARG', 'HIE', 'LYS', 'ASP', 'GLU', 'SER', 'THR', 'ASN', 'GLN', 'CYS', 'MET', 'GLY', 'ALA', 'VAL', 'ILE', 'LEU', 'PRO', 'PHE', 'TYR', 'TRP']
     #aa = ['ILE', 'LEU', 'ASP', 'GLU', 'PHE']
     err = dict(zip(mclbl, mcdat))
 
     # handle for frame, overall axis
-    fig, axt = plt.subplots(figsize=(6,6))
-     
-    axt.set_xticks(np.arange(len(aa))+0.3, minor=False)
-    axt.set_yticks(np.arange(len(aa))+0.3, minor=False)
+    fig, axt = plt.subplots(figsize=(6, 6))
+
+    axt.set_xticks(np.arange(len(aa)) + 0.3, minor=False)
+    axt.set_yticks(np.arange(len(aa)) + 0.3, minor=False)
     axt.invert_yaxis()
     axt.xaxis.tick_top()
     axt.set_xticklabels(aa, minor=False, rotation=60, size='small')
@@ -494,24 +477,25 @@ def iowa(mcdat, mclbl, title='', xlimit=2.0):
     axt.text(10.0, -1.5, title, horizontalalignment='center', fontsize=16)
 
     # nill spacing between 20x20 heatmaps
-    plt.subplots_adjust(hspace=0.001, wspace=0.001) 
+    plt.subplots_adjust(hspace=0.001, wspace=0.001)
 
     index = 1
     for aa1 in aa:
         for aa2 in aa:
             cb = composition_tile(err, aa1, aa2)
 
-            ax = Subplot(fig, len(aa), len(aa), index) 
+            ax = matplotlib.axes.Subplot(fig, len(aa), len(aa), index)
             fig.add_subplot(ax)
             heatmap = ax.pcolor(cb, vmin=-xlimit, vmax=xlimit, cmap=plt.cm.PRGn)
             ax.set_xticks([])
             ax.set_yticks([])
             index += 1
-    
-    plt.show()
+
     title = '_'.join(title.split())
     plt.savefig('iowa_' + title + '.pdf', bbox_inches='tight', transparent=True, format='PDF')
-        
+    plt.show()
+    #plt.savefig(os.environ['HOME'] + os.sep + 'iowa_' + title + '.pdf', bbox_inches='tight', transparent=True, format='PDF')
+
 
 if __name__ == "__main__":
 
@@ -546,7 +530,8 @@ if __name__ == "__main__":
     color='sapt', title='MP2-CP-adz', mae=1.21356003247, mape=24.6665886087, xlimit=4.0)
 
     lin_dats = [-0.5, -0.4, -0.3, 0, .5, .8, 5]
-    lin_labs = ['008ILE-012LEU-1', '012LEU-085ASP-1', '004GLU-063LEU-2', 
+    lin_labs = ['008ILE-012LEU-1', '012LEU-085ASP-1', '004GLU-063LEU-2',
         '011ILE-014PHE-1', '027GLU-031LEU-1', '038PHE-041ILE-1', '199LEU-202GLU-1']
     iowa(lin_dats, lin_labs, title='ttl', xlimit=0.5)
- 
+
+    disthist(lin_dats)
