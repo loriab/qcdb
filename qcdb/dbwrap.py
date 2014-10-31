@@ -669,6 +669,52 @@ class Database(object):
         func = 'load_' + project
         self.load_qcdata(modname=mod, funcname=func, pythonpath=pythonpath)
 
+    def load_qcdata_hdf5_trusted(self, project, path=None):
+        """Loads qcdb.ReactionDatums from HDF5 file at path/dbse_project.h5 . 
+        If path not given, looks in qcdb/data. This file is written by 
+        reap-DB and so has been largely validated.
+
+        """
+        if path is None:
+            path = os.path.dirname(__file__) + '/../data'
+        hdf5file = os.path.abspath(path) + os.sep + self.dbse + '_' + project + '.h5'
+        if not os.path.isfile(hdf5file):
+            raise ValidationError("HDF5 file for loading database data from file %s does not exist" % (hdf5file))
+        try:
+            import pandas as pd
+        except ImportError:
+            raise ValidationError("Pandas data managment module must be available for import")
+
+        intrxn = True if (self.hrxn.keys()[0] + 1 > 0) else False
+
+        with pd.get_store(hdf5file) as handle:
+            for mc in handle['pdie'].keys():
+                lmc = mc.split('-')  # TODO could be done better
+                method = lmc[0]
+                bsse = '_'.join(lmc[1:-1])
+                basis = lmc[-1]
+
+                df = handle['pdie'][mc]
+                for dbrxn in df.index[df.notnull()].values:
+                    [dbse, rxn] = dbrxn.split('-', 1)
+                    if intrxn:
+                        rxn = int(rxn)
+                    self.hrxn[rxn].data[mc] = ReactionDatum.library_modelchem(dbse=dbse, rxn=rxn,
+                        method=method, mode=bsse, basis=basis, value=df[dbrxn])
+
+    def available_modelchems(self, union=True):
+        """Returns all the labels of model chemistries that have been
+        loaded. Either all modelchems that have data for any reaction if
+        *union* is True or all modelchems that have data for all reactions
+        if *union* is False.
+
+        """
+        mcs = [set(v.data) for k, v in self.hrxn.items()]
+        if union:
+            return sorted(set.union(*mcs))
+        else:
+            return sorted(set.intersection(*mcs))
+
     def load_subsets(self, modname='subsetgenerator', pythonpath=None):
         """Loads subsets from all functions in module *modname*.
 
@@ -771,8 +817,85 @@ class Database(object):
         else:
             # if running from Canopy, call mpl directly
             mpl.thread(dbdat, color=color, title=title, labels=mid, mae=mae, mape=mapbe, xlimit=xlimit)
-            print """mpl.thread(%s,\n    color='%s',\n    title='%s',\n    labels=%s,\n    mae=%s,\n    mape=%s\n    xlimit=%s)\n\n""" % \
-                (dbdat, color, title, mid, mae, mapbe, str(xlimit))
+
+    def plot_modelchems_mouseover(self, modelchem, benchmark='default', mbenchmark=None, sset='default', msset=None, failoninc=True, verbose=False, color='sapt', xlimit=4.0, saveas=None, mousetext=None, mouselink=None, mouseimag=None, mousetitle=None):
+        """Computes individual errors and summary statistics for each model
+        chemistry in array *modelchem* versus *benchmark* over subset *sset*.
+        *mbenchmark* and *msset* are array options (same length as *modelchem*) 
+        that override *benchmark* and *sset*, respectively, for non-uniform 
+        specification. *saveas* conveys directory ('/') and/or filename 
+        for saving the resulting plot; file extension is not accessible.
+        Thread *color* can be 'rgb' for old coloring, a color name or 'sapt'
+        for spectrum coloring. Prepares thread diagram instructions and
+        either executes them if matplotlib available (Canopy) or prints them.
+        If any of *mousetext*, *mouselink*, or *mouseimag* is specified, 
+        htmlcode will be returned with an image map of slats to any of 
+        text, link, or image, respectively.
+
+        """
+        # distribute benchmark
+        if mbenchmark is None:
+            # benchmark is normal modelchem name
+            lbenchmark = [benchmark] * len(modelchem)
+        else:
+            if isinstance(mbenchmark, basestring) or len(mbenchmark) != len(modelchem):
+                raise ValidationError("""mbenchmark must be array of length distributable among modelchem""" % (str(mbenchmark)))
+            else:
+            # mbenchmark is array of benchmarks for each modelchem
+                lbenchmark = mbenchmark
+        # distribute sset
+        if msset is None:
+            # sset is normal subset name like 'MX'
+            lsset = [sset] * len(modelchem)
+        else:
+            if isinstance(msset, basestring) or len(msset) != len(modelchem):
+                raise ValidationError("""msset must be array of length distributable among modelchem""" % (str(msset)))
+            else:
+            # msset is array of subsets for each modelchem
+                lsset = msset
+        # compute errors
+        errors = collections.OrderedDict()
+        indiv = collections.OrderedDict()
+        index = []
+        for mc, bm, ss in zip(modelchem, lbenchmark, lsset):
+            ix = '%s_%s_%s' % (mc, bm, ss)
+            index.append(ix)
+            errors[ix], indiv[ix] = self.compute_statistics(mc, benchmark=bm,
+                sset=ss, failoninc=failoninc, verbose=verbose, returnindiv=True)
+        # repackage
+        dbdat = []
+        for rxn in self.hrxn.keys():
+            data = []
+            for ix in index:
+                if rxn in self.sset[lsset[index.index(ix)]].keys():
+                    try:
+                        data.append(indiv[ix][rxn][0])
+                    except KeyError, e:
+                        if failoninc:
+                            raise e
+                        else:
+                            data.append(None)
+                else:
+                    data.append(None)
+            dbdat.append({'db': self.dbse, 'sys': str(rxn), 'color': self.hrxn[rxn].color, 'data': data})
+        mae = [errors[ix]['mae'] for ix in index]
+        mapbe = [100 * errors[ix]['mapbe'] for ix in index]
+        # form unique filename
+        ixpre, ixsuf, ixmid = string_contrast(index)
+        title = self.dbse + ' ' + ixpre + '[]' + ixsuf
+        # generate matplotlib instructions and call or print
+        try:
+            import mpl
+            import matplotlib.pyplot as plt
+        except ImportError:
+            # if not running from Canopy, print line to execute from Canopy
+            print """mpl.thread_mouseover_th(%s,\n    color='%s',\n    title='%s',\n    labels=%s,\n    mae=%s,\n    mape=%s\n    xlimit=%s\n    saveas=%s\n    mousetext=%s\n    mouselink=%s\n    mouseimag=%s\n    mousetitle=%s)\n\n""" % \
+                (dbdat, color, title, ixmid, mae, mapbe, str(xlimit), 
+                repr(saveas), repr(mousetext), repr(mouselink), repr(mouseimag), repr(mousetitle))
+        else:
+            # if running from Canopy, call mpl directly
+            htmlcode = mpl.thread_mouseover(dbdat, color=color, title=title, labels=ixmid, mae=mae, mape=mapbe, xlimit=xlimit, saveas=saveas, mousetext=mousetext, mouselink=mouselink, mouseimag=mouseimag, mousetitle=mousetitle)
+            return htmlcode
 
     def plot_flat(self, modelchem, benchmark='default', sset='default', failoninc=True, verbose=False, color='sapt', xlimit=4.0, view=True):
         """Computes individual errors and summary statistics for single
