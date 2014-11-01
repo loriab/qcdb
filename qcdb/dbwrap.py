@@ -689,7 +689,12 @@ class Database(object):
         except ImportError:
             raise ValidationError("Pandas data managment module must be available for import")
 
-        intrxn = True if (self.hrxn.keys()[0] + 1 > 0) else False
+        try:
+            self.hrxn.iterkeys().next() + 1
+        except TypeError:
+            intrxn = False
+        else:
+            intrxn = True
 
         with pd.get_store(hdf5file) as handle:
             for mc in handle['pdie'].keys():
@@ -734,9 +739,7 @@ class Database(object):
             return sorted(set.intersection(*mcs))
 
     def benchmark(self):
-        """
-
-        """
+        """Returns the model chemistry label for the database's benchmark."""
         return self.hrxn.itervalues().next().benchmark
         # TODO all rxns have same bench in db module so all have same here in obj
         #   but the way things stored in Reactions, this doesn't have to be so
