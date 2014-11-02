@@ -576,26 +576,26 @@ def thread_mouseover(data, labels, color=None, title='', xlimit=4.0, mae=None, m
         img_width = fig.get_figwidth() * dpi
         img_height = fig.get_figheight() * dpi
 
-        htmlcode = """<SCRIPT>"""
-        htmlcode += """function mouseshow(db, rxn, val) {"""
+        htmlcode = """<SCRIPT>\n"""
+        htmlcode += """function mouseshow(db, rxn, val) {\n"""
         if mousetext or mouselink:
-            htmlcode += """   var cid = document.getElementById("cid");"""
+            htmlcode += """   var cid = document.getElementById("cid");\n"""
             if mousetext:
-                htmlcode += """   cid.innerHTML = %s;""" % (mousetext)
+                htmlcode += """   cid.innerHTML = %s;\n""" % (mousetext)
             if mouselink:
-                htmlcode += """   cid.href = %s;""" % (mouselink)
+                htmlcode += """   cid.href = %s;\n""" % (mouselink)
         if mouseimag:
-            htmlcode += """   var cmpd_img = document.getElementById("cmpd_img");"""
-            htmlcode += """   cmpd_img.src = %s;""" % (mouseimag)
-        htmlcode += """}"""
-        htmlcode += """</SCRIPT>"""
+            htmlcode += """   var cmpd_img = document.getElementById("cmpd_img");\n"""
+            htmlcode += """   cmpd_img.src = %s;\n""" % (mouseimag)
+        htmlcode += """}\n"""
+        htmlcode += """</SCRIPT>\n"""
 
         htmlcode += """%s <BR>""" % (mousetitle)
-        htmlcode += """Mouseover:<BR><a id="cid"></a><br>"""
-        htmlcode += """<IMG SRC="%s" ismap usemap="#points" WIDTH="%d" HEIGHT="%d">""" % \
+        htmlcode += """Mouseover:<BR><a id="cid"></a><br>\n"""
+        htmlcode += """<IMG SRC="%s" ismap usemap="#points" WIDTH="%d" HEIGHT="%d">\n""" % \
             (pltfile + '.png', img_width, img_height)
-        htmlcode += """<IMG ID="cmpd_img" WIDTH="%d" HEIGHT="%d">""" % (200, 160)
-        htmlcode += """<MAP name="points">"""
+        htmlcode += """<IMG ID="cmpd_img" WIDTH="%d" HEIGHT="%d">\n""" % (200, 160)
+        htmlcode += """<MAP name="points">\n"""
 
         # generating html image map code
         #   points sorted to avoid overlapping map areas that can overwhelm html for SSI
@@ -617,7 +617,7 @@ def thread_mouseover(data, labels, color=None, title='', xlimit=4.0, mae=None, m
                     dbse, rxn, val)
                 last = now
 
-        htmlcode += """</MAP>"""
+        htmlcode += """</MAP>\n"""
 
         return htmlcode
 
