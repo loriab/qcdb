@@ -8,7 +8,7 @@ import os
 #matplotlib.use('Agg')
 
 
-def expand_saveas(saveas, def_filename, def_path=os.path.abspath(os.curdir), def_prefix=''):
+def expand_saveas(saveas, def_filename, def_path=os.path.abspath(os.curdir), def_prefix='', force_relpath=False):
     """Analyzes string *saveas* to see if it contains information on
     path to save file, name to save file, both or neither (*saveas*
     ends in '/' to indicate directory only) (able to expand '.'). A full
@@ -27,7 +27,12 @@ def expand_saveas(saveas, def_filename, def_path=os.path.abspath(os.curdir), def
         pth, fil = os.path.split(saveas)
         pth = pth if pth != '' else def_path
         fil = fil if fil != '' else defname
-    return os.path.join(os.path.abspath(pth), fil)
+
+    abspathfile = os.path.join(os.path.abspath(pth), fil)
+    if force_relpath:
+        return abspathfile.split(os.path.commonprefix([abspathfile, os.getcwd()]) + os.sep)[1]
+    else:
+        return abspathfile
 
 
 def segment_color(argcolor, saptcolor):
@@ -337,7 +342,7 @@ def flat(data, color=None, title='', xlimit=4.0, mae=None, mape=None, view=True)
 #    plt.savefig('scratch/' + pltfile + '_trimd' + '.eps', transparent=True, format='EPS')
 
 
-def disthist(data, saveas=None, title='', xtitle='', xmin=None, xmax=None, me=None, stde=None):
+def disthist(data, saveas=None, title='', xtitle='', xmin=None, xmax=None, me=None, stde=None, force_relpath=False):
     """Saves a plot with name *saveas* with a histogram representation
     of the reaction errors in *data*. Also plots a gaussian distribution
     with mean *me* and standard deviation *stde*. Plot has x-range
@@ -381,7 +386,7 @@ def disthist(data, saveas=None, title='', xtitle='', xmin=None, xmax=None, me=No
     plt.title(title)
 
     pltuid = title  # TODO not really unique
-    pltfile = expand_saveas(saveas, pltuid, def_prefix='disthist_')
+    pltfile = expand_saveas(saveas, pltuid, def_prefix='disthist_', force_relpath=force_relpath)
     plt.savefig(pltfile + '.png', transparent=True, bbox_inches='tight', format='PNG')
     plt.show()
 
@@ -471,7 +476,7 @@ def thread(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None):
     plt.show()
 
 
-def thread_mouseover(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None, saveas=None, mousetext=None, mouselink=None, mouseimag=None, mousetitle=None):
+def thread_mouseover(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None, saveas=None, mousetext=None, mouselink=None, mouseimag=None, mousetitle=None, force_relpath=False):
     """Generates a tiered slat diagram between model chemistries with
     errors (or simply values) in list *data*, which is supplied as part of the
     dictionary for each participating reaction, along with *dbse* and *rxn* keys
@@ -565,7 +570,7 @@ def thread_mouseover(data, labels, color=None, title='', xlimit=4.0, mae=None, m
     plt.axvline(0, color='black')
 
     pltuid = title + '_' + hashlib.sha1(title + repr(labels) + repr(xlimit)).hexdigest()
-    pltfile = expand_saveas(saveas, pltuid, def_prefix='thread_')
+    pltfile = expand_saveas(saveas, pltuid, def_prefix='thread_', force_relpath=force_relpath)
     plt.savefig(pltfile + '.png', transparent=True, format='PNG')
     #bbox_inches='tight'
     plt.show()
