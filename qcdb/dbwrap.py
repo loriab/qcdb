@@ -847,7 +847,7 @@ class Database(object):
             # if running from Canopy, call mpl directly
             mpl.thread(dbdat, color=color, title=title, labels=mid, mae=mae, mape=mapbe, xlimit=xlimit)
 
-    def plot_modelchems_mouseover(self, modelchem, benchmark='default', mbenchmark=None, sset='default', msset=None, failoninc=True, verbose=False, color='sapt', xlimit=4.0, saveas=None, mousetext=None, mouselink=None, mouseimag=None, mousetitle=None):
+    def plot_modelchems_mouseover(self, modelchem, benchmark='default', mbenchmark=None, sset='default', msset=None, failoninc=True, verbose=False, color='sapt', xlimit=4.0, saveas=None, mousetext=None, mouselink=None, mouseimag=None, mousetitle=None, force_relpath=False):
         """Computes individual errors and summary statistics for each model
         chemistry in array *modelchem* versus *benchmark* over subset *sset*.
         *mbenchmark* and *msset* are array options (same length as *modelchem*) 
@@ -918,12 +918,12 @@ class Database(object):
             import matplotlib.pyplot as plt
         except ImportError:
             # if not running from Canopy, print line to execute from Canopy
-            print """mpl.thread_mouseover_th(%s,\n    color='%s',\n    title='%s',\n    labels=%s,\n    mae=%s,\n    mape=%s\n    xlimit=%s\n    saveas=%s\n    mousetext=%s\n    mouselink=%s\n    mouseimag=%s\n    mousetitle=%s)\n\n""" % \
+            print """mpl.thread_mouseover_th(%s,\n    color='%s',\n    title='%s',\n    labels=%s,\n    mae=%s,\n    mape=%s\n    xlimit=%s\n    saveas=%s\n    mousetext=%s\n    mouselink=%s\n    mouseimag=%s\n    mousetitle=%s,\n    force_relpath=%s)\n\n""" % \
                 (dbdat, color, title, ixmid, mae, mapbe, str(xlimit), 
-                repr(saveas), repr(mousetext), repr(mouselink), repr(mouseimag), repr(mousetitle))
+                repr(saveas), repr(mousetext), repr(mouselink), repr(mouseimag), repr(mousetitle), repr(force_relpath))
         else:
             # if running from Canopy, call mpl directly
-            htmlcode = mpl.thread_mouseover(dbdat, color=color, title=title, labels=ixmid, mae=mae, mape=mapbe, xlimit=xlimit, saveas=saveas, mousetext=mousetext, mouselink=mouselink, mouseimag=mouseimag, mousetitle=mousetitle)
+            htmlcode = mpl.thread_mouseover(dbdat, color=color, title=title, labels=ixmid, mae=mae, mape=mapbe, xlimit=xlimit, saveas=saveas, mousetext=mousetext, mouselink=mouselink, mouseimag=mouseimag, mousetitle=mousetitle, force_relpath=force_relpath)
             return htmlcode
 
     def plot_flat(self, modelchem, benchmark='default', sset='default', failoninc=True, verbose=False, color='sapt', xlimit=4.0, view=True):
