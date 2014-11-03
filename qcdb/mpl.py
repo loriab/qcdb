@@ -548,18 +548,19 @@ def thread_mouseover(data, labels, color=None, title='', xlimit=4.0, mae=None, m
             xvals, xscreen, yscreen))
 
         # labeling
-        try:
-            toplblposn = next(item for item in xvals if item is not None)
-            botlblposn = next(item for item in reversed(xvals) if item is not None)
-        except StopIteration:
-            pass
-        else:
-            ax.text(toplblposn, -0.75 + 0.6 * random.random(), rxn['sys'],
-                verticalalignment='bottom', horizontalalignment='center',
-                family='Times New Roman', fontsize=8)
-            ax.text(botlblposn, -1 * Nweft - 0.75 + 0.6 * random.random(), rxn['sys'],
-                verticalalignment='bottom', horizontalalignment='center',
-                family='Times New Roman', fontsize=8)
+        if not(mousetext or mouselink or mouseimag):
+            try:
+                toplblposn = next(item for item in xvals if item is not None)
+                botlblposn = next(item for item in reversed(xvals) if item is not None)
+            except StopIteration:
+                pass
+            else:
+                ax.text(toplblposn, -0.75 + 0.6 * random.random(), rxn['sys'],
+                    verticalalignment='bottom', horizontalalignment='center',
+                    family='Times New Roman', fontsize=8)
+                ax.text(botlblposn, -1 * Nweft - 0.75 + 0.6 * random.random(), rxn['sys'],
+                    verticalalignment='bottom', horizontalalignment='center',
+                    family='Times New Roman', fontsize=8)
 
     # plot trimmings
     if mae is not None:
@@ -572,11 +573,19 @@ def thread_mouseover(data, labels, color=None, title='', xlimit=4.0, mae=None, m
     pltuid = title + '_' + hashlib.sha1(title + repr(labels) + repr(xlimit)).hexdigest()
     pltfile = expand_saveas(saveas, pltuid, def_prefix='thread_', force_relpath=force_relpath)
     plt.savefig(pltfile + '.png', transparent=True, format='PNG')
+    plt.savefig(pltfile + '.pdf', transparent=True, format='PDF')
+    plt.savefig(pltfile + '.eps', transparent=True, format='EPS')
     #bbox_inches='tight'
+    files_saved = {
+        'png_labeled': pltfile + '.png',
+        'pdf_labeled': pltfile + '.pdf',
+        'eps_labeled': pltfile + '.eps',
+        }
     plt.show()
 
-    if mousetext or mouselink or mouseimag:
-
+    if not (mousetext or mouselink or mouseimag):
+        return files_saved, None
+    else:
         dpi = 80
         img_width = fig.get_figwidth() * dpi
         img_height = fig.get_figheight() * dpi
@@ -624,7 +633,7 @@ def thread_mouseover(data, labels, color=None, title='', xlimit=4.0, mae=None, m
 
         htmlcode += """</MAP>\n"""
 
-        return htmlcode
+        return files_saved, htmlcode
 
 
 #def thread_mouseover_web(pltfile, dbid, dbname, xmin, xmax, mcdats, labels, titles):

@@ -530,6 +530,9 @@ class Database(object):
             lsslist = [rxn for rxn in self.sset['default'].keys() if rxn in func(self)]
         except TypeError, e:
             raise ValidationError("""Function %s did not return list: %s.""" % (func.__name__, str(e)))
+        if len(lsslist) == 0:
+            print """Database %s: Subset %s NOT formed: empty""" % (self.dbse, label)
+            return
 
         self.sset[label] = collections.OrderedDict()
         for rxn in lsslist:
@@ -923,8 +926,8 @@ class Database(object):
                 repr(saveas), repr(mousetext), repr(mouselink), repr(mouseimag), repr(mousetitle), repr(force_relpath))
         else:
             # if running from Canopy, call mpl directly
-            htmlcode = mpl.thread_mouseover(dbdat, color=color, title=title, labels=ixmid, mae=mae, mape=mapbe, xlimit=xlimit, saveas=saveas, mousetext=mousetext, mouselink=mouselink, mouseimag=mouseimag, mousetitle=mousetitle, force_relpath=force_relpath)
-            return htmlcode
+            filedict, htmlcode = mpl.thread_mouseover(dbdat, color=color, title=title, labels=ixmid, mae=mae, mape=mapbe, xlimit=xlimit, saveas=saveas, mousetext=mousetext, mouselink=mouselink, mouseimag=mouseimag, mousetitle=mousetitle, force_relpath=force_relpath)
+            return filedict, htmlcode
 
     def plot_flat(self, modelchem, benchmark='default', sset='default', failoninc=True, verbose=False, color='sapt', xlimit=4.0, view=True):
         """Computes individual errors and summary statistics for single
