@@ -8,7 +8,7 @@ import os
 #matplotlib.use('Agg')
 
 
-def expand_saveas(saveas, def_filename, def_path=os.path.abspath(os.curdir), def_prefix='', force_relpath=False):
+def expand_saveas(saveas, def_filename, def_path=os.path.abspath(os.curdir), def_prefix='', relpath=False):
     """Analyzes string *saveas* to see if it contains information on
     path to save file, name to save file, both or neither (*saveas*
     ends in '/' to indicate directory only) (able to expand '.'). A full
@@ -29,7 +29,7 @@ def expand_saveas(saveas, def_filename, def_path=os.path.abspath(os.curdir), def
         fil = fil if fil != '' else defname
 
     abspathfile = os.path.join(os.path.abspath(pth), fil)
-    if force_relpath:
+    if relpath:
         return abspathfile.split(os.path.commonprefix([abspathfile, os.getcwd()]) + os.sep)[1]
     else:
         return abspathfile
@@ -79,118 +79,15 @@ def segment_color(argcolor, saptcolor):
     return clr
 
 
-#def oldthread(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None):
-#    """Generates a tiered slat diagram between model chemistries with
-#    errors in list *data*, which is supplied as part of the dictionary for
-#    each participating reaction, along with *dbse* and *rxn* keys in
-#    argument *data*. The plot is labeled with *title* and each tier with
-#    an element of *labels* and plotted at *xlimit* from the zero-line. If
-#    *color* is None, slats are black, if 'sapt', colors are taken from
-#    sapt_colors module. Summary statistics *mae* are plotted on the
-#    overbound side and relative statistics *mape* on the underbound side.
-#
-#    """
-#    from random import random
-#    import matplotlib.pyplot as plt
-#    import matplotlib as mpl
-#    #import sapt_colors
-#
-#    Nweft = len(labels)
-#    positions = range(-1, -1 * Nweft - 1, -1)
-#
-#    # initialize plot
-#    fig, ax = plt.subplots(figsize=(12, 7))
-#    plt.xlim([-xlimit, xlimit])
-#    plt.ylim([-1 * Nweft - 1, 0])
-#    plt.yticks([])
-#
-#    # label plot and tiers
-#    ax.text(-xlimit + 0.25, -0.25, title,
-#        verticalalignment='bottom', horizontalalignment='left',
-#        family='Times New Roman', weight='bold', fontsize=12)
-#    for weft in labels:
-#        ax.text(-xlimit + 0.25, -(1.2 + labels.index(weft)), weft,
-#            verticalalignment='bottom', horizontalalignment='left',
-#            family='Times New Roman', weight='bold', fontsize=18)
-#
-#    # plot reaction errors and threads
-#    for rxn in data:
-#        xvals = rxn['data']
-#        toplblposn = next(item for item in xvals if item is not None)
-#        botlblposn = next(item for item in reversed(xvals) if item is not None)
-#
-#        # validate any sapt color
-#        try:
-#            rxn['color'] *= 1.0
-#        except (KeyError, TypeError):
-#            saptcolor = None
-#        else:
-#            if rxn['color'] >= 0.0 and rxn['color'] <= 1.0:
-#                saptcolor = rxn['color']
-#            else:
-#                saptcolor = None
-#
-#        if color is None:
-#            # no color argument, so take from rxn
-#            if rxn['color'] is None:
-#                clr = 'grey'
-#            elif saptcolor is not None:
-#                clr = mpl.cm.jet(saptcolor)
-#            else:
-#                clr = rxn['color']
-#        elif color == 'sapt':
-#            # sapt color from rxn if available
-#            if saptcolor is not None:
-#                clr = mpl.cm.jet(saptcolor)
-#            else:
-#                clr = 'grey'
-#        elif color == 'rgb':
-#            # HB/MX/DD sapt color from rxn if available
-#            if saptcolor is not None:
-#                if saptcolor < 0.333:
-#                    clr = 'blue'
-#                elif saptcolor < 0.667:
-#                    clr = 'green'
-#                else:
-#                    clr = 'red'
-#            else:
-#                clr = 'grey'
-#        else:
-#            # color argument is name of mpl color
-#            clr = color
-#
-#        ax.plot(xvals, positions, '-', color=clr)
-#        ax.plot(xvals, positions, '|', color=clr, markersize=10.0)
-#
-#        ax.text(toplblposn, -0.75 + 0.6 * random(), rxn['sys'],
-#            verticalalignment='bottom', horizontalalignment='center',
-#            family='Times New Roman', fontsize=8)
-#        ax.text(botlblposn, -1 * Nweft - 0.75 + 0.6 * random(), rxn['sys'],
-#            verticalalignment='bottom', horizontalalignment='center',
-#            family='Times New Roman', fontsize=8)
-#
-#    # plot trimmings
-#    if mae is not None:
-#        ax.plot([-x for x in mae], positions, 's', color='black')
-#    if mape is not None:  # equivalent to MAE for a 10 kcal/mol interaction energy
-#        ax.plot([0.025 * x for x in mape], positions, 'o', color='black')
-#
-#    plt.axvline(0, color='black')
-#    plt.show()
+def bars(data, title='', saveas=None, relpath=False, graphicsformat=['pdf']):
+    """Generates a 'gray-bars' diagram between model chemistries with error
+    statistics in list *data*, which is supplied as part of the dictionary
+    for each participating bar/modelchem, along with *mc* keys in argument
+    *data*. The plot is labeled with *title* and each bar with *mc* key and
+    plotted at a fixed scale to facilitate comparison across projects.
 
-
-def bar(data, title=''):
-    #"""Generates a tiered slat diagram between model chemistries with
-    #errors in list *data*, which is supplied as part of the dictionary for
-    #each participating reaction, along with *dbse* and *rxn* keys in
-    #argument *data*. The plot is labeled with *title* and each tier with
-    #an element of *labels* and plotted at *xlimit* from the zero-line. If
-    #*color* is None, slats are black, if 'sapt', colors are taken from
-    #sapt_colors module. Summary statistics *mae* are plotted on the
-    #overbound side and relative statistics *mape* on the underbound side.
-
-    #"""
-    from random import random
+    """
+    import hashlib
     import matplotlib.pyplot as plt
 
     # initialize plot, fix dimensions for consistent Illustrator import
@@ -208,27 +105,35 @@ def bar(data, title=''):
     xval = 0.1  # starting posn along x-axis
 
     # plot bar sets
-    for rxn in data:
-        if rxn is not None:
+    for bar in data:
+        if bar is not None:
             lefts = [xval, xval + 0.025, xval + 0.065, xval + 0.105]
 
-            rect = ax.bar(lefts, rxn['data'], widths, linewidth=0)
+            rect = ax.bar(lefts, bar['data'], widths, linewidth=0)
             rect[0].set_color('grey')
             rect[1].set_color('red')
             rect[2].set_color('green')
             rect[3].set_color('blue')
 
-            ax.text(xval + .08, 4.3, rxn['mc'],
+            ax.text(xval + .08, 4.3, bar['mc'],
                 verticalalignment='center', horizontalalignment='right', rotation='vertical',
                 family='Times New Roman', fontsize=8)
         xval += 0.20
 
-    plt.savefig('bar_' + title + '.pdf', bbox_inches='tight', transparent=True, format='PDF')
+    # save and show
+    pltuid = title + '_' + hashlib.sha1(title + repr([bar['mc'] for bar in data if bar is not None])).hexdigest()
+    pltfile = expand_saveas(saveas, pltuid, def_prefix='bar_', relpath=relpath)
+    files_saved = {}
+    for ext in graphicsformat:
+        savefile = pltfile + '.' + ext.lower()
+        plt.savefig(savefile, transparent=True, format=ext, bbox_inches='tight')
+        files_saved[ext.lower()] = savefile
     plt.show()
-    #print os.environ['HOME'] + os.sep + 'mplbar_' + title + '.pdf'
+    return files_saved
 
 
-def flat(data, color=None, title='', xlimit=4.0, mae=None, mape=None, view=True):
+def flat(data, color=None, title='', xlimit=4.0, mae=None, mape=None, view=True,
+    saveas=None, relpath=False, graphicsformat=['pdf']):
     """Generates a slat diagram between model chemistries with errors in
     single-item list *data*, which is supplied as part of the dictionary
     for each participating reaction, along with *dbse* and *rxn* keys in
@@ -239,7 +144,6 @@ def flat(data, color=None, title='', xlimit=4.0, mae=None, mape=None, view=True)
     Saves a file with name *title* and plots to screen if *view*.
 
     """
-    from random import random
     import matplotlib.pyplot as plt
 
     Nweft = 1
@@ -274,10 +178,18 @@ def flat(data, color=None, title='', xlimit=4.0, mae=None, mape=None, view=True)
     if mape is not None:  # equivalent to MAE for a 10 kcal/mol interaction energy
         ax.plot(0.025 * mape, positions, 'o', color='black', markersize=15.0)
 
-    plt.savefig('flat_' + title + '.pdf', transparent=True, format='PDF')  # bbox_inches='tight'
+    # save and show
+    pltuid = title  # simple (not really unique) filename for LaTeX integration
+    pltfile = expand_saveas(saveas, pltuid, def_prefix='flat_', relpath=relpath)
+    files_saved = {}
+    for ext in graphicsformat:
+        savefile = pltfile + '.' + ext.lower()
+        plt.savefig(savefile, transparent=True, format=ext)  # , bbox_inches='tight')
+        files_saved[ext.lower()] = savefile
     plt.show()
     if not view:
         plt.close()
+    return files_saved
 
 
 #def mpl_distslat_multiplot_files(pltfile, dbid, dbname, xmin, xmax, mcdats, labels, titles):
@@ -342,13 +254,15 @@ def flat(data, color=None, title='', xlimit=4.0, mae=None, mape=None, view=True)
 #    plt.savefig('scratch/' + pltfile + '_trimd' + '.eps', transparent=True, format='EPS')
 
 
-def disthist(data, saveas=None, title='', xtitle='', xmin=None, xmax=None, me=None, stde=None, force_relpath=False):
+def disthist(data, title='', xtitle='', xmin=None, xmax=None,
+    me=None, stde=None, saveas=None, relpath=False, graphicsformat=['pdf']):
     """Saves a plot with name *saveas* with a histogram representation
     of the reaction errors in *data*. Also plots a gaussian distribution
     with mean *me* and standard deviation *stde*. Plot has x-range
     *xmin* to *xmax*, x-axis label *xtitle* and overall title *title*.
 
     """
+    import hashlib
     import numpy as np
     import matplotlib.pyplot as plt
 
@@ -385,98 +299,106 @@ def disthist(data, saveas=None, title='', xtitle='', xmin=None, xmax=None, me=No
 
     plt.title(title)
 
-    pltuid = title  # TODO not really unique
-    pltfile = expand_saveas(saveas, pltuid, def_prefix='disthist_', force_relpath=force_relpath)
-    plt.savefig(pltfile + '.png', transparent=True, bbox_inches='tight', format='PNG')
+    # save and show
+    pltuid = title + '_' + hashlib.sha1(title + str(me) + str(stde) + str(xmin) + str(xmax)).hexdigest()
+    pltfile = expand_saveas(saveas, pltuid, def_prefix='disthist_', relpath=relpath)
+    files_saved = {}
+    for ext in graphicsformat:
+        savefile = pltfile + '.' + ext.lower()
+        plt.savefig(savefile, transparent=True, format=ext, bbox_inches='tight')
+        files_saved[ext.lower()] = savefile
     plt.show()
+    return files_saved
 
 
-def thread(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None):
-    """Generates a tiered slat diagram between model chemistries with
-    errors (or simply values) in list *data*, which is supplied as part of the
-    dictionary for each participating reaction, along with *dbse* and *rxn* keys
-    in argument *data*. The plot is labeled with *title* and each tier with
-    an element of *labels* and plotted at *xlimit* from the zero-line. If
-    *color* is None, slats are black, if 'sapt', colors are taken from *color*
-    key in *data* [0, 1]. Summary statistics *mae* are plotted on the
-    overbound side and relative statistics *mape* on the underbound side.
+#def thread(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None):
+#    """Generates a tiered slat diagram between model chemistries with
+#    errors (or simply values) in list *data*, which is supplied as part of the
+#    dictionary for each participating reaction, along with *dbse* and *rxn* keys
+#    in argument *data*. The plot is labeled with *title* and each tier with
+#    an element of *labels* and plotted at *xlimit* from the zero-line. If
+#    *color* is None, slats are black, if 'sapt', colors are taken from *color*
+#    key in *data* [0, 1]. Summary statistics *mae* are plotted on the
+#    overbound side and relative statistics *mape* on the underbound side.
+#
+#    """
+#    from random import random
+#    import matplotlib.pyplot as plt
+#
+#    # initialize tiers/wefts
+#    Nweft = len(labels)
+#    lenS = 0.2
+#    gapT = 0.04
+#    positions = range(-1, -1 * Nweft - 1, -1)
+#    posnS = []
+#    for weft in range(Nweft):
+#        posnS.extend([positions[weft] + lenS, positions[weft] - lenS, None])
+#    posnT = []
+#    for weft in range(Nweft - 1):
+#        posnT.extend([positions[weft] - lenS - gapT, positions[weft + 1] + lenS + gapT, None])
+#
+#    # initialize plot
+#    fht = Nweft * 0.8
+#    fig, ax = plt.subplots(figsize=(12, fht))
+#    plt.subplots_adjust(left=0.01, right=0.99, hspace=0.3)
+#    plt.xlim([-xlimit, xlimit])
+#    plt.ylim([-1 * Nweft - 1, 0])
+#    plt.yticks([])
+#
+#    # label plot and tiers
+#    ax.text(-0.9 * xlimit, -0.25, title,
+#        verticalalignment='bottom', horizontalalignment='left',
+#        family='Times New Roman', weight='bold', fontsize=12)
+#    for weft in labels:
+#        ax.text(-0.9 * xlimit, -(1.2 + labels.index(weft)), weft,
+#            verticalalignment='bottom', horizontalalignment='left',
+#            family='Times New Roman', weight='bold', fontsize=18)
+#
+#    # plot reaction errors and threads
+#    for rxn in data:
+#
+#        # preparation
+#        xvals = rxn['data']
+#        clr = segment_color(color, rxn['color'] if 'color' in rxn else None)
+#        slat = []
+#        for weft in range(Nweft):
+#            slat.extend([xvals[weft], xvals[weft], None])
+#        thread = []
+#        for weft in range(Nweft - 1):
+#            thread.extend([xvals[weft], xvals[weft + 1], None])
+#
+#        # plotting
+#        ax.plot(slat, posnS, color=clr, linewidth=1.0, solid_capstyle='round')
+#        ax.plot(thread, posnT, color=clr, linewidth=0.5, solid_capstyle='round',
+#            alpha=0.3)
+#
+#        # labeling
+#        try:
+#            toplblposn = next(item for item in xvals if item is not None)
+#            botlblposn = next(item for item in reversed(xvals) if item is not None)
+#        except StopIteration:
+#            pass
+#        else:
+#            ax.text(toplblposn, -0.75 + 0.6 * random(), rxn['sys'],
+#                verticalalignment='bottom', horizontalalignment='center',
+#                family='Times New Roman', fontsize=8)
+#            ax.text(botlblposn, -1 * Nweft - 0.75 + 0.6 * random(), rxn['sys'],
+#                verticalalignment='bottom', horizontalalignment='center',
+#                family='Times New Roman', fontsize=8)
+#
+#    # plot trimmings
+#    if mae is not None:
+#        ax.plot([-x for x in mae], positions, 's', color='black')
+#    if mape is not None:  # equivalent to MAE for a 10 kcal/mol IE
+#        ax.plot([0.025 * x for x in mape], positions, 'o', color='black')
+#
+#    plt.axvline(0, color='black')
+#    plt.show()
 
-    """
-    from random import random
-    import matplotlib.pyplot as plt
 
-    # initialize tiers/wefts
-    Nweft = len(labels)
-    lenS = 0.2
-    gapT = 0.04
-    positions = range(-1, -1 * Nweft - 1, -1)
-    posnS = []
-    for weft in range(Nweft):
-        posnS.extend([positions[weft] + lenS, positions[weft] - lenS, None])
-    posnT = []
-    for weft in range(Nweft - 1):
-        posnT.extend([positions[weft] - lenS - gapT, positions[weft + 1] + lenS + gapT, None])
-
-    # initialize plot
-    fht = Nweft * 0.8
-    fig, ax = plt.subplots(figsize=(12, fht))
-    plt.subplots_adjust(left=0.01, right=0.99, hspace=0.3)
-    plt.xlim([-xlimit, xlimit])
-    plt.ylim([-1 * Nweft - 1, 0])
-    plt.yticks([])
-
-    # label plot and tiers
-    ax.text(-0.9 * xlimit, -0.25, title,
-        verticalalignment='bottom', horizontalalignment='left',
-        family='Times New Roman', weight='bold', fontsize=12)
-    for weft in labels:
-        ax.text(-0.9 * xlimit, -(1.2 + labels.index(weft)), weft,
-            verticalalignment='bottom', horizontalalignment='left',
-            family='Times New Roman', weight='bold', fontsize=18)
-
-    # plot reaction errors and threads
-    for rxn in data:
-
-        # preparation
-        xvals = rxn['data']
-        clr = segment_color(color, rxn['color'] if 'color' in rxn else None)
-        slat = []
-        for weft in range(Nweft):
-            slat.extend([xvals[weft], xvals[weft], None])
-        thread = []
-        for weft in range(Nweft - 1):
-            thread.extend([xvals[weft], xvals[weft + 1], None])
-
-        # plotting
-        ax.plot(slat, posnS, color=clr, linewidth=1.0, solid_capstyle='round')
-        ax.plot(thread, posnT, color=clr, linewidth=0.5, solid_capstyle='round',
-            alpha=0.3)
-
-        # labeling
-        try:
-            toplblposn = next(item for item in xvals if item is not None)
-            botlblposn = next(item for item in reversed(xvals) if item is not None)
-        except StopIteration:
-            pass
-        else:
-            ax.text(toplblposn, -0.75 + 0.6 * random(), rxn['sys'],
-                verticalalignment='bottom', horizontalalignment='center',
-                family='Times New Roman', fontsize=8)
-            ax.text(botlblposn, -1 * Nweft - 0.75 + 0.6 * random(), rxn['sys'],
-                verticalalignment='bottom', horizontalalignment='center',
-                family='Times New Roman', fontsize=8)
-
-    # plot trimmings
-    if mae is not None:
-        ax.plot([-x for x in mae], positions, 's', color='black')
-    if mape is not None:  # equivalent to MAE for a 10 kcal/mol IE
-        ax.plot([0.025 * x for x in mape], positions, 'o', color='black')
-
-    plt.axvline(0, color='black')
-    plt.show()
-
-
-def thread_mouseover(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None, saveas=None, mousetext=None, mouselink=None, mouseimag=None, mousetitle=None, force_relpath=False):
+def threads(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None,
+    mousetext=None, mouselink=None, mouseimag=None, mousetitle=None,
+    saveas=None, relpath=False, graphicsformat=['pdf']):
     """Generates a tiered slat diagram between model chemistries with
     errors (or simply values) in list *data*, which is supplied as part of the
     dictionary for each participating reaction, along with *dbse* and *rxn* keys
@@ -567,20 +489,16 @@ def thread_mouseover(data, labels, color=None, title='', xlimit=4.0, mae=None, m
         ax.plot([-x for x in mae], positions, 's', color='black')
     if mape is not None:  # equivalent to MAE for a 10 kcal/mol IE
         ax.plot([0.025 * x for x in mape], positions, 'o', color='black')
-
     plt.axvline(0, color='black')
 
+    # save and show
     pltuid = title + '_' + hashlib.sha1(title + repr(labels) + repr(xlimit)).hexdigest()
-    pltfile = expand_saveas(saveas, pltuid, def_prefix='thread_', force_relpath=force_relpath)
-    plt.savefig(pltfile + '.png', transparent=True, format='PNG')
-    plt.savefig(pltfile + '.pdf', transparent=True, format='PDF')
-    plt.savefig(pltfile + '.eps', transparent=True, format='EPS')
-    #bbox_inches='tight'
-    files_saved = {
-        'png_labeled': pltfile + '.png',
-        'pdf_labeled': pltfile + '.pdf',
-        'eps_labeled': pltfile + '.eps',
-        }
+    pltfile = expand_saveas(saveas, pltuid, def_prefix='thread_', relpath=relpath)
+    files_saved = {}
+    for ext in graphicsformat:
+        savefile = pltfile + '.' + ext.lower()
+        plt.savefig(savefile, transparent=True, format=ext, bbox_inches='tight')
+        files_saved[ext.lower()] = savefile
     plt.show()
 
     if not (mousetext or mouselink or mouseimag):
@@ -802,13 +720,13 @@ def iowa(mcdat, mclbl, title='', xlimit=2.0):
 if __name__ == "__main__":
 
     merge_dats = [
-    {'dbse':'HSG', 'sys':'1', 'data':[0.3508, 0.1234, 0.0364, 0.0731, 0.0388]},
-    {'dbse':'HSG', 'sys':'3', 'data':[0.2036, -0.0736, -0.1650, -0.1380, -0.1806]},
-    {'dbse':'S22', 'sys':'14', 'data':[None, -3.2144, None, None, None]},
-    {'dbse':'S22', 'sys':'15', 'data':[-1.5090, -2.5263, -2.9452, -2.8633, -3.1059]},
-    {'dbse':'S22', 'sys':'22', 'data':[0.3046, -0.2632, -0.5070, -0.4925, -0.6359]}]
+    {'db':'HSG', 'sys':'1', 'data':[0.3508, 0.1234, 0.0364, 0.0731, 0.0388]},
+    {'db':'HSG', 'sys':'3', 'data':[0.2036, -0.0736, -0.1650, -0.1380, -0.1806]},
+    {'db':'S22', 'sys':'14', 'data':[None, -3.2144, None, None, None]},
+    {'db':'S22', 'sys':'15', 'data':[-1.5090, -2.5263, -2.9452, -2.8633, -3.1059]},
+    {'db':'S22', 'sys':'22', 'data':[0.3046, -0.2632, -0.5070, -0.4925, -0.6359]}]
 
-    thread(merge_dats, labels=['d', 't', 'dt', 'q', 'tq'], color='sapt',
+    threads(merge_dats, labels=['d', 't', 'dt', 'q', 'tq'], color='sapt',
         title='MP2-CPa[]z', mae=[0.25, 0.5, 0.5, 0.3, 1.0], mape=[20.1, 25, 15, 5.5, 3.6])
 
     more_dats = [
@@ -817,7 +735,7 @@ if __name__ == "__main__":
     None,
     {'mc':'MP2-CP-adzagain', 'data':[1.0, 0.8, 1.4, 1.6]}]
 
-    bar(more_dats, title='asdf')
+    bars(more_dats, title='asdf')
 
     single_dats = [
     {'dbse':'HSG', 'sys':'1', 'data':[0.3508]},
