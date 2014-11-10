@@ -24,7 +24,7 @@
 databases. Contains Molecule class and physical constants from psi4 suite.
 
 """
-__version__ = '0.1'
+__version__ = '0.3'
 __author__ = 'Lori A. Burns'
 
 # Load Python modules
@@ -35,7 +35,8 @@ from qcformat import *
 import cfour
 import jajo
 from orient import OrientMols
-from dbwrap import Database, FourDatabases, ThreeDatabases  # , ReactionDatum, Reagent, Reaction
+#from origdbwrap import Database, FourDatabases, ThreeDatabases  # , ReactionDatum, Reagent, Reaction
+from dbwrap import Database, FourDB #DatabaseWrapper  #ReactionDatum, Reagent, Reaction
 from libmintspointgrp import SymmetryOperation, PointGroup
 from libmintsbasisset import BasisSet
 
