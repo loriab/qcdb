@@ -298,27 +298,39 @@ class Reaction(object):
 
 
 class WrappedDatabase(object):
-    """
+    """Wrapper class for raw Psi4 database modules that does some validation 
+    of contents, creates member data and accessors for database structures, 
+    defines error computation, and handles database subsets. Not to be used 
+    directly-- see qcdb.Database for handling single or multiple 
+    qdcb.WrappedDatabase objects and defining nice statistics, plotting, and
+    table functionalities.
 
     >>> asdf = qcdb.WrappedDatabase('Nbc10')
     """
 
     def __init__(self, dbname, pythonpath=None):
+        """Instantiate class with case insensitive name *dbname*. Module 
+        search path can be prepended with *pythonpath*.
+
+        """
         #: internal name of database
         #:
         #: >>> print asdf.dbse
         #: 'NBC1'
         self.dbse = None
+
         #: OrderedDict of reactions/members
         #:
         #: >>> print asdf.hrxn.keys()
         #: ['BzBz_S-3.2', 'BzBz_S-3.3', ...  'BzBz_PD36-2.8', 'BzBz_PD36-3.0']
         self.hrxn = None
+
         #: dict of reagents/geometries
         #:
         #: >>> print asdf.hrgt.keys()
         #: ['NBC1-BzBz_PD32-0.8-monoA-CP', 'NBC1-BzBz_PD34-0.6-dimer', ... 'NBC1-BzBz_PD34-1.7-dimer']
         self.hrgt = None
+
         #: dict of defined reaction subsets.
         #: Note that self.sset['default'] contains all the nonredundant information.
         #:
@@ -1197,16 +1209,19 @@ class Database(object):
         #: >>> print asdf.dbse
         #: 'DB4'
         self.dbse = None
+
         #: ordered component Database objects
         #:
         #: >>> print asdf.dbdict
         #: XXXX
         self.dbdict = collections.OrderedDict()
+
         #: subset assembly pattern
         #:
         #: >>> print asdf.sset.keys()
         #: XXXX
         self.sset = collections.OrderedDict()
+
         #: assembly pattern for transspecies modelchems
         #:
         #: >>> print asdf.mcs.keys()
@@ -1236,8 +1251,8 @@ class Database(object):
 
         self.mcs['default'] = consolidated_bench
         #self.mcs['default'] = [odb.benchmark() for odb in self.dbdict.values()]
-        self.intersect_subsets()
-        self.intersect_modelchems()
+        self._intersect_subsets()
+        self._intersect_modelchems()
 
         # collection name
         self.dbse = ''.join(self.dbdict.keys()) if dbse is None else dbse
@@ -1286,7 +1301,7 @@ class Database(object):
         """
         for db, odb in self.dbdict.items():
             odb.load_qcdata_byproject(project, pythonpath=pythonpath)
-        self.intersect_modelchems()
+        self._intersect_modelchems()
 
     def load_qcdata_hdf5_trusted(self, project, path=None):
         """For each component database, loads qcdb.ReactionDatums from
@@ -1297,7 +1312,7 @@ class Database(object):
         """
         for db, odb in self.dbdict.items():
             odb.load_qcdata_hdf5_trusted(project, path=path)
-        self.intersect_modelchems()
+        self._intersect_modelchems()
 
     def load_subsets(self, modname='subsetgenerator', pythonpath=None):
         """For each component database, loads subsets from all functions
@@ -1306,9 +1321,9 @@ class Database(object):
         """
         for db, odb in self.dbdict.items():
             odb.load_subsets(modname=modname, pythonpath=pythonpath)
-        self.intersect_subsets()
+        self._intersect_subsets()
 
-    def intersect_subsets(self):
+    def _intersect_subsets(self):
         """Examine component database subsets and collect common names as
         Database subset.
 
@@ -1318,7 +1333,7 @@ class Database(object):
         for ss in new:
             self.sset[ss] = [ss] * len(self.dbdict.keys())
 
-    def intersect_modelchems(self):
+    def _intersect_modelchems(self):
         """Examine component database qcdata and collect common names as
         Database modelchem.
 
@@ -1750,7 +1765,7 @@ class Database(object):
         # TODO: not handled: filename, TODO switch standalone
 
 
-class FourDB(Database):
+class DB4(Database):
     def __init__(self, pythonpath=None, loadfrompickle=False, path=None):
         """Initialize FourDatabases object from SuperDatabase"""
         Database.__init__(self, ['s22', 'nbc10', 'hbc6', 'hsg'], dbse='DB4', 
