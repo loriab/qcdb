@@ -11,8 +11,7 @@ Users' Manual
 
    datavis
    canopy
-   rawdatabase
-   wrappeddatabase
+   chapterdb
 
 Programmers' Manual
 ===================

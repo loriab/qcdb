@@ -9,7 +9,7 @@ for Windows) suffices to acquire the repository. ::
 
     git clone https://github.com/cdsgroup/qcdb.git
 
-The above is sufficient to run |qcdb| in Canopy or to run |qcdb| scripts.
+The above is sufficient to run |qcdb| in Canopy or Anaconda or to run |qcdb| scripts.
 If you want to be able to simply ``import qcdb`` in a python file or to
 use the QC interface capabilities in |PSIfour| that need an advanced
 version of the |qcdb| module (an old, stable version is included in the
@@ -28,10 +28,10 @@ following. ::
    in preparation to running |PSIfour| be modified to use a restricted 
    :envvar:`PYTHONPATH`.
 
-Initialization in Canopy
-========================
+Initialization
+==============
 
-A blank Canopy session needs to be instructed where to find |qcdb| and to
+A blank Canopy session or python script needs to be instructed where to find |qcdb| and to
 build an object containing all the data you want to analyze. It is easiest
 to just keep around a little script that defines these initialization
 steps. ::
@@ -41,13 +41,17 @@ steps. ::
     sys.path.append('/Users/johndoe/linux/qcdb/databases')
     import qcdb
 
-    # to work with S22, NBC10, HBC6, HSG together
-    asdf = qcdb.FourDatabases()
-    asdf.load_qcdata_byproject('saptone')
-
     # to work with a single database
     asdf = qcdb.Database('S22')
     asdf.load_qcdata_byproject('dft')
+
+    # to work with several databases together (labeling the combo 'DB2')
+    asdf = qcdb.Database(['s22', 'hsg'], 'DB2')
+    asdf.load_qcdata_byproject('dft')
+
+    # to work with S22, NBC10, HBC6, HSG together (with special cross-db modelchems defined)
+    asdf = qcdb.DB4()
+    asdf.load_qcdata_byproject('saptone')
 
 .. note:: Any time you alter the qcdb module code, the python kernal in 
    Canopy must be restarted and |qcdb| re-imported for those changes to 
@@ -59,6 +63,8 @@ steps. ::
    in PSIPATH.
 
 .. note:: there are further PATH issues dealing with ipython notebook.
-   Particularly, dftd3 cant write to scratch which can be fixed by adding the home dir to the code. 
-   matplotlib routines also give problems unsolved for now.
+   Particularly, dftd3 cant write to scratch which can be fixed by adding
+   the home dir to the code.  matplotlib routines also give problems
+   unsolved for now. These may have been solved with 'saveas' argument to
+   mpl functions- haven't rechecked.
 

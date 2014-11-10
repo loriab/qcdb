@@ -1,6 +1,6 @@
 
-Databases, Meeting and Acquiring
-================================
+Raw Databases: Meeting and Acquiring
+====================================
 
 The fundamental analysis unit of |qcdb| is the database, which is simply a
 collection of geometries (reagents; rgt), their algebraic arrangement into
@@ -25,6 +25,7 @@ importable as such (a one-file python module, so no ``__init__.py``) with
 ``import S22`` or the like. Below is code to import a generic database
 *db_name*. ::
 
+    mode = 'ACTV_CP'
     try:
         database = __import__(db_name)
     except ImportError:
