@@ -50,14 +50,25 @@ def average_errors(*args):
     Ndb = float(len(args))
     avgerror = initialize_errors()
     try:
+        avgerror['maxe'] = max([x['maxe'] for x in args], key=lambda x: abs(x))
+        avgerror['mine'] = min([x['mine'] for x in args], key=lambda x: abs(x))
         avgerror['me'] = sum([x['me'] for x in args]) / Ndb
         avgerror['mae'] = sum([x['mae'] for x in args]) / Ndb
-        avgerror['stde'] = math.sqrt(sum([x['stde'] * x['stde'] for x in args]) / Ndb)
+        avgerror['rmse'] = 0.0  # TODO
+        avgerror['stde'] = math.sqrt(sum([x['stde'] ** 2 for x in args]) / Ndb)
+
+        avgerror['maxpe'] = max([x['maxpe'] for x in args], key=lambda x: abs(x))
+        avgerror['minpe'] = min([x['minpe'] for x in args], key=lambda x: abs(x))
         avgerror['mpe'] = sum([x['mpe'] for x in args]) / Ndb
         avgerror['mape'] = sum([x['mape'] for x in args]) / Ndb
+        avgerror['rmspe'] = 0.0  # TODO
         avgerror['stdpe'] = math.sqrt(sum([x['stdpe'] * x['stdpe'] for x in args]) / Ndb)
+
+        avgerror['maxpbe'] = max([x['maxpbe'] for x in args], key=lambda x: abs(x))
+        avgerror['minpbe'] = min([x['minpbe'] for x in args], key=lambda x: abs(x))
         avgerror['mpbe'] = sum([x['mpbe'] for x in args]) / Ndb
         avgerror['mapbe'] = sum([x['mapbe'] for x in args]) / Ndb
+        avgerror['rmspbe'] = 0.0 # TODO
         avgerror['stdpbe'] = math.sqrt(sum([x['stdpbe'] * x['stdpbe'] for x in args]) / Ndb)
     except TypeError:
         pass
@@ -286,10 +297,10 @@ class Reaction(object):
         return text
 
 
-class DatabaseWrapper(object):
+class WrappedDatabase(object):
     """
 
-    >>> asdf = qcdb.DatabaseWrapper('Nbc10')
+    >>> asdf = qcdb.WrappedDatabase('Nbc10')
     """
 
     def __init__(self, dbname, pythonpath=None):
@@ -485,11 +496,11 @@ class DatabaseWrapper(object):
             for rxn in oSSET[item]:
                 self.sset[label][rxn] = oHRXN[rxn]
 
-        print """Database %s: Unparsed attributes""" % (self.dbse), pieces
+        print """WrappedDatabase %s: Unparsed attributes""" % (self.dbse), pieces
 
     def __str__(self):
         text = ''
-        text += """  ==> %s DatabaseWrapper <==\n\n""" % (self.dbse)
+        text += """  ==> %s WrappedDatabase <==\n\n""" % (self.dbse)
         text += """  Reagents:             %s\n""" % (self.hrgt.keys())
         text += """  Reactions:            %s\n""" % (self.hrxn.keys())
         text += """  Subsets:              %s\n""" % (self.sset.keys())
@@ -536,13 +547,13 @@ class DatabaseWrapper(object):
         except TypeError, e:
             raise ValidationError("""Function %s did not return list: %s.""" % (func.__name__, str(e)))
         if len(lsslist) == 0:
-            print """Database %s: Subset %s NOT formed: empty""" % (self.dbse, label)
+            print """WrappedDatabase %s: Subset %s NOT formed: empty""" % (self.dbse, label)
             return
 
         self.sset[label] = collections.OrderedDict()
         for rxn in lsslist:
             self.sset[label][rxn] = self.hrxn[rxn]
-        print """Database %s: Subset %s formed: %s""" % (self.dbse, label, self.sset[label].keys())
+        print """WrappedDatabase %s: Subset %s formed: %s""" % (self.dbse, label, self.sset[label].keys())
 
     def compute_errors(self, modelchem, benchmark='default', sset='default', failoninc=True, verbose=False):
         """For full database or subset *sset*, computes raw reaction
@@ -669,7 +680,7 @@ class DatabaseWrapper(object):
             else:
                 raise ValidationError("Python module missing function %s for loading data " % (str(funcname)))
 
-        print """Database %s: %s %s results loaded""" % (self.dbse, modname, funcname)
+        print """WrappedDatabase %s: %s %s results loaded""" % (self.dbse, modname, funcname)
 
     def load_qcdata_byproject(self, project, pythonpath=None):
         """Loads qcdb.ReactionDatums from standard location for *project*
@@ -772,7 +783,7 @@ class DatabaseWrapper(object):
             if callable(getattr(ssmod, func)):
                 self.add_Subset(getattr(ssmod, func).__doc__, getattr(ssmod, func))
 
-        print """Database %s: Defined subsets loaded""" % (self.dbse)
+        print """WrappedDatabase %s: Defined subsets loaded""" % (self.dbse)
 
     #def analyze_modelchems(self, modelchem, benchmark='default', failoninc=True, verbose=False):
     #    """Compute and print error statistics for each model chemistry in
@@ -1172,7 +1183,7 @@ class DatabaseWrapper(object):
 
 
 class Database(object):
-    """Collection for handling single or multiple qcdb.DatabaseWrapper objects.
+    """Collection for handling single or multiple qcdb.WrappedDatabase objects.
     Particularly, unifying modelchem and subset names that when inconsistent
     across component databases. Also, defining statistics across databases.
 
@@ -1180,7 +1191,7 @@ class Database(object):
     >>> qwer = qcdb.Database(['s22'])
     """
 
-    def __init__(self, dbnamelist, dbse=None, pythonpath=None):
+    def __init__(self, dbnamelist, dbse=None, pythonpath=None, loadfrompickle=False, path=None):
         #: internal name of database collection
         #:
         #: >>> print asdf.dbse
@@ -1202,13 +1213,29 @@ class Database(object):
         #: XXXX
         self.mcs = {}
 
+        self.benchmark = None
+
         # load databases
         for db in dbnamelist:
-            tmp = DatabaseWrapper(db, pythonpath=pythonpath)
+            if loadfrompickle:
+                tmp = WrappedDatabase.load_pickled(db, path=path)
+            else:
+                tmp = WrappedDatabase(db, pythonpath=pythonpath)
             self.dbdict[tmp.dbse] = tmp
 
         # slurp up the obvious overlaps
-        self.mcs['default'] = [odb.benchmark() for odb in self.dbdict.values()]
+        consolidated_bench = [odb.benchmark() for odb in self.dbdict.values()]
+        if len(set(consolidated_bench)) == 1:
+            self.benchmark = consolidated_bench[0]
+        else:
+            self.benchmark = ''.join(consolidated_bench)
+        self.mcs[self.benchmark] = consolidated_bench
+
+        #methods[ref] = Method(name=ref)
+        #bases[ref] = BasisSet(name=ref)
+
+        self.mcs['default'] = consolidated_bench
+        #self.mcs['default'] = [odb.benchmark() for odb in self.dbdict.values()]
         self.intersect_subsets()
         self.intersect_modelchems()
 
@@ -1223,7 +1250,9 @@ class Database(object):
         #text += """  Reagents:             %s\n""" % (self.hrgt.keys())
         #text += """  Reactions:            %s\n""" % (self.hrxn.keys())
         text += """  Subsets:              %s\n""" % (self.sset.keys())
-        text += """  Reference:            %s\n""" % ('default: ' + ' + '.join(self.mcs['default']))
+        #text += """  Reference:            %s\n""" % ('default: ' + ' + '.join(self.mcs['default']))
+        text += """  Reference:            %s\n""" % (self.benchmark + ': ' + ' + '.join(self.mcs[self.benchmark]))
+        text += """  Model Chemistries:    %s\n""" % (', '.join(sorted(self.mcs.keys())))
         text += """\n"""
         for db in self.dbdict.keys():
             text += self.dbdict[db].__str__()
@@ -1231,7 +1260,23 @@ class Database(object):
 
 #    def benchmark(self):
 #        """Returns the model chemistry label for the database's benchmark."""
-#        return self.mcs['default']
+#        return self.benchmark  #TODO not sure if right way to go about this self.mcs['default']
+
+    def fancy_mcs(self):
+        """
+
+        """
+        fmcs = {}
+        for mc in self.mcs.keys():
+            #print '%30s' % (mc),
+            try:
+                mtd, mod, bas = mc.split('-')
+            except ValueError:
+                fmcs[mc] = mc
+            else:
+                fmcs[mc] = """%20s / %-20s %s""" % (methods[mtd].fullname, bases[bas].fullname, mod)
+            #print fmcs[mc]
+        return fmcs
 
     def load_qcdata_byproject(self, project, pythonpath=None):
         """For each component database, loads qcdb.ReactionDatums from
@@ -1610,7 +1655,7 @@ class Database(object):
 
 
     def table_generic(self, mtd, bas, columnplan, rowplan=['bas', 'mtd'],
-        dbse=['DB4'], opt=['CP'], err=['mae'], sset=['tt'],
+        opt=['CP'], err=['mae'], sset=['tt'],
         benchmark='default', failoninc=True,
         landscape=False, standalone=True, subjoin=True,
         plotpath='', theme='', filename=None):
@@ -1620,6 +1665,7 @@ class Database(object):
         along to textables.table_generic.
 
         """
+        # argument dbse=['DB4']  # TODO
         # gather list of model chemistries for table
         mcs = ['-'.join(prod) for prod in itertools.product(mtd, opt, bas)]
 
@@ -1628,14 +1674,12 @@ class Database(object):
         for mc in mcs:
             serrors[mc] = {}
             for ss in self.sset.keys():
-                errblock = self.compute_statistics(mc, benchmark=benchmark, sset=ss,
+                perr = self.compute_statistics(mc, benchmark=benchmark, sset=ss,
                     failoninc=failoninc, verbose=False, returnindiv=False)
                 serrors[mc][ss] = {}
-                serrors[mc][ss]['S22'] = None if errblock['S22'] is None else format_errors(errblock['S22'], mode=3)
-                serrors[mc][ss]['NBC1'] = None if errblock['NBC1'] is None else format_errors(errblock['NBC1'], mode=3)
-                serrors[mc][ss]['HBC1'] = None if errblock['HBC1'] is None else format_errors(errblock['HBC1'], mode=3)
-                serrors[mc][ss]['HSG'] = None if errblock['HSG'] is None else format_errors(errblock['HSG'], mode=3)
-                serrors[mc][ss]['DB4'] = format_errors(errblock['DB4'], mode=3)
+                serrors[mc][ss][self.dbse] = format_errors(perr[self.dbse], mode=3)
+                for db in self.dbdict.keys():
+                    serrors[mc][ss][db] = None if perr[db] is None else format_errors(perr[db], mode=3)
 
         textables.table_generic(dbse=dbse, serrors=serrors,
             mtd=mtd, bas=bas, columnplan=columnplan, rowplan=rowplan,
@@ -1706,16 +1750,17 @@ class Database(object):
         # TODO: not handled: filename, TODO switch standalone
 
 
-class FourDatabases(Database):
-    def __init__(self, pythonpath=None):
+class FourDB(Database):
+    def __init__(self, pythonpath=None, loadfrompickle=False, path=None):
         """Initialize FourDatabases object from SuperDatabase"""
-        Database.__init__(self, ['s22', 'nbc10', 'hbc6', 'hsg'], dbse='DB4', pythonpath=None)
+        Database.__init__(self, ['s22', 'nbc10', 'hbc6', 'hsg'], dbse='DB4', 
+            pythonpath=pythonpath, loadfrompickle=loadfrompickle, path=path)
 
-        # load up data and definitions
-        self.load_qcdata_byproject('dft')
-        self.load_qcdata_byproject('pt2')
-        #self.load_qcdata_byproject('dhdft')
-        self.load_subsets()
+#        # load up data and definitions
+#        self.load_qcdata_byproject('dft')
+#        self.load_qcdata_byproject('pt2')
+#        #self.load_qcdata_byproject('dhdft')
+#        self.load_subsets()
         self.define_supersubsets()
         self.define_supermodelchems()
 
@@ -1738,51 +1783,56 @@ class FourDatabases(Database):
         self.sset['pp-5min'] = ['mxddpp', 'mxddpp-5min', None, None]
         self.sset['np-5min'] = ['mxddnp', 'mxddnp-5min', None, 'mxdd']
 
+#    def benchmark(self):
+#        """Returns the model chemistry label for the database's benchmark."""
+#        return 'C2001BENCH'
+
     def define_supermodelchems(self):
         """
 
         """
-        self.mc['C2011BENCH'] = ['S22A', 'NBC100', 'HBC60', 'HSG0']
+        self.benchmark = 'C2011BENCH'
+        self.mcs['C2011BENCH'] = ['S22A', 'NBC100', 'HBC60', 'HSG0']
 
-        self.mc['CCSD-CP-adz'] = ['CCSD-CP-adz', 'CCSD-CP-hadz', 'CCSD-CP-adz', 'CCSD-CP-hadz']
-        self.mc['CCSD-CP-atz'] = ['CCSD-CP-atz', 'CCSD-CP-hatz', 'CCSD-CP-atz', 'CCSD-CP-hatz']
-        self.mc['CCSD-CP-adtz'] = ['CCSD-CP-adtz', 'CCSD-CP-hadtz', 'CCSD-CP-adtz', 'CCSD-CP-hadtz']
-        self.mc['CCSD-CP-adtzadz'] = ['CCSD-CP-adtzadz', 'CCSD-CP-adtzhadz', 'CCSD-CP-adtzadz', 'CCSD-CP-adtzhadz']
-        self.mc['CCSD-CP-atzadz'] = ['CCSD-CP-atzadz', 'CCSD-CP-atzhadz', 'CCSD-CP-atzadz', 'CCSD-CP-atzhadz']
-        self.mc['CCSD-CP-atqzadz'] = ['CCSD-CP-atqzadz', 'CCSD-CP-atqzhadz', 'CCSD-CP-atqzadz', 'CCSD-CP-atqzhadz']
-        self.mc['CCSD-CP-atzadtz'] = ['CCSD-CP-atzadtz', 'CCSD-CP-atzhadtz', 'CCSD-CP-atzadtz', 'CCSD-CP-atzhadtz']
-        self.mc['CCSD-CP-atqzadtz'] = ['CCSD-CP-atqzadtz', 'CCSD-CP-atqzhadtz', 'CCSD-CP-atqzadtz', 'CCSD-CP-atqzhadtz']
-        self.mc['CCSD-CP-atqzatz'] = ['CCSD-CP-atqzatz', 'CCSD-CP-atqzhatz', 'CCSD-CP-atqzatz', 'CCSD-CP-atqzhatz']
+        self.mcs['CCSD-CP-adz'] = ['CCSD-CP-adz', 'CCSD-CP-hadz', 'CCSD-CP-adz', 'CCSD-CP-hadz']
+        self.mcs['CCSD-CP-atz'] = ['CCSD-CP-atz', 'CCSD-CP-hatz', 'CCSD-CP-atz', 'CCSD-CP-hatz']
+        self.mcs['CCSD-CP-adtz'] = ['CCSD-CP-adtz', 'CCSD-CP-hadtz', 'CCSD-CP-adtz', 'CCSD-CP-hadtz']
+        self.mcs['CCSD-CP-adtzadz'] = ['CCSD-CP-adtzadz', 'CCSD-CP-adtzhadz', 'CCSD-CP-adtzadz', 'CCSD-CP-adtzhadz']
+        self.mcs['CCSD-CP-atzadz'] = ['CCSD-CP-atzadz', 'CCSD-CP-atzhadz', 'CCSD-CP-atzadz', 'CCSD-CP-atzhadz']
+        self.mcs['CCSD-CP-atqzadz'] = ['CCSD-CP-atqzadz', 'CCSD-CP-atqzhadz', 'CCSD-CP-atqzadz', 'CCSD-CP-atqzhadz']
+        self.mcs['CCSD-CP-atzadtz'] = ['CCSD-CP-atzadtz', 'CCSD-CP-atzhadtz', 'CCSD-CP-atzadtz', 'CCSD-CP-atzhadtz']
+        self.mcs['CCSD-CP-atqzadtz'] = ['CCSD-CP-atqzadtz', 'CCSD-CP-atqzhadtz', 'CCSD-CP-atqzadtz', 'CCSD-CP-atqzhadtz']
+        self.mcs['CCSD-CP-atqzatz'] = ['CCSD-CP-atqzatz', 'CCSD-CP-atqzhatz', 'CCSD-CP-atqzatz', 'CCSD-CP-atqzhatz']
 
-        self.mc['SCSCCSD-CP-adz'] = ['SCSCCSD-CP-adz', 'SCSCCSD-CP-hadz', 'SCSCCSD-CP-adz', 'SCSCCSD-CP-hadz']
-        self.mc['SCSCCSD-CP-atz'] = ['SCSCCSD-CP-atz', 'SCSCCSD-CP-hatz', 'SCSCCSD-CP-atz', 'SCSCCSD-CP-hatz']
-        self.mc['SCSCCSD-CP-adtz'] = ['SCSCCSD-CP-adtz', 'SCSCCSD-CP-hadtz', 'SCSCCSD-CP-adtz', 'SCSCCSD-CP-hadtz']
-        self.mc['SCSCCSD-CP-adtzadz'] = ['SCSCCSD-CP-adtzadz', 'SCSCCSD-CP-adtzhadz', 'SCSCCSD-CP-adtzadz', 'SCSCCSD-CP-adtzhadz']
-        self.mc['SCSCCSD-CP-atzadz'] = ['SCSCCSD-CP-atzadz', 'SCSCCSD-CP-atzhadz', 'SCSCCSD-CP-atzadz', 'SCSCCSD-CP-atzhadz']
-        self.mc['SCSCCSD-CP-atqzadz'] = ['SCSCCSD-CP-atqzadz', 'SCSCCSD-CP-atqzhadz', 'SCSCCSD-CP-atqzadz', 'SCSCCSD-CP-atqzhadz']
-        self.mc['SCSCCSD-CP-atzadtz'] = ['SCSCCSD-CP-atzadtz', 'SCSCCSD-CP-atzhadtz', 'SCSCCSD-CP-atzadtz', 'SCSCCSD-CP-atzhadtz']
-        self.mc['SCSCCSD-CP-atqzadtz'] = ['SCSCCSD-CP-atqzadtz', 'SCSCCSD-CP-atqzhadtz', 'SCSCCSD-CP-atqzadtz', 'SCSCCSD-CP-atqzhadtz']
-        self.mc['SCSCCSD-CP-atqzatz'] = ['SCSCCSD-CP-atqzatz', 'SCSCCSD-CP-atqzhatz', 'SCSCCSD-CP-atqzatz', 'SCSCCSD-CP-atqzhatz']
+        self.mcs['SCSCCSD-CP-adz'] = ['SCSCCSD-CP-adz', 'SCSCCSD-CP-hadz', 'SCSCCSD-CP-adz', 'SCSCCSD-CP-hadz']
+        self.mcs['SCSCCSD-CP-atz'] = ['SCSCCSD-CP-atz', 'SCSCCSD-CP-hatz', 'SCSCCSD-CP-atz', 'SCSCCSD-CP-hatz']
+        self.mcs['SCSCCSD-CP-adtz'] = ['SCSCCSD-CP-adtz', 'SCSCCSD-CP-hadtz', 'SCSCCSD-CP-adtz', 'SCSCCSD-CP-hadtz']
+        self.mcs['SCSCCSD-CP-adtzadz'] = ['SCSCCSD-CP-adtzadz', 'SCSCCSD-CP-adtzhadz', 'SCSCCSD-CP-adtzadz', 'SCSCCSD-CP-adtzhadz']
+        self.mcs['SCSCCSD-CP-atzadz'] = ['SCSCCSD-CP-atzadz', 'SCSCCSD-CP-atzhadz', 'SCSCCSD-CP-atzadz', 'SCSCCSD-CP-atzhadz']
+        self.mcs['SCSCCSD-CP-atqzadz'] = ['SCSCCSD-CP-atqzadz', 'SCSCCSD-CP-atqzhadz', 'SCSCCSD-CP-atqzadz', 'SCSCCSD-CP-atqzhadz']
+        self.mcs['SCSCCSD-CP-atzadtz'] = ['SCSCCSD-CP-atzadtz', 'SCSCCSD-CP-atzhadtz', 'SCSCCSD-CP-atzadtz', 'SCSCCSD-CP-atzhadtz']
+        self.mcs['SCSCCSD-CP-atqzadtz'] = ['SCSCCSD-CP-atqzadtz', 'SCSCCSD-CP-atqzhadtz', 'SCSCCSD-CP-atqzadtz', 'SCSCCSD-CP-atqzhadtz']
+        self.mcs['SCSCCSD-CP-atqzatz'] = ['SCSCCSD-CP-atqzatz', 'SCSCCSD-CP-atqzhatz', 'SCSCCSD-CP-atqzatz', 'SCSCCSD-CP-atqzhatz']
 
-        self.mc['SCSMICCSD-CP-adz'] = ['SCSMICCSD-CP-adz', 'SCSMICCSD-CP-hadz', 'SCSMICCSD-CP-adz', 'SCSMICCSD-CP-hadz']
-        self.mc['SCSMICCSD-CP-atz'] = ['SCSMICCSD-CP-atz', 'SCSMICCSD-CP-hatz', 'SCSMICCSD-CP-atz', 'SCSMICCSD-CP-hatz']
-        self.mc['SCSMICCSD-CP-adtz'] = ['SCSMICCSD-CP-adtz', 'SCSMICCSD-CP-hadtz', 'SCSMICCSD-CP-adtz', 'SCSMICCSD-CP-hadtz']
-        self.mc['SCSMICCSD-CP-adtzadz'] = ['SCSMICCSD-CP-adtzadz', 'SCSMICCSD-CP-adtzhadz', 'SCSMICCSD-CP-adtzadz', 'SCSMICCSD-CP-adtzhadz']
-        self.mc['SCSMICCSD-CP-atzadz'] = ['SCSMICCSD-CP-atzadz', 'SCSMICCSD-CP-atzhadz', 'SCSMICCSD-CP-atzadz', 'SCSMICCSD-CP-atzhadz']
-        self.mc['SCSMICCSD-CP-atqzadz'] = ['SCSMICCSD-CP-atqzadz', 'SCSMICCSD-CP-atqzhadz', 'SCSMICCSD-CP-atqzadz', 'SCSMICCSD-CP-atqzhadz']
-        self.mc['SCSMICCSD-CP-atzadtz'] = ['SCSMICCSD-CP-atzadtz', 'SCSMICCSD-CP-atzhadtz', 'SCSMICCSD-CP-atzadtz', 'SCSMICCSD-CP-atzhadtz']
-        self.mc['SCSMICCSD-CP-atqzadtz'] = ['SCSMICCSD-CP-atqzadtz', 'SCSMICCSD-CP-atqzhadtz', 'SCSMICCSD-CP-atqzadtz', 'SCSMICCSD-CP-atqzhadtz']
-        self.mc['SCSMICCSD-CP-atqzatz'] = ['SCSMICCSD-CP-atqzatz', 'SCSMICCSD-CP-atqzhatz', 'SCSMICCSD-CP-atqzatz', 'SCSMICCSD-CP-atqzhatz']
+        self.mcs['SCSMICCSD-CP-adz'] = ['SCSMICCSD-CP-adz', 'SCSMICCSD-CP-hadz', 'SCSMICCSD-CP-adz', 'SCSMICCSD-CP-hadz']
+        self.mcs['SCSMICCSD-CP-atz'] = ['SCSMICCSD-CP-atz', 'SCSMICCSD-CP-hatz', 'SCSMICCSD-CP-atz', 'SCSMICCSD-CP-hatz']
+        self.mcs['SCSMICCSD-CP-adtz'] = ['SCSMICCSD-CP-adtz', 'SCSMICCSD-CP-hadtz', 'SCSMICCSD-CP-adtz', 'SCSMICCSD-CP-hadtz']
+        self.mcs['SCSMICCSD-CP-adtzadz'] = ['SCSMICCSD-CP-adtzadz', 'SCSMICCSD-CP-adtzhadz', 'SCSMICCSD-CP-adtzadz', 'SCSMICCSD-CP-adtzhadz']
+        self.mcs['SCSMICCSD-CP-atzadz'] = ['SCSMICCSD-CP-atzadz', 'SCSMICCSD-CP-atzhadz', 'SCSMICCSD-CP-atzadz', 'SCSMICCSD-CP-atzhadz']
+        self.mcs['SCSMICCSD-CP-atqzadz'] = ['SCSMICCSD-CP-atqzadz', 'SCSMICCSD-CP-atqzhadz', 'SCSMICCSD-CP-atqzadz', 'SCSMICCSD-CP-atqzhadz']
+        self.mcs['SCSMICCSD-CP-atzadtz'] = ['SCSMICCSD-CP-atzadtz', 'SCSMICCSD-CP-atzhadtz', 'SCSMICCSD-CP-atzadtz', 'SCSMICCSD-CP-atzhadtz']
+        self.mcs['SCSMICCSD-CP-atqzadtz'] = ['SCSMICCSD-CP-atqzadtz', 'SCSMICCSD-CP-atqzhadtz', 'SCSMICCSD-CP-atqzadtz', 'SCSMICCSD-CP-atqzhadtz']
+        self.mcs['SCSMICCSD-CP-atqzatz'] = ['SCSMICCSD-CP-atqzatz', 'SCSMICCSD-CP-atqzhatz', 'SCSMICCSD-CP-atqzatz', 'SCSMICCSD-CP-atqzhatz']
 
-        self.mc['CCSDT-CP-adz'] = ['CCSDT-CP-adz', 'CCSDT-CP-hadz', 'CCSDT-CP-adz', 'CCSDT-CP-hadz']
-        self.mc['CCSDT-CP-atz'] = ['CCSDT-CP-atz', 'CCSDT-CP-hatz', 'CCSDT-CP-atz', 'CCSDT-CP-hatz']
-        self.mc['CCSDT-CP-adtz'] = ['CCSDT-CP-adtz', 'CCSDT-CP-hadtz', 'CCSDT-CP-adtz', 'CCSDT-CP-hadtz']
-        self.mc['CCSDT-CP-adtzadz'] = ['CCSDT-CP-adtzadz', 'CCSDT-CP-adtzhadz', 'CCSDT-CP-adtzadz', 'CCSDT-CP-adtzhadz']
-        self.mc['CCSDT-CP-atzadz'] = ['CCSDT-CP-atzadz', 'CCSDT-CP-atzhadz', 'CCSDT-CP-atzadz', 'CCSDT-CP-atzhadz']
-        self.mc['CCSDT-CP-atqzadz'] = ['CCSDT-CP-atqzadz', 'CCSDT-CP-atqzhadz', 'CCSDT-CP-atqzadz', 'CCSDT-CP-atqzhadz']
-        self.mc['CCSDT-CP-atzadtz'] = ['CCSDT-CP-atzadtz', 'CCSDT-CP-atzhadtz', 'CCSDT-CP-atzadtz', 'CCSDT-CP-atzhadtz']
-        self.mc['CCSDT-CP-atqzadtz'] = ['CCSDT-CP-atqzadtz', 'CCSDT-CP-atqzhadtz', 'CCSDT-CP-atqzadtz', 'CCSDT-CP-atqzhadtz']
-        self.mc['CCSDT-CP-atqzatz'] = ['CCSDT-CP-atqzatz', 'CCSDT-CP-atqzhatz', 'CCSDT-CP-atqzatz', 'CCSDT-CP-atqzhatz']
+        self.mcs['CCSDT-CP-adz'] = ['CCSDT-CP-adz', 'CCSDT-CP-hadz', 'CCSDT-CP-adz', 'CCSDT-CP-hadz']
+        self.mcs['CCSDT-CP-atz'] = ['CCSDT-CP-atz', 'CCSDT-CP-hatz', 'CCSDT-CP-atz', 'CCSDT-CP-hatz']
+        self.mcs['CCSDT-CP-adtz'] = ['CCSDT-CP-adtz', 'CCSDT-CP-hadtz', 'CCSDT-CP-adtz', 'CCSDT-CP-hadtz']
+        self.mcs['CCSDT-CP-adtzadz'] = ['CCSDT-CP-adtzadz', 'CCSDT-CP-adtzhadz', 'CCSDT-CP-adtzadz', 'CCSDT-CP-adtzhadz']
+        self.mcs['CCSDT-CP-atzadz'] = ['CCSDT-CP-atzadz', 'CCSDT-CP-atzhadz', 'CCSDT-CP-atzadz', 'CCSDT-CP-atzhadz']
+        self.mcs['CCSDT-CP-atqzadz'] = ['CCSDT-CP-atqzadz', 'CCSDT-CP-atqzhadz', 'CCSDT-CP-atqzadz', 'CCSDT-CP-atqzhadz']
+        self.mcs['CCSDT-CP-atzadtz'] = ['CCSDT-CP-atzadtz', 'CCSDT-CP-atzhadtz', 'CCSDT-CP-atzadtz', 'CCSDT-CP-atzhadtz']
+        self.mcs['CCSDT-CP-atqzadtz'] = ['CCSDT-CP-atqzadtz', 'CCSDT-CP-atqzhadtz', 'CCSDT-CP-atqzadtz', 'CCSDT-CP-atqzhadtz']
+        self.mcs['CCSDT-CP-atqzatz'] = ['CCSDT-CP-atqzatz', 'CCSDT-CP-atqzhatz', 'CCSDT-CP-atqzatz', 'CCSDT-CP-atqzhatz']
 
     def make_pt2_flats(self):
         """Generate pieces for inclusion into tables for PT2 paper."""
