@@ -1,8 +1,9 @@
 import os
 import re
-import collections
 import string
+import hashlib
 import itertools
+import collections
 from exceptions import *
 from psiutil import search_file
 from molecule import Molecule
@@ -518,9 +519,15 @@ class BasisSet(object):
         text += msg
 
         if returnBasisSet:
+            print text
             return bs
         else:
-            return bs.export_for_libmints()
+            bsdict = {}
+            bsdict['message'] = text
+            bsdict['name'] = bs.name
+            bsdict['puream'] = bs.has_puream()
+            bsdict['shell_map'] = bs.export_for_libmints(fitrole)
+            return bsdict
 
     @classmethod
     def construct(cls, parser, mol, role, deffit=None, basstrings=None):
@@ -650,7 +657,9 @@ class BasisSet(object):
 
         # Construct all the one-atom BasisSet-s for mol's CoordEntry-s
         for at in range(mol.natom()):
-            mol.set_shell_by_number(at, BasisSet(basisset, at), role=role)
+            oneatombasis = BasisSet(basisset, at)
+            oneatombasishash = hashlib.sha1(oneatombasis.print_detail(numbersonly=True)).hexdigest()
+            mol.set_shell_by_number(at, oneatombasishash, role=role)
         mol.update_geometry()  # re-evaluate symmetry taking basissets into account
 
 #TODO fix name
@@ -855,6 +864,7 @@ class BasisSet(object):
         text += """    Number of Cartesian functions: %d\n""" % (self.nao())
         text += """    Spherical Harmonics?: %s\n""" % ('true' if self.has_puream() else 'false')
         text += """    Max angular momentum: %d\n\n""" % (self.max_am())
+        #text += """    Source:\n%s\n""" % (self.source())  # TODO
 
         if out is None:
             return text
@@ -921,22 +931,24 @@ class BasisSet(object):
             with open(out, mode='w') as handle:
                 handle.write(text)
 
-    def print_detail(self, out=None):
+    def print_detail(self, out=None, numbersonly=False):
         """Prints a detailed PSI3-style summary of the basis (per-atom)
         *  @param out The file stream to use for printing. Defaults to outfile.
 
         """
-        text = self.print_summary(out=None)
-
-        text += """  ==> AO Basis Functions <==\n"""
-        text += '\n'
-        text += """    [ %s ]\n""" % (self.name)
+        text = ''
+        if not numbersonly:
+            text += self.print_summary(out=None)
+            text += """  ==> AO Basis Functions <==\n"""
+            text += '\n'
+            text += """    [ %s ]\n""" % (self.name)
         text += """    spherical\n""" if self.has_puream() else """    cartesian\n"""
         text += """    ****\n"""
 
         for uA in range(self.molecule.nunique()):
             A = self.molecule.unique(uA)
-            text += """   %2s %3d\n""" % (self.molecule.symbol(A), A + 1)
+            if not numbersonly:
+                text += """   %2s %3d\n""" % (self.molecule.symbol(A), A + 1)
             first_shell = self.center_to_shell[A]
             n_shell = self.center_to_nshell[A]
 
@@ -951,19 +963,16 @@ class BasisSet(object):
             with open(out, mode='w') as handle:
                 handle.write(text)
 
-    def export_for_libmints(self):
-        """From complete BasisSet object, returns array whose first
-        element is basis name, second element is basis puream, and
-        additional pairs of elements are each unique atom label and the
+    def export_for_libmints(self, role):
+        """From complete BasisSet object, returns array where
+        triplets of elements are each unique atom label, the hash
+        of the string shells entry in gbs format and the
         shells entry in gbs format for that label. This packaging is
         intended for return to libmints BasisSet::pyconstruct for
         instantiation of a libmints BasisSet clone of *self*.
 
         """
         basstrings = []
-        basstrings.append(self.name)
-        basstrings.append('spherical' if self.has_puream() else 'cartesian')
-
         tally = []
         for A in range(self.molecule.natom()):
             if self.molecule.label(A) not in tally:
@@ -972,6 +981,7 @@ class BasisSet(object):
                 n_shell = self.center_to_nshell[A]
 
                 basstrings.append(label)
+                basstrings.append(self.molecule.atoms[A].shell(key=role))
                 text = """   %s  0\n""" % (label)
                 for Q in range(n_shell):
                     text += self.shells[Q + first_shell].pyprint(outfile=None)

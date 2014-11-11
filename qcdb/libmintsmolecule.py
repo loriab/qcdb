@@ -931,10 +931,14 @@ class LibmintsMolecule(object):
                 text += """    %8s%4s """ % (self.symbol(i), "" if self.Z(i) else "(Gh)")
                 for j in range(3):
                     text += """  %17.12f""" % (geom[j])
-                #text += """ %12s""" % (self.label(i))
-                #text += """  %s""" % (self.atoms[i].basissets())
-                #text += """SHELL  %s""" % (self.atoms[i].shells())
                 text += "\n"
+            # TODO if (Process::environment.options.get_int("PRINT") > 2) {
+            text += "\n"
+            for i in range(self.natom()):
+                text += """    %8s\n""" % (self.label(i))
+                for bas in self.atoms[i].basissets().keys():
+                    text += """              %-15s %-20s %s\n""" % (bas, 
+                        self.atoms[i].basissets()[bas], self.atoms[i].shells()[bas])
             text += "\n"
         else:
             text += "  No atoms in this molecule.\n"
@@ -1724,13 +1728,13 @@ class LibmintsMolecule(object):
             if label.upper() == atom.label():
                 atom.set_basisset(name, role)
 
-    def set_shell_by_number(self, number, bs, role="BASIS"):
-        """Assigns BasisSet *bs* to atom number *number* (0-indexed, excludes dummies)."""
+    def set_shell_by_number(self, number, bshash, role="BASIS"):
+        """Assigns BasisSet *bshash* to atom number *number* (0-indexed, excludes dummies)."""
         self.lock_frame = False
         if number >= self.natom():
             raise ValidationError("Molecule::set_shell_by_number: Basis specified for atom %d, but there are only %d atoms in this molecule." % \
                 (number, self.natom()))
-        self.atoms[number].set_shell(bs, role)
+        self.atoms[number].set_shell(bshash, role)
 
     def nfrozen_core(self, depth=False):
         """Number of frozen core for molecule given freezing state.

@@ -184,7 +184,7 @@ class CoordEntry(object):
         self.ghosted = False
         # Different types of basis sets that can be assigned to this atom.
         self.PYbasissets = basis if basis is not None else collections.OrderedDict()
-        # Actual one-atom BasisSet attached to this atom
+        # Hash of one-atom BasisSet attached to this atom
         self.PYshells = shells if shells is not None else collections.OrderedDict()
 
     @staticmethod
@@ -243,18 +243,20 @@ class CoordEntry(object):
         if other.PYshells is not None and self.PYshells is not None:
             for bas in self.PYshells:  # do we instead care only about orbital basis?
                 if bas in other.PYshells:
-                    if other.PYshells[bas].nbf() != self.PYshells[bas].nbf():
+                    if other.PYshells[bas] != self.PYshells[bas]:
                         return False
-                    if other.PYshells[bas].nshell() != self.PYshells[bas].nshell():
-                        return False
-                    if other.PYshells[bas].nprimitive() != self.PYshells[bas].nprimitive():
-                        return False
-                    if other.PYshells[bas].max_am() != self.PYshells[bas].max_am():
-                        return False
-                    if other.PYshells[bas].max_nprimitive() != self.PYshells[bas].max_nprimitive():
-                        return False
-                    if other.PYshells[bas].has_puream() != self.PYshells[bas].has_puream():
-                        return False
+                    #if other.PYshells[bas].nbf() != self.PYshells[bas].nbf():
+                    #    return False
+                    #if other.PYshells[bas].nshell() != self.PYshells[bas].nshell():
+                    #    return False
+                    #if other.PYshells[bas].nprimitive() != self.PYshells[bas].nprimitive():
+                    #    return False
+                    #if other.PYshells[bas].max_am() != self.PYshells[bas].max_am():
+                    #    return False
+                    #if other.PYshells[bas].max_nprimitive() != self.PYshells[bas].max_nprimitive():
+                    #    return False
+                    #if other.PYshells[bas].has_puream() != self.PYshells[bas].has_puream():
+                    #    return False
                 else:
                     raise ValidationError("""Basis set %s set for one and not other. This shouldn't happen. Investigate.""" % (bas))
         return True
@@ -318,18 +320,18 @@ class CoordEntry(object):
         """Returns basisset to atom map"""
         return self.PYbasissets
 
-    def set_shell(self, bs, key='BASIS'):
-        """Set the shells for this atom
+    def set_shell(self, bshash, key='BASIS'):
+        """Set the hash for this atom
         * @param key Keyword from input file, basis, ri_basis, etc.
-        * @param bs BasisSet
+        * @param bshash hash string of one-atom BasisSet
 
         """
-        self.PYshells[key] = bs
+        self.PYshells[key] = bshash
 
     def shell(self, key='BASIS'):
-        """Returns the shells for the provided type.
+        """Returns the hash for the provided type.
         * @param type Keyword from input file.
-        * @returns the value from input.
+        * @returns the hash string for basis.
 
         """
         try:
@@ -346,9 +348,7 @@ class CoordEntry(object):
         print '\nCoordEntry\n  Entry Number = %d\n  Computed = %s\n  Z = %d\n  Charge = %f\n  Mass = %f\n  Symbol = %s\n  Label = %s\n  Ghosted = %s\n  Coordinates = %s\n  Basissets = %s\n\n  Shells = %s\n\n' % \
             (self.entry_number(), self.is_computed(), self.Z(), self.charge(),
             self.mass(), self.symbol(), self.label(), self.is_ghosted(),
-            self.coordinates, self.PYbasissets, self.PYshells.keys())
-        for bs in self.PYshells.keys():
-            print self.PYshells[bs].print_by_level(level=2)
+            self.coordinates, self.PYbasissets, self.PYshells)
 
 
 class CartesianEntry(CoordEntry):
