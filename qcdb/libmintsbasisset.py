@@ -544,7 +544,9 @@ class BasisSet(object):
         mol.update_geometry()
 
         # Paths to search for gbs files: here + PSIPATH + library
-        libraryPath = ':' + os.path.abspath(os.environ.get('PSIDATADIR', '')) + '/basis'
+        psidatadir = os.environ.get('PSIDATADIR', None)
+        psidatadir = __file__ + '/../../..' if psidatadir is None else psidatadir
+        libraryPath = ':' + os.path.abspath(psidatadir) + '/basis'
         basisPath = os.path.abspath('.') + \
             ':' + ':'.join([os.path.abspath(x) for x in os.environ.get('PSIPATH', '').split(':')]) + \
             libraryPath
