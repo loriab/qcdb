@@ -525,7 +525,7 @@ class BasisSet(object):
             bsdict = {}
             bsdict['message'] = text
             bsdict['name'] = bs.name
-            bsdict['puream'] = bs.has_puream()
+            bsdict['puream'] = int(bs.has_puream())
             bsdict['shell_map'] = bs.export_for_libmints(fitrole)
             return bsdict
 
