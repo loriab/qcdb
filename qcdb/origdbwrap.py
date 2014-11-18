@@ -6,7 +6,10 @@ try:
 except ImportError:
     import pickle
 import itertools
-import collections
+try:
+    from collections import OrderedDict
+except ImportError:
+    from oldpymodules import OrderedDict
 from exceptions import *
 from modelchems import Method, BasisSet, Error, methods, bases, errors
 import psiutil
@@ -17,7 +20,7 @@ def initialize_errors(e=None, pe=None, pbe=None, extrema=True):
     """
 
     """
-    error = collections.OrderedDict()
+    error = OrderedDict()
     error['maxe'] = None if (e is None or not extrema) else e        # LD_XA
     error['mine'] = None if (e is None or not extrema) else e        # LD_XI
     error['me'] = None if e is None else 0.0                         # LD_MS
@@ -104,7 +107,7 @@ def format_errors(err, mode=1):
         return text
 
     if mode == 3:
-        sdict = collections.OrderedDict()
+        sdict = OrderedDict()
         sdict['maxe'] = '' if err['maxe'] is None else '%8.2f' % (err['maxe'])
         sdict['mine'] = '' if err['mine'] is None else '%8.2f' % (err['mine'])
         sdict['me'] = '' if err['me'] is None else '%+8.2f' % (err['me'])
@@ -377,7 +380,7 @@ class Database(object):
         self.hrgt = oHRGT
 
         # form qcdb.Reaction objects from comprehensive reaction list, HRXN
-        oHRXN = collections.OrderedDict()
+        oHRXN = OrderedDict()
         for rxn in database.HRXN:
             try:
                 tagl = database.TAGL[database.dbse + '-' + str(rxn)]
@@ -417,7 +420,7 @@ class Database(object):
 #        for rxn in database.HRXN:
 #            dbrxn = database.dbse + '-' + str(rxn)
 #            for mode, actvrxnm in oACTV.iteritems():
-#                tdict = collections.OrderedDict()
+#                tdict = OrderedDict()
 #                for rgt in getattr(database, actvrxnm[0])[dbrxn]:
 #                    tdict[oHRGT[rgt]] = getattr(database, actvrxnm[1])[dbrxn][rgt]
 #                oHRXN[rxn].rxnm[mode] = tdict
@@ -461,7 +464,7 @@ class Database(object):
             pieces.remove(item)
         oSSET['HRXN'] = database.HRXN
 
-        self.sset = collections.OrderedDict()
+        self.sset = OrderedDict()
         for item in oSSET.keys():
             if item == 'HRXN_SM':
                 label = 'small'
@@ -477,7 +480,7 @@ class Database(object):
                 label = item.lower()
 
             # subsets may have different ordering from HRXN
-            self.sset[label] = collections.OrderedDict()
+            self.sset[label] = OrderedDict()
             for rxn in oSSET[item]:
                 self.sset[label][rxn] = oHRXN[rxn]
 
@@ -534,7 +537,7 @@ class Database(object):
             print """Database %s: Subset %s NOT formed: empty""" % (self.dbse, label)
             return
 
-        self.sset[label] = collections.OrderedDict()
+        self.sset[label] = OrderedDict()
         for rxn in lsslist:
             self.sset[label][rxn] = self.hrxn[rxn]
         print """Database %s: Subset %s formed: %s""" % (self.dbse, label, self.sset[label].keys())
@@ -553,7 +556,7 @@ class Database(object):
                 lsset = self.sset[sset.lower()]
             except KeyError, e:
                 #raise ValidationError("""Subset named %s not available""" % (str(e)))
-                lsset = collections.OrderedDict()
+                lsset = OrderedDict()
         else:
             if callable(sset):
                 # sset is function that will generate subset of HRXN from sset(self)
@@ -562,7 +565,7 @@ class Database(object):
                 # sset is array containing reactions
                 lsslist = [rxn for rxn in self.sset['default'].keys() if rxn in sset]
             # assemble dict of qcdb.Reaction objects from array of reaction names
-            lsset = collections.OrderedDict()
+            lsset = OrderedDict()
             for rxn in lsslist:
                 lsset[rxn] = self.hrxn[rxn]
 
@@ -602,7 +605,7 @@ class Database(object):
                 print """Warning: nothing to compute."""
         else:
             Nrxn = float(len(err))
-            error = collections.OrderedDict()
+            error = OrderedDict()
             # linear (absolute) error
             linear = [val[0] for val in err.values()]
             error['maxe'] = max(linear, key=lambda x: abs(x))
@@ -774,7 +777,7 @@ class Database(object):
     #    *benchmark* for all available subsets and return dictionary of same.
 
     #    """
-    #    errors = collections.OrderedDict()
+    #    errors = OrderedDict()
     #    for ss in self.sset.keys():
     #        errors[ss] = self.compute_statistics(modelchem, benchmark=benchmark, sset=ss, failoninc=failoninc, verbose=verbose)
     #    print """\n  ==> %s %s Errors <==""" % (self.dbse, modelchem)
@@ -792,9 +795,9 @@ class Database(object):
 
         """
         pre, suf, mid = string_contrast(modelchem)
-        errors = collections.OrderedDict()
+        errors = OrderedDict()
         for ss in self.sset.keys():
-            errors[ss] = collections.OrderedDict()
+            errors[ss] = OrderedDict()
             for mc in modelchem:
                 errors[ss][mc] = self.compute_statistics(mc, benchmark=benchmark, sset=ss, failoninc=failoninc, verbose=verbose)
         print """\n  ==> %s %s[]%s Errors <==""" % (self.dbse, pre, suf)
@@ -817,8 +820,8 @@ class Database(object):
         """
         pre, suf, mid = string_contrast(modelchem)
         # compute errors
-        errors = collections.OrderedDict()
-        indiv = collections.OrderedDict()
+        errors = OrderedDict()
+        indiv = OrderedDict()
         for mc in modelchem:
             errors[mc], indiv[mc] = self.compute_statistics(mc, benchmark=benchmark,
                 sset=sset, failoninc=failoninc, verbose=verbose, returnindiv=True)
@@ -886,8 +889,8 @@ class Database(object):
             # msset is array of subsets for each modelchem
                 lsset = msset
         # compute errors
-        errors = collections.OrderedDict()
-        indiv = collections.OrderedDict()
+        errors = OrderedDict()
+        indiv = OrderedDict()
         index = []
         for mc, bm, ss in zip(modelchem, lbenchmark, lsset):
             ix = '%s_%s_%s' % (mc, bm, ss)
@@ -1199,7 +1202,7 @@ class FourDatabases(object):
         # HSG database
         self.hsg = Database('HSG')
         # subset assembly pattern
-        self.sset = collections.OrderedDict()
+        self.sset = OrderedDict()
         # assembly pattern for transspecies modelchems
         self.mc = {}
 
@@ -1387,8 +1390,8 @@ class FourDatabases(object):
         else:
             lss = [sset, sset, sset, sset]
 
-        errors = collections.OrderedDict()
-        indiv = collections.OrderedDict()
+        errors = OrderedDict()
+        indiv = OrderedDict()
         errors['S22'], indiv['S22'] = (None, None) if lss[0] is None else self.s22.compute_statistics(lmc[0], sset=lss[0],
             benchmark=lbm[0], failoninc=failoninc, verbose=verbose, returnindiv=True)
         errors['NBC1'], indiv['NBC1'] = (None, None) if lss[1] is None else self.nbc1.compute_statistics(lmc[1], sset=lss[1],
@@ -1780,7 +1783,7 @@ class ThreeDatabases(object):
         # HSG database
         self.hsg = Database('HSG')
         # subset assembly pattern
-        self.sset = collections.OrderedDict()
+        self.sset = OrderedDict()
         # assembly pattern for transspecies modelchems
         self.mc = {}
 
@@ -1966,8 +1969,8 @@ class ThreeDatabases(object):
         else:
             lss = [sset, sset, sset, sset]
 
-        errors = collections.OrderedDict()
-        indiv = collections.OrderedDict()
+        errors = OrderedDict()
+        indiv = OrderedDict()
         errors['S22'], indiv['S22'] = (None, None) if lss[0] is None else self.s22.compute_statistics(lmc[0], sset=lss[0],
             benchmark=benchmark, failoninc=failoninc, verbose=verbose, returnindiv=True)
         errors['HSG'], indiv['HSG'] = (None, None) if lss[1] is None else self.hsg.compute_statistics(lmc[1], sset=lss[1],

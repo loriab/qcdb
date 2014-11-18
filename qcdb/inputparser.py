@@ -516,7 +516,7 @@ def check_parentheses_and_brackets(input_string, exit_on_error):
 
     """
     # This returns 1 if the string's all matched up, 0 otherwise
-    import collections
+    from collections import deque
 
     # create left to right parenthesis mappings
     lrmap = {"(": ")", "[": "]", "{": "}"}
@@ -525,7 +525,7 @@ def check_parentheses_and_brackets(input_string, exit_on_error):
     lparens = set(lrmap.keys())
     rparens = set(lrmap.values())
 
-    parenstack = collections.deque()
+    parenstack = deque()
     all_matched = 1
     for ch in input_string:
         if ch in lparens:

@@ -22,7 +22,7 @@
 
 import re
 import math
-import collections
+from collections import defaultdict
 
 from exceptions import *
 import qcformat
@@ -140,7 +140,7 @@ class Infile(qcformat.InputFormat2):
 
 def muster_cdsgroup_options():
     text = ''
-    options = collections.defaultdict(lambda: collections.defaultdict(dict))
+    options = defaultdict(lambda: defaultdict(dict))
     options['GLOBALS']['E_CONVERGENCE']['value'] = 8
     options['SCF']['GUESS']['value'] = 'sad'
     options['SCF']['MAXITER']['value'] = 200
@@ -161,7 +161,7 @@ def muster_modelchem(name, dertype):
     """
     text = ''
     lowername = name.lower()
-    options = collections.defaultdict(lambda: collections.defaultdict(dict))
+    options = defaultdict(lambda: defaultdict(dict))
 
     if dertype == 0:
         text += """energy('"""
