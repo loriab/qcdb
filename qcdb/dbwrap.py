@@ -1346,7 +1346,8 @@ class Database(object):
         for mc in new:
             self.mcs[mc] = [mc] * len(self.dbdict.keys())
 
-    def compute_statistics(self, modelchem, benchmark='default', sset='default', failoninc=True, verbose=False, returnindiv=False):
+    def compute_statistics(self, modelchem, benchmark='default', sset='default', 
+        failoninc=True, verbose=False, returnindiv=False):
         """Computes summary statistics and, if *returnindiv* True,
         individual errors for single model chemistry *modelchem* versus
         *benchmark* over subset *sset* over all component databases.
@@ -1631,11 +1632,12 @@ class Database(object):
         # repackage
         dbdat = []
         for db, odb in self.dbdict.items():
+            dbindbdict = self.dbdict.keys().index(db)
             for rxn in odb.hrxn.keys():
                 data = []
                 for ix in index:
                     if indiv[ix][db] is not None:
-                        if rxn in odb.sset[lsset[index.index(ix)]].keys():
+                        if rxn in odb.sset[self.sset[lsset[index.index(ix)]][dbindbdict]].keys():
                             try:
                                 data.append(indiv[ix][db][rxn][0])
                             except KeyError, e:
@@ -1645,10 +1647,13 @@ class Database(object):
                                     data.append(None)
                         else:
                             data.append(None)
-                dbdat.append({'db': db,
-                              'sys': str(rxn),
-                              'color': odb.hrxn[rxn].color,
-                              'data': data})
+                if not data or all(item is None for item in data):
+                    pass  # filter out empty reactions
+                else:
+                    dbdat.append({'db': db,
+                                  'sys': str(rxn),
+                                  'color': odb.hrxn[rxn].color,
+                                  'data': data})
         mae = [errors[ix][self.dbse]['mae'] for ix in index]
         mape = [100 * errors[ix][self.dbse]['mape'] for ix in index]
         # form unique filename
