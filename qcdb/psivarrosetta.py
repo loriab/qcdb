@@ -33,6 +33,8 @@ useme2psivar = {
 
     'wb97x2.usemeraw': 'WB97X-2 TOTAL ENERGY',  # no psivar for fctl + dh, which would be the more restrictive def
 
+    'wb97xv.usemeraw': 'WB97X-V TOTAL ENERGY',
+
     'm052x.usemeraw': 'M05-2X FUNCTIONAL TOTAL ENERGY',
     'm052xd3.usemedash': 'M05-2X-D3 DISPERSION CORRECTION ENERGY',
 
