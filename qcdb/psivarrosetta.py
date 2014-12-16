@@ -55,7 +55,10 @@ useme2psivar = {
 
     'lcvv10.usemeraw': 'LC-VV10 FUNCTIONAL TOTAL ENERGY',
 
-    'dsdpbep86.usemeraw': 'DSD-PBEP86 TOTAL ENERGY',  # no psivar for fctl + dh, which would be the more restrictive def
+    'dsdpbep86.usemeraw': 'DSD-PBEP86 TOTAL ENERGY',  # no psivar for fctl + dh, which would be the more restrictive def  # also DSD technically implies -D
+    'dsdpbep86d2.usemedash': 'DSD-PBEP86-D2 DISPERSION CORRECTION ENERGY',
+    'dsdpbep86d3.usemedash': 'DSD-PBEP86-D3 DISPERSION CORRECTION ENERGY',
+    'dsdpbep86d3bj.usemedash': 'DSD-PBEP86-D3BJ DISPERSION CORRECTION ENERGY',
 
     'm08hx.usemeraw': 'M08-HX FUNCTIONAL TOTAL ENERGY',
     'm08so.usemeraw': 'M08-SO FUNCTIONAL TOTAL ENERGY',
@@ -215,7 +218,9 @@ optclue2psivar = {
                'CCSD(T) CORRELATION ENERGY', '(T) CORRECTION ENERGY',
                'CCSDT CORRELATION ENERGY',
                'CCSDT(Q) CORRELATION ENERGY', '(Q) CORRECTION ENERGY'],
-    'nfc': ['B2PLYP TOTAL ENERGY', 'DSD-PBEP86 TOTAL ENERGY', 'WB97X-2 TOTAL ENERGY', 'B2PLYP-D2 TOTAL ENERGY', 'B2PLYP-D3 TOTAL ENERGY'],
+    'nfc': ['B2PLYP TOTAL ENERGY', 'B2PLYP-D2 TOTAL ENERGY', 'B2PLYP-D3 TOTAL ENERGY',
+            'DSD-PBEP86 TOTAL ENERGY', 'DSD-PBEP86-D2 TOTAL ENERGY', 'DSD-PBEP86-D3 TOTAL ENERGY', 'DSD-PBEP86-D3BJ TOTAL ENERGY',
+            'WB97X-2 TOTAL ENERGY'],
     'dfhf': ['HF-CABS TOTAL ENERGY', 'MP2-F12 TOTAL ENERGY', 'SCS-MP2-F12 TOTAL ENERGY', 'SCS(N)-MP2-F12 TOTAL ENERGY', 
              'SCS(MI)-MP2-F12 TOTAL ENERGY', 'DW-MP2-F12 TOTAL ENERGY', 'MP2C-F12 TOTAL ENERGY',
              'SCF TOTAL ENERGY', 'HF TOTAL ENERGY', 'MP2 TOTAL ENERGY', 'SCS-MP2 TOTAL ENERGY', 'SCS(N)-MP2 TOTAL ENERGY', 

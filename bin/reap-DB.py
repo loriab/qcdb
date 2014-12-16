@@ -43,6 +43,11 @@ path = r"""/Users/loriab/linux/qcdb/data/dftusemefiles/"""
 #project = 'dhdft'
 #path = r"""/Users/loriab/linux/qcdb/data/dhdftusemefiles/"""
 
+# fail --> pass
+dbse = 'S22'
+project = 'dhdft2'
+path = r"""/Users/loriab/linux/qcdb/data/dhdftusemefiles/DSD/"""
+
 # pass --> pass
 #dbse = 'A24'
 #project = 'dilabio'
@@ -532,6 +537,9 @@ pv1['B3LYP-XDM TOTAL ENERGY'] = {'func': sum, 'args': ['B3LYP FUNCTIONAL TOTAL E
 pv1['B2PLYP-D2 TOTAL ENERGY'] = {'func': sum, 'args': ['B2PLYP TOTAL ENERGY', 'B2PLYP-D2 DISPERSION CORRECTION ENERGY']}
 pv1['B2PLYP-D3 TOTAL ENERGY'] = {'func': sum, 'args': ['B2PLYP TOTAL ENERGY', 'B2PLYP-D3 DISPERSION CORRECTION ENERGY']}
 pv1['B2PLYP-D3BJ TOTAL ENERGY'] = {'func': sum, 'args': ['B2PLYP TOTAL ENERGY', 'B2PLYP-D3BJ DISPERSION CORRECTION ENERGY']}
+pv1['DSD-PBEP86-D2 TOTAL ENERGY'] = {'func': sum, 'args': ['DSD-PBEP86 TOTAL ENERGY', 'DSD-PBEP86-D2 DISPERSION CORRECTION ENERGY']}
+pv1['DSD-PBEP86-D3 TOTAL ENERGY'] = {'func': sum, 'args': ['DSD-PBEP86 TOTAL ENERGY', 'DSD-PBEP86-D3 DISPERSION CORRECTION ENERGY']}
+pv1['DSD-PBEP86-D3BJ TOTAL ENERGY'] = {'func': sum, 'args': ['DSD-PBEP86 TOTAL ENERGY', 'DSD-PBEP86-D3BJ DISPERSION CORRECTION ENERGY']}
 pv1['B970-D2 TOTAL ENERGY'] = {'func': sum, 'args': ['B970 FUNCTIONAL TOTAL ENERGY', 'B970-D2 DISPERSION CORRECTION ENERGY']}
 pv1['B97-D2 TOTAL ENERGY'] = {'func': sum, 'args': ['B97 FUNCTIONAL TOTAL ENERGY', 'B97-D2 DISPERSION CORRECTION ENERGY']}
 pv1['B97-D3 TOTAL ENERGY'] = {'func': sum, 'args': ['B97 FUNCTIONAL TOTAL ENERGY', 'B97-D3 DISPERSION CORRECTION ENERGY']}
@@ -1030,6 +1038,12 @@ elif project == 'dhdft':
     opts = ['', 'nfc']
     cpmd = ['CP', 'unCP']
     
+elif project == 'dhdft2':
+    mtds = ['DSDPBEP86', 'DSDPBEP86D2', 'DSDPBEP86D3BJ']
+    bass = ['adz', 'atz']
+    opts = ['', 'nfc']
+    cpmd = ['CP', 'unCP']
+    
 elif project == 'pt2':
     mtds = ['HF', 'MP2', 'SCSMP2', 'SCSNMP2', 'SCSMIMP2', 'DWMP2', 'MP2C',
             'MP25', 'MP3',
@@ -1189,6 +1203,7 @@ test_pandas(h2kc, project, mine)
 # <<< write qcdb data loader >>>
 
 f1 = open('%s/%s_%s.py' % (homewrite, dbse, project), 'w')
+print 'Writing to %s/%s_%s.py ...' % (homewrite, dbse, project)
 f1.write('\ndef load_%s(dbinstance):\n\n' % (project))
 
 for mc in mine.columns:
