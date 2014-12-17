@@ -289,10 +289,11 @@ _tlist = [
     Method('M11L',            fullname='M11L'),
     Method('XYG3',            fullname='XYG3'),
     Method('DLDFD',           fullname='dlDF+D'),
-    Method('DSDPBEP86',       fullname='DSD-PBEP86'),
-    Method('DSDPBEP86D2opt',  fullname='DSD-PBEP86-D2opt'),
+    Method('DSDPBEP86',       fullname='DSD-PBEP86'),  # this a real thing?
+    Method('DSDPBEP86D2opt',  fullname='DSD-PBEP86-D2opt'),  # email version of DSD
     Method('DSDPBEP86D2',     fullname='DSD-PBEP86-D2'),
-    Method('DSDPBEP86D3BJ',   fullname='DSD-PBEP86-B3bj'),
+    Method('DSDPBEP86D3',     fullname='DSD-PBEP86-D3'),
+    Method('DSDPBEP86D3BJ',   fullname='DSD-PBEP86-D3bj'),
     Method('VV10',            fullname='VV10'),
     Method('LCVV10',          fullname='LC-VV10'),
     Method('WB97XD',          fullname='wB97X-D', latex="""$\omega$B97X-D"""),
