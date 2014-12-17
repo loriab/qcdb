@@ -53,7 +53,7 @@ import math
 
 
 def df(n):
-    """Gives the double factorial of *i*"""
+    """Gives the double factorial of *n*"""
     return 1.0 if n <= 0 else 1.0 * n * df(n - 2)
 
 
