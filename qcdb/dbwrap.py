@@ -71,7 +71,7 @@ def average_errors(*args):
         avgerror['minpbe'] = min([x['minpbe'] for x in args], key=lambda x: abs(x))
         avgerror['mpbe'] = sum([x['mpbe'] for x in args]) / Ndb
         avgerror['mapbe'] = sum([x['mapbe'] for x in args]) / Ndb
-        avgerror['rmspbe'] = 0.0 # TODO
+        avgerror['rmspbe'] = 0.0  # TODO
         avgerror['stdpbe'] = math.sqrt(sum([x['stdpbe'] * x['stdpbe'] for x in args]) / Ndb)
     except TypeError:
         pass
@@ -234,11 +234,20 @@ class Reagent(object):
         except AttributeError:
             raise ValidationError("""Reagent must be instantiated with qcdb.Molecule object.""")
         else:
-            self.mol = mol
-        # description line
-        self.tagl = tagl
-        # addl comments
-        self.comment = comment
+#            self.mol = mol
+            self.mol = mol.create_psi4_string_from_molecule()
+#        # description line
+#        self.tagl = tagl
+#        # addl comments
+#        self.comment = comment
+#        # fragmentation
+#        self.fragments = mol.fragments
+#        # frag activation
+#        self.frtype = mol.fragment_types
+#        # frag charge
+#        self.frchg = mol.fragment_charges
+#        # frag multiplicity
+#        self.frmult = mol.fragment_multiplicities
 
     def __str__(self):
         text = ''
@@ -246,7 +255,15 @@ class Reagent(object):
         text += """  Tagline:              %s\n""" % (self.tagl)
         text += """  Comment:              %s\n""" % (self.comment)
         text += """  NRE:                  %f\n""" % (self.NRE)
-        text += """  Molecule:             \n%s""" % (self.mol.format_molecule_for_psi4())
+        #text += """  Charge:               %+d\n"""
+        text += """  Fragments:            %d\n""" % (len(self.fragments))
+        text += """    FrgNo  Actv  Chg  Mult  AtomRange\n"""
+        for fr in range(len(self.fragments)):
+            text += """    %-4d   %1s     %+2d  %2d     %s\n""" % (fr + 1,
+                '*' if self.frtype[fr] == 'Real' else '',
+                self.frchg[fr], self.frmult[fr], self.fragments[fr])
+#        text += """  Molecule:             \n%s""" % (self.mol.format_molecule_for_psi4())
+        text += """  Molecule:             \n%s""" % (self.mol)
         text += """\n"""
         return text
 
@@ -301,10 +318,10 @@ class Reaction(object):
 
 
 class WrappedDatabase(object):
-    """Wrapper class for raw Psi4 database modules that does some validation 
-    of contents, creates member data and accessors for database structures, 
-    defines error computation, and handles database subsets. Not to be used 
-    directly-- see qcdb.Database for handling single or multiple 
+    """Wrapper class for raw Psi4 database modules that does some validation
+    of contents, creates member data and accessors for database structures,
+    defines error computation, and handles database subsets. Not to be used
+    directly-- see qcdb.Database for handling single or multiple
     qdcb.WrappedDatabase objects and defining nice statistics, plotting, and
     table functionalities.
 
@@ -312,7 +329,7 @@ class WrappedDatabase(object):
     """
 
     def __init__(self, dbname, pythonpath=None):
-        """Instantiate class with case insensitive name *dbname*. Module 
+        """Instantiate class with case insensitive name *dbname*. Module
         search path can be prepended with *pythonpath*.
 
         """
@@ -349,9 +366,8 @@ class WrappedDatabase(object):
             sys.path.insert(1, pythonpath)
         else:
             sys.path.append(os.path.dirname(__file__) + '/../databases')
-        try:
-            database = psiutil.import_ignorecase(dbname)
-        except ImportError:
+        database = psiutil.import_ignorecase(dbname)
+        if not database:
             print('\nPython module for database %s failed to load\n\n' % (dbname))
             print('\nSearch path that was tried:\n')
             print(", ".join(map(str, sys.path)))
@@ -382,15 +398,15 @@ class WrappedDatabase(object):
 
         # form qcdb.Reagent objects from all defined geometries, GEOS
         oHRGT = {}
-#        for rgt, mol in database.GEOS.iteritems():
-#            mol.update_geometry()
-#            try:
-#                tagl = database.TAGL[rgt]
-#            except KeyError:
-#                tagl = None
-#                print """Warning: TAGL missing for reagent %s""" % (rgt)
-#            oHRGT[rgt] = Reagent(name=rgt, mol=mol, tagl=tagl)
-#        pieces.remove('GEOS')
+        for rgt, mol in database.GEOS.iteritems():
+            mol.update_geometry()
+            try:
+                tagl = database.TAGL[rgt]
+            except KeyError:
+                tagl = None
+                print """Warning: TAGL missing for reagent %s""" % (rgt)
+            oHRGT[rgt] = Reagent(name=rgt, mol=mol, tagl=tagl)
+        pieces.remove('GEOS')
         self.hrgt = oHRGT
 
         # form qcdb.Reaction objects from comprehensive reaction list, HRXN
@@ -1203,7 +1219,7 @@ class Database(object):
     across component databases. Also, defining statistics across databases.
 
     >>> asdf = qcdb.Database(['s22', 'Nbc10', 'hbc6', 'HSG'], 'DB4')
-    >>> qwer = qcdb.Database(['s22'])
+    >>> qwer = qcdb.Database('s22')
     """
 
     def __init__(self, dbnamelist, dbse=None, pythonpath=None, loadfrompickle=False, path=None):
@@ -1232,6 +1248,14 @@ class Database(object):
         self.mcs = {}
 
         self.benchmark = None
+
+        # slight validation, repackaging into dbnamelist
+        if isinstance(dbnamelist, basestring):
+            dbnamelist = [dbnamelist]
+        elif all(isinstance(item, basestring) for item in dbnamelist):
+            pass
+        else:
+            raise ValidationError('Database::constructor: Inappropriate configuration of constructor arguments')
 
         # load databases
         for db in dbnamelist:
@@ -1346,7 +1370,7 @@ class Database(object):
         for mc in new:
             self.mcs[mc] = [mc] * len(self.dbdict.keys())
 
-    def compute_statistics(self, modelchem, benchmark='default', sset='default', 
+    def compute_statistics(self, modelchem, benchmark='default', sset='default',
         failoninc=True, verbose=False, returnindiv=False):
         """Computes summary statistics and, if *returnindiv* True,
         individual errors for single model chemistry *modelchem* versus
@@ -1776,7 +1800,7 @@ class Database(object):
 class DB4(Database):
     def __init__(self, pythonpath=None, loadfrompickle=False, path=None):
         """Initialize FourDatabases object from SuperDatabase"""
-        Database.__init__(self, ['s22', 'nbc10', 'hbc6', 'hsg'], dbse='DB4', 
+        Database.__init__(self, ['s22', 'nbc10', 'hbc6', 'hsg'], dbse='DB4',
             pythonpath=pythonpath, loadfrompickle=loadfrompickle, path=path)
 
 #        # load up data and definitions

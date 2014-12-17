@@ -21,6 +21,7 @@ pd.set_option('display.width', 200)
 #path = r"""C:\Users\Owner\Documents\f12dilabiousemefiles\usemefiles"""
 verbose = True
 homewrite = '/Users/loriab/'
+homewrite = '/Users/loriab/linux/qcdb/sandbox/bfdb'
 
 # pass --> pass
 #dbse = 'A24'
@@ -42,6 +43,10 @@ path = r"""/Users/loriab/linux/qcdb/data/dftusemefiles/"""
 #dbse = 'S22'
 #project = 'dhdft'
 #path = r"""/Users/loriab/linux/qcdb/data/dhdftusemefiles/"""
+
+dbse = 'S22'
+project = 'dhdft2'
+path = r"""/Users/loriab/linux/qcdb/data/dhdftusemefiles/DSD/"""
 
 # pass --> pass
 #dbse = 'A24'
@@ -72,7 +77,8 @@ path = r"""/Users/loriab/linux/qcdb/data/dftusemefiles/"""
 
 dbobj = qcdb.Database(dbse)
 dbse = dbobj.dbse
-rxns = ['%s-%s' % (dbse, rxn) for rxn in dbobj.hrxn.keys()]
+print '<<<', dbse, '>>>'
+rxns = ['%s-%s' % (dbse, rxn) for rxn in dbobj.dbdict[dbobj.dbse].hrxn.keys()]
 names = ['rxn', 'dimer', 'monoA', 'monoB']
 h2kc = qcdb.psi_hartree2kcalmol
 
@@ -532,6 +538,9 @@ pv1['B3LYP-XDM TOTAL ENERGY'] = {'func': sum, 'args': ['B3LYP FUNCTIONAL TOTAL E
 pv1['B2PLYP-D2 TOTAL ENERGY'] = {'func': sum, 'args': ['B2PLYP TOTAL ENERGY', 'B2PLYP-D2 DISPERSION CORRECTION ENERGY']}
 pv1['B2PLYP-D3 TOTAL ENERGY'] = {'func': sum, 'args': ['B2PLYP TOTAL ENERGY', 'B2PLYP-D3 DISPERSION CORRECTION ENERGY']}
 pv1['B2PLYP-D3BJ TOTAL ENERGY'] = {'func': sum, 'args': ['B2PLYP TOTAL ENERGY', 'B2PLYP-D3BJ DISPERSION CORRECTION ENERGY']}
+pv1['DSD-PBEP86-D2 TOTAL ENERGY'] = {'func': sum, 'args': ['DSD-PBEP86 TOTAL ENERGY', 'DSD-PBEP86-D2 DISPERSION CORRECTION ENERGY']}
+pv1['DSD-PBEP86-D3 TOTAL ENERGY'] = {'func': sum, 'args': ['DSD-PBEP86 TOTAL ENERGY', 'DSD-PBEP86-D3 DISPERSION CORRECTION ENERGY']}
+pv1['DSD-PBEP86-D3BJ TOTAL ENERGY'] = {'func': sum, 'args': ['DSD-PBEP86 TOTAL ENERGY', 'DSD-PBEP86-D3BJ DISPERSION CORRECTION ENERGY']}
 pv1['B970-D2 TOTAL ENERGY'] = {'func': sum, 'args': ['B970 FUNCTIONAL TOTAL ENERGY', 'B970-D2 DISPERSION CORRECTION ENERGY']}
 pv1['B97-D2 TOTAL ENERGY'] = {'func': sum, 'args': ['B97 FUNCTIONAL TOTAL ENERGY', 'B97-D2 DISPERSION CORRECTION ENERGY']}
 pv1['B97-D3 TOTAL ENERGY'] = {'func': sum, 'args': ['B97 FUNCTIONAL TOTAL ENERGY', 'B97-D3 DISPERSION CORRECTION ENERGY']}
@@ -981,12 +990,12 @@ def build(method, option, cpmode, basis):
         print 'bass:', baslist
         print 'opts:', optlist
         for pcs, bas, opt in zip(mtdlist, baslist, optlist):
-            print df.loc[bas].loc[pcs].loc[opt].loc['A24-1'] #'BBI-150LYS-158LEU-2'] #'S22-2']
+            print df.loc[bas].loc[pcs].loc[opt].loc['S22-1'] #'A24-1'] #'BBI-150LYS-158LEU-2'] #'S22-2']
     return func(sum([df.loc[bas].loc[pcs].loc[opt] for pcs, bas, opt in zip(mtdlist, baslist, optlist)]))
 
 # <<< assemble all model chemistries into columns of new DataFrame >>>
 
-rxns = ['%s-%s' % (dbse, rxn) for rxn in dbobj.hrxn.keys()]
+rxns = ['%s-%s' % (dbse, rxn) for rxn in dbobj.dbdict[dbobj.dbse].hrxn.keys()]
 mine = pd.DataFrame({}, index=rxns)
 mine.index.names = ['rxn']
 
@@ -1026,6 +1035,12 @@ elif project == 'dhdft':
             'DSDPBEP86', 'VV10', 'LCVV10', 'DSDPBEP86', 'PBE', 'PBED3', 'PBE0', 'PBE0D3',
             'M08HX', 'M08SO', 'M11', 'M11L', 'PBE02', 'DLDFD', 'WB97X2', 'WB97XD',
             'M062XD3']
+    bass = ['adz', 'atz']
+    opts = ['', 'nfc']
+    cpmd = ['CP', 'unCP']
+    
+elif project == 'dhdft2':
+    mtds = ['DSDPBEP86', 'DSDPBEP86D2', 'DSDPBEP86D3BJ']
     bass = ['adz', 'atz']
     opts = ['', 'nfc']
     cpmd = ['CP', 'unCP']
@@ -1094,7 +1109,7 @@ for cpm in cpmd:
                     #print """Error building rxn mc: empty '%s' b/c no %s""" % (mc, e)
                     pass
                 else:
-                    if tmp.empty or tmp.dropna(how='all').empty:
+                    if tmp.empty or tmp.dropna(how='all').empty:  # invalid for canopy python
                         #print """Empty rxn mc: empty '%s'""" % (mc)
                         pass
                     else:
@@ -1108,7 +1123,7 @@ def threadtheframe(modelchem, xlimit=4.0):
         for mc in modelchem:
             value = h2kc * mine[mc]['%s-%s' % (dbse, rxn)]
             data.append(None if pd.isnull(value) else value)
-        dbdat.append({'sys': str(rxn), 'color': dbobj.hrxn[rxn].color, 'data': data})
+        dbdat.append({'sys': str(rxn), 'color': dbobj.dbdict[dbobj.dbse].hrxn[rxn].color, 'data': data})
     qcdb.mpl.thread(dbdat, modelchem, color='sapt', xlimit=xlimit)
 
 if project == 'f12dilabio':
@@ -1189,6 +1204,7 @@ test_pandas(h2kc, project, mine)
 # <<< write qcdb data loader >>>
 
 f1 = open('%s/%s_%s.py' % (homewrite, dbse, project), 'w')
+print 'Writing to %s/%s_%s.py ...' % (homewrite, dbse, project)
 f1.write('\ndef load_%s(dbinstance):\n\n' % (project))
 
 for mc in mine.columns:
@@ -1196,7 +1212,7 @@ for mc in mine.columns:
     method = lmc[0]
     bsse = '_'.join(lmc[1:-1])
     basis = lmc[-1]
-    for rxn in dbobj.hrxn.keys():
+    for rxn in dbobj.dbdict[dbobj.dbse].hrxn.keys():
         value = h2kc * mine[mc]['%s-%s' % (dbse, rxn)]
         if pd.isnull(value):
             if rxn == 2:
@@ -1211,7 +1227,7 @@ f1.close()
 # <<< write hdf5 >>>
 
 with pd.get_store('%s/%s_%s.h5' % (homewrite, dbse, project)) as handle:
-    handle['pdie'] = mine
+    handle['pdie'] = mine * h2kc
     print 'hdf5', handle
 
 

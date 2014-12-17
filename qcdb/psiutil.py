@@ -136,7 +136,7 @@ def query_yes_no(question, default=True):
     while True:
         sys.stdout.write(question + prompt)
         choice = raw_input().strip().lower()
-        if default is not None and choice == "":
+        if default is not None and choice == '':
             return default
         elif yes.match(choice):
             return True
@@ -185,7 +185,7 @@ def all_casings(input_string):
 
     """
     if not input_string:
-        yield ""
+        yield ''
     else:
         first = input_string[:1]
         if first.lower() == first.upper():
