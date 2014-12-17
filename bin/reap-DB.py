@@ -21,6 +21,7 @@ pd.set_option('display.width', 200)
 #path = r"""C:\Users\Owner\Documents\f12dilabiousemefiles\usemefiles"""
 verbose = True
 homewrite = '/Users/loriab/'
+homewrite = '/Users/loriab/linux/qcdb/sandbox/bfdb'
 
 # pass --> pass
 #dbse = 'A24'
@@ -43,7 +44,6 @@ path = r"""/Users/loriab/linux/qcdb/data/dftusemefiles/"""
 #project = 'dhdft'
 #path = r"""/Users/loriab/linux/qcdb/data/dhdftusemefiles/"""
 
-# fail --> pass
 dbse = 'S22'
 project = 'dhdft2'
 path = r"""/Users/loriab/linux/qcdb/data/dhdftusemefiles/DSD/"""
@@ -77,7 +77,8 @@ path = r"""/Users/loriab/linux/qcdb/data/dhdftusemefiles/DSD/"""
 
 dbobj = qcdb.Database(dbse)
 dbse = dbobj.dbse
-rxns = ['%s-%s' % (dbse, rxn) for rxn in dbobj.hrxn.keys()]
+print '<<<', dbse, '>>>'
+rxns = ['%s-%s' % (dbse, rxn) for rxn in dbobj.dbdict[dbobj.dbse].hrxn.keys()]
 names = ['rxn', 'dimer', 'monoA', 'monoB']
 h2kc = qcdb.psi_hartree2kcalmol
 
@@ -989,12 +990,12 @@ def build(method, option, cpmode, basis):
         print 'bass:', baslist
         print 'opts:', optlist
         for pcs, bas, opt in zip(mtdlist, baslist, optlist):
-            print df.loc[bas].loc[pcs].loc[opt].loc['A24-1'] #'BBI-150LYS-158LEU-2'] #'S22-2']
+            print df.loc[bas].loc[pcs].loc[opt].loc['S22-1'] #'A24-1'] #'BBI-150LYS-158LEU-2'] #'S22-2']
     return func(sum([df.loc[bas].loc[pcs].loc[opt] for pcs, bas, opt in zip(mtdlist, baslist, optlist)]))
 
 # <<< assemble all model chemistries into columns of new DataFrame >>>
 
-rxns = ['%s-%s' % (dbse, rxn) for rxn in dbobj.hrxn.keys()]
+rxns = ['%s-%s' % (dbse, rxn) for rxn in dbobj.dbdict[dbobj.dbse].hrxn.keys()]
 mine = pd.DataFrame({}, index=rxns)
 mine.index.names = ['rxn']
 
@@ -1108,7 +1109,7 @@ for cpm in cpmd:
                     #print """Error building rxn mc: empty '%s' b/c no %s""" % (mc, e)
                     pass
                 else:
-                    if tmp.empty or tmp.dropna(how='all').empty:
+                    if tmp.empty or tmp.dropna(how='all').empty:  # invalid for canopy python
                         #print """Empty rxn mc: empty '%s'""" % (mc)
                         pass
                     else:
@@ -1122,7 +1123,7 @@ def threadtheframe(modelchem, xlimit=4.0):
         for mc in modelchem:
             value = h2kc * mine[mc]['%s-%s' % (dbse, rxn)]
             data.append(None if pd.isnull(value) else value)
-        dbdat.append({'sys': str(rxn), 'color': dbobj.hrxn[rxn].color, 'data': data})
+        dbdat.append({'sys': str(rxn), 'color': dbobj.dbdict[dbobj.dbse].hrxn[rxn].color, 'data': data})
     qcdb.mpl.thread(dbdat, modelchem, color='sapt', xlimit=xlimit)
 
 if project == 'f12dilabio':
@@ -1211,7 +1212,7 @@ for mc in mine.columns:
     method = lmc[0]
     bsse = '_'.join(lmc[1:-1])
     basis = lmc[-1]
-    for rxn in dbobj.hrxn.keys():
+    for rxn in dbobj.dbdict[dbobj.dbse].hrxn.keys():
         value = h2kc * mine[mc]['%s-%s' % (dbse, rxn)]
         if pd.isnull(value):
             if rxn == 2:
@@ -1226,7 +1227,7 @@ f1.close()
 # <<< write hdf5 >>>
 
 with pd.get_store('%s/%s_%s.h5' % (homewrite, dbse, project)) as handle:
-    handle['pdie'] = mine
+    handle['pdie'] = mine * h2kc
     print 'hdf5', handle
 
 
