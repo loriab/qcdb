@@ -2031,6 +2031,56 @@ class DB4(Database):
         self.plot_bars(['CCSDTAF12-CP-adz', 'CCSDTAF12-CP-adtzadz', 'CCSDTAF12-CP-atqzadz'])
         self.plot_bars(['CCSDTBF12-CP-adz', 'CCSDTBF12-CP-adtzadz', 'CCSDTBF12-CP-atqzadz'])
         self.plot_bars(['DWCCSDTF12-CP-adz', 'DWCCSDTF12-CP-adtzadz', 'DWCCSDTF12-CP-atqzadz'])
+        
+    def plot_dhdft_bars(self):
+        """Generate pieces for grey bars figure for DH-DFT paper."""
+
+        self.plot_bars(['B97D3-CP-adz','PBED3-CP-adz','M11L-CP-adz','DLDFD-CP-adz','B3LYPD3-CP-adz','PBE0D3-CP-adz',
+            'WB97XD-CP-adz','M052X-CP-adz','M062X-CP-adz','M08HX-CP-adz','M08SO-CP-adz','M11-CP-adz','VV10-CP-adz',
+            'LCVV10-CP-adz','WB97XV-CP-adz','PBE02-CP-adz','WB97X2-CP-adz','B2PLYPD3-CP-adz','DSDPBEP86-CP-adz','MP2-CP-adz','SCSNMP2-CP-adz'])
+        self.plot_bars(['B97D3-unCP-adz','PBED3-unCP-adz','M11L-unCP-adz','DLDFD-unCP-adz','B3LYPD3-unCP-adz','PBE0D3-unCP-adz',
+            'WB97XD-unCP-adz','M052X-unCP-adz','M062X-unCP-adz','M08HX-unCP-adz','M08SO-unCP-adz','M11-unCP-adz','VV10-unCP-adz',
+            'LCVV10-unCP-adz','WB97XV-unCP-adz','PBE02-unCP-adz','WB97X2-unCP-adz','B2PLYPD3-unCP-adz','DSDPBEP86-unCP-adz','MP2-CP-adz','SCSNMP2-CP-adz'])
+        self.plot_bars(['B97D3-CP-atz','PBED3-CP-atz','M11L-CP-atz','DLDFD-CP-atz','B3LYPD3-CP-atz','PBE0D3-CP-atz',
+            'WB97XD-CP-atz','M052X-CP-atz','M062X-CP-atz','M08HX-CP-atz','M08SO-CP-atz','M11-CP-atz','VV10-CP-atz',
+            'LCVV10-CP-atz','WB97XV-CP-atz','PBE02-CP-atz','WB97X2-CP-atz','B2PLYPD3-CP-atz','DSDPBEP86-CP-atz','MP2-CP-atz','SCSNMP2-CP-atz'])
+        self.plot_bars(['B97D3-unCP-atz','PBED3-unCP-atz','M11L-unCP-atz','DLDFD-unCP-atz','B3LYPD3-unCP-atz','PBE0D3-unCP-atz',
+            'WB97XD-unCP-atz','M052X-unCP-atz','M062X-unCP-atz','M08HX-unCP-atz','M08SO-unCP-atz','M11-unCP-atz','VV10-unCP-atz',
+            'LCVV10-unCP-atz','WB97XV-unCP-atz','PBE02-unCP-atz','WB97X2-unCP-atz','B2PLYPD3-unCP-atz','DSDPBEP86-unCP-atz','MP2-CP-atz','SCSNMP2-CP-atz'])
+
+
+
+    def plot_minn_bars(self):
+
+        self.plot_bars(['DLDFD-unCP-adz','M052X-unCP-adz','M062X-unCP-adz','M08HX-unCP-adz','M08SO-unCP-adz','M11-unCP-adz','M11L-unCP-adz',
+            'DLDFD-CP-adz','M052X-CP-adz','M062X-CP-adz','M08HX-CP-adz','M08SO-CP-adz','M11-CP-adz','M11L-CP-adz'])
+        self.plot_bars(['DLDFD-unCP-atz','M052X-unCP-atz','M062X-unCP-atz','M08HX-unCP-atz','M08SO-unCP-atz','M11-unCP-atz','M11L-unCP-atz',
+            'DLDFD-CP-atz','M052X-CP-atz','M062X-CP-atz','M08HX-CP-atz','M08SO-CP-atz','M11-CP-atz','M11L-CP-atz'])
+
+
+    def plot_dhdft_modelchems(self):
+
+        self.plot_modelchems(['B97D3-CP-adz','PBED3-CP-adz','M11L-CP-adz','DLDFD-CP-adz','B3LYPD3-CP-adz','PBE0D3-CP-adz',
+            'WB97XD-CP-adz','M052X-CP-adz','M062X-CP-adz','M08HX-CP-adz','M08SO-CP-adz','M11-CP-adz','VV10-CP-adz',
+            'LCVV10-CP-adz','WB97XV-CP-adz','PBE02-CP-adz','WB97X2-CP-adz','B2PLYPD3-CP-adz','DSDPBEP86-CP-adz'], sset='tt-5min')
+        self.plot_modelchems(['B97D3-unCP-adz','PBED3-unCP-adz','M11L-unCP-adz','DLDFD-unCP-adz','B3LYPD3-unCP-adz','PBE0D3-unCP-adz',
+            'WB97XD-unCP-adz','M052X-unCP-adz','M062X-unCP-adz','M08HX-unCP-adz','M08SO-unCP-adz','M11-unCP-adz','VV10-unCP-adz',
+            'LCVV10-unCP-adz','WB97XV-unCP-adz','PBE02-unCP-adz','WB97X2-unCP-adz','B2PLYPD3-unCP-adz','DSDPBEP86-unCP-adz'], sset='tt-5min')
+        self.plot_modelchems(['B97D3-CP-atz','PBED3-CP-atz','M11L-CP-atz','DLDFD-CP-atz','B3LYPD3-CP-atz','PBE0D3-CP-atz',
+            'WB97XD-CP-atz','M052X-CP-atz','M062X-CP-atz','M08HX-CP-atz','M08SO-CP-atz','M11-CP-atz','VV10-CP-atz',
+            'LCVV10-CP-atz','WB97XV-CP-atz','PBE02-CP-atz','WB97X2-CP-atz','B2PLYPD3-CP-atz','DSDPBEP86-CP-atz'], sset='tt-5min')
+        self.plot_modelchems(['B97D3-unCP-atz','PBED3-unCP-atz','M11L-unCP-atz','DLDFD-unCP-atz','B3LYPD3-unCP-atz','PBE0D3-unCP-atz',
+            'WB97XD-unCP-atz','M052X-unCP-atz','M062X-unCP-atz','M08HX-unCP-atz','M08SO-unCP-atz','M11-unCP-atz','VV10-unCP-atz',
+            'LCVV10-unCP-atz','WB97XV-unCP-atz','PBE02-unCP-atz','WB97X2-unCP-atz','B2PLYPD3-unCP-atz','DSDPBEP86-unCP-atz'], sset='tt-5min')
+
+
+    def plot_minn_modelchems(self):
+
+        self.plot_modelchems(['DLDFD-unCP-adz','M052X-unCP-adz','M062X-unCP-adz','M08HX-unCP-adz','M08SO-unCP-adz','M11-unCP-adz','M11L-unCP-adz',
+            'DLDFD-CP-adz','M052X-CP-adz','M062X-CP-adz','M08HX-CP-adz','M08SO-CP-adz','M11-CP-adz','M11L-CP-adz'])
+        self.plot_modelchems(['DlDFD-unCP-atz','M052X-unCP-atz','M062X-unCP-atz','M08HX-unCP-atz','M08SO-unCP-atz','M11-unCP-atz','M11L-unCP-atz',
+            'DLDFD-CP-atz','M052X-CP-atz','M062X-CP-atz','M08HX-CP-atz','M08SO-CP-atz','M11-CP-atz','M11L-CP-atz'])
+
 
 
 class ThreeDatabases(Database):
