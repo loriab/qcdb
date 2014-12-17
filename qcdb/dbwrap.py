@@ -1281,6 +1281,9 @@ class Database(object):
         self._intersect_subsets()
         self._intersect_modelchems()
 
+        # complex subsets
+        self.load_subsets()
+
         # collection name
         self.dbse = ''.join(self.dbdict.keys()) if dbse is None else dbse
 
@@ -1728,7 +1731,7 @@ class Database(object):
                 for db in self.dbdict.keys():
                     serrors[mc][ss][db] = None if perr[db] is None else format_errors(perr[db], mode=3)
 
-        textables.table_generic(dbse=dbse, serrors=serrors,
+        textables.table_generic(dbse=[self.dbse], serrors=serrors,
             mtd=mtd, bas=bas, columnplan=columnplan, rowplan=rowplan,
             opt=opt, err=err, sset=sset,
             landscape=landscape, standalone=standalone, subjoin=subjoin,
@@ -1881,9 +1884,14 @@ class DB4(Database):
         self.mcs['CCSDT-CP-atqzadtz'] = ['CCSDT-CP-atqzadtz', 'CCSDT-CP-atqzhadtz', 'CCSDT-CP-atqzadtz', 'CCSDT-CP-atqzhadtz']
         self.mcs['CCSDT-CP-atqzatz'] = ['CCSDT-CP-atqzatz', 'CCSDT-CP-atqzhatz', 'CCSDT-CP-atqzatz', 'CCSDT-CP-atqzhatz']
 
-    def make_pt2_flats(self):
-        """Generate pieces for inclusion into tables for PT2 paper."""
-        self.plot_all_flats(modelchem=None, sset='tt-5min', xlimit=4.0)
+    #def make_pt2_flats(self):
+    def plot_all_flats(self):
+        """Generate pieces for inclusion into tables for PT2 paper.
+        Note that DB4 flats use near-equilibrium subset.
+
+        """
+        Database.plot_all_flats(self, modelchem=None, sset='tt-5min', xlimit=4.0,
+            graphicsformat=['pdf'])
 
     def make_pt2_Figure_3(self):
         """Plot all the graphics needed for the calendar grey bars plot
