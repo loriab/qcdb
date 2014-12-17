@@ -161,6 +161,8 @@ def table_generic(dbse, serrors,
 
     text = '\n'.join(text)
     print text
+    with open('supmat_table', 'w') as handle:
+         handle.write(text)
 
 
 if __name__ == "__main__":
