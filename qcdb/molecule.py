@@ -96,8 +96,11 @@ class Molecule(LibmintsMolecule):
 
         xyz1 = re.compile(r"^\s*(\d+)\s*(bohr|au)?\s*$", re.IGNORECASE)
         xyz2 = re.compile(r'^\s*(-?\d+)\s+(\d+)\s+(.*)\s*$')
-        xyzN = re.compile(r"(?:\s*)([A-Z](?:[a-z])?)(?:\s+)(-?\d+\.\d+)(?:\s+)(-?\d+\.\d+)(?:\s+)(-?\d+\.\d+)(?:\s*)", re.IGNORECASE)
-        xyzC = re.compile(r"(?:\s*)(\d+\.?\d*)(?:\s+)(-?\d+\.\d+)(?:\s+)(-?\d+\.\d+)(?:\s+)(-?\d+\.\d+)(?:\s*)", re.IGNORECASE)
+        NUMBER = "((?:[-+]?\\d*\\.\\d+(?:[DdEe][-+]?\\d+)?)|(?:[-+]?\\d+\\.\\d*(?:[DdEe][-+]?\\d+)?))"
+        xyzN = re.compile(r'(?:\s*)([A-Z](?:[a-z])?)(?:\s+)' + 
+            NUMBER + '(?:\s+)' + NUMBER + '(?:\s+)' + NUMBER + '(?:\s*)', re.IGNORECASE)
+        xyzC = re.compile(r'(?:\s*)(\d+\.?\d*)(?:\s+)' + 
+            NUMBER + '(?:\s+)' + NUMBER + '(?:\s+)' + NUMBER + '(?:\s*)', re.IGNORECASE)
 
         # Try to match the first line
         if xyz1.match(text[0]):
@@ -817,6 +820,10 @@ class Molecule(LibmintsMolecule):
         coc = scale(self.center_of_charge(), -1.0)
         self.translate(coc)
 
-# Attach method to qcdb.Molecule class
+# Attach methods to qcdb.Molecule class
 from interface_dftd3 import run_dftd3 as _dftd3_qcdb_yo
 Molecule.run_dftd3 = _dftd3_qcdb_yo
+from parker import xyz2mol as _parker_xyz2mol_yo
+Molecule.format_molecule_for_mol2 = _parker_xyz2mol_yo
+from parker import bond_profile as _parker_bondprofile_yo
+Molecule.bond_profile = _parker_bondprofile_yo
