@@ -1287,6 +1287,18 @@ class Database(object):
         # collection name
         self.dbse = ''.join(self.dbdict.keys()) if dbse is None else dbse
 
+        # merge Reaction-s
+        self.hrxn = OrderedDict()
+        for db, odb in self.dbdict.iteritems():
+            for rxn, orxn in odb.hrxn.iteritems():
+                self.hrxn[orxn.dbrxn] = orxn
+
+        # merge Reagent-s
+        self.hrgt = OrderedDict()
+        for db, odb in self.dbdict.iteritems():
+            for rgt, orgt in odb.hrgt.iteritems():
+                self.hrgt[orgt.name] = orgt
+
         print """Database %s: %s""" % (self.dbse, ', '.join(self.dbdict.keys()))
 
     def __str__(self):
@@ -1353,6 +1365,32 @@ class Database(object):
             odb.load_subsets(modname=modname, pythonpath=pythonpath)
         self._intersect_subsets()
 
+    def add_Subset(self, name, func):
+        """Define a new subset labeled *name* by providing a database 
+        *func* whose keys are the keys of dbdict and whose values are a 
+        function that filters each WrappedDatabase's *self.hrxn*.
+ 
+        """
+        label = name.lower()
+        for db, odb in self.dbdict.iteritems():
+            odb.add_Subset(name=name, func=func[db])
+        self.sset[label] = [label] * len(self.dbdict.keys())
+        print """Database %s: Subset %s formed: %s""" % (self.dbse, label, self.sset[label])
+
+    def add_Subset_union(self, name, sslist):
+        """
+        Define a new subset labeled *name* (note that there's nothing to 
+        prevent overwriting an existing subset name) from the union of 
+        existing named subsets in *sslist*.
+
+        """
+        funcdb = {}
+        for db, odb in self.dbdict.iteritems():
+            dbix = self.dbdict.keys().index(db)
+            rxnlist = set().union(*[set(self.dbdict[db].sset[self.sset[ss][dbix]].keys()) for ss in sslist])
+            funcdb[db] = lambda x: rxnlist
+        self.add_Subset(name, funcdb)
+
     def _intersect_subsets(self):
         """Examine component database subsets and collect common names as
         Database subset.
@@ -1372,6 +1410,14 @@ class Database(object):
         new = sorted(set.intersection(*mcs))
         for mc in new:
             self.mcs[mc] = [mc] * len(self.dbdict.keys())
+
+    #def reaction_generator(self):
+    #    """
+
+    #    """
+    #    for db, odb in self.dbdict.items():
+    #        for rxn, orxn in odb.hrxn.items():
+    #            yield orxn
 
     def compute_statistics(self, modelchem, benchmark='default', sset='default',
         failoninc=True, verbose=False, returnindiv=False):
