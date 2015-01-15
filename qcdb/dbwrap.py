@@ -240,10 +240,9 @@ class Reagent(object):
         except AttributeError:
             raise ValidationError("""Reagent must be instantiated with qcdb.Molecule object.""")
         else:
-#            self.mol = mol
             self.mol = mol.create_psi4_string_from_molecule()
-#        # description line
-#        self.tagl = tagl
+        # description line
+        self.tagl = tagl
 #        # addl comments
 #        self.comment = comment
 #        # fragmentation
@@ -259,16 +258,15 @@ class Reagent(object):
         text = ''
         text += """  ==> %s Reagent <==\n\n""" % (self.name)
         text += """  Tagline:              %s\n""" % (self.tagl)
-        text += """  Comment:              %s\n""" % (self.comment)
+        #text += """  Comment:              %s\n""" % (self.comment)
         text += """  NRE:                  %f\n""" % (self.NRE)
         #text += """  Charge:               %+d\n"""
-        text += """  Fragments:            %d\n""" % (len(self.fragments))
-        text += """    FrgNo  Actv  Chg  Mult  AtomRange\n"""
-        for fr in range(len(self.fragments)):
-            text += """    %-4d   %1s     %+2d  %2d     %s\n""" % (fr + 1,
-                '*' if self.frtype[fr] == 'Real' else '',
-                self.frchg[fr], self.frmult[fr], self.fragments[fr])
-#        text += """  Molecule:             \n%s""" % (self.mol.format_molecule_for_psi4())
+        #text += """  Fragments:            %d\n""" % (len(self.fragments))
+        #text += """    FrgNo  Actv  Chg  Mult  AtomRange\n"""
+        #for fr in range(len(self.fragments)):
+        #    text += """    %-4d   %1s     %+2d  %2d     %s\n""" % (fr + 1,
+        #        '*' if self.frtype[fr] == 'Real' else '',
+        #        self.frchg[fr], self.frmult[fr], self.fragments[fr])
         text += """  Molecule:             \n%s""" % (self.mol)
         text += """\n"""
         return text
@@ -555,13 +553,13 @@ class WrappedDatabase(object):
             pieces.remove(item)
 
         # populate reaction matrices in qcdb.Reaction objects
-#        for rxn in database.HRXN:
-#            dbrxn = database.dbse + '-' + str(rxn)
-#            for mode, actvrxnm in oACTV.iteritems():
-#                tdict = OrderedDict()
-#                for rgt in getattr(database, actvrxnm[0])[dbrxn]:
-#                    tdict[oHRGT[rgt]] = getattr(database, actvrxnm[1])[dbrxn][rgt]
-#                oHRXN[rxn].rxnm[mode] = tdict
+        for rxn in database.HRXN:
+            dbrxn = database.dbse + '-' + str(rxn)
+            for mode, actvrxnm in oACTV.iteritems():
+                tdict = OrderedDict()
+                for rgt in getattr(database, actvrxnm[0])[dbrxn]:
+                    tdict[oHRGT[rgt]] = getattr(database, actvrxnm[1])[dbrxn][rgt]
+                oHRXN[rxn].rxnm[mode] = tdict
 
         # list embedded quantum chem info per rxn, incl. BIND*
         arrsbind = [item for item in pieces if item.startswith('BIND_')]
