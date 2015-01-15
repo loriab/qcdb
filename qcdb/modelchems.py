@@ -6,7 +6,7 @@ class QCEssential(object):
     shorthand and indexed representation of same.
 
     """
-    def __init__(self, name, fullname=None, latex=None, citation=None, pdfdatabase=None, comment=None):
+    def __init__(self, name, fullname=None, latex=None, citation=None, doi=None, pdfdatabase=None, comment=None):
         """
 
         """
@@ -17,6 +17,7 @@ class QCEssential(object):
         else:
             self.latex = latex
         self.citation = citation
+        self.doi = doi
         self.dsdbid = pdfdatabase
         self.comment = comment
 
@@ -31,13 +32,22 @@ class QCEssential(object):
         text += """\n"""
         return text
 
+#class Publication(QCEssential):
+#    """Specialization of :pyclass:`QCEssential` for published calculation.
+#
+#    """
+#    def __init__(self, name, fullname=None, latex=None, citation=None, doi=None, pdfdatabase=None, comment=None, owner=None):
+#        QCEssential.__init__(self, name, fullname, latex, citation, doi, pdfdatabase, comment)
+#        self.name = name.lower()
+#        self.owner = owner
+#        self.zeta = zeta
 
 class BasisSet(QCEssential):
     """Specialization of :pyclass:`QCEssential` for basis sets.
 
     """
-    def __init__(self, name, fullname=None, latex=None, citation=None, pdfdatabase=None, comment=None, zeta=None, build=None):
-        QCEssential.__init__(self, name, fullname, latex, citation, pdfdatabase, comment)
+    def __init__(self, name, fullname=None, latex=None, citation=None, doi=None, pdfdatabase=None, comment=None, zeta=None, build=None):
+        QCEssential.__init__(self, name, fullname, latex, citation, doi, pdfdatabase, comment)
         self.name = name.lower()
         self.zeta = zeta
         self.build = [[self.name]] if build is None else build
@@ -50,7 +60,7 @@ class BasisSet(QCEssential):
         text += """  Zeta:                 %s\n""" % (self.zeta)
         text += """  CBS build:            %s\n""" % (self.build)
         text += """  PDF database id:      %s\n""" % (self.dsdbid)
-        text += """  Literature citation:  %s\n""" % (self.citation)
+        text += """  Literature citation:  %s\n""" % (self.doi)
         text += """  Comment:              %s\n""" % (self.comment)
         text += """\n"""
         return text
@@ -60,8 +70,8 @@ class Method(QCEssential):
     """Specialization of :pyclass:`QCEssential` for quantum chemical methods.
 
     """
-    def __init__(self, name, fullname=None, latex=None, citation=None, pdfdatabase=None, comment=None):
-        QCEssential.__init__(self, name, fullname, latex, citation, pdfdatabase, comment)
+    def __init__(self, name, fullname=None, latex=None, citation=None, doi=None, pdfdatabase=None, comment=None):
+        QCEssential.__init__(self, name, fullname, latex, citation, doi, pdfdatabase, comment)
         self.name = name.upper()
 
     def __str__(self):
@@ -70,7 +80,7 @@ class Method(QCEssential):
         text += """  Formal name:          %s\n""" % (self.fullname)
         text += """  LaTeX representation: %s\n""" % (self.latex)
         text += """  PDF database id:      %s\n""" % (self.dsdbid)
-        text += """  Literature citation:  %s\n""" % (self.citation)
+        text += """  Literature citation:  %s\n""" % (self.doi)
         text += """  Comment:              %s\n""" % (self.comment)
         text += """\n"""
         return text
@@ -80,8 +90,8 @@ class Error(QCEssential):
     """Specialization of :pyclass:`QCEssential` for measures of error.
 
     """
-    def __init__(self, name, fullname=None, latex=None, citation=None, pdfdatabase=None, comment=None):
-        QCEssential.__init__(self, name, fullname, latex, citation, pdfdatabase, comment)
+    def __init__(self, name, fullname=None, latex=None, citation=None, doi=None, pdfdatabase=None, comment=None):
+        QCEssential.__init__(self, name, fullname, latex, citation, doi, pdfdatabase, comment)
         self.name = name.lower()
 
     def __str__(self):
@@ -90,10 +100,18 @@ class Error(QCEssential):
         text += """  Formal name:          %s\n""" % (self.fullname)
         text += """  LaTeX representation: %s\n""" % (self.latex)
         text += """  PDF database id:      %s\n""" % (self.dsdbid)
-        text += """  Literature citation:  %s\n""" % (self.citation)
+        text += """  Literature citation:  %s\n""" % (self.doi)
         text += """  Comment:              %s\n""" % (self.comment)
         text += """\n"""
         return text
+
+#_tlist = [
+#    Publication('dft', doi='10.1063/1.3545971', pdfdatabase='Burns:2011:084107', owner='LAB',
+#        fullname="""Density-Functional Approaches to Noncovalent Interactions: A Comparison of Dispersion Corrections (DFT-D), Exchange-Hole Dipole Moment (XDM) Theory, and Specialized Functions. L. A. Burns, A. Vazquez-Mayagoitia, B. G. Sumpter, and C. D. Sherrill, J. Chem. Phys. 134(8), 084107/1-25 (2011)""")
+#]
+#pubs = {}
+#for item in _tlist:
+#    pubs[item.name] = item
 
 
 _tlist = [

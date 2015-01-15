@@ -173,7 +173,7 @@ class ReactionDatum(object):
     """Piece of quantum chemical information that describes a qcdb.Reaction object.
 
     """
-    def __init__(self, dbse, rxn, method, mode, basis, value, units='kcal/mol', comment=None):
+    def __init__(self, dbse, rxn, method, mode, basis, value, units='kcal/mol', citation=None, doi=None, comment=None):
         # geometry
         self.dbrxn = dbse + '-' + str(rxn)
         # qcdb.Method
@@ -186,11 +186,15 @@ class ReactionDatum(object):
         self.value = float(value)
         # energy unit attached to value, defaults to kcal/mol
         self.units = units
+        # publication citation of value
+        self.citation = citation
+        # digital object identifier for publication
+        self.doi = doi
         # addl comments
         self.comment = comment
 
     @classmethod
-    def library_modelchem(cls, dbse, rxn, method, mode, basis, value, units='kcal/mol', comment=None):
+    def library_modelchem(cls, dbse, rxn, method, mode, basis, value, units='kcal/mol', citation=None, doi=None, comment=None):
         """Constructor when method and basis are strings corresponding to
         qcdb.Method and qcdb.BasisSet already defined in methods and bases.
 
@@ -205,7 +209,7 @@ class ReactionDatum(object):
             tmp_basis = bases[basis.lower()]
         else:
             raise ValidationError("""Invalid ReactionDatum basis %s.""" % (basis))
-        return cls(dbse, rxn, tmp_method, mode, tmp_basis, value, units='kcal/mol', comment=None)
+        return cls(dbse, rxn, tmp_method, mode, tmp_basis, value, units, citation=citation, doi=doi, comment=comment)
 
     def __str__(self):
         text = ''
@@ -215,6 +219,8 @@ class ReactionDatum(object):
         text += """  Mode:                 %s\n""" % (self.mode)
         text += """  Basis:                %s\n""" % (self.basis.fullname)
         text += """  Value:                %f [%s]\n""" % (self.value, self.units)
+        text += """  Citation:             %s\n""" % (self.citation)
+        text += """  DOI:                  %s\n""" % (self.doi)
         text += """  Comment:              %s\n""" % (self.comment)
         text += """\n"""
         return text
