@@ -57,21 +57,21 @@ def average_errors(*args):
         avgerror['mine'] = min([x['mine'] for x in args], key=lambda x: abs(x))
         avgerror['me'] = sum([x['me'] for x in args]) / Ndb
         avgerror['mae'] = sum([x['mae'] for x in args]) / Ndb
-        avgerror['rmse'] = 0.0  # TODO
+        avgerror['rmse'] = sum([x['rmse'] for x in args]) / Ndb  # TODO: unsure of op validity
         avgerror['stde'] = math.sqrt(sum([x['stde'] ** 2 for x in args]) / Ndb)
 
         avgerror['maxpe'] = max([x['maxpe'] for x in args], key=lambda x: abs(x))
         avgerror['minpe'] = min([x['minpe'] for x in args], key=lambda x: abs(x))
         avgerror['mpe'] = sum([x['mpe'] for x in args]) / Ndb
         avgerror['mape'] = sum([x['mape'] for x in args]) / Ndb
-        avgerror['rmspe'] = 0.0  # TODO
+        avgerror['rmspe'] = sum([x['rmspe'] for x in args]) / Ndb  # TODO: unsure of op validity
         avgerror['stdpe'] = math.sqrt(sum([x['stdpe'] * x['stdpe'] for x in args]) / Ndb)
 
         avgerror['maxpbe'] = max([x['maxpbe'] for x in args], key=lambda x: abs(x))
         avgerror['minpbe'] = min([x['minpbe'] for x in args], key=lambda x: abs(x))
         avgerror['mpbe'] = sum([x['mpbe'] for x in args]) / Ndb
         avgerror['mapbe'] = sum([x['mapbe'] for x in args]) / Ndb
-        avgerror['rmspbe'] = 0.0  # TODO
+        avgerror['rmspbe'] = sum([x['rmspbe'] for x in args]) / Ndb  # TODO: unsure of op validity
         avgerror['stdpbe'] = math.sqrt(sum([x['stdpbe'] * x['stdpbe'] for x in args]) / Ndb)
     except TypeError:
         pass
@@ -877,9 +877,12 @@ class WrappedDatabase(object):
         """
         if path is None:
             path = os.path.dirname(__file__) + '/../data'
-        picklefile = psiutil.findfile_ignorecase(dbname, pre=os.path.abspath(path)+os.sep, post='.pickle')
+        picklefile = psiutil.findfile_ignorecase(dbname, 
+            pre=os.path.abspath(path)+os.sep, post='.pickle')
         if not picklefile:
             raise ValidationError("Pickle file for loading database data from file %s does not exist" % (os.path.abspath(path) + os.sep + dbname + '.pickle'))
+        #with open('/var/www/html/bfdb_devel/bfdb/scratch/ASDFlogfile.txt', 'a') as handle:
+        #    handle.write('<!-- PICKLE %s\n' % (picklefile))
         with open(picklefile, 'rb') as handle:
             instance = pickle.load(handle)
         return instance
