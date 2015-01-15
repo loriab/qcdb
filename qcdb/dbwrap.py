@@ -871,9 +871,9 @@ class WrappedDatabase(object):
         """
         if path is None:
             path = os.path.dirname(__file__) + '/../data'
-        picklefile = os.path.abspath(path) + os.sep + dbname + '.pickle'
-        if not os.path.isfile(picklefile):
-            raise ValidationError("Pickle file for loading database data from file %s does not exist" % (picklefile))
+        picklefile = psiutil.findfile_ignorecase(dbname, pre=os.path.abspath(path)+os.sep, post='.pickle')
+        if not picklefile:
+            raise ValidationError("Pickle file for loading database data from file %s does not exist" % (os.path.abspath(path) + os.sep + dbname + '.pickle'))
         with open(picklefile, 'rb') as handle:
             instance = pickle.load(handle)
         return instance

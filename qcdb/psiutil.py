@@ -231,3 +231,20 @@ def import_ignorecase(module):
             break
 
     return modobj
+
+def findfile_ignorecase(fil, pre='', post=''):
+    """Function to locate a file *pre* + *fil* + *post* in any possible 
+    lettercase permutation of *fil*. Returns *pre* + *fil* + *post* if 
+    available, None if not.
+
+    """
+    afil = None
+    for per in list(all_casings(fil)):
+        if os.path.isfile(pre + per + post):
+            afil = pre + per + post
+            break
+        else:
+            pass
+
+    return afil
+
