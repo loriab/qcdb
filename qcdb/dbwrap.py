@@ -316,6 +316,108 @@ class Reaction(object):
         text += """\n"""
         return text
 
+    def compute_errors(self, benchmark='default', mcset='default', failoninc=True, verbose=False):
+        """For all data or modelchem subset *mcset*, computes raw reaction
+        errors between *modelchem* and *benchmark* model chemistries.
+        Returns error if model chemistries are missing for any reaction in
+        subset unless *failoninc* set to False, whereupon returns partial.
+        Returns dictionary of reaction labels and error forms.
+
+        """
+        if mcset == 'default':
+            lsslist = self.data.keys()
+        elif callable(mcset):
+            # mcset is function that will generate subset of HRXN from sset(self)
+            lsslist = [mc for mc in self.data.keys() if mc in mcset(self)]  # untested
+        else:
+            # mcset is array containing reactions
+            lsslist = [mc for mc in self.data.keys() if mc in mcset]
+        # assemble dict of qcdb.Reaction objects from array of reaction names
+        lsset = OrderedDict()
+        for mc in lsslist:
+            lsset[mc] = self.data[mc]
+
+        lbench = self.benchmark if benchmark == 'default' else benchmark
+        try:
+            mcGreater = self.data[lbench].value
+        except KeyError, e:
+            raise ValidationError("""Reaction %s missing benchmark datum %s.""" % (self.name, str(e)))
+
+        err = {}
+        for label, datum in lsset.iteritems():
+            try:
+                mcLesser = datum.value
+            except KeyError, e:
+                if failoninc:
+                    raise ValidationError("""Reaction %s missing datum %s.""" % (label, str(e)))
+                else:
+                    continue
+
+            err[label] = [mcLesser - mcGreater,
+                        (mcLesser - mcGreater) / abs(mcGreater),
+                        (mcLesser - mcGreater) / abs(mcGreater)]  # TODO define BER
+            if verbose:
+                print """p = %6.2f, pe = %6.1f%%, bpe = %6.1f%% modelchem %s.""" % \
+                    (err[label][0], 100 * err[label][1], 100 * err[label][2], label)
+
+        return err
+
+    def plot(self, benchmark='default', mcset='default',
+        failoninc=True, verbose=False, color='sapt',
+        xlimit=4.0, saveas=None, mousetext=None, mouselink=None, mouseimag=None,
+        mousetitle=None, relpath=False, graphicsformat=['pdf']):
+        """Computes individual errors over model chemistries in *mcset* (which
+        may be default or an array or a function generating an array) versus
+        *benchmark*. Thread *color* can be 'rgb' for old coloring, a color 
+        name or 'sapt' for spectrum coloring.
+
+        *saveas* conveys directory ('/') and/or filename for saving the
+        resulting plot. File extension is not accessible, but *graphicsformat*
+        array requests among 'png', 'pdf', and 'eps' formats. *relpath*
+        forces paths to saved files to be relative to current directory,
+        rather than absolute paths for returned code and file dictionary.
+
+        Prepares thread diagram instructions and either executes them if
+        matplotlib available (Canopy or Anaconda) or prints them. Returns a
+        dictionary of all saved plot filenames. If any of *mousetext*, *mouselink*,
+        or *mouseimag* is specified, htmlcode will be returned with an image map of
+        slats to any of text, link, or image, respectively.
+
+        """
+        # compute errors
+        dbse = self.dbrxn.split('-')[0]
+        indiv = self.compute_errors(benchmark=benchmark, mcset=mcset, 
+            failoninc=failoninc, verbose=verbose)
+
+        # repackage
+        dbdat = []
+        for mc in indiv.keys():
+            dbdat.append({'db': dbse,
+                          'sys': mc,
+                          'color': self.color,
+                          'data': [indiv[mc][0]]})
+        mae = None  #[errors[ix][self.dbse]['mae'] for ix in index]
+        mape = None  #[100 * errors[ix][self.dbse]['mape'] for ix in index]
+        # form unique filename
+#        ixpre, ixsuf, ixmid = string_contrast(index)
+#        title = self.dbse + ' ' + ixpre + '[]' + ixsuf
+        title = self.dbrxn
+        labels = ['']
+        # generate matplotlib instructions and call or print
+        try:
+            import mpl
+            import matplotlib.pyplot as plt
+        except ImportError:
+            # if not running from Canopy, print line to execute from Canopy
+            print """filedict, htmlcode = mpl.threads(%s,\n    color='%s',\n    title='%s',\n    labels=%s,\n    mae=%s,\n    mape=%s\n    xlimit=%s\n    saveas=%s\n    mousetext=%s\n    mouselink=%s\n    mouseimag=%s\n    mousetitle=%s,\n    relpath=%s\n    graphicsformat=%s)\n\n""" % \
+                (dbdat, color, title, labels, mae, mape, str(xlimit),
+                repr(saveas), repr(mousetext), repr(mouselink), repr(mouseimag),
+                repr(mousetitle), repr(relpath), repr(graphicsformat))
+        else:
+            # if running from Canopy, call mpl directly
+            filedict, htmlcode = mpl.threads(dbdat, color=color, title=title, labels=labels, mae=mae, mape=mape, xlimit=xlimit, saveas=saveas, mousetext=mousetext, mouselink=mouselink, mouseimag=mouseimag, mousetitle=mousetitle, relpath=relpath, graphicsformat=graphicsformat)
+            return filedict, htmlcode
+
 
 class WrappedDatabase(object):
     """Wrapper class for raw Psi4 database modules that does some validation
@@ -633,7 +735,8 @@ class WrappedDatabase(object):
                     (err[rxn][0], 100 * err[rxn][1], 100 * err[rxn][2], str(rxn))
         return err
 
-    def compute_statistics(self, modelchem, benchmark='default', sset='default', failoninc=True, verbose=False, returnindiv=False):
+    def compute_statistics(self, modelchem, benchmark='default', sset='default',
+        failoninc=True, verbose=False, returnindiv=False):
         """For full database or subset *sset*, computes many error
         statistics between single *modelchem* and *benchmark* model
         chemistries. Returns error if model chemistries are missing

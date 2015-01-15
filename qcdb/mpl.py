@@ -526,7 +526,8 @@ def threads(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None,
         htmlcode += """Mouseover:<BR><a id="cid"></a><br>\n"""
         htmlcode += """<IMG SRC="%s" ismap usemap="#points" WIDTH="%d" HEIGHT="%d">\n""" % \
             (pltfile + '.png', img_width, img_height)
-        htmlcode += """<IMG ID="cmpd_img" WIDTH="%d" HEIGHT="%d">\n""" % (200, 160)
+        if mouseimag:
+            htmlcode += """<IMG ID="cmpd_img" WIDTH="%d" HEIGHT="%d">\n""" % (200, 160)
         htmlcode += """<MAP name="points">\n"""
 
         # generating html image map code
