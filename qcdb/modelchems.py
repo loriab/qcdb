@@ -212,7 +212,7 @@ for item in _tlist:
 # latex can contain escape codes for LaTeX
 _tlist = [
     Method('SAPT0',           fullname='SAPT0'),
-    Method('SAPT0S',          fullname='sSAPT0', latex="""\\textit{s}SAPT0"""),
+    Method('SAPT0S',          fullname='sSAPT0', latex=r"""$\textit{s}$SAPT0"""),  #latex="""\\textit{s}SAPT0"""),
     Method('SAPTSCS',         fullname='SCS-SAPT0'),
     Method('SAPTDFT',         fullname='DFT-SAPT'),
     Method('SAPT2',           fullname='SAPT2'),
@@ -342,13 +342,13 @@ _tlist = [
     Error('maxpe',           fullname='maxPE'),
     Error('minpe',           fullname='minPE'),
     Error('mpe',             fullname='MPE'),
-    Error('mape',            fullname='MAPE', latex="""MA\%E"""),
+    Error('mape',            fullname='MAPE', latex=r"""MA$\%$E"""),  #latex="""MA\%E"""),
     Error('rmspe',           fullname='rmsPE'),
     Error('stdpe',           fullname='stdPE'),
     Error('maxpbe',          fullname='maxPBE'),
     Error('minpbe',          fullname='minPBE'),
     Error('mpbe',            fullname='MPBE'),
-    Error('mapbe',           fullname='MAPBE', latex="""MA\%BE"""),
+    Error('mapbe',           fullname='MAPBE', latex=r"""MA$\%$BE"""),  #latex="""MA\%BE"""),
     Error('rmspbe',          fullname='rmsPBE'),
     Error('stdpbe',          fullname='stdPBE'),
 ]
