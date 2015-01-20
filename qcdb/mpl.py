@@ -397,7 +397,7 @@ def disthist(data, title='', xtitle='', xmin=None, xmax=None,
 
 
 def threads(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None,
-    mousetext=None, mouselink=None, mouseimag=None, mousetitle=None,
+    mousetext=None, mouselink=None, mouseimag=None, mousetitle=None, mousediv=None,
     saveas=None, relpath=False, graphicsformat=['pdf']):
     """Generates a tiered slat diagram between model chemistries with
     errors (or simply values) in list *data*, which is supplied as part of the
@@ -522,8 +522,15 @@ def threads(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None,
         htmlcode += """}\n"""
         htmlcode += """</SCRIPT>\n"""
 
-        htmlcode += """%s <BR>""" % (mousetitle)
-        htmlcode += """Mouseover:<BR><a id="cid"></a><br>\n"""
+        #htmlcode += """%s <BR>""" % (mousetitle)
+        #htmlcode += """Mouseover:<BR><a id="cid"></a><br>\n"""
+        if mousediv:
+            htmlcode += """%s\n""" % (mousediv[0])
+        if mousetitle:
+            htmlcode += """%s <BR>""" % (mousetitle)
+        htmlcode += """<h4>Mouseover</h4><a id="cid"></a><br>\n"""
+        if mousediv:
+            htmlcode += """%s\n""" % (mousediv[1])
         htmlcode += """<IMG SRC="%s" ismap usemap="#points" WIDTH="%d" HEIGHT="%d">\n""" % \
             (pltfile + '.png', img_width, img_height)
         if mouseimag:
