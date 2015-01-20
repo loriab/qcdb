@@ -11,6 +11,7 @@ try:
 except ImportError:
     from oldpymodules import OrderedDict
 from exceptions import *
+from molecule import Molecule
 from modelchems import Method, BasisSet, Error, methods, bases, errors
 import psiutil
 import textables
@@ -1689,6 +1690,49 @@ class Database(object):
                 xlimit=xlimit, view=view,
                 saveas=saveas, relpath=relpath, graphicsformat=graphicsformat)
             return filedict
+
+    def write_xyz_files(self, path=None):
+        """Writes xyz files for every reagent in the Database to directory 
+        in *path* or to directory dbse_xyzfiles that it createsin cwd if 
+        *path* is None. Additionally, writes a script to that directory 
+        that will generate transparent-background ray-traced png files for 
+        every reagent with PyMol.
+
+        """
+        if path is None:
+            xyzdir = os.getcwd() + os.sep + self.dbse + '_xyzfiles' + os.sep
+        else:
+            xyzdir = os.path.abspath(path) + os.sep
+        if not os.path.exists(xyzdir):
+            os.mkdir(xyzdir)
+
+        for rgt, orgt in self.hrgt.iteritems():
+            omol = Molecule(orgt.mol)
+            omol.update_geometry()
+            omol.save_xyz(xyzdir + rgt + '.xyz')
+
+        with open(xyzdir + 'pymol_xyz2png_script.pml', 'w') as handle:
+            handle.write("""
+# Launch PyMOL and run from its command line:
+# PyMOL> cd {}
+# PyMOL> @{}
+""".format(xyzdir, 'pymol_xyz2png_script.pml'))
+            for rgt in self.hrgt.keys():
+                handle.write("""
+load {xyzfile}
+hide lines
+show sticks
+color grey, name c
+cmd.set('''opaque_background''','''0''',quiet=0)
+reset
+orient
+cmd.zoom(buffer=0.3, complete=1)
+ray
+png {pngfile}
+reinitialize
+""".format(
+    xyzfile = xyzdir + rgt + '.xyz',
+    pngfile = xyzdir + rgt + '.png'))
 
     def plot_all_flats(self, modelchem=None, sset='default', xlimit=4.0,
         saveas=None, relpath=False, graphicsformat=['pdf']):
