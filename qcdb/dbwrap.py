@@ -12,7 +12,7 @@ except ImportError:
     from oldpymodules import OrderedDict
 from exceptions import *
 from molecule import Molecule
-from modelchems import Method, BasisSet, Error, methods, bases, errors
+from modelchems import Method, BasisSet, Error, methods, bases, errors, pubs
 import psiutil
 import textables
 
@@ -189,7 +189,7 @@ class ReactionDatum(object):
         self.units = units
         # publication citation of value
         self.citation = citation
-        # digital object identifier for publication
+        # digital object identifier for publication (maybe this should be doi of datum, not of pub?)
         self.doi = doi
         # addl comments
         self.comment = comment
@@ -210,7 +210,15 @@ class ReactionDatum(object):
             tmp_basis = bases[basis.lower()]
         else:
             raise ValidationError("""Invalid ReactionDatum basis %s.""" % (basis))
-        return cls(dbse, rxn, tmp_method, mode, tmp_basis, value, units, citation=citation, doi=doi, comment=comment)
+        # publication
+        if citation is None:
+            tmp_pub = citation
+        else:
+            if citation.lower() in pubs:
+                tmp_pub = pubs[citation.lower()]
+            else:
+                raise ValidationError("""Invalid ReactionDatum publication %s.""" % (citation))
+        return cls(dbse, rxn, tmp_method, mode, tmp_basis, value, units, citation=tmp_pub, doi=doi, comment=comment)
 
     def __str__(self):
         text = ''
@@ -220,7 +228,7 @@ class ReactionDatum(object):
         text += """  Mode:                 %s\n""" % (self.mode)
         text += """  Basis:                %s\n""" % (self.basis.fullname)
         text += """  Value:                %f [%s]\n""" % (self.value, self.units)
-        text += """  Citation:             %s\n""" % (self.citation)
+        text += """  Citation:             %s %s\n""" % (self.citation.name, self.citation.doi)
         text += """  DOI:                  %s\n""" % (self.doi)
         text += """  Comment:              %s\n""" % (self.comment)
         text += """\n"""
@@ -646,7 +654,7 @@ class WrappedDatabase(object):
         text += """\n"""
         return text
 
-    def add_ReactionDatum(self, dbse, rxn, method, mode, basis, value, units='kcal/mol', comment=None, overwrite=False):
+    def add_ReactionDatum(self, dbse, rxn, method, mode, basis, value, units='kcal/mol', citation=None, comment=None, overwrite=False):
         """Add a new quantum chemical value to *rxn* by creating a
         qcdb.ReactionDatum from same arguments as that class's
         object-less constructor. *rxn* may be actual Reaction.name
@@ -667,7 +675,7 @@ class WrappedDatabase(object):
             if overwrite or (label not in self.hrxn[rxnname].data.keys()):
                 self.hrxn[rxnname].data[label] = ReactionDatum.library_modelchem(dbse=dbse, rxn=rxnname,
                     method=method, mode=mode, basis=basis,
-                    value=value, units=units, comment=comment)
+                    value=value, units=units, comment=comment, citation=citation)
             else:
                 raise ValidationError("""ReactionDatum %s already present in Database.""" % (label))
         else:

@@ -1,3 +1,38 @@
+try:
+    from collections import OrderedDict
+except ImportError:
+    from oldpymodules import OrderedDict
+
+# thinking now that QCEssential should have one doi and dictionary of
+# citations. that way the doi contains the record of the definition of the
+# QCEssential but several publications (each with their own doi-s) can be
+# associated with the Essential (e.g., original theoretical definition,
+# current implementation, expanded atom range, reparameterization)
+
+# links to GitHub Psi4 files accepted as doi for the present
+
+class Citation(object):
+    """Class to hold reference to a single published scientific work
+
+    """
+    def __init__(self, doi, fullname=None, dsdbid=None, comment=None):
+        """
+
+        """
+        self.doi = doi.lower()
+        self.fullname = fullname
+        self.dsdbid = dsdbid
+        self.comment = comment
+
+    def __str__(self):
+        text = ''
+        text += """  ==> Citation <==\n\n"""
+        text += """  DOI:                  %s\n""" % (self.doi)
+        text += """  PDF database id:      %s\n""" % (self.dsdbid)
+        text += """  Formal Name:          %s\n""" % (self.fullname)
+        text += """  Comment:              %s\n""" % (self.comment)
+        text += """\n"""
+        return text
 
 
 class QCEssential(object):
@@ -6,7 +41,7 @@ class QCEssential(object):
     shorthand and indexed representation of same.
 
     """
-    def __init__(self, name, fullname=None, latex=None, citation=None, doi=None, pdfdatabase=None, comment=None):
+    def __init__(self, name, fullname=None, latex=None, citations=None, doi=None, comment=None):
         """
 
         """
@@ -16,38 +51,61 @@ class QCEssential(object):
             self.latex = fullname
         else:
             self.latex = latex
-        self.citation = citation
+        # OrderedDict of roles as keys and qcdb.Citation as values
+        if citations is None:
+            self.citations = OrderedDict()
+        else:
+            self.citations = citations
         self.doi = doi
-        self.dsdbid = pdfdatabase
         self.comment = comment
 
     def __str__(self):
         text = ''
-        text += """  ==> %s BasisSet <==\n\n""" % (self.name)
+        text += """  ==> %s QCEssential <==\n\n""" % (self.name)
         text += """  Formal name:          %s\n""" % (self.fullname)
         text += """  LaTeX representation: %s\n""" % (self.latex)
-        text += """  PDF database id:      %s\n""" % (self.dsdbid)
-        text += """  Literature citation:  %s\n""" % (self.citation)
+        text += """  DOI:                  %s\n""" % (self.doi)
+        text += """  Literature citations:\n"""
+        for rol, cit in self.citations.iteritems():
+            text += """    %17s: %s\n""" (rol, cit.doi)
         text += """  Comment:              %s\n""" % (self.comment)
         text += """\n"""
         return text
 
-#class Publication(QCEssential):
-#    """Specialization of :pyclass:`QCEssential` for published calculation.
-#
-#    """
-#    def __init__(self, name, fullname=None, latex=None, citation=None, doi=None, pdfdatabase=None, comment=None, owner=None):
-#        QCEssential.__init__(self, name, fullname, latex, citation, doi, pdfdatabase, comment)
-#        self.name = name.lower()
-#        self.owner = owner
-#        self.zeta = zeta
+
+class Publication(QCEssential):
+    """Specialization of :pyclass:`QCEssential` for computational chemistry 
+    publications, presumably containing many quantum chemistry results.
+
+    """
+    def __init__(self, name, fullname=None, latex=None, dsdbid=None, doi=None, comment=None, owner=None):
+        primary = Citation(doi=doi, fullname=fullname, dsdbid=dsdbid)
+        cits = OrderedDict()
+        cits['primary'] = primary
+        QCEssential.__init__(self, name=name, fullname=primary.fullname, latex=latex, citations=cits, doi=primary.doi, comment=comment)
+        self.name = name.lower()
+        self.owner = owner.upper()
+
+    def __str__(self):
+        text = ''
+        text += """  ==> %s Publication <==\n\n""" % (self.name)
+        text += """  Formal name:          %s\n""" % (self.fullname)
+        text += """  LaTeX representation: %s\n""" % (self.latex)
+        text += """  Owner:                %s\n""" % (self.owner)
+        text += """  DOI:                  %s\n""" % (self.doi)
+        text += """  Literature citations:\n"""
+        for rol, cit in self.citations.iteritems():
+            text += """    %-17s   %s\n""" % (rol, cit.doi)
+        text += """  Comment:              %s\n""" % (self.comment)
+        text += """\n"""
+        return text
 
 class BasisSet(QCEssential):
     """Specialization of :pyclass:`QCEssential` for basis sets.
 
     """
-    def __init__(self, name, fullname=None, latex=None, citation=None, doi=None, pdfdatabase=None, comment=None, zeta=None, build=None):
-        QCEssential.__init__(self, name, fullname, latex, citation, doi, pdfdatabase, comment)
+    def __init__(self, name, fullname=None, latex=None, citations=None, doi=None, comment=None, zeta=None, build=None):
+        QCEssential.__init__(self, name, fullname, latex, citations, doi, comment)
         self.name = name.lower()
         self.zeta = zeta
         self.build = [[self.name]] if build is None else build
@@ -59,8 +117,10 @@ class BasisSet(QCEssential):
         text += """  LaTeX representation: %s\n""" % (self.latex)
         text += """  Zeta:                 %s\n""" % (self.zeta)
         text += """  CBS build:            %s\n""" % (self.build)
-        text += """  PDF database id:      %s\n""" % (self.dsdbid)
-        text += """  Literature citation:  %s\n""" % (self.doi)
+        text += """  DOI:                  %s\n""" % (self.doi)
+        text += """  Literature citations:\n"""
+        for rol, cit in self.citations.iteritems():
+            text += """    %17s: %s\n""" (rol, cit.doi)
         text += """  Comment:              %s\n""" % (self.comment)
         text += """\n"""
         return text
@@ -70,8 +130,8 @@ class Method(QCEssential):
     """Specialization of :pyclass:`QCEssential` for quantum chemical methods.
 
     """
-    def __init__(self, name, fullname=None, latex=None, citation=None, doi=None, pdfdatabase=None, comment=None):
-        QCEssential.__init__(self, name, fullname, latex, citation, doi, pdfdatabase, comment)
+    def __init__(self, name, fullname=None, latex=None, citations=None, doi=None, comment=None):
+        QCEssential.__init__(self, name, fullname, latex, citations, doi, comment)
         self.name = name.upper()
 
     def __str__(self):
@@ -79,8 +139,10 @@ class Method(QCEssential):
         text += """  ==> %s Method <==\n\n""" % (self.name)
         text += """  Formal name:          %s\n""" % (self.fullname)
         text += """  LaTeX representation: %s\n""" % (self.latex)
-        text += """  PDF database id:      %s\n""" % (self.dsdbid)
-        text += """  Literature citation:  %s\n""" % (self.doi)
+        text += """  DOI:                  %s\n""" % (self.doi)
+        text += """  Literature citations:\n"""
+        for rol, cit in self.citations.iteritems():
+            text += """    %17s: %s\n""" (rol, cit.doi)
         text += """  Comment:              %s\n""" % (self.comment)
         text += """\n"""
         return text
@@ -90,8 +152,8 @@ class Error(QCEssential):
     """Specialization of :pyclass:`QCEssential` for measures of error.
 
     """
-    def __init__(self, name, fullname=None, latex=None, citation=None, doi=None, pdfdatabase=None, comment=None):
-        QCEssential.__init__(self, name, fullname, latex, citation, doi, pdfdatabase, comment)
+    def __init__(self, name, fullname=None, latex=None, citations=None, doi=None,  comment=None):
+        QCEssential.__init__(self, name, fullname, latex, citations, doi, comment)
         self.name = name.lower()
 
     def __str__(self):
@@ -99,19 +161,30 @@ class Error(QCEssential):
         text += """  ==> %s Error Measure <==\n\n""" % (self.name)
         text += """  Formal name:          %s\n""" % (self.fullname)
         text += """  LaTeX representation: %s\n""" % (self.latex)
-        text += """  PDF database id:      %s\n""" % (self.dsdbid)
-        text += """  Literature citation:  %s\n""" % (self.doi)
+        text += """  DOI:                  %s\n""" % (self.doi)
+        text += """  Literature citations:\n"""
+        for rol, cit in self.citations.iteritems():
+            text += """    %17s: %s\n""" (rol, cit.doi)
         text += """  Comment:              %s\n""" % (self.comment)
         text += """\n"""
         return text
 
-#_tlist = [
-#    Publication('dft', doi='10.1063/1.3545971', pdfdatabase='Burns:2011:084107', owner='LAB',
-#        fullname="""Density-Functional Approaches to Noncovalent Interactions: A Comparison of Dispersion Corrections (DFT-D), Exchange-Hole Dipole Moment (XDM) Theory, and Specialized Functions. L. A. Burns, A. Vazquez-Mayagoitia, B. G. Sumpter, and C. D. Sherrill, J. Chem. Phys. 134(8), 084107/1-25 (2011)""")
-#]
-#pubs = {}
-#for item in _tlist:
-#    pubs[item.name] = item
+
+_tlist = [
+    Publication('dft', doi='10.1063/1.3545971', dsdbid='Burns:2011:084107', owner='LAB',
+        fullname="""Density-Functional Approaches to Noncovalent Interactions: A Comparison of Dispersion Corrections (DFT-D), Exchange-Hole Dipole Moment (XDM) Theory, and Specialized Functions. L. A. Burns, A. Vazquez-Mayagoitia, B. G. Sumpter, and C. D. Sherrill, J. Chem. Phys. 134(8), 084107/1-25 (2011)"""),
+    Publication('saptone', doi='10.1063/1.4867135', dsdbid='Parker:2014:094106', owner='LAB',
+        fullname="""Levels of Symmetry Adapted Perturbation Theory (SAPT). I. Efficiency and Performance for Interaction Energies. T. M. Parker, L. A. Burns, R. M. Parrish, A. G. Ryno, and C. D. Sherrill, J. Chem. Phys. 140(9), 094106/1-16 (2014)"""),
+    Publication('pt2', doi='10.1063/1.4903765', dsdbid='Burns:2014:234111', owner='LAB',
+        fullname="""Appointing Silver and Bronze Standards for Noncovalent Interactions: A Comparison of Spin-Component-Scaled (SCS), Explicitly Correlated (F12), and Specialized Wavefunction Approaches. L. A. Burns, M. S. Marshall, and C. D. Sherrill, J. Chem. Phys. 141(23), 234111/1-21 (2014)"""),
+    Publication('s22b', doi='10.1063/1.3659142', dsdbid='Marshall:2011:194102', owner='LAB',
+        fullname="""Basis Set Convergence of the Coupled-Cluster Correction, delta_MP2^CCSD(T): Best Practices for Benchmarking Noncovalent Interactions and the Attendant Revision of the S22, NBC10, HBC6, and HSG Databases. M. S. Marshall, L. A. Burns, and C. D. Sherrill, J. Chem. Phys. 135(19), 194102/1-10 (2011)"""),
+    Publication('dilabio', doi='10.1021/ct400149j', dsdbid='Burns:2014:49', owner='LAB',
+        fullname="""Comparing Counterpoise-Corrected, Uncorrected, and Averaged Binding Energies for Benchmarking Noncovalent Interactions. L. A. Burns, M. S. Marshall, and C. D. Sherrill, J. Chem. Theory Comput. 10(1), 49-57 (2014)"""),
+]
+pubs = {}
+for item in _tlist:
+    pubs[item.name] = item
 
 
 _tlist = [
