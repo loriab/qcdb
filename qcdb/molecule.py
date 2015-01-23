@@ -247,8 +247,11 @@ class Molecule(LibmintsMolecule):
         text += '}\n'
         return text
 
-    def format_molecule_for_qchem(self):
-        """
+    def format_molecule_for_qchem(self, mixedbas=True):
+        """Returns geometry section of input file formatted for Q-Chem. 
+        For ghost atoms, prints **Gh** as elemental symbol, with expectation 
+        that element identity will be established in mixed basis section. 
+        For ghost atoms when *mixedbas* is False, prints @ plus element symbol.
 
         """
         factor = 1.0 if self.PYunits == 'Angstrom' else psi_bohr2angstroms
@@ -259,11 +262,13 @@ class Molecule(LibmintsMolecule):
 
         for i in range(self.natom()):
             [x, y, z] = self.atoms[i].compute()
-            text += '%2s %17.12f %17.12f %17.12f\n' % ((self.symbol(i) if self.Z(i) else "Gh"), \
-                x * factor, y * factor, z * factor)
+            if mixedbas:
+                text += '%2s ' % (self.symbol(i) if self.Z(i) else "Gh")
+            else:
+                text += '%s%-2s ' % ('' if self.Z(i) else '@', self.symbol(i))
+            text += '%17.12f %17.12f %17.12f\n' % (x * factor, y * factor, z * factor)
         text += '$end\n'
         return text
-        pass
 
     def format_molecule_for_molpro(self):
         """
@@ -293,9 +298,13 @@ class Molecule(LibmintsMolecule):
 
         textDummy = "dummy"
         for fr in range(self.nfragments()):
-            if self.fragment_types[fr] == 'Ghost':
+            #if self.fragment_types[fr] == 'Ghost':
+            if self.fragment_types[fr] == 'Absent':
+                pass
+            else:  # have to check Z not fragment_types b/c latter not set when str-->Mol-->str-->Mol
                 for at in range(self.fragments[fr][0], self.fragments[fr][1] + 1):
-                    textDummy += """,%d""" % (at + 1)  # Molpro atom numbering is 1-indexed
+                    if not self.Z(at):
+                        textDummy += """,%d""" % (at + 1)  # Molpro atom numbering is 1-indexed
         textDummy += '\n'
         if len(textDummy) > 6:
             text += textDummy
