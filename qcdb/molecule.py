@@ -424,33 +424,36 @@ class Molecule(LibmintsMolecule):
 
         return text, options
 
-    def format_basis_for_orca(self, puream):
-        """Function to print the BASIS=SPECIAL block for Cfour according
-        to the active atoms in Molecule. Special short basis names
-        are used by Psi4 libmints GENBAS-writer in accordance with
-        Cfour constraints.
-
+    def format_molecule_for_orca(self):
         """
-        text = ''
-        #cr = 1
-        #for fr in range(self.nfragments()):
-        #    if self.fragment_types[fr] == 'Absent':
-        #        pass
-        #    else:
-        #        for at in range(self.fragments[fr][0], self.fragments[fr][1] + 1):
-        #            text += """%s:P4_%d\n""" % (self.symbol(at).upper(), cr)
-        #            cr += 1
-        #text += '\n'
-
+        Format the molecule into an orca xyz format
+        """
         options = defaultdict(lambda: defaultdict(dict))
-        #options['CFOUR']['CFOUR_BASIS']['value'] = 'SPECIAL'
-        #options['CFOUR']['CFOUR_SPHERICAL']['value'] = puream
+        self.update_geometry()
+        factor = 1.0 if self.PYunits == 'Angstrom' else psi_bohr2angstroms
 
-        #options['CFOUR']['CFOUR_BASIS']['clobber'] = True
-        #options['CFOUR']['CFOUR_SPHERICAL']['clobber'] = True
+        text = ""
+        text += '* xyz {} {}\n'.format(self.molecular_charge(), self.multiplicity())
 
-        #options['CFOUR']['CFOUR_BASIS']['superclobber'] = True
-        #options['CFOUR']['CFOUR_SPHERICAL']['superclobber'] = True
+        n_frags = self.nfragments()
+        for fr in range(n_frags):
+            if self.fragment_types[fr] == 'Absent':
+                pass
+            else:
+                for at in range(self.fragments[fr][0], self.fragments[fr][1] + 1):
+                    if self.fragment_types[fr] == 'Ghost':
+                        # TODO: add support for ghost atoms
+                        # atom += ':'
+                        continue
+                    x, y, z = self.atoms[at].compute()
+                    atom = self.symbol(at)
+                    if n_frags > 1:
+                        text += '    {:2s}({:d}) {:> 17.12f} {:> 17.12f} {:> 17.12f}\n'.format(\
+                                atom, fr + 1, x*factor, y*factor, z*factor)
+                    else:
+                        text += '    {:2s} {:> 17.12f} {:> 17.12f} {:> 17.12f}\n'.format(\
+                                atom, x*factor, y*factor, z*factor)
+        text += '*'
 
         return text, options
 
