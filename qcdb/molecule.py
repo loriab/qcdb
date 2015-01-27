@@ -247,6 +247,12 @@ class Molecule(LibmintsMolecule):
         text += '}\n'
         return text
 
+    def format_molecule_for_orca(self):
+        text = 'orca geom here'
+        options = defaultdict(lambda: defaultdict(dict))
+
+        return text, options
+
     def format_molecule_for_qchem(self, mixedbas=True):
         """Returns geometry section of input file formatted for Q-Chem. 
         For ghost atoms, prints **Gh** as elemental symbol, with expectation 
@@ -415,6 +421,36 @@ class Molecule(LibmintsMolecule):
 
         options['CFOUR']['CFOUR_BASIS']['superclobber'] = True
         options['CFOUR']['CFOUR_SPHERICAL']['superclobber'] = True
+
+        return text, options
+
+    def format_basis_for_orca(self, puream):
+        """Function to print the BASIS=SPECIAL block for Cfour according
+        to the active atoms in Molecule. Special short basis names
+        are used by Psi4 libmints GENBAS-writer in accordance with
+        Cfour constraints.
+
+        """
+        text = ''
+        #cr = 1
+        #for fr in range(self.nfragments()):
+        #    if self.fragment_types[fr] == 'Absent':
+        #        pass
+        #    else:
+        #        for at in range(self.fragments[fr][0], self.fragments[fr][1] + 1):
+        #            text += """%s:P4_%d\n""" % (self.symbol(at).upper(), cr)
+        #            cr += 1
+        #text += '\n'
+
+        options = defaultdict(lambda: defaultdict(dict))
+        #options['CFOUR']['CFOUR_BASIS']['value'] = 'SPECIAL'
+        #options['CFOUR']['CFOUR_SPHERICAL']['value'] = puream
+
+        #options['CFOUR']['CFOUR_BASIS']['clobber'] = True
+        #options['CFOUR']['CFOUR_SPHERICAL']['clobber'] = True
+
+        #options['CFOUR']['CFOUR_BASIS']['superclobber'] = True
+        #options['CFOUR']['CFOUR_SPHERICAL']['superclobber'] = True
 
         return text, options
 

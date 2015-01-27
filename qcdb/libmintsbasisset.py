@@ -11,6 +11,7 @@ except ImportError:
 from exceptions import *
 from psiutil import search_file
 from molecule import Molecule
+from periodictable import *
 from libmintsgshell import GaussianShell
 from libmintsbasissetparser import Gaussian94BasisSetParser
 from basislist import corresponding_basis
@@ -1077,6 +1078,38 @@ class BasisSet(object):
                 basstrings.append(text)
 
         return basstrings
+
+    def print_detail_gamess(self, out=None, numbersonly=False):
+        """Prints a detailed PSI3-style summary of the basis (per-atom)
+        *  @param out The file stream to use for printing. Defaults to outfile.
+
+        """
+        text = ''
+        if not numbersonly:
+            text += self.print_summary(out=None)
+            text += """  ==> AO Basis Functions <==\n"""
+            text += '\n'
+            text += """    [ %s ]\n""" % (self.name)
+        text += """    spherical\n""" if self.has_puream() else """    cartesian\n"""
+        text += """    ****\n"""
+
+        for uA in range(self.molecule.nunique()):
+            A = self.molecule.unique(uA)
+            if not numbersonly:
+                text += """%s\n""" % (z2element[self.molecule.Z(A)])
+            first_shell = self.center_to_shell[A]
+            n_shell = self.center_to_nshell[A]
+
+            for Q in range(n_shell):
+                text += self.shells[Q + first_shell].pyprint_gamess(outfile=None)
+            #text += """    ****\n"""
+        text += """\n"""
+
+        if out is None:
+            return text
+        else:
+            with open(out, mode='w') as handle:
+                handle.write(text)
 
     def print_detail_cfour(self, out=None):
         """Returns a string in CFOUR-style of the basis (per-atom)

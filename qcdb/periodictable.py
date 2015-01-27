@@ -24,6 +24,29 @@
 
 """
 
+_temp_element = ["GHOST", "HYDROGEN", "HELIUM", "LITHIUM", "BERYLLIUM", 
+    "BORON", "CARBON", "NITROGEN", "OXYGEN", "FLUORINE", 
+    "NEON", "SODIUM", "MAGNESIUM", "ALUMINUM", "SILICON", 
+    "PHOSPHORUS", "SULFUR", "CHLORINE", "ARGON", "POTASSIUM", 
+    "CALCIUM", "SCANDIUM", "TITANIUM", "VANADIUM", "CHROMIUM",
+    "MANGANESE", "IRON", "COBALT", "NICKEL", "COPPER",
+    "ZINC", "GALLIUM", "GERMANIUM", "ARSENIC", "SELENIUM",
+    "BROMINE", "KRYPTON", "RUBIDIUM", "STRONTIUM", "YTTRIUM",
+    "ZIRCONIUM", "NIOBIUM", "MOLYBDENUM", "TECHNETIUM", "RUTHENIUM",
+    "RHODIUM", "PALLADIUM", "SILVER", "CADMIUM", "INDIUM",
+    "TIN", "ANTIMONY", "TELLURIUM", "IODINE", "XENON",
+    "CESIUM", "BARIUM", "LANTHANUM", "CERIUM", "PRASEODYMIUM",
+    "NEODYMIUM", "PROMETHIUM", "SAMARIUM", "EUROPIUM", "GADOLINIUM",
+    "TERBIUM", "DYSPROSIUM", "HOLMIUM", "ERBIUM", "THULIUM",
+    "YTTERBIUM", "LUTETIUM", "HAFNIUM", "TANTALUM", "TUNGSTEN",
+    "RHENIUM", "OSMIUM", "IRIDIUM", "PLATINUM", "GOLD",
+    "MERCURY", "THALLIUM", "LEAD", "BISMUTH", "POLONIUM",
+    "ASTATINE", "RADON", "FRANCIUM", "RADIUM", "ACTINIUM",
+    "THORIUM", "PROTACTINIUM", "URANIUM", "NEPTUNIUM", "PLUTONIUM",
+    "AMERICIUM", "CURIUM", "BERKELIUM", "CALIFORNIUM", "EINSTEINIUM",
+    "FERMIUM", "MENDELEVIUM", "NOBELIUM", "LAWRENCIUM" "RUTHERFORDIUM",
+    "DUBNIUM", "SEABORGIUM", "BOHRIUM"]
+
 _temp_symbol = ["X", "H", "HE", "LI", "BE", "B", "C", "N", "O", "F", "NE", "NA", "MG",
     "AL", "SI", "P", "S", "CL", "AR", "K", "CA", "SC", "TI", "V", "CR", "MN", "FE", "CO",
     "NI", "CU", "ZN", "GA", "GE", "AS", "SE", "BR", "KR", "RB", "SR", "Y", "ZR", "NB",
@@ -67,3 +90,4 @@ el2z = dict(zip(_temp_symbol, _temp_z))
 el2z["GH"] = 0
 z2masses = dict(zip(_temp_z, _temp_mass))
 z2el = dict(zip(_temp_z, _temp_symbol))
+z2element = dict(zip(_temp_z, _temp_element))
