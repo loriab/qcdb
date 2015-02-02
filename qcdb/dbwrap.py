@@ -6,6 +6,7 @@ try:
 except ImportError:
     import pickle
 import itertools
+#from collections import defaultdict
 try:
     from collections import OrderedDict
 except ImportError:
@@ -360,7 +361,7 @@ class Reaction(object):
             # mcset is function that will generate subset of HRXN from sset(self)
             lsslist = [mc for mc in self.data.keys() if mc in mcset(self)]  # untested
         else:
-            # mcset is array containing reactions
+            # mcset is array containing modelchemistries
             lsslist = [mc for mc in self.data.keys() if mc in mcset]
         # assemble dict of qcdb.Reaction objects from array of reaction names
         lsset = OrderedDict()
@@ -1455,21 +1456,45 @@ class Database(object):
 #        """Returns the model chemistry label for the database's benchmark."""
 #        return self.benchmark  #TODO not sure if right way to go about this self.mcs['default']
 
-    def fancy_mcs(self):
+    def fancy_mcs(self, latex=False):
         """
 
         """
         fmcs = {}
         for mc in self.mcs.keys():
-            #print '%30s' % (mc),
             try:
                 mtd, mod, bas = mc.split('-')
             except ValueError:
                 fmcs[mc] = mc
             else:
-                fmcs[mc] = """%20s / %-20s %s""" % (methods[mtd].fullname, bases[bas].fullname, mod)
-            #print fmcs[mc]
+                if latex:
+                    fmcs[mc] = """%20s / %-20s, %s""" % \
+                        (methods[mtd].latex, bases[bas].latex, mod)
+                else:
+                    fmcs[mc] = """%20s / %-20s, %s""" % \
+                        (methods[mtd].fullname, bases[bas].fullname, mod)
         return fmcs
+
+    #def fancy_mcs_nested(self):
+    #    """
+
+    #    """
+    #    fmcs = defaultdict(lambda: defaultdict(dict))
+    #    for mc in self.mcs.keys():
+    #        try:
+    #            mtd, mod, bas = mc.split('-')
+    #        except ValueError:
+    #            fmcs['All']['All'][mc] = mc
+    #            fmcs['Method']['Others'][mc] = mc
+    #            fmcs['Options']['Others'][mc] = mc
+    #            fmcs['Basis Treatment']['Others'][mc] = mc
+    #        else:
+    #            fancyrepr = """%20s / %-20s %s""" % (methods[mtd].latex, bases[bas].latex, mod)
+    #            fmcs['All']['All'][mc] = fancyrepr
+    #            fmcs['Method'][methods[mtd].latex][mc] = fancyrepr
+    #            fmcs['Options'][mod][mc] = fancyrepr
+    #            fmcs['Basis Treatment'][bases[bas].latex][mc] = fancyrepr
+    #    return fmcs
 
     def load_qcdata_byproject(self, project, pythonpath=None):
         """For each component database, loads qcdb.ReactionDatums from
@@ -1784,6 +1809,39 @@ reinitialize
                 saveas=saveas, relpath=relpath, graphicsformat=graphicsformat)
             filedict[mc] = minifiledict['pdf']
         return filedict
+
+    def get_reactions(self, modelchem, sset='default', benchmark='default',
+        failoninc=True):
+        """Collects the reactions present in *sset* from each WrappedDatabase, 
+        checks that *modelchem* and *benchmark* ReactionDatum are present 
+        (fails if *failoninc* True), then returns in an array a tuple for 
+        each reaction containing the modelchem key needed to access 
+        *modelchem*, the modelchem key needed to access *benchmark*, and 
+        the Reaction object.
+
+        """
+        # repackage
+        dbdat = []
+        for db, odb in self.dbdict.items():
+            dbix = self.dbdict.keys().index(db)
+            for rxn, orxn in odb.hrxn.iteritems():
+                lss = self.sset[sset][dbix]
+                lmc = self.mcs[modelchem][dbix]
+                lbm = self.mcs[benchmark][dbix]
+                if lss is not None:
+                    if rxn in odb.sset[lss].keys():
+                        try:
+                            orxn.data[lmc]
+                            orxn.data[lbm]
+                        except KeyError, e:
+                            if failoninc:
+                                raise e
+                            else:
+                                # not sure yet if should return empties or just pass over
+                                pass
+                        else:
+                            dbdat.append((lmc, lbm, orxn))
+        return dbdat
 
     def plot_disthist(self, modelchem, benchmark='default', sset='default',
         failoninc=True, verbose=False, xtitle='',
