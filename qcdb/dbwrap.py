@@ -1890,7 +1890,8 @@ reinitialize
         for mc in sorted(mcs):
             minifiledict = self.plot_flat(mc, sset=sset, xlimit=xlimit, view=False,
                 saveas=saveas, relpath=relpath, graphicsformat=graphicsformat)
-            filedict[mc] = minifiledict['pdf']
+            #filedict[mc] = minifiledict['pdf']
+            filedict[mc] = minifiledict
         return filedict
 
     def plot_disthist(self, modelchem, benchmark='default', sset='default',

@@ -170,7 +170,7 @@ def flat(data, color=None, title='', xlimit=4.0, mae=None, mape=None, view=True,
         xvals = rxn['data']
         clr = segment_color(color, rxn['color'] if 'color' in rxn else None)
 
-        ax.plot(xvals, positions, '|', color=clr, markersize=13.0)
+        ax.plot(xvals, positions, '|', color=clr, markersize=13.0, mew=4)
 
     # plot trimmings
     if mae is not None:
@@ -186,9 +186,9 @@ def flat(data, color=None, title='', xlimit=4.0, mae=None, mape=None, view=True,
         savefile = pltfile + '.' + ext.lower()
         plt.savefig(savefile, transparent=True, format=ext)  # , bbox_inches='tight')
         files_saved[ext.lower()] = savefile
-    plt.show()
-    if not view:
-        plt.close()
+    if view:
+        plt.show()
+    plt.close()  # give this a try
     return files_saved
 
 
