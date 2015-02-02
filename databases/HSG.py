@@ -261,6 +261,14 @@ TAGL['%s-%s-monoB-CP'   % (dbse, 21)] = 'indinavir from wat200'
 TAGL['%s-%s-monoA-unCP' % (dbse, 21)] = 'water from wat200'
 TAGL['%s-%s-monoB-unCP' % (dbse, 21)] = 'indinavir from wat200'
 
+TAGL['dbse'] = 'interaction energies for bimolecular complexes from protein-indinavir reaction site'
+TAGL['HB'] = 'hydrogen-bonded systems'
+TAGL['MX'] = 'mixed-influence systems'
+TAGL['DD'] = 'dispersion-dominated systems'
+TAGL['large'] = 'most computationally expensive systems'
+TAGL['default'] = 'entire database'
+TAGL['small'] = 'few computationally quick systems'
+
 # <<< Geometry Specification Strings >>>
 GEOS = {}
 

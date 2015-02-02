@@ -599,6 +599,19 @@ TAGL['%s-FaOO-mono-RLX'  % (dbse)]  = 'Formic Acid Relaxed Monomer'
 TAGL['%s-FaON-mono-RLX'  % (dbse)]  = 'Formamide Relaxed Monomer'
 TAGL['%s-FaNN-mono-RLX'  % (dbse)]  = 'Formamidine Relaxed Monomer'
 
+TAGL['dbse'] = 'interaction energies for dissociation curves of doubly hydrogen-bonded bimolecular complexes'
+TAGL['equilibrium'] = 'minimum-energy systems on dissociation curves'
+TAGL['FaOOFaOO'] = 'dissociation curve for formic acid dimer'
+TAGL['FaONFaON'] = 'dissociation curve for formamide dimer'
+TAGL['FaNNFaNN'] = 'dissociation curve for formamidine dimer'
+TAGL['FaOOFaON'] = 'dissociation curve for formic acid- formamide complex'
+TAGL['FaONFaNN'] = 'dissociation curve for formamide- formamidine complex'
+TAGL['FaOOFaNN'] = 'dissociation curve for formic acid- formamidine complex'
+TAGL['5min'] = 'five points on each dissociation curve incl. and surrounding equilibrium'
+TAGL['large'] = 'most computationally expensive systems'
+TAGL['default'] = 'entire database'
+TAGL['small'] = 'few computationally quick systems'
+
 # <<< Geometry Specification Strings >>>
 GEOS = {}
 

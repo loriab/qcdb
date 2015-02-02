@@ -720,6 +720,27 @@ TAGL['%s-Bz2-mono-unCP' % (dbse)] = 'Benzene (alt. geometry)'
 TAGL['%s-Me-mono-unCP'  % (dbse)] = 'Methane'
 TAGL['%s-Py-mono-unCP'  % (dbse)] = 'Pyridine'
 
+TAGL['dbse'] = 'interaction energies for dissociation curves of dispersion-bound bimolecular complexes'
+TAGL['BzBz_S'] = 'dissociation curve for benzene dimer, sandwich'
+TAGL['BzBz_T'] = 'dissociation curve for benzene dimer, t-shaped'
+TAGL['BzBz_PD34'] = 'dissociation curve for benzene dimer, parallel displaced by 3.4A'
+TAGL['BzH2S'] = 'dissociation curve for benzene-H2S'
+TAGL['BzMe'] = 'dissociation curve for benzene-methane'
+TAGL['MeMe'] = 'dissociation curve for methane dimer'
+TAGL['PyPy_S2'] = 'dissociation curve for pyridine dimer, sandwich'
+TAGL['PyPy_T3'] = 'dissociation curve for pyridine dimer, t-shaped'
+TAGL['BzBz_PD32'] = 'dissociation curve for benzene dimer, parallel displaced by 3.2A'
+TAGL['BzBz_PD36'] = 'dissociation curve for benzene dimer, parallel displaced by 3.6A'
+TAGL['5min'] = 'five points on each dissociation curve incl. and surrounding equilibrium'
+TAGL['MX'] = 'mixed-influence systems'
+TAGL['DD'] = 'dispersion-dominated systems'
+TAGL['MXDDPP'] = 'pi-pi-type mixed and dispersion systems'
+TAGL['MXDDNP'] = 'non-pi-pi-type mixed and dispersion systems'
+TAGL['large'] = 'most computationally expensive systems'
+TAGL['default'] = 'entire database'
+TAGL['equilibrium'] = 'minimum-energy systems on dissociation curves'
+TAGL['small'] = 'few computationally quick systems'
+
 #<<< Geometry Specification Strings >>>
 GEOS = {}
 

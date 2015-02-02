@@ -306,6 +306,18 @@ TAGL['%s-%s-monoB-CP'   % (dbse, 22)] =      'Phenol from Phenol Dimer'
 TAGL['%s-%s-monoA-unCP' % (dbse, 22)] =      'Phenol from Phenol Dimer'
 TAGL['%s-%s-monoB-unCP' % (dbse, 22)] =      'Phenol from Phenol Dimer'
 
+TAGL['dbse'] = 'interaction energies for organic bimolecular complexes'
+TAGL['default'] = 'entire database'
+TAGL['small'] = 'few computationally quick systems'
+TAGL['large'] = 'most computationally expensive systems'
+TAGL['HB'] = 'hydrogen-bonded systems'
+TAGL['MX'] = 'mixed-influence systems'
+TAGL['DD'] = 'dispersion-dominated systems'
+TAGL['S11'] = 'smaller systems in S22'
+TAGL['WATER'] = 'water dimer'
+TAGL['MXDDPP'] = 'pi-pi-type mixed and dispersion systems'
+TAGL['MXDDNP'] = 'non-pi-pi-type mixed and dispersion systems'
+
 # <<< Geometry Specification Strings >>>
 GEOS = {}
 
