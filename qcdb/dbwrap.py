@@ -1655,6 +1655,49 @@ class Database(object):
                 saveas=saveas, relpath=relpath, graphicsformat=graphicsformat)
             return filedict
 
+    def plot_axis(self, axis, modelchem, benchmark='default', sset='default',
+        failoninc=True, verbose=False, color='sapt', view=True,
+        saveas=None, relpath=False, graphicsformat=['pdf']):
+        """
+
+        """
+        # compute errors
+        mc = modelchem
+        errors, indiv = self.compute_statistics(mc, benchmark=benchmark, sset=sset,
+            failoninc=failoninc, verbose=verbose, returnindiv=True)
+        # repackage
+        dbdat = []
+        for db, odb in self.dbdict.iteritems():
+            dbix = self.dbdict.keys().index(db)
+            oss = odb.oss[self.sset[sset][dbix]]
+            # TODO may need to make axis name distributable across wrappeddbs
+            # TODO not handling mc present bm absent
+            if indiv[db] is not None:
+                for rxn in indiv[db].keys():
+                    rxnix = oss.hrxn.index(rxn)
+                    dbdat.append({'db': db,
+                                  'sys': str(rxn),
+                                  'color': odb.hrxn[rxn].color,
+                                  'mcdata': odb.hrxn[rxn].data[self.mcs[mc][dbix]].value,
+                                  'bmdata': odb.hrxn[rxn].data[self.mcs[benchmark][dbix]].value,
+                                  'axis': oss.axis[axis][rxnix],
+                                  'error': [indiv[db][rxn][0]]})
+        title = """%s vs %s axis %s for %s subset %s""" % (mc, benchmark, axis, self.dbse, sset)
+        # generate matplotlib instructions and call or print
+        try:
+            import mpl
+            import matplotlib.pyplot as plt
+        except ImportError:
+            # if not running from Canopy, print line to execute from Canopy
+            print """filedict = mpl.valerr(%s,\n    color='%s',\n    title='%s',\n    xtitle='%s',\n    view=%s\n    saveas=%s\n    relpath=%s\n    graphicsformat=%s)\n\n""" % \
+                (dbdat, color, title, axis, view, repr(saveas), repr(relpath), repr(graphicsformat))
+        else:
+            # if running from Canopy, call mpl directly
+            filedict = mpl.valerr(dbdat, color=color, title=title, xtitle=axis,
+                view=view,
+                saveas=saveas, relpath=relpath, graphicsformat=graphicsformat)
+            return filedict
+
     def plot_flat(self, modelchem, benchmark='default', sset='default',
         failoninc=True, verbose=False, color='sapt', xlimit=4.0, view=True,
         saveas=None, relpath=False, graphicsformat=['pdf']):
