@@ -69,55 +69,58 @@ import qcdb
 dbse = 'NBC1'
 
 # <<< Database Members >>>
-BzBz_S = []
+AXIS_Rang = {}
+AXIS_Rrat = {}
+
 dist = [3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4.0, 4.1, 4.2, 4.5, 5.0, 5.5, 6.0, 6.5, 10.0]
-for d in dist:
-    BzBz_S.append('BzBz_S-' + str(d))
+BzBz_S = ['BzBz_S-' + str(d) for d in dist]
+AXIS_Rang.update(dict(zip(BzBz_S, dist)))
+AXIS_Rrat.update(dict(zip(BzBz_S, [d / 3.9 for d in dist])))
 
-BzBz_T = []
 dist = [4.4, 4.5, 4.6, 4.7, 4.8, 4.9, 5.0, 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 6.0, 6.5, 7.0, 7.5, 8.0]
-for d in dist:
-    BzBz_T.append('BzBz_T-' + str(d))
+BzBz_T = ['BzBz_T-' + str(d) for d in dist]
+AXIS_Rang.update(dict(zip(BzBz_T, dist)))
+AXIS_Rrat.update(dict(zip(BzBz_T, [d / 5.0 for d in dist])))
 
-BzBz_PD34 = []
 dist = [0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.2, 2.4, 2.6, 2.8, 3.0]
-for d in dist:
-    BzBz_PD34.append('BzBz_PD34-' + str(d))
+BzBz_PD34 = ['BzBz_PD34-' + str(d) for d in dist]
+AXIS_Rang.update(dict(zip(BzBz_PD34, dist)))
+AXIS_Rrat.update(dict(zip(BzBz_PD34, [d / 1.8 for d in dist])))
 
-BzH2S = []
 dist = [3.2, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4.0, 4.1, 4.2, 4.5, 4.75, 5.0, 5.25, 5.5, 6.0, 6.5, 7.0, 7.5]
-for d in dist:
-    BzH2S.append('BzH2S-' + str(d))
+BzH2S = ['BzH2S-' + str(d) for d in dist]
+AXIS_Rang.update(dict(zip(BzH2S, dist)))
+AXIS_Rrat.update(dict(zip(BzH2S, [d / 3.8 for d in dist])))
 
-BzMe = []
 dist = [3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4.0, 4.1, 4.2, 4.4, 4.6, 4.8, 5.0, 5.2, 5.4, 5.6, 6.0]
-for d in dist:
-    BzMe.append('BzMe-' + str(d))
+BzMe = ['BzMe-' + str(d) for d in dist]
+AXIS_Rang.update(dict(zip(BzMe, dist)))
+AXIS_Rrat.update(dict(zip(BzMe, [d / 3.8 for d in dist])))
 
-MeMe = []
 dist = [3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4.0, 4.1, 4.2, 4.3, 4.4, 4.6, 4.8, 5.0, 5.4, 5.8]
-for d in dist:
-    MeMe.append('MeMe-' + str(d))
+MeMe = ['MeMe-' + str(d) for d in dist]
+AXIS_Rang.update(dict(zip(MeMe, dist)))
+AXIS_Rrat.update(dict(zip(MeMe, [d / 3.6 for d in dist])))
 
-PyPy_S2 = []
 dist = [3.1, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4.0, 4.1, 4.2, 4.3, 4.4, 4.5, 4.7, 5.0, 5.5, 6.0, 6.5, 7.0]
-for d in dist:
-    PyPy_S2.append('PyPy_S2-' + str(d))
+PyPy_S2 = ['PyPy_S2-' + str(d) for d in dist]
+AXIS_Rang.update(dict(zip(PyPy_S2, dist)))
+AXIS_Rrat.update(dict(zip(PyPy_S2, [d / 3.7 for d in dist])))
 
-PyPy_T3 = []
 dist = [4.1, 4.3, 4.5, 4.6, 4.7, 4.8, 4.9, 5.0, 5.1, 5.2, 5.3, 5.4, 5.5, 5.7, 6.0, 6.5, 7.0, 8.0, 9.0]
-for d in dist:
-    PyPy_T3.append('PyPy_T3-' + str(d))
+PyPy_T3 = ['PyPy_T3-' + str(d) for d in dist]
+AXIS_Rang.update(dict(zip(PyPy_T3, dist)))
+AXIS_Rrat.update(dict(zip(PyPy_T3, [d / 4.9 for d in dist])))
 
-BzBz_PD32 = []
 dist = [0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.2, 2.4, 2.6, 2.8, 3.0]
-for d in dist:
-    BzBz_PD32.append('BzBz_PD32-' + str(d))
+BzBz_PD32 = ['BzBz_PD32-' + str(d) for d in dist]
+AXIS_Rang.update(dict(zip(BzBz_PD32, dist)))
+AXIS_Rrat.update(dict(zip(BzBz_PD32, [d / 1.9 for d in dist])))
 
-BzBz_PD36 = []
 dist = [0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.2, 2.4, 2.6, 2.8, 3.0]
-for d in dist:
-    BzBz_PD36.append('BzBz_PD36-' + str(d))
+BzBz_PD36 = ['BzBz_PD36-' + str(d) for d in dist]
+AXIS_Rang.update(dict(zip(BzBz_PD36, dist)))
+AXIS_Rrat.update(dict(zip(BzBz_PD36, [d / 1.7 for d in dist])))
 
 temp = [BzBz_S, BzBz_T, BzBz_PD34, BzH2S, BzMe, MeMe, PyPy_S2, PyPy_T3, BzBz_PD32, BzBz_PD36]
 HRXN = sum(temp, [])
