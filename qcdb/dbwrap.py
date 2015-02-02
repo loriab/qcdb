@@ -235,6 +235,38 @@ class ReactionDatum(object):
         return text
 
 
+class Subset(object):
+    """Affiliated qcdb.Reaction-s
+
+    """
+
+    def __init__(self, name, hrxn, tagl=None, axis=None):
+        # identifier
+        self.name = name
+        # array of reactions names
+        self.hrxn = hrxn
+        # description line
+        self.tagl = tagl
+        # mathematical relationships of reactions
+        self.axis = OrderedDict()
+
+    def __str__(self):
+        text = ''
+        text += """  ==> %s Subset <==\n\n""" % (self.name)
+        text += """  Tagline:              %s\n""" % (self.tagl)
+        text += """  %20s""" % ('Reactions')
+        for ax in self.axis.keys():
+            text += """  %8s""" % (ax)
+        text += """\n"""
+        for ix in range(len(self.hrxn)):
+            text += """  %20s""" % (str(self.hrxn[ix]))
+            for ax in self.axis.values():
+                text += """  %8.3f""" % (ax[ix])
+            text += """\n"""
+        text += """\n"""
+        return text
+
+
 class Reagent(object):
     """Chemical entity only slightly dresed up from qcdb.Molecule.
 
@@ -454,6 +486,12 @@ class WrappedDatabase(object):
         #: 'NBC1'
         self.dbse = None
 
+        #: description line
+        #:
+        #: >>> print asdf.tagl
+        #: 'interaction energies of dissociation curves for non-bonded systems'
+        self.tagl = None
+
         #: OrderedDict of reactions/members
         #:
         #: >>> print asdf.hrxn.keys()
@@ -475,6 +513,9 @@ class WrappedDatabase(object):
 
         #   Removing hrxn, hrgt etc. do not reduce the size of the object.
         #   These attributes are stored for ease of access for adding qc info, etc.
+
+        #: object of defined reaction subsets.
+        self.oss = None
 
         # load database
         if pythonpath is not None:
@@ -499,7 +540,13 @@ class WrappedDatabase(object):
                 getattr(database, item)
             except AttributeError:
                 print """Warning: Database %s possibly deformed with %s missing.\n""" % (database.__name__, item)
+
+        # form database name
         self.dbse = database.dbse
+        try:
+            self.tagl = database.TAGL['dbse']
+        except KeyError:
+            print """Warning: TAGL missing for database %s""" % (self.dbse)
 
         # form array of database contents to process through
         pieces = []
@@ -612,17 +659,19 @@ class WrappedDatabase(object):
         oSSET = {}
         fsHRXN = frozenset(database.HRXN)
         for sset in pieces:
-            try:
-                fssset = frozenset(getattr(database, sset))
-            except TypeError:
-                continue
-            if fssset.issubset(fsHRXN):
-                oSSET[sset] = getattr(database, sset)
+            if not sset.startswith('AXIS_'):
+                try:
+                    fssset = frozenset(getattr(database, sset))
+                except TypeError:
+                    continue
+                if fssset.issubset(fsHRXN):
+                    oSSET[sset] = getattr(database, sset)
         for item in oSSET.keys():
             pieces.remove(item)
         oSSET['HRXN'] = database.HRXN
 
         self.sset = OrderedDict()
+        self.oss = OrderedDict()  # just in case oss replaces sset someday
         for item in oSSET.keys():
             if item == 'HRXN_SM':
                 label = 'small'
@@ -641,6 +690,39 @@ class WrappedDatabase(object):
             self.sset[label] = OrderedDict()
             for rxn in oSSET[item]:
                 self.sset[label][rxn] = oHRXN[rxn]
+
+            # initialize subset objects with light info
+            try:
+                sstagl = database.TAGL[item]
+            except KeyError:
+                try:
+                    sstagl = database.TAGL[label]
+                except KeyError:
+                    sstagl = None
+                    print """Warning: TAGL missing for subset %s""" % (label)
+            self.oss[label] = Subset(name = label,
+                                     hrxn = self.sset[label].keys(),
+                                     tagl = sstagl)
+
+        # Process axes
+        for axis in [item for item in pieces if item.startswith('AXIS_')]:
+            label = axis.replace('AXIS_', '')
+            try:
+                defn = getattr(database, axis)
+            except AttributeError:
+                raise ValidationError("""Axis %s not importable.""" % (label))
+            axisrxns = frozenset(defn.keys())
+            attached = False
+            for ss, rxns in self.sset.iteritems():
+                if frozenset(rxns).issubset(axisrxns):
+                    ordered_floats = []
+                    for rx in self.oss[ss].hrxn:
+                        ordered_floats.append(defn[rx])
+                    self.oss[ss].axis[label] = ordered_floats
+                    attached = True
+            if not attached:
+                print """Warning: AXIS %s not affiliated with a subset""" % (label)
+            pieces.remove(axis)
 
         print """WrappedDatabase %s: Unparsed attributes""" % (self.dbse), pieces
 
