@@ -34,6 +34,7 @@ from options import *
 from qcformat import *
 import cfour
 import jajo
+import orca
 from orient import OrientMols
 #from origdbwrap import Database, FourDatabases, ThreeDatabases  # , ReactionDatum, Reagent, Reaction
 from dbwrap import Database, DB4 #DatabaseWrapper  #ReactionDatum, Reagent, Reaction

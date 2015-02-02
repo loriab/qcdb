@@ -170,6 +170,23 @@ def string_contrast(ss):
     return prefix, suffix, middle
 
 
+def fancify_mc_tag(mc, latex=False):
+    """From the usual MTD-opt1_opt2-bas model chemistry identifier, return 
+    string based on fullname, if *latex* is False or latex if *latex is True.
+
+    """
+    try:
+        mtd, mod, bas = mc.split('-')
+    except ValueError:
+        text = mc
+    else:
+        if latex:
+            text = r"""%20s / %-20s %s""" % (methods[mtd].latex, bases[bas].latex, mod)
+        else:
+            text = r"""%20s / %-20s, %s""" % (methods[mtd].fullname, bases[bas].fullname, mod)
+    return text
+
+
 class ReactionDatum(object):
     """Piece of quantum chemical information that describes a qcdb.Reaction object.
 
@@ -438,7 +455,7 @@ class Reaction(object):
         dbdat = []
         for mc in indiv.keys():
             dbdat.append({'db': dbse,
-                          'sys': mc,
+                          'sys': fancify_mc_tag(mc),
                           'color': self.color,
                           'data': [indiv[mc][0]]})
         mae = None  #[errors[ix][self.dbse]['mae'] for ix in index]
