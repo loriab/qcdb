@@ -272,8 +272,9 @@ def disthist(data, title='', xtitle='', xmin=None, xmax=None,
 
     me = me if me is not None else np.mean(data)
     stde = stde if stde is not None else np.std(data, ddof=1)
-    xmin = xmin if xmin is not None else me - 4.0 * stde
-    xmax = xmax if xmax is not None else me + 4.0 * stde
+    evenerr = max(abs(me - 4.0 * stde), abs(me + 4.0 * stde))
+    xmin = xmin if xmin is not None else -1 * evenerr
+    xmax = xmax if xmax is not None else evenerr
 
     dx = (xmax - xmin) / 40.
     nx = int(round((xmax - xmin) / dx)) + 1
@@ -284,11 +285,11 @@ def disthist(data, title='', xtitle='', xmin=None, xmax=None,
         pdfx.append(ix)
         pdfy.append(gaussianpdf(me, pow(stde, 2), ix))
 
-    fig, ax = plt.subplots(figsize=(8, 6))
+    fig, ax = plt.subplots(figsize=(16, 6))
     plt.axvline(0.0, color='#cccc00')
     ax1 = fig.add_subplot(111)
     ax1.set_xlim(xmin, xmax)
-    ax1.hist(data, bins=30, range=(xmin, xmax), color='#224477', alpha=0.7)
+    ax1.hist(data, bins=30, range=(xmin, xmax), color='#2d4065', alpha=0.7)
     ax1.set_xlabel(xtitle)
     ax1.set_ylabel('Count')
 
