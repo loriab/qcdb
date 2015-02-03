@@ -247,6 +247,12 @@ class Molecule(LibmintsMolecule):
         text += '}\n'
         return text
 
+    def format_molecule_for_orca(self):
+        text = 'orca geom here'
+        options = defaultdict(lambda: defaultdict(dict))
+
+        return text, options
+
     def format_molecule_for_qchem(self, mixedbas=True):
         """Returns geometry section of input file formatted for Q-Chem. 
         For ghost atoms, prints **Gh** as elemental symbol, with expectation 
@@ -415,6 +421,39 @@ class Molecule(LibmintsMolecule):
 
         options['CFOUR']['CFOUR_BASIS']['superclobber'] = True
         options['CFOUR']['CFOUR_SPHERICAL']['superclobber'] = True
+
+        return text, options
+
+    def format_molecule_for_orca(self):
+        """
+        Format the molecule into an orca xyz format
+        """
+        options = defaultdict(lambda: defaultdict(dict))
+        self.update_geometry()
+        factor = 1.0 if self.PYunits == 'Angstrom' else psi_bohr2angstroms
+
+        text = ""
+        text += '* xyz {} {}\n'.format(self.molecular_charge(), self.multiplicity())
+
+        n_frags = self.nfragments()
+        for fr in range(n_frags):
+            if self.fragment_types[fr] == 'Absent':
+                pass
+            else:
+                for at in range(self.fragments[fr][0], self.fragments[fr][1] + 1):
+                    if self.fragment_types[fr] == 'Ghost':
+                        # TODO: add support for ghost atoms
+                        # atom += ':'
+                        continue
+                    x, y, z = self.atoms[at].compute()
+                    atom = self.symbol(at)
+                    if n_frags > 1:
+                        text += '    {:2s}({:d}) {:> 17.12f} {:> 17.12f} {:> 17.12f}\n'.format(\
+                                atom, fr + 1, x*factor, y*factor, z*factor)
+                    else:
+                        text += '    {:2s} {:> 17.12f} {:> 17.12f} {:> 17.12f}\n'.format(\
+                                atom, x*factor, y*factor, z*factor)
+        text += '*'
 
         return text, options
 
