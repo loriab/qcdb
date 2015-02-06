@@ -4,11 +4,11 @@ def muster_memory(mem):
     """Transform input *mem* in MB into psi4-type options for orca.
 
     """
-    text = ''
+    text = """%MaxCore {}\n""".format(int(mem))
 
     # prepare memory keywords to be set as c-side keywords
     options = defaultdict(lambda: defaultdict(dict))
-    options['ORCA']['ORCA_MAXCORE']['value'] = int(mem)
+    #options['ORCA']['ORCA_MAXCORE']['value'] = int(mem)
     #options['CFOUR']['CFOUR_MEM_UNIT']['value'] = 'MB' # orca expects always mb
 
     for item in options['ORCA']:
