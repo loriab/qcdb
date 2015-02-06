@@ -31,15 +31,15 @@ def muster_memory(mem):
     """Transform input *mem* in MB into psi4-type options for orca.
 
     """
-    text = ''
-
     # prepare memory keywords to be set as c-side keywords
     options = defaultdict(lambda: defaultdict(dict))
     options['ORCA']['ORCA_MAXCORE']['value'] = int(mem)
-    #options['CFOUR']['CFOUR_MEM_UNIT']['value'] = 'MB' # orca expects always mb
 
     for item in options['ORCA']:
         options['ORCA'][item]['clobber'] = True
+
+    text = "%MaxCore {}\n".format(options['ORCA']['ORCA_MAXCORE']['value'])
+
     return text, options
 
 
@@ -85,8 +85,6 @@ def muster_modelchem(name, dertype):
     if 'ORCA_FUNCTIONAL' in options['ORCA']:
         options['ORCA']['ORCA_FUNCTIONAL']['clobber'] = True
         options['ORCA']['ORCA_FUNCTIONAL']['superclobber'] = True
-    #if 'CFOUR_CC_PROGRAM' in options['CFOUR']:
-    #    options['CFOUR']['CFOUR_CC_PROGRAM']['clobber'] = False
 
     return text, options
 
