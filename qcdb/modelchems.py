@@ -171,6 +171,8 @@ class Error(QCEssential):
 
 
 _tlist = [
+    Publication('dhdft', doi='', dsdbid='', owner='CAC',
+        fullname=""),
     Publication('dft', doi='10.1063/1.3545971', dsdbid='Burns:2011:084107', owner='LAB',
         fullname="""Density-Functional Approaches to Noncovalent Interactions: A Comparison of Dispersion Corrections (DFT-D), Exchange-Hole Dipole Moment (XDM) Theory, and Specialized Functions. L. A. Burns, A. Vazquez-Mayagoitia, B. G. Sumpter, and C. D. Sherrill, J. Chem. Phys. 134(8), 084107/1-25 (2011)"""),
     Publication('saptone', doi='10.1063/1.4867135', dsdbid='Parker:2014:094106', owner='LAB',
@@ -382,7 +384,7 @@ _tlist = [
     Method('XYG3',            fullname='XYG3'),
     Method('DLDFD',           fullname='dlDF+D'),
     Method('DSDPBEP86',       fullname='DSD-PBEP86'),  # this a real thing?
-    Method('DSDPBEP86D2opt',  fullname='DSD-PBEP86-D2opt'),  # email version of DSD
+    Method('DSDPBEP86D2OPT',  fullname='DSD-PBEP86-D2opt'),  # email version of DSD
     Method('DSDPBEP86D2',     fullname='DSD-PBEP86-D2'),
     Method('DSDPBEP86D3',     fullname='DSD-PBEP86-D3'),
     Method('DSDPBEP86D3BJ',   fullname='DSD-PBEP86-D3bj'),
