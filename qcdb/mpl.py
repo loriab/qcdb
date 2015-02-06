@@ -170,7 +170,7 @@ def flat(data, color=None, title='', xlimit=4.0, mae=None, mape=None, view=True,
         xvals = rxn['data']
         clr = segment_color(color, rxn['color'] if 'color' in rxn else None)
 
-        ax.plot(xvals, positions, '|', color=clr, markersize=13.0)
+        ax.plot(xvals, positions, '|', color=clr, markersize=13.0, mew=4)
 
     # plot trimmings
     if mae is not None:
@@ -186,9 +186,9 @@ def flat(data, color=None, title='', xlimit=4.0, mae=None, mape=None, view=True,
         savefile = pltfile + '.' + ext.lower()
         plt.savefig(savefile, transparent=True, format=ext)  # , bbox_inches='tight')
         files_saved[ext.lower()] = savefile
-    plt.show()
-    if not view:
-        plt.close()
+    if view:
+        plt.show()
+    plt.close()  # give this a try
     return files_saved
 
 
@@ -253,6 +253,66 @@ def flat(data, color=None, title='', xlimit=4.0, mae=None, mape=None, view=True,
 #    plt.savefig('scratch/' + pltfile + '_trimd' + '.pdf', transparent=True, format='PDF')
 #    plt.savefig('scratch/' + pltfile + '_trimd' + '.eps', transparent=True, format='EPS')
 
+
+def valerr(data, color=None, title='', xtitle='', view=True,
+    saveas=None, relpath=False, graphicsformat=['pdf']):
+    """
+
+    """
+    import hashlib
+    import matplotlib.pyplot as plt
+
+    fig, ax = plt.subplots(figsize=(4, 6))
+    ax1 = fig.add_subplot(211)
+    plt.axhline(0.0, axes=ax1, color='black')
+    ax1.set_ylabel('Reaction Energy')
+    plt.title(title)
+
+    ax2 = plt.subplot(212, sharex=ax1)
+    plt.axhline(0.0, axes=ax2, color='#cccc00')
+    ax2.set_ylabel('Energy Error')
+    ax2.set_xlabel(xtitle)
+
+    xmin = 500.0
+    xmax = -500.0
+    vmin = 1.0
+    vmax = -1.0
+    emin = 1.0
+    emax = -1.0
+    # plot reaction errors and threads
+    for rxn in data:
+        clr = segment_color(color, rxn['color'] if 'color' in rxn else None)
+
+        ax1.plot(rxn['axis'], rxn['bmdata'], 'o', color='black', markersize=6.0)
+        ax1.plot(rxn['axis'], rxn['mcdata'], '^', color=clr, markersize=8.0)
+        xmin = min(xmin, rxn['axis'])
+        xmax = max(xmax, rxn['axis'])
+        vmin = min(0, vmin, rxn['mcdata'], rxn['bmdata'])
+        vmax = max(0, vmax, rxn['mcdata'], rxn['bmdata'])
+
+        ax2.plot(rxn['axis'], rxn['error'][0], 's', color=clr)
+        emin = min(0, emin, rxn['error'][0])
+        emax = max(0, emax, rxn['error'][0])
+
+    xbuf = max(0.05, abs(0.02 * xmax))
+    vbuf = max(0.1, abs(0.02 * vmax))
+    ebuf = max(0.01, abs(0.02 * emax))
+    plt.xlim([xmin - xbuf, xmax + xbuf])
+    ax1.set_ylim([vmin - vbuf, vmax + vbuf])
+    ax2.set_ylim([emin - ebuf, emax + ebuf])
+
+    # save and show
+    pltuid = title + '_' + hashlib.sha1(title).hexdigest()
+    pltfile = expand_saveas(saveas, pltuid, def_prefix='valerr_', relpath=relpath)
+    files_saved = {}
+    for ext in graphicsformat:
+        savefile = pltfile + '.' + ext.lower()
+        plt.savefig(savefile, transparent=True, format=ext, bbox_inches='tight')
+        files_saved[ext.lower()] = savefile
+    if view:
+        plt.show()
+    plt.close()  # give this a try
+    return files_saved
 
 def disthist(data, title='', xtitle='', xmin=None, xmax=None,
     me=None, stde=None, saveas=None, relpath=False, graphicsformat=['pdf']):
@@ -763,3 +823,8 @@ if __name__ == "__main__":
     iowa(lin_dats, lin_labs, title='ttl', xlimit=0.5)
 
     disthist(lin_dats)
+
+    valerr([{'color': 0.14255710779686612, 'db': 'NBC1', 'sys': 'BzBz_S-3.6', 'error': [0.027999999999999803], 'mcdata': -1.231, 'bmdata': -1.259, 'axis': 3.6}, {'color': 0.08862098445220466, 'db': 'NBC1', 'sys': 'BzBz_S-3.7', 'error': [0.02300000000000013], 'mcdata': -1.535, 'bmdata': -1.558, 'axis': 3.7}, {'color': 0.246634626511043, 'db': 'NBC1', 'sys': 'BzBz_S-3.4', 'error': [0.04200000000000001], 'mcdata': 0.189, 'bmdata': 0.147, 'axis': 3.4}, {'color': 0.19526236766857613, 'db': 'NBC1', 'sys': 'BzBz_S-3.5', 'error': [0.03500000000000003], 'mcdata': -0.689, 'bmdata': -0.724, 'axis': 3.5}, {'color': 0.3443039102164425, 'db': 'NBC1', 'sys': 'BzBz_S-3.2', 'error': [0.05999999999999961], 'mcdata': 3.522, 'bmdata': 3.462, 'axis': 3.2}, {'color': 0.29638827303466814, 'db': 'NBC1', 'sys': 'BzBz_S-3.3', 'error': [0.050999999999999934], 'mcdata': 1.535, 'bmdata': 1.484, 'axis': 3.3}, {'color': 0.42859228971962615, 'db': 'NBC1', 'sys': 'BzBz_S-6.0', 'error': [0.0020000000000000018], 'mcdata': -0.099, 'bmdata': -0.101, 'axis': 6.0}, {'color': 0.30970751839224836, 'db': 'NBC1', 'sys': 'BzBz_S-5.0', 'error': [0.0040000000000000036], 'mcdata': -0.542, 'bmdata': -0.546, 'axis': 5.0}, {'color': 0.3750832778147902, 'db': 'NBC1', 'sys': 'BzBz_S-5.5', 'error': [0.0030000000000000027], 'mcdata': -0.248, 'bmdata': -0.251, 'axis': 5.5}, {'color': 0.0335358832178858, 'db': 'NBC1', 'sys': 'BzBz_S-3.8', 'error': [0.019000000000000128], 'mcdata': -1.674, 'bmdata': -1.693, 'axis': 3.8}, {'color': 0.021704594689389095, 'db': 'NBC1', 'sys': 'BzBz_S-3.9', 'error': [0.016000000000000014], 'mcdata': -1.701, 'bmdata': -1.717, 'axis': 3.9}, {'color': 0.22096255119953187, 'db': 'NBC1', 'sys': 'BzBz_S-4.5', 'error': [0.008000000000000007], 'mcdata': -1.058, 'bmdata': -1.066, 'axis': 4.5}, {'color': 0.10884135031532088, 'db': 'NBC1', 'sys': 'BzBz_S-4.1', 'error': [0.01200000000000001], 'mcdata': -1.565, 'bmdata': -1.577, 'axis': 4.1}, {'color': 0.06911476296747143, 'db': 'NBC1', 'sys': 'BzBz_S-4.0', 'error': [0.014000000000000012], 'mcdata': -1.655, 'bmdata': -1.669, 'axis': 4.0}, {'color': 0.14275218373289067, 'db': 'NBC1', 'sys': 'BzBz_S-4.2', 'error': [0.01100000000000012], 'mcdata': -1.448, 'bmdata': -1.459, 'axis': 4.2}, {'color': 0.4740372133275638, 'db': 'NBC1', 'sys': 'BzBz_S-6.5', 'error': [0.0010000000000000009], 'mcdata': -0.028, 'bmdata': -0.029, 'axis': 6.5}, {'color': 0.6672504378283713, 'db': 'NBC1', 'sys': 'BzBz_S-10.0', 'error': [0.0], 'mcdata': 0.018, 'bmdata': 0.018, 'axis': 10.0}],
+        color='sapt', xtitle='Rang', title='aggh', graphicsformat=['png'])
+
+

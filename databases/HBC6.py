@@ -56,22 +56,34 @@ import qcdb
 dbse = 'HBC1'
 
 # <<< Database Members >>>
-FaOOFaOO = []
-FaONFaON = []
-FaNNFaNN = []
-FaOOFaON = []
-FaONFaNN = []
-FaOOFaNN = []
+AXIS_Rang = {}
+AXIS_Rrat = {}
+
 dist = [3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4.0, 4.1, 4.2, 4.3, 4.4, 4.6, 4.8, 5.0, 5.4, 5.8, 6.4, 7.0, 8.0, 10.0]
-for d in dist:
-    FaOOFaOO.append('FaOOFaOO-' + str(d))
-    FaONFaON.append('FaONFaON-' + str(d))
-    FaNNFaNN.append('FaNNFaNN-' + str(d))
-    FaOOFaON.append('FaOOFaON-' + str(d))
-    FaONFaNN.append('FaONFaNN-' + str(d))
+FaOOFaOO = ['FaOOFaOO-' + str(d) for d in dist]
+AXIS_Rang.update(dict(zip(FaOOFaOO, dist)))
+AXIS_Rrat.update(dict(zip(FaOOFaOO, [d / 3.6 for d in dist])))
+
+FaONFaON = ['FaONFaON-' + str(d) for d in dist]
+AXIS_Rang.update(dict(zip(FaONFaON, dist)))
+AXIS_Rrat.update(dict(zip(FaONFaON, [d / 4.0 for d in dist])))
+
+FaNNFaNN = ['FaNNFaNN-' + str(d) for d in dist]
+AXIS_Rang.update(dict(zip(FaNNFaNN, dist)))
+AXIS_Rrat.update(dict(zip(FaNNFaNN, [d / 4.1 for d in dist])))
+
+FaOOFaON = ['FaOOFaON-' + str(d) for d in dist]
+AXIS_Rang.update(dict(zip(FaOOFaON, dist)))
+AXIS_Rrat.update(dict(zip(FaOOFaON, [d / 3.8 for d in dist])))
+
+FaONFaNN = ['FaONFaNN-' + str(d) for d in dist]
+AXIS_Rang.update(dict(zip(FaONFaNN, dist)))
+AXIS_Rrat.update(dict(zip(FaONFaNN, [d / 4.0 for d in dist])))
+
 dist = [3.6, 3.7, 3.8, 3.9, 4.0, 4.1, 4.2, 4.3, 4.4, 4.6, 4.8, 5.0, 5.4, 5.8, 6.4, 7.0, 8.0, 10.0]
-for d in dist:
-    FaOOFaNN.append('FaOOFaNN-' + str(d))
+FaOOFaNN = ['FaOOFaNN-' + str(d) for d in dist]
+AXIS_Rang.update(dict(zip(FaOOFaNN, dist)))
+AXIS_Rrat.update(dict(zip(FaOOFaNN, [d / 3.6 for d in dist])))
 
 temp = [FaOOFaOO, FaONFaON, FaNNFaNN, FaOOFaON, FaONFaNN, FaOOFaNN]
 HRXN = sum(temp, [])
@@ -598,6 +610,19 @@ for item in FaOOFaNN:
 TAGL['%s-FaOO-mono-RLX'  % (dbse)]  = 'Formic Acid Relaxed Monomer'
 TAGL['%s-FaON-mono-RLX'  % (dbse)]  = 'Formamide Relaxed Monomer'
 TAGL['%s-FaNN-mono-RLX'  % (dbse)]  = 'Formamidine Relaxed Monomer'
+
+TAGL['dbse'] = 'interaction energies for dissociation curves of doubly hydrogen-bonded bimolecular complexes'
+TAGL['equilibrium'] = 'minimum-energy systems on dissociation curves'
+TAGL['FaOOFaOO'] = 'dissociation curve for formic acid dimer'
+TAGL['FaONFaON'] = 'dissociation curve for formamide dimer'
+TAGL['FaNNFaNN'] = 'dissociation curve for formamidine dimer'
+TAGL['FaOOFaON'] = 'dissociation curve for formic acid- formamide complex'
+TAGL['FaONFaNN'] = 'dissociation curve for formamide- formamidine complex'
+TAGL['FaOOFaNN'] = 'dissociation curve for formic acid- formamidine complex'
+TAGL['5min'] = 'five points on each dissociation curve incl. and surrounding equilibrium'
+TAGL['large'] = 'most computationally expensive systems'
+TAGL['default'] = 'entire database'
+TAGL['small'] = 'few computationally quick systems'
 
 # <<< Geometry Specification Strings >>>
 GEOS = {}

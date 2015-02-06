@@ -247,12 +247,6 @@ class Molecule(LibmintsMolecule):
         text += '}\n'
         return text
 
-    def format_molecule_for_orca(self):
-        text = 'orca geom here'
-        options = defaultdict(lambda: defaultdict(dict))
-
-        return text, options
-
     def format_molecule_for_qchem(self, mixedbas=True):
         """Returns geometry section of input file formatted for Q-Chem. 
         For ghost atoms, prints **Gh** as elemental symbol, with expectation 
