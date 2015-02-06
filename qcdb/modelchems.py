@@ -183,6 +183,7 @@ _tlist = [
         fullname="""Basis Set Convergence of the Coupled-Cluster Correction, delta_MP2^CCSD(T): Best Practices for Benchmarking Noncovalent Interactions and the Attendant Revision of the S22, NBC10, HBC6, and HSG Databases. M. S. Marshall, L. A. Burns, and C. D. Sherrill, J. Chem. Phys. 135(19), 194102/1-10 (2011)"""),
     Publication('dilabio', doi='10.1021/ct400149j', dsdbid='Burns:2014:49', owner='LAB',
         fullname="""Comparing Counterpoise-Corrected, Uncorrected, and Averaged Binding Energies for Benchmarking Noncovalent Interactions. L. A. Burns, M. S. Marshall, and C. D. Sherrill, J. Chem. Theory Comput. 10(1), 49-57 (2014)"""),
+    Publication('pt2uncp', doi='', dsdbid='', owner='LAB', fullname=''),
 ]
 pubs = {}
 for item in _tlist:
