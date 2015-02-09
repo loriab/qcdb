@@ -34,11 +34,10 @@ def muster_memory(mem):
     # prepare memory keywords to be set as c-side keywords
     options = defaultdict(lambda: defaultdict(dict))
     options['ORCA']['ORCA_MAXCORE']['value'] = int(mem)
+    text = "%MaxCore {}\n".format(options['ORCA']['ORCA_MAXCORE']['value'])
 
     for item in options['ORCA']:
         options['ORCA'][item]['clobber'] = True
-
-    text = "%MaxCore {}\n".format(options['ORCA']['ORCA_MAXCORE']['value'])
 
     return text, options
 

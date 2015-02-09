@@ -74,6 +74,9 @@ path = r"""/Users/loriab/linux/qcdb/data/dhdftusemefiles/DSD/"""
 #project = 'aep'
 #path = r"""/Users/loriab/linux/qcdb/data/pt2usemefiles/"""
 
+dbse = 'S22'
+project = 'sflow'
+path = r"""/Users/loriab/linux/qcdb/data/flowusemefiles/"""
 
 dbobj = qcdb.Database(dbse)
 dbse = dbobj.dbse
@@ -1095,6 +1098,13 @@ elif project == 'aep':
     mtds = ['SCSMICCSD']
     bass = ['adz', 'atz', 'adtz', 'atqzadz', 'atqzatz']
     opts = ['', 'dfhf-dfmp']
+    cpmd = ['CP']
+
+elif project == 'sflow':
+    mtds = ['MP2']
+    bass = ['aqz']
+    #opts = ['', 'dfhf-dfmp-dsrgs0p1', 'dfhf-dfmp-dsrgs0p5', 'dfhf-dfmp-dsrgs1p0']
+    opts = ['dfhf-dfmp-dsrgs0p1', 'dfhf-dfmp-dsrgs1p0']
     cpmd = ['CP']
 
 for cpm in cpmd:
