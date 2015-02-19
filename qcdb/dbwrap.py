@@ -2088,7 +2088,7 @@ reinitialize
             landscape=landscape, standalone=standalone, subjoin=subjoin,
             plotpath=plotpath, theme=theme, filename=filename)
 
-    def table_merge_abbr(self, mtd, bas, opt=['CP'], err=['mae'], benchmark='default', failoninc=True, plotpath='analysis/flats/mplflat_', theme='smmerge'):
+    def table_merge_abbr(self, mtd, bas, opt=['CP'], err=['mae'], benchmark='default', failoninc=True, plotpath='analysis/flats/mplflat_', theme='smmerge', standalone=True, filename=None):
         """Specialization of table_generic into table with minimal statistics
         (three S22 and three overall) plus embedded slat diagram as suitable
         for main paper. A single table is formed in sections by *bas* with
@@ -2111,8 +2111,8 @@ reinitialize
         self.table_generic(mtd=mtd, bas=bas, columnplan=columnplan, rowplan=rowplan,
             opt=opt, err=err,
             benchmark=benchmark, failoninc=failoninc,
-            landscape=False, standalone=True, subjoin=True,
-            plotpath=plotpath, theme=theme, filename=None)
+            landscape=False, standalone=standalone, subjoin=True,
+            plotpath=plotpath, theme=theme, filename=filename)
         # TODO: not handled: filename, TODO switch standalone
 
     def table_merge_suppmat(self, mtd, bas, opt=['CP'], err=['mae'], benchmark='default', failoninc=True, plotpath='analysis/flats/mplflat_', theme='lgmerge'):
