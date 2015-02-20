@@ -2236,13 +2236,13 @@ class DB4(Database):
         self.mcs['CCSDT-CP-atqzatz'] = ['CCSDT-CP-atqzatz', 'CCSDT-CP-atqzhatz', 'CCSDT-CP-atqzatz', 'CCSDT-CP-atqzhatz']
 
     #def make_pt2_flats(self):
-    def plot_all_flats(self):
-        """Generate pieces for inclusion into tables for PT2 paper.
-        Note that DB4 flats use near-equilibrium subset.
-
-        """
-        Database.plot_all_flats(self, modelchem=None, sset='tt-5min', xlimit=4.0,
-            graphicsformat=['pdf'])
+    #def plot_all_flats(self):
+    #    """Generate pieces for inclusion into tables for PT2 paper.
+    #    Note that DB4 flats use near-equilibrium subset.
+    #
+    #   """
+        #Database.plot_all_flats(self, modelchem=None, sset='tt-5min', xlimit=4.0,
+        #    graphicsformat=['pdf'])
 
     def make_pt2_Figure_3(self):
         """Plot all the graphics needed for the calendar grey bars plot
@@ -2396,16 +2396,16 @@ class DB4(Database):
 
         self.plot_bars(['B97D3-CP-adz','PBED3-CP-adz','M11L-CP-adz','DLDFD-CP-adz','B3LYPD3-CP-adz','PBE0D3-CP-adz',
             'WB97XD-CP-adz','M052X-CP-adz','M062X-CP-adz','M08HX-CP-adz','M08SO-CP-adz','M11-CP-adz','VV10-CP-adz',
-            'LCVV10-CP-adz','WB97XV-CP-adz','PBE02-CP-adz','WB97X2-CP-adz','B2PLYPD3-CP-adz','DSDPBEP86D2opt-CP-adz','DSDPBEP86D3BJ-CP-adz'])
+            'LCVV10-CP-adz','WB97XV-CP-adz','PBE02-CP-adz','WB97X2-CP-adz','B2PLYPD3-CP-adz','DSDPBEP86D2OPT-CP-adz','MP2-CP-adz'])
         self.plot_bars(['B97D3-unCP-adz','PBED3-unCP-adz','M11L-unCP-adz','DLDFD-unCP-adz','B3LYPD3-unCP-adz','PBE0D3-unCP-adz',
             'WB97XD-unCP-adz','M052X-unCP-adz','M062X-unCP-adz','M08HX-unCP-adz','M08SO-unCP-adz','M11-unCP-adz','VV10-unCP-adz',
-            'LCVV10-unCP-adz','WB97XV-unCP-adz','PBE02-unCP-adz','WB97X2-unCP-adz','B2PLYPD3-unCP-adz','DSDPBEP86D2opt-unCP-adz','DSDPBEP86D3BJ-unCP-adz'])
+            'LCVV10-unCP-adz','WB97XV-unCP-adz','PBE02-unCP-adz','WB97X2-unCP-adz','B2PLYPD3-unCP-adz','DSDPBEP86D2OPT-unCP-adz','MP2-unCP-adz'])
         self.plot_bars(['B97D3-CP-atz','PBED3-CP-atz','M11L-CP-atz','DLDFD-CP-atz','B3LYPD3-CP-atz','PBE0D3-CP-atz',
             'WB97XD-CP-atz','M052X-CP-atz','M062X-CP-atz','M08HX-CP-atz','M08SO-CP-atz','M11-CP-atz','VV10-CP-atz',
-            'LCVV10-CP-atz','WB97XV-CP-atz','PBE02-CP-atz','WB97X2-CP-atz','B2PLYPD3-CP-atz','DSDPBEP86D2opt-CP-atz','DSDPBEP86D3BJ-CP-atz'])
+            'LCVV10-CP-atz','WB97XV-CP-atz','PBE02-CP-atz','WB97X2-CP-atz','B2PLYPD3-CP-atz','DSDPBEP86D2OPT-CP-atz','MP2-CP-atz'])
         self.plot_bars(['B97D3-unCP-atz','PBED3-unCP-atz','M11L-unCP-atz','DLDFD-unCP-atz','B3LYPD3-unCP-atz','PBE0D3-unCP-atz',
             'WB97XD-unCP-atz','M052X-unCP-atz','M062X-unCP-atz','M08HX-unCP-atz','M08SO-unCP-atz','M11-unCP-atz','VV10-unCP-atz',
-            'LCVV10-unCP-atz','WB97XV-unCP-atz','PBE02-unCP-atz','WB97X2-unCP-atz','B2PLYPD3-unCP-atz','DSDPBEP86D2opt-unCP-atz','DSDPBEP86D3BJ-unCP-atz'])
+            'LCVV10-unCP-atz','WB97XV-unCP-atz','PBE02-unCP-atz','WB97X2-unCP-atz','B2PLYPD3-unCP-atz','DSDPBEP86D2OPT-unCP-atz','MP2-unCP-atz'])
 
 
     def plot_dhdft_flats(self):
@@ -2413,16 +2413,16 @@ class DB4(Database):
 
         self.plot_all_flats(['B97D3-CP-adz','PBED3-CP-adz','M11L-CP-adz','DLDFD-CP-adz','B3LYPD3-CP-adz','PBE0D3-CP-adz',
             'WB97XD-CP-adz','M052X-CP-adz','M062X-CP-adz','M08HX-CP-adz','M08SO-CP-adz','M11-CP-adz','VV10-CP-adz',
-            'LCVV10-CP-adz','WB97XV-CP-adz','PBE02-CP-adz','WB97X2-CP-adz','B2PLYPD3-CP-adz','DSDPBEP86D2opt-CP-adz','DSDPBEP86D3BJ-CP-adz'],sset='tt-5min')
+            'LCVV10-CP-adz','WB97XV-CP-adz','PBE02-CP-adz','WB97X2-CP-adz','B2PLYPD3-CP-adz','DSDPBEP86D2OPT-CP-adz','MP2-CP-adz'], sset='tt-5min')
         self.plot_all_flats(['B97D3-unCP-adz','PBED3-unCP-adz','M11L-unCP-adz','DLDFD-unCP-adz','B3LYPD3-unCP-adz','PBE0D3-unCP-adz',
             'WB97XD-unCP-adz','M052X-unCP-adz','M062X-unCP-adz','M08HX-unCP-adz','M08SO-unCP-adz','M11-unCP-adz','VV10-unCP-adz',
-            'LCVV10-unCP-adz','WB97XV-unCP-adz','PBE02-unCP-adz','WB97X2-unCP-adz','B2PLYPD3-unCP-adz','DSDPBEP86D2opt-unCP-adz','DSDPBEP86D3BJ-unCP-adz'],sset='tt-5min')
+            'LCVV10-unCP-adz','WB97XV-unCP-adz','PBE02-unCP-adz','WB97X2-unCP-adz','B2PLYPD3-unCP-adz','DSDPBEP86D2OPT-unCP-adz','MP2-unCP-adz'], sset='tt-5min')
         self.plot_all_flats(['B97D3-CP-atz','PBED3-CP-atz','M11L-CP-atz','DLDFD-CP-atz','B3LYPD3-CP-atz','PBE0D3-CP-atz',
             'WB97XD-CP-atz','M052X-CP-atz','M062X-CP-atz','M08HX-CP-atz','M08SO-CP-atz','M11-CP-atz','VV10-CP-atz',
-            'LCVV10-CP-atz','WB97XV-CP-atz','PBE02-CP-atz','WB97X2-CP-atz','B2PLYPD3-CP-atz','DSDPBEP86D2opt-CP-atz','DSDPBEP86D3BJ-CP-atz'],sset='tt-5min')
+            'LCVV10-CP-atz','WB97XV-CP-atz','PBE02-CP-atz','WB97X2-CP-atz','B2PLYPD3-CP-atz','DSDPBEP86D2OPT-CP-atz','MP2-CP-atz'], sset='tt-5min')
         self.plot_all_flats(['B97D3-unCP-atz','PBED3-unCP-atz','M11L-unCP-atz','DLDFD-unCP-atz','B3LYPD3-unCP-atz','PBE0D3-unCP-atz',
             'WB97XD-unCP-atz','M052X-unCP-atz','M062X-unCP-atz','M08HX-unCP-atz','M08SO-unCP-atz','M11-unCP-atz','VV10-unCP-atz',
-            'LCVV10-unCP-atz','WB97XV-unCP-atz','PBE02-unCP-atz','WB97X2-unCP-atz','B2PLYPD3-unCP-atz','DSDPBEP86D2opt-unCP-atz','DSDPBEP86D3BJ-unCP-atz'],sset='tt-5min')
+            'LCVV10-unCP-atz','WB97XV-unCP-atz','PBE02-unCP-atz','WB97X2-unCP-atz','B2PLYPD3-unCP-atz','DSDPBEP86D2OPT-unCP-atz','MP2-unCP-atz'], sset='tt-5min')
 
 
     def plot_dhdft_figure(self):
@@ -2445,8 +2445,8 @@ class DB4(Database):
         self.plot_bars(['PBE02-unCP-adz','PBE02-CP-adz','PBE02-unCP-atz','PBE02-CP-atz'],sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
         self.plot_bars(['WB97X2-unCP-adz','WB97X2-CP-adz','WB97X2-unCP-atz','WB97X2-CP-atz'],sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
         self.plot_bars(['B2PLYPD3-unCP-adz','B2PLYPD3-CP-adz','B2PLYPD3-unCP-atz','B2PLYPD3-CP-atz'],sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
-        self.plot_bars(['DSDPBEP86D2opt-unCP-adz','DSDPBEP86D2opt-CP-adz','DSDPBEP86D2opt-unCP-atz','DSDPBEP86D2opt-CP-atz'],sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
-        self.plot_bars(['DSDPBEP86D3BJ-unCP-adz','DSDPBEP86D3BJ-CP-adz','DSDPBEP86D3BJ-unCP-atz','DSDPBEP86D3BJ-CP-atz'],sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
+        self.plot_bars(['DSDPBEP86D2OPT-unCP-adz','DSDPBEP86D2OPT-CP-adz','DSDPBEP86D2OPT-unCP-atz','DSDPBEP86D2OPT-CP-atz'],sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
+        self.plot_bars(['MP2-unCP-adz','MP2-CP-adz','MP2-unCP-atz','MP2-CP-atz'],sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
         
         
     def plot_minn_bars(self):
@@ -2461,16 +2461,16 @@ class DB4(Database):
 
         self.plot_modelchems(['B97D3-CP-adz','PBED3-CP-adz','M11L-CP-adz','DLDFD-CP-adz','B3LYPD3-CP-adz','PBE0D3-CP-adz',
             'WB97XD-CP-adz','M052X-CP-adz','M062X-CP-adz','M08HX-CP-adz','M08SO-CP-adz','M11-CP-adz','VV10-CP-adz',
-            'LCVV10-CP-adz','WB97XV-CP-adz','PBE02-CP-adz','WB97X2-CP-adz','B2PLYPD3-CP-adz','DSDPBEP86D2opt-CP-adz','DSDPBEP86D3BJ-CP-adz'], sset='tt-5min')
+            'LCVV10-CP-adz','WB97XV-CP-adz','PBE02-CP-adz','WB97X2-CP-adz','B2PLYPD3-CP-adz','DSDPBEP86D2OPT-CP-adz','MP2-CP-adz'], sset='tt-5min')
         self.plot_modelchems(['B97D3-unCP-adz','PBED3-unCP-adz','M11L-unCP-adz','DLDFD-unCP-adz','B3LYPD3-unCP-adz','PBE0D3-unCP-adz',
             'WB97XD-unCP-adz','M052X-unCP-adz','M062X-unCP-adz','M08HX-unCP-adz','M08SO-unCP-adz','M11-unCP-adz','VV10-unCP-adz',
-            'LCVV10-unCP-adz','WB97XV-unCP-adz','PBE02-unCP-adz','WB97X2-unCP-adz','B2PLYPD3-unCP-adz','DSDPBEP86D2opt-unCP-adz','DSDPBEP86D3BJ-unCP-adz'], sset='tt-5min')
+            'LCVV10-unCP-adz','WB97XV-unCP-adz','PBE02-unCP-adz','WB97X2-unCP-adz','B2PLYPD3-unCP-adz','DSDPBEP86D2OPT-unCP-adz','MP2-unCP-adz'], sset='tt-5min')
         self.plot_modelchems(['B97D3-CP-atz','PBED3-CP-atz','M11L-CP-atz','DLDFD-CP-atz','B3LYPD3-CP-atz','PBE0D3-CP-atz',
             'WB97XD-CP-atz','M052X-CP-atz','M062X-CP-atz','M08HX-CP-atz','M08SO-CP-atz','M11-CP-atz','VV10-CP-atz',
-            'LCVV10-CP-atz','WB97XV-CP-atz','PBE02-CP-atz','WB97X2-CP-atz','B2PLYPD3-CP-atz','DSDPBEP86D2opt-CP-atz','DSDPBEP86D3BJ-CP-atz'], sset='tt-5min')
+            'LCVV10-CP-atz','WB97XV-CP-atz','PBE02-CP-atz','WB97X2-CP-atz','B2PLYPD3-CP-atz','DSDPBEP86D2OPT-CP-atz','MP2-CP-atz'], sset='tt-5min')
         self.plot_modelchems(['B97D3-unCP-atz','PBED3-unCP-atz','M11L-unCP-atz','DLDFD-unCP-atz','B3LYPD3-unCP-atz','PBE0D3-unCP-atz',
             'WB97XD-unCP-atz','M052X-unCP-atz','M062X-unCP-atz','M08HX-unCP-atz','M08SO-unCP-atz','M11-unCP-atz','VV10-unCP-atz',
-            'LCVV10-unCP-atz','WB97XV-unCP-atz','PBE02-unCP-atz','WB97X2-unCP-atz','B2PLYPD3-unCP-atz','DSDPBEP86D2opt-unCP-atz','DSDPBEP86D3BJ-unCP-atz'], sset='tt-5min')
+            'LCVV10-unCP-atz','WB97XV-unCP-atz','PBE02-unCP-atz','WB97X2-unCP-atz','B2PLYPD3-unCP-atz','DSDPBEP86D2OPT-unCP-atz','MP2-unCP-atz'], sset='tt-5min')
 
 
     def plot_minn_modelchems(self):
