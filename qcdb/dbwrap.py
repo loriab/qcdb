@@ -1310,7 +1310,7 @@ class WrappedDatabase(object):
         mcs = ['-'.join(prod) for prod in itertools.product(mtd, opt, bas)]
 
         if plotpath == 'autogen':
-            plotpath = os.environ['HOME'] + os.sep + 'mplflat_'
+            plotpath = os.environ['HOME'] + os.sep + 'flat_'
             for mc in mcs:
                 self.plot_flat(mc)
             # TODO isn't going to work if sset in rowplan
@@ -1331,7 +1331,7 @@ class WrappedDatabase(object):
             landscape=landscape, standalone=standalone, subjoin=subjoin,
             plotpath=plotpath, theme=theme, filename=filename)
 
-    def table_simple1(self, mtd, bas, opt=['CP'], err=['mae'], benchmark='default', failoninc=True, plotpath='analysis/flats/mplflat_', theme='smmerge'):
+    def table_simple1(self, mtd, bas, opt=['CP'], err=['mae'], benchmark='default', failoninc=True, plotpath='analysis/flats/flat_', theme='smmerge'):
         """Specialization of table_generic into table with minimal statistics
         (three S22 and three overall) plus embedded slat diagram as suitable
         for main paper. A single table is formed in sections by *bas* with
@@ -1353,7 +1353,7 @@ class WrappedDatabase(object):
             landscape=False, standalone=True, subjoin=True,
             plotpath=plotpath, theme=theme, filename=None)
 
-    def table_simple2(self, mtd, bas, opt=['CP'], err=['mae'], benchmark='default', failoninc=True, plotpath='analysis/flats/mplflat_', theme='smmerge'):
+    def table_simple2(self, mtd, bas, opt=['CP'], err=['mae'], benchmark='default', failoninc=True, plotpath='analysis/flats/flat_', theme='smmerge'):
         """Specialization of table_generic into table with minimal statistics
         (three S22 and three overall) plus embedded slat diagram as suitable
         for main paper. A single table is formed in sections by *bas* with
@@ -1383,7 +1383,7 @@ class WrappedDatabase(object):
             landscape=False, standalone=True, subjoin=True,
             plotpath=plotpath, theme=theme, filename=None)
 
-    def table_simple3(self, mtd, bas, opt=['CP'], err=['mae'], benchmark='default', failoninc=True, plotpath='analysis/flats/mplflat_', theme='smmerge'):
+    def table_simple3(self, mtd, bas, opt=['CP'], err=['mae'], benchmark='default', failoninc=True, plotpath='analysis/flats/flat_', theme='smmerge'):
         """Specialization of table_generic into table with minimal statistics
         (three S22 and three overall) plus embedded slat diagram as suitable
         for main paper. A single table is formed in sections by *bas* with
@@ -1405,7 +1405,7 @@ class WrappedDatabase(object):
             landscape=False, standalone=True, subjoin=True,
             plotpath=plotpath, theme=theme, filename=None)
 
-    def table_simple4(self, mtd, bas, opt=['CP'], err=['mae'], benchmark='default', failoninc=True, plotpath='analysis/flats/mplflat_', theme='smmerge'):
+    def table_simple4(self, mtd, bas, opt=['CP'], err=['mae'], benchmark='default', failoninc=True, plotpath='analysis/flats/flat_', theme='smmerge'):
         """Specialization of table_generic into table with minimal statistics
         (three S22 and three overall) plus embedded slat diagram as suitable
         for main paper. A single table is formed in sections by *bas* with
@@ -1833,7 +1833,8 @@ class Database(object):
         pre, suf, mid = string_contrast(mc)
         title = self.dbse + '-' + sset + ' ' + pre + '[]' + suf
         mae = errors[self.dbse]['mae']
-        mape = 100 * errors[self.dbse]['mape']
+        mape = None
+        # mape = 100 * errors[self.dbse]['mape']
         mapbe = None
         # generate matplotlib instructions and call or print
         try:
@@ -2088,7 +2089,7 @@ reinitialize
             landscape=landscape, standalone=standalone, subjoin=subjoin,
             plotpath=plotpath, theme=theme, filename=filename)
 
-    def table_merge_abbr(self, mtd, bas, opt=['CP'], err=['mae'], benchmark='default', failoninc=True, plotpath='analysis/flats/mplflat_', theme='smmerge', standalone=True, filename=None):
+    def table_merge_abbr(self, mtd, bas, opt=['CP'], err=['mae'], benchmark='default', failoninc=True, plotpath='analysis/flats/flat_', theme='smmerge', standalone=True, filename=None):
         """Specialization of table_generic into table with minimal statistics
         (three S22 and three overall) plus embedded slat diagram as suitable
         for main paper. A single table is formed in sections by *bas* with
@@ -2115,7 +2116,7 @@ reinitialize
             plotpath=plotpath, theme=theme, filename=filename)
         # TODO: not handled: filename, TODO switch standalone
 
-    def table_merge_suppmat(self, mtd, bas, opt=['CP'], err=['mae'], benchmark='default', failoninc=True, plotpath='analysis/flats/mplflat_', theme='lgmerge'):
+    def table_merge_suppmat(self, mtd, bas, opt=['CP'], err=['mae'], benchmark='default', failoninc=True, plotpath='analysis/flats/flat_', theme='lgmerge'):
         """Specialization of table_generic into table with as many statistics
         as will fit (mostly fullcurve and a few 5min) plus embedded slat
         diagram as suitable for supplementary material. Multiple tables are
