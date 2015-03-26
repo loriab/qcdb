@@ -1637,6 +1637,21 @@ class Database(object):
     #        for rxn, orxn in odb.hrxn.items():
     #            yield orxn
 
+    def get_hrxn(self, sset='default'):
+        """
+
+        """
+        rhrxn = OrderedDict()
+        for db, odb in self.dbdict.items():
+            dbix = self.dbdict.keys().index(db)
+            for rxn, orxn in odb.hrxn.iteritems():
+                lss = self.sset[sset][dbix]
+                if lss is not None:
+                    if rxn in odb.sset[lss].keys():
+                        #rhrxn[rxn] = orxn
+                        rhrxn[orxn.dbrxn] = orxn  # this is a change and conflict with vergil version
+        return rhrxn
+
     def compute_statistics(self, modelchem, benchmark='default', sset='default',
         failoninc=True, verbose=False, returnindiv=False):
         """Computes summary statistics and, if *returnindiv* True,
