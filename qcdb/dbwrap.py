@@ -365,7 +365,10 @@ class Reaction(object):
         text += """  LaTeX representation: %s\n""" % (self.latex)
         text += """  Tagline:              %s\n""" % (self.tagl)
         text += """  Comment:              %s\n""" % (self.comment)
-        text += """  Benchmark:            %f\n""" % (self.data[self.benchmark].value)
+        if self.benchmark is None:
+            text += """  Benchmark:            %s\n""" % ('UNDEFINED')
+        else:
+            text += """  Benchmark:            %f\n""" % (self.data[self.benchmark].value)
         text += """  Color:                %s\n""" % (str(self.color))
         text += """  Reaction matrix:\n"""
         for mode, rxnm in self.rxnm.iteritems():
@@ -663,14 +666,18 @@ class WrappedDatabase(object):
         for rxn in database.HRXN:
             dbrxn = database.dbse + '-' + str(rxn)
             for ref, info in oBIND.iteritems():
-                oHRXN[rxn].data[ref] = ReactionDatum(dbse=database.dbse,
-                                                     rxn=rxn,
-                                                     method=info[0],
-                                                     mode=info[1],
-                                                     basis=info[2],
-                                                     value=getattr(database, info[3])[dbrxn])
-                if info[4]:
-                    oHRXN[rxn].benchmark = ref
+                bindval = getattr(database, info[3])[dbrxn]
+                print rxn, ref, bindval
+                if bindval is not None:
+                    oHRXN[rxn].data[ref] = ReactionDatum(dbse=database.dbse,
+                                                         rxn=rxn,
+                                                         method=info[0],
+                                                         mode=info[1],
+                                                         basis=info[2],
+                                                         value=bindval)
+                                                         #value=getattr(database, info[3])[dbrxn])
+                    if info[4]:
+                        oHRXN[rxn].benchmark = ref
 
         # Process subsets
         oSSET = {}
@@ -832,12 +839,16 @@ class WrappedDatabase(object):
             lbench = oRxn.benchmark if benchmark == 'default' else benchmark
             try:
                 mcLesser = oRxn.data[modelchem].value
-                mcGreater = oRxn.data[lbench].value
             except KeyError, e:
                 if failoninc:
                     raise ValidationError("""Reaction %s missing datum %s.""" % (str(rxn), str(e)))
                 else:
                     continue
+            try:
+                mcGreater = oRxn.data[lbench].value
+            except KeyError, e:
+                print """Reaction %s missing benchmark""" % (str(rxn))
+                continue
 
             err[rxn] = [mcLesser - mcGreater,
                         (mcLesser - mcGreater) / abs(mcGreater),
@@ -1008,7 +1019,15 @@ class WrappedDatabase(object):
 
     def benchmark(self):
         """Returns the model chemistry label for the database's benchmark."""
-        return self.hrxn.itervalues().next().benchmark
+        bm = None
+        rxns = self.hrxn.itervalues()
+        while bm is None:
+            try:
+                bm = rxns.next().benchmark
+            except StopIteration:
+                break
+        return bm
+        #return self.hrxn.itervalues().next().benchmark
         # TODO all rxns have same bench in db module so all have same here in obj
         #   but the way things stored in Reactions, this doesn't have to be so
 
@@ -1526,8 +1545,11 @@ class Database(object):
         #text += """  Reactions:            %s\n""" % (self.hrxn.keys())
         text += """  Subsets:              %s\n""" % (self.sset.keys())
         #text += """  Reference:            %s\n""" % ('default: ' + ' + '.join(self.mcs['default']))
-        text += """  Reference:            %s\n""" % (self.benchmark + ': ' + ' + '.join(self.mcs[self.benchmark]))
-        text += """  Model Chemistries:    %s\n""" % (', '.join(sorted(self.mcs.keys())))
+        try:
+            text += """  Reference:            %s\n""" % (self.benchmark + ': ' + ' + '.join(self.mcs[self.benchmark]))
+        except TypeError:
+            text += """  Reference:            %s\n""" % ('UNDEFINED')
+        text += """  Model Chemistries:    %s\n""" % (', '.join(sorted([mc for mc in self.mcs.keys() if mc is not None])))
         text += """\n"""
         for db in self.dbdict.keys():
             text += self.dbdict[db].__str__()
