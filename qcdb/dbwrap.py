@@ -2089,8 +2089,59 @@ reinitialize
             filedict, htmlcode = mpl.threads(dbdat, color=color, title=title, labels=ixmid, mae=mae, mape=mape, xlimit=xlimit, saveas=saveas, mousetext=mousetext, mouselink=mouselink, mouseimag=mouseimag, mousetitle=mousetitle, mousediv=mousediv, relpath=relpath, graphicsformat=graphicsformat)
             return filedict, htmlcode
 
+    def export_pandas(self, modelchem=[], benchmark='default', sset='default', modelchemlabels=None,
+        failoninc=True):
+        """
+        *modelchem* is array of model chemistries, if modelchem is empty, get only benchmark
+        is benchmark needed?
+        """
+        import pandas as pd
+        import numpy as np
 
+        listodicts = []
+        rhrxn = self.get_hrxn(sset=sset)
+        for dbrxn, orxn in rhrxn.iteritems():
+            wdb = dbrxn.split('-')[0]
+            dbix = self.dbdict.keys().index(wdb)
+            wbm = self.mcs[benchmark][dbix]
+            wss = self.sset[sset][dbix]
+            woss = self.dbdict[wdb].oss[wss]
+            try:
+                Rrat = woss.axis['Rrat'][woss.hrxn.index(orxn.name)]
+            except KeyError:
+                Rrat = 1.0  # TODO generic soln?
 
+            dictorxn = {}
+            dictorxn['DB'] = wdb
+            dictorxn['System'] = orxn.tagl
+            dictorxn['Name'] = orxn.name
+            dictorxn['R'] = Rrat
+            dictorxn['System #'] = orxn.indx
+            dictorxn['Benchmark'] = np.NaN if orxn.benchmark is None else orxn.data[wbm].value  # this NaN exception is new and experimental
+
+            orgts = orxn.rxnm['default'].keys()
+            omolD = Molecule(orgts[0].mol)  # TODO this is only going to work with Reaction ~= Reagent databases
+            dictorxn['Geometry'] = omolD.format_molecule_for_numpy()
+            omolA = Molecule(orgts[1].mol)  # TODO this is only going to work with Reaction ~= Reagent databases
+            omolA.update_geometry()
+            dictorxn['MonA'] = omolA.natom()
+
+            for mc in modelchem:
+                try:
+                    wmc = self.mcs[mc][dbix]
+                except KeyError:
+                    # modelchem not in Database at all
+                    print mc, 'not found'
+                    continue
+                key = mc if modelchemlabels is None else modelchemlabels[modelchem.index(mc)]
+                dictorxn[key] = orxn.data[wmc].value
+            listodicts.append(dictorxn)
+
+        df = pd.DataFrame(listodicts)
+        pd.set_option('display.width', 500)
+        print df.head(5)
+        print df.tail(5)
+        return df
 
     def table_generic(self, mtd, bas, columnplan, rowplan=['bas', 'mtd'],
         opt=['CP'], err=['mae'], sset=['tt'],
