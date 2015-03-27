@@ -1809,15 +1809,26 @@ class Database(object):
             # TODO may need to make axis name distributable across wrappeddbs
             # TODO not handling mc present bm absent
             if indiv[db] is not None:
-                for rxn in indiv[db].keys():
+                for rxn in oss.hrxn:
                     rxnix = oss.hrxn.index(rxn)
-                    dbdat.append({'db': db,
+                    bm = self.mcs[benchmark][dbix]
+                    if bm is None or bm not in odb.hrxn[rxn].data:
+                        dbdat.append({'db': db,
+                                  'sys': str(rxn),
+                                  'color': odb.hrxn[rxn].color,
+                                  'mcdata': odb.hrxn[rxn].data[self.mcs[mc][dbix]].value,
+                                  'bmdata': None,
+                                  'error': [None],
+                                  'axis': oss.axis[axis][rxnix]})
+
+                    else:
+                        dbdat.append({'db': db,
                                   'sys': str(rxn),
                                   'color': odb.hrxn[rxn].color,
                                   'mcdata': odb.hrxn[rxn].data[self.mcs[mc][dbix]].value,
                                   'bmdata': odb.hrxn[rxn].data[self.mcs[benchmark][dbix]].value,
-                                  'axis': oss.axis[axis][rxnix],
-                                  'error': [indiv[db][rxn][0]]})
+                                  'error': [indiv[db][rxn][0]],
+                                  'axis': oss.axis[axis][rxnix]})
         title = """%s vs %s axis %s for %s subset %s""" % (mc, benchmark, axis, self.dbse, sset)
         # generate matplotlib instructions and call or print
         try:
