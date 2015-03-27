@@ -171,6 +171,8 @@ class Error(QCEssential):
 
 
 _tlist = [
+    Publication('dhdft', doi='', dsdbid='', owner='CAC',
+        fullname=""),
     Publication('dft', doi='10.1063/1.3545971', dsdbid='Burns:2011:084107', owner='LAB',
         fullname="""Density-Functional Approaches to Noncovalent Interactions: A Comparison of Dispersion Corrections (DFT-D), Exchange-Hole Dipole Moment (XDM) Theory, and Specialized Functions. L. A. Burns, A. Vazquez-Mayagoitia, B. G. Sumpter, and C. D. Sherrill, J. Chem. Phys. 134(8), 084107/1-25 (2011)"""),
     Publication('saptone', doi='10.1063/1.4867135', dsdbid='Parker:2014:094106', owner='LAB',
@@ -181,6 +183,7 @@ _tlist = [
         fullname="""Basis Set Convergence of the Coupled-Cluster Correction, delta_MP2^CCSD(T): Best Practices for Benchmarking Noncovalent Interactions and the Attendant Revision of the S22, NBC10, HBC6, and HSG Databases. M. S. Marshall, L. A. Burns, and C. D. Sherrill, J. Chem. Phys. 135(19), 194102/1-10 (2011)"""),
     Publication('dilabio', doi='10.1021/ct400149j', dsdbid='Burns:2014:49', owner='LAB',
         fullname="""Comparing Counterpoise-Corrected, Uncorrected, and Averaged Binding Energies for Benchmarking Noncovalent Interactions. L. A. Burns, M. S. Marshall, and C. D. Sherrill, J. Chem. Theory Comput. 10(1), 49-57 (2014)"""),
+    Publication('pt2uncp', doi='', dsdbid='', owner='LAB', fullname=''),
 ]
 pubs = {}
 for item in _tlist:
@@ -382,7 +385,7 @@ _tlist = [
     Method('XYG3',            fullname='XYG3'),
     Method('DLDFD',           fullname='dlDF+D'),
     Method('DSDPBEP86',       fullname='DSD-PBEP86'),  # this a real thing?
-    Method('DSDPBEP86D2opt',  fullname='DSD-PBEP86-D2opt'),  # email version of DSD
+    Method('DSDPBEP86D2OPT',  fullname='DSD-PBEP86-D2opt'),  # email version of DSD
     Method('DSDPBEP86D2',     fullname='DSD-PBEP86-D2'),
     Method('DSDPBEP86D3',     fullname='DSD-PBEP86-D3'),
     Method('DSDPBEP86D3BJ',   fullname='DSD-PBEP86-D3bj'),
