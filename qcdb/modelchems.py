@@ -296,6 +296,7 @@ _tlist = [
     BasisSet('631pgs',     fullname='6-31+G(d)'),
     BasisSet('6311pg_3df_2p_', fullname='6-311+G(3df,2p)'),
     BasisSet('6311ppg_3df_2p_', fullname='6-311++G(3df,2p)'),
+    BasisSet('def2qzvp', fullname='def2-QZVP'),
 ]
 bases = {}
 for item in _tlist:

@@ -365,7 +365,10 @@ class Reaction(object):
         text += """  LaTeX representation: %s\n""" % (self.latex)
         text += """  Tagline:              %s\n""" % (self.tagl)
         text += """  Comment:              %s\n""" % (self.comment)
-        text += """  Benchmark:            %f\n""" % (self.data[self.benchmark].value)
+        if self.benchmark is None:
+            text += """  Benchmark:            %s\n""" % ('UNDEFINED')
+        else:
+            text += """  Benchmark:            %f\n""" % (self.data[self.benchmark].value)
         text += """  Color:                %s\n""" % (str(self.color))
         text += """  Reaction matrix:\n"""
         for mode, rxnm in self.rxnm.iteritems():
@@ -663,14 +666,18 @@ class WrappedDatabase(object):
         for rxn in database.HRXN:
             dbrxn = database.dbse + '-' + str(rxn)
             for ref, info in oBIND.iteritems():
-                oHRXN[rxn].data[ref] = ReactionDatum(dbse=database.dbse,
-                                                     rxn=rxn,
-                                                     method=info[0],
-                                                     mode=info[1],
-                                                     basis=info[2],
-                                                     value=getattr(database, info[3])[dbrxn])
-                if info[4]:
-                    oHRXN[rxn].benchmark = ref
+                bindval = getattr(database, info[3])[dbrxn]
+                print rxn, ref, bindval
+                if bindval is not None:
+                    oHRXN[rxn].data[ref] = ReactionDatum(dbse=database.dbse,
+                                                         rxn=rxn,
+                                                         method=info[0],
+                                                         mode=info[1],
+                                                         basis=info[2],
+                                                         value=bindval)
+                                                         #value=getattr(database, info[3])[dbrxn])
+                    if info[4]:
+                        oHRXN[rxn].benchmark = ref
 
         # Process subsets
         oSSET = {}
@@ -832,12 +839,16 @@ class WrappedDatabase(object):
             lbench = oRxn.benchmark if benchmark == 'default' else benchmark
             try:
                 mcLesser = oRxn.data[modelchem].value
-                mcGreater = oRxn.data[lbench].value
             except KeyError, e:
                 if failoninc:
                     raise ValidationError("""Reaction %s missing datum %s.""" % (str(rxn), str(e)))
                 else:
                     continue
+            try:
+                mcGreater = oRxn.data[lbench].value
+            except KeyError, e:
+                print """Reaction %s missing benchmark""" % (str(rxn))
+                continue
 
             err[rxn] = [mcLesser - mcGreater,
                         (mcLesser - mcGreater) / abs(mcGreater),
@@ -1008,7 +1019,15 @@ class WrappedDatabase(object):
 
     def benchmark(self):
         """Returns the model chemistry label for the database's benchmark."""
-        return self.hrxn.itervalues().next().benchmark
+        bm = None
+        rxns = self.hrxn.itervalues()
+        while bm is None:
+            try:
+                bm = rxns.next().benchmark
+            except StopIteration:
+                break
+        return bm
+        #return self.hrxn.itervalues().next().benchmark
         # TODO all rxns have same bench in db module so all have same here in obj
         #   but the way things stored in Reactions, this doesn't have to be so
 
@@ -1526,8 +1545,11 @@ class Database(object):
         #text += """  Reactions:            %s\n""" % (self.hrxn.keys())
         text += """  Subsets:              %s\n""" % (self.sset.keys())
         #text += """  Reference:            %s\n""" % ('default: ' + ' + '.join(self.mcs['default']))
-        text += """  Reference:            %s\n""" % (self.benchmark + ': ' + ' + '.join(self.mcs[self.benchmark]))
-        text += """  Model Chemistries:    %s\n""" % (', '.join(sorted(self.mcs.keys())))
+        try:
+            text += """  Reference:            %s\n""" % (self.benchmark + ': ' + ' + '.join(self.mcs[self.benchmark]))
+        except TypeError:
+            text += """  Reference:            %s\n""" % ('UNDEFINED')
+        text += """  Model Chemistries:    %s\n""" % (', '.join(sorted([mc for mc in self.mcs.keys() if mc is not None])))
         text += """\n"""
         for db in self.dbdict.keys():
             text += self.dbdict[db].__str__()
@@ -1636,6 +1658,21 @@ class Database(object):
     #    for db, odb in self.dbdict.items():
     #        for rxn, orxn in odb.hrxn.items():
     #            yield orxn
+
+    def get_hrxn(self, sset='default'):
+        """
+
+        """
+        rhrxn = OrderedDict()
+        for db, odb in self.dbdict.items():
+            dbix = self.dbdict.keys().index(db)
+            for rxn, orxn in odb.hrxn.iteritems():
+                lss = self.sset[sset][dbix]
+                if lss is not None:
+                    if rxn in odb.sset[lss].keys():
+                        #rhrxn[rxn] = orxn
+                        rhrxn[orxn.dbrxn] = orxn  # this is a change and conflict with vergil version
+        return rhrxn
 
     def compute_statistics(self, modelchem, benchmark='default', sset='default',
         failoninc=True, verbose=False, returnindiv=False):
@@ -1772,15 +1809,26 @@ class Database(object):
             # TODO may need to make axis name distributable across wrappeddbs
             # TODO not handling mc present bm absent
             if indiv[db] is not None:
-                for rxn in indiv[db].keys():
+                for rxn in oss.hrxn:
                     rxnix = oss.hrxn.index(rxn)
-                    dbdat.append({'db': db,
+                    bm = self.mcs[benchmark][dbix]
+                    if bm is None or bm not in odb.hrxn[rxn].data:
+                        dbdat.append({'db': db,
+                                  'sys': str(rxn),
+                                  'color': odb.hrxn[rxn].color,
+                                  'mcdata': odb.hrxn[rxn].data[self.mcs[mc][dbix]].value,
+                                  'bmdata': None,
+                                  'error': [None],
+                                  'axis': oss.axis[axis][rxnix]})
+
+                    else:
+                        dbdat.append({'db': db,
                                   'sys': str(rxn),
                                   'color': odb.hrxn[rxn].color,
                                   'mcdata': odb.hrxn[rxn].data[self.mcs[mc][dbix]].value,
                                   'bmdata': odb.hrxn[rxn].data[self.mcs[benchmark][dbix]].value,
-                                  'axis': oss.axis[axis][rxnix],
-                                  'error': [indiv[db][rxn][0]]})
+                                  'error': [indiv[db][rxn][0]],
+                                  'axis': oss.axis[axis][rxnix]})
         title = """%s vs %s axis %s for %s subset %s""" % (mc, benchmark, axis, self.dbse, sset)
         # generate matplotlib instructions and call or print
         try:
@@ -2053,8 +2101,59 @@ reinitialize
             filedict, htmlcode = mpl.threads(dbdat, color=color, title=title, labels=ixmid, mae=mae, mape=mape, xlimit=xlimit, saveas=saveas, mousetext=mousetext, mouselink=mouselink, mouseimag=mouseimag, mousetitle=mousetitle, mousediv=mousediv, relpath=relpath, graphicsformat=graphicsformat)
             return filedict, htmlcode
 
+    def export_pandas(self, modelchem=[], benchmark='default', sset='default', modelchemlabels=None,
+        failoninc=True):
+        """
+        *modelchem* is array of model chemistries, if modelchem is empty, get only benchmark
+        is benchmark needed?
+        """
+        import pandas as pd
+        import numpy as np
 
+        listodicts = []
+        rhrxn = self.get_hrxn(sset=sset)
+        for dbrxn, orxn in rhrxn.iteritems():
+            wdb = dbrxn.split('-')[0]
+            dbix = self.dbdict.keys().index(wdb)
+            wbm = self.mcs[benchmark][dbix]
+            wss = self.sset[sset][dbix]
+            woss = self.dbdict[wdb].oss[wss]
+            try:
+                Rrat = woss.axis['Rrat'][woss.hrxn.index(orxn.name)]
+            except KeyError:
+                Rrat = 1.0  # TODO generic soln?
 
+            dictorxn = {}
+            dictorxn['DB'] = wdb
+            dictorxn['System'] = orxn.tagl
+            dictorxn['Name'] = orxn.name
+            dictorxn['R'] = Rrat
+            dictorxn['System #'] = orxn.indx
+            dictorxn['Benchmark'] = np.NaN if orxn.benchmark is None else orxn.data[wbm].value  # this NaN exception is new and experimental
+
+            orgts = orxn.rxnm['default'].keys()
+            omolD = Molecule(orgts[0].mol)  # TODO this is only going to work with Reaction ~= Reagent databases
+            dictorxn['Geometry'] = omolD.format_molecule_for_numpy()
+            omolA = Molecule(orgts[1].mol)  # TODO this is only going to work with Reaction ~= Reagent databases
+            omolA.update_geometry()
+            dictorxn['MonA'] = omolA.natom()
+
+            for mc in modelchem:
+                try:
+                    wmc = self.mcs[mc][dbix]
+                except KeyError:
+                    # modelchem not in Database at all
+                    print mc, 'not found'
+                    continue
+                key = mc if modelchemlabels is None else modelchemlabels[modelchem.index(mc)]
+                dictorxn[key] = orxn.data[wmc].value
+            listodicts.append(dictorxn)
+
+        df = pd.DataFrame(listodicts)
+        pd.set_option('display.width', 500)
+        print df.head(5)
+        print df.tail(5)
+        return df
 
     def table_generic(self, mtd, bas, columnplan, rowplan=['bas', 'mtd'],
         opt=['CP'], err=['mae'], sset=['tt'],
