@@ -292,7 +292,10 @@ else:
 temp = []
 for rxn in HRXN:
     temp.append(database.ACTV['%s-%s' % (dbse, rxn)])
-    temp.append(database.ACTV_CP['%s-%s' % (dbse, rxn)])
+    try:
+        temp.append(database.ACTV_CP['%s-%s' % (dbse, rxn)])
+    except AttributeError:
+        pass
 HSYS = qcdb.drop_duplicates(temp)
 
 # commence the file-writing loop
