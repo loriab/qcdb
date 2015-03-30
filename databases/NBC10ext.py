@@ -60,6 +60,7 @@
   - ``'DD'`` dispersion-dominated systems
   - ``'MXDDPP'`` pi-pi-type mixed and dispersion systems
   - ``'MXDDNP'`` non-pi-pi-type mixed and dispersion systems
+  - ``'WALL'``
 
 """
 import re
@@ -107,7 +108,7 @@ PyPy_S2 = ['PyPy_S2-' + str(d) for d in dist]
 AXIS_Rang.update(dict(zip(PyPy_S2, dist)))
 AXIS_Rrat.update(dict(zip(PyPy_S2, [d / 3.7 for d in dist])))
 
-dist = [4.1, 4.28, 4.3, 4.36, 4.44, 4.5, 4.6, 4.7, 4.8, 4.9, 5.0, 5.1, 5.2, 5.3, 5.4, 5.5, 5.7, 6.0, 6.5, 7.0, 8.0, 9.0]
+dist = [4.1, 4.27, 4.3, 4.36, 4.44, 4.5, 4.6, 4.7, 4.8, 4.9, 5.0, 5.1, 5.2, 5.3, 5.4, 5.5, 5.7, 6.0, 6.5, 7.0, 8.0, 9.0]
 PyPy_T3 = ['PyPy_T3-' + str(d) for d in dist]
 AXIS_Rang.update(dict(zip(PyPy_T3, dist)))
 AXIS_Rrat.update(dict(zip(PyPy_T3, [d / 4.9 for d in dist])))
@@ -140,7 +141,7 @@ HRXN_LG = ['BzBz_T-5.0']
 HRXN_EQ = ['BzBz_S-3.9', 'BzBz_T-5.0', 'BzBz_PD34-1.8', 'BzH2S-3.8', 'BzMe-3.8',
            'MeMe-3.6', 'PyPy_S2-3.7', 'PyPy_T3-4.9', 'BzBz_PD32-1.9', 'BzBz_PD36-1.7']
 HRXN_WALL = ['BzBz_T-4.3', 'BzBz_T-4.35', 'BzH2S-3.15', 'BzH2S-3.3', 'BzMe-3.15', 'MeMe-3.1', 
-             'MeMe-3.15', 'PyPy_S2-3.2', 'PyPy_T3-4.28', 'PyPy_T3-4.36', 'PyPy_T3-4.44']
+             'MeMe-3.15', 'PyPy_S2-3.2', 'PyPy_T3-4.27', 'PyPy_T3-4.36', 'PyPy_T3-4.44']
 MX = sum([BzH2S, PyPy_T3, BzBz_PD32], [])
 DD = sum([BzBz_S, BzBz_T, BzBz_PD34, BzMe, MeMe, PyPy_S2, BzBz_PD36], [])
 MXDDPP = sum([BzBz_S, BzBz_PD34, PyPy_S2, BzBz_PD32, BzBz_PD36], [])
@@ -407,7 +408,7 @@ BIND_NBC10A['%s-PyPy_S2-6.5' % (dbse)] = -0.276
 BIND_NBC10A['%s-PyPy_S2-7.0' % (dbse)] = -0.200
 
 BIND_NBC10A['%s-PyPy_T3-4.1' % (dbse)] =  9.341
-BIND_NBC10A['%s-PyPy_T3-4.28' % (dbse)] =  None
+BIND_NBC10A['%s-PyPy_T3-4.27' % (dbse)] =  None
 BIND_NBC10A['%s-PyPy_T3-4.3' % (dbse)] =  1.991
 BIND_NBC10A['%s-PyPy_T3-4.36' % (dbse)] =  None
 BIND_NBC10A['%s-PyPy_T3-4.44' % (dbse)] =  None
