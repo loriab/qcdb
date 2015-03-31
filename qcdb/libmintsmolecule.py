@@ -347,7 +347,7 @@ class LibmintsMolecule(object):
         if math.fabs(self.atoms[atom].Z() - int(self.atoms[atom].Z())) > 0.0:
             print "WARNING: Obtaining masses from atom with fractional charge...may be incorrect!!!\n"
             # TODO outfile
-        return z2masses[int(self.atoms[atom].Z())]
+        return z2mass[int(self.atoms[atom].Z())]
 
     def symbol(self, atom):
         """Returns the cleaned up label of the atom (C2 => C, H4 = H) (0-indexed)
@@ -708,7 +708,7 @@ class LibmintsMolecule(object):
                     yval = self.get_coord_value(entries[2])
                     zval = self.get_coord_value(entries[3])
                     self.full_atoms.append(CartesianEntry(iatom, zVal, charge, \
-                        el2masses[atomSym], atomSym, atomLabel, \
+                        el2mass[atomSym], atomSym, atomLabel, \
                         xval, yval, zval))
 
                 # handle first line of Zmat
@@ -716,7 +716,7 @@ class LibmintsMolecule(object):
                     zmatrix = True
                     tempfrag.append(iatom)
                     self.full_atoms.append(ZMatrixEntry(iatom, zVal, charge, \
-                        el2masses[atomSym], atomSym, atomLabel))
+                        el2mass[atomSym], atomSym, atomLabel))
 
                 # handle second line of Zmat
                 elif len(entries) == 3:
@@ -732,7 +732,7 @@ class LibmintsMolecule(object):
                         rval.set_fixed(True)
 
                     self.full_atoms.append(ZMatrixEntry(iatom, zVal, charge, \
-                        el2masses[atomSym], atomSym, atomLabel, \
+                        el2mass[atomSym], atomSym, atomLabel, \
                         self.full_atoms[rTo], rval))
 
                 # handle third line of Zmat
@@ -757,7 +757,7 @@ class LibmintsMolecule(object):
                         aval.set_fixed(True)
 
                     self.full_atoms.append(ZMatrixEntry(iatom, zVal, charge, \
-                        el2masses[atomSym], atomSym, atomLabel, \
+                        el2mass[atomSym], atomSym, atomLabel, \
                         self.full_atoms[rTo], rval, \
                         self.full_atoms[aTo], aval))
 
@@ -790,7 +790,7 @@ class LibmintsMolecule(object):
                         dval.set_fixed(True)
 
                     self.full_atoms.append(ZMatrixEntry(iatom, zVal, charge, \
-                        el2masses[atomSym], atomSym, atomLabel, \
+                        el2mass[atomSym], atomSym, atomLabel, \
                         self.full_atoms[rTo], rval, \
                         self.full_atoms[aTo], aval, \
                         self.full_atoms[dTo], dval))
@@ -873,7 +873,7 @@ class LibmintsMolecule(object):
                         raise ValidationError('Molecule::init_with_xyz: Illegal atom symbol in geometry specification: %s' % (atomSym))
 
                     # Add it to the molecule.
-                    instance.add_atom(el2z[fileAtom], fileX, fileY, fileZ, fileAtom, el2masses[fileAtom])
+                    instance.add_atom(el2z[fileAtom], fileX, fileY, fileZ, fileAtom, el2mass[fileAtom])
 
                 else:
                     raise ValidationError("Molecule::init_with_xyz: Malformed atom information line %d." % (i + 3))
