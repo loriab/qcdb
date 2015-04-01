@@ -52,6 +52,15 @@ class Infile(qcformat.InputFormat2):
     
         if self.method in ['ccsd(t)-f12-optri']:
             pass
+        elif self.method in ['ccsd(t)-f12-cabsfit']:
+            if self.unaugbasis and self.auxbasis:
+                #options['BASIS']['JKFIT']['value'] = self.auxbasis + '/jkfit'
+                #options['BASIS']['JKFITB']['value'] = self.unaugbasis + '/jkfit'
+                #options['BASIS']['MP2FIT']['value'] = self.auxbasis + '/mp2fit'
+                #options['BASIS']['DFLHF']['value'] = self.auxbasis + '/jkfit'
+                options['BASIS']['JKFITC']['value'] = 'aug-cc-pv5z/mp2fit'
+            else:
+                raise ValidationError("""Auxiliary basis not predictable from orbital basis '%s'""" % (self.basis))
         elif ('df-' in self.method) or ('f12' in self.method) or (self.method in ['mp2c', 'dft-sapt', 'dft-sapt-pbe0acalda']):
             if self.unaugbasis and self.auxbasis:
                 options['BASIS']['JKFIT']['value'] = self.auxbasis + '/jkfit'
@@ -234,6 +243,11 @@ def muster_modelchem(name, dertype, mol):
         proc.append('ccsd(t)-f12')
         #options['CCSD(T)-F12']['OPTIONS']['value'] = ',df_basis=mp2fit,df_basis_exch=jkfitb,ri_basis=jkfitb'
 
+    elif lowername == 'ccsd(t)-f12-cabsfit':
+        proc.append('rhf')
+        proc.append('ccsd(t)-f12')
+        options['CCSD(T)-F12']['OPTIONS']['value'] = ',df_basis=jkfitc,df_basis_exch=jkfitc,ri_basis=jkfitc'
+
     elif lowername == 'mp2c':
         proc.append('gdirect')
         proc.append(mol.extract_fragments(1, 2).format_molecule_for_molpro())
@@ -275,6 +289,7 @@ procedures = {
         'ccsd(t)-f12'    : muster_modelchem,
         'ccsd(t)-f12c'   : muster_modelchem,
         'ccsd(t)-f12-optri' : muster_modelchem,
+        'ccsd(t)-f12-cabsfit' : muster_modelchem,
         #'sapt0'         : muster_modelchem,
         #'sapt2+'        : muster_modelchem,
         #'sapt2+(3)'     : muster_modelchem,
