@@ -1,11 +1,17 @@
 import os
 import re
-import collections
 import string
+import hashlib
 import itertools
+from collections import defaultdict
+try:
+    from collections import OrderedDict
+except ImportError:
+    from oldpymodules import OrderedDict
 from exceptions import *
 from psiutil import search_file
 from molecule import Molecule
+from periodictable import *
 from libmintsgshell import GaussianShell
 from libmintsbasissetparser import Gaussian94BasisSetParser
 from basislist import corresponding_basis
@@ -37,6 +43,8 @@ class BasisSet(object):
         self.shells = None
         # Molecule object.
         self.molecule = None
+        # Shell information
+        self.atom_basis_shell = None
 
         # <<< Scalars >>>
 
@@ -99,7 +107,7 @@ class BasisSet(object):
         elif len(args) == 3 and \
             isinstance(args[0], basestring) and \
             isinstance(args[1], Molecule) and \
-            isinstance(args[2], collections.OrderedDict):
+            isinstance(args[2], OrderedDict):
             self.constructor_role_mol_shellmap(*args)
         else:
             raise ValidationError('BasisSet::constructor: Inappropriate configuration of constructor arguments')
@@ -166,6 +174,7 @@ class BasisSet(object):
         self.molecule = mol
         self.name = role
         self.xyz = self.molecule.geometry()  # not used in libmints but this seems to be the intent
+        self.atom_basis_shell = shell_map
         natom = self.molecule.natom()
 
         # Singletons
@@ -183,15 +192,16 @@ class BasisSet(object):
         uoriginal_coefs = []
         uerd_coefs = []
         self.n_uprimitive = 0
-        for basisfirst, basissecond in shell_map.items():
-            basis = basisfirst
-            symbol_map = shell_map[basis]
-            primitive_start[basis] = {}
-            primitive_end[basis] = {}
-            for symbolfirst, symbolsecond in symbol_map.items():
-                label = symbolfirst  # symbol --> label
-                shells = symbol_map[label]  # symbol --> label
-                primitive_start[basis][label] = self.n_uprimitive  # symbol --> label
+
+        for symbolfirst, symbolsecond in shell_map.items():
+            label = symbolfirst
+            basis_map = symbolsecond
+            primitive_start[label] = {}
+            primitive_end[label] = {}
+            for basisfirst, basissecond in basis_map.items():
+                basis = basisfirst
+                shells = basis_map[basis]  # symbol --> label
+                primitive_start[label][basis] = self.n_uprimitive  # symbol --> label
                 for i in range(len(shells)):
                     shell = shells[i]
                     for prim in range(shell.nprimitive()):
@@ -200,7 +210,7 @@ class BasisSet(object):
                         uoriginal_coefs.append(shell.original_coef(prim))
                         uerd_coefs.append(shell.erd_coef(prim))
                         self.n_uprimitive += 1
-                primitive_end[basis][label] = self.n_uprimitive  # symbol --> label
+                primitive_end[label][basis] = self.n_uprimitive  # symbol --> label
 
         # Count basis functions, shells and primitives
         self.n_shells = 0
@@ -211,7 +221,7 @@ class BasisSet(object):
             atom = self.molecule.atom_entry(n)
             basis = atom.basisset(role)
             label = atom.label()  # symbol --> label
-            shells = shell_map[basis][label]  # symbol --> label
+            shells = shell_map[label][basis]  # symbol --> label
             for i in range(len(shells)):
                 shell = shells[i]
                 nprim = shell.nprimitive()
@@ -255,9 +265,9 @@ class BasisSet(object):
             atom = self.molecule.atom_entry(n)
             basis = atom.basisset(role)
             label = atom.label()  # symbol --> label
-            shells = shell_map[basis][label]  # symbol --> label
-            ustart = primitive_start[basis][label]  # symbol --> label
-            uend = primitive_end[basis][label]  # symbol --> label
+            shells = shell_map[label][basis]  # symbol --> label
+            ustart = primitive_start[label][basis]  # symbol --> label
+            uend = primitive_end[label][basis]  # symbol --> label
             nshells = len(shells)
             self.center_to_nshell[n] = nshells
             self.center_to_shell[n] = shell_count
@@ -440,6 +450,77 @@ class BasisSet(object):
         raise FeatureNotImplemented('BasisSet::build')
 
     @staticmethod
+    def pyconstruct_combined(mol, keys, targets, fitroles, others):
+
+        # make sure the lengths are all the same
+        if len(keys) != len(targets) or len(keys) != len(fitroles):
+            raise ValidationError("""Lengths of keys, targets, and fitroles must be equal""")
+
+        # Create (if necessary) and update qcdb.Molecule
+        if isinstance(mol, basestring):
+            mol = Molecule(mol)
+            returnBasisSet = False
+        elif isinstance(mol, Molecule):
+            returnBasisSet = True
+        else:
+            raise ValidationError("""Argument mol must be psi4string or qcdb.Molecule""")
+        mol.update_geometry()
+
+        # load in the basis sets
+        sets = []
+        name = ""
+        for at in range(len(keys)):
+            bas = BasisSet.pyconstruct(mol, keys[at], targets[at], fitroles[at], others[at])
+            name += targets[at] + " + "
+            sets.append(bas)
+
+        name = name[:-3].strip()
+        # work our way through the sets merging them
+        combined_atom_basis_shell = OrderedDict()
+        for at in range(len(sets)):
+            atom_basis_shell = sets[at].atom_basis_shell
+
+            for label, basis_map in atom_basis_shell.items():
+                if label not in combined_atom_basis_shell:
+                    combined_atom_basis_shell[label] = OrderedDict()
+                    combined_atom_basis_shell[label][name] = []
+                for basis, shells in basis_map.items():
+                    combined_atom_basis_shell[label][name].extend(shells)
+
+        #for label, basis_map in combined_atom_basis_shell.items():
+        #    # sort the shells by angular momentum
+        #    combined_atom_basis_shell[label][name] = sorted(combined_atom_basis_shell[label][name], key=lambda shell: she
+
+        # Molecule and parser prepped, call the constructor
+        mol.set_basis_all_atoms(name, "CABS")
+
+        # Construct the grand BasisSet for mol
+        basisset = BasisSet("CABS", mol, combined_atom_basis_shell)
+
+        # Construct all the one-atom BasisSet-s for mol's CoordEntry-s
+        for at in range(mol.natom()):
+            oneatombasis = BasisSet(basisset, at)
+            oneatombasishash = hashlib.sha1(oneatombasis.print_detail(numbersonly=True)).hexdigest()
+            mol.set_shell_by_number(at, oneatombasishash, role="CABS")
+        mol.update_geometry()  # re-evaluate symmetry taking basissets into account
+
+        text = """   => Creating Basis Set <=\n\n"""
+        text += """    Role: %s\n""" % (fitroles)
+        text += """    Keyword: %s\n""" % (keys)
+        text += """    Name: %s\n""" % (name)
+
+        if returnBasisSet:
+            print text
+            return basisset
+        else:
+            bsdict = {}
+            bsdict['message'] = text
+            bsdict['name'] = basisset.name
+            bsdict['puream'] = int(basisset.has_puream())
+            bsdict['shell_map'] = basisset.export_for_libmints("CABS")
+            return bsdict
+
+    @staticmethod
     def pyconstruct(mol, key, target, fitrole='BASIS', other=None):
         """Builds a BasisSet object for *mol* (either a qcdb.Molecule or
         a string that can be instantiated into one) from basis set
@@ -486,7 +567,7 @@ class BasisSet(object):
         #   - error checking not needed since C-side already checked for NULL ptr
         mol.clear_basis_all_atoms()
         # TODO now need to clear shells, too
-        basstrings = collections.defaultdict(dict)
+        basstrings = defaultdict(dict)
         if orb is None or orb == '':
             raise ValidationError("""Orbital basis argument must not be empty.""")
         elif callable(orb):
@@ -518,9 +599,15 @@ class BasisSet(object):
         text += msg
 
         if returnBasisSet:
+            #print text
             return bs
         else:
-            return bs.export_for_libmints()
+            bsdict = {}
+            bsdict['message'] = text
+            bsdict['name'] = bs.name
+            bsdict['puream'] = int(bs.has_puream())
+            bsdict['shell_map'] = bs.export_for_libmints(fitrole)
+            return bsdict
 
     @classmethod
     def construct(cls, parser, mol, role, deffit=None, basstrings=None):
@@ -537,7 +624,9 @@ class BasisSet(object):
         mol.update_geometry()
 
         # Paths to search for gbs files: here + PSIPATH + library
-        libraryPath = ':' + os.path.abspath(os.environ.get('PSIDATADIR', '')) + '/basis'
+        psidatadir = os.environ.get('PSIDATADIR', None)
+        psidatadir = __file__ + '/../../..' if psidatadir is None else psidatadir
+        libraryPath = ':' + os.path.abspath(psidatadir) + '/basis'
         basisPath = os.path.abspath('.') + \
             ':' + ':'.join([os.path.abspath(x) for x in os.environ.get('PSIPATH', '').split(':')]) + \
             libraryPath
@@ -545,13 +634,15 @@ class BasisSet(object):
         # Validate deffit for role
         univdef = {'JFIT': 'def2-qzvpp-jfit',
                    'JKFIT': 'def2-qzvpp-jkfit',
-                   'RIFIT': 'def2-qzvpp-ri'}
+                   'RIFIT': 'def2-qzvpp-ri',
+                   'F12': 'def2-qzvpp-f12'}
+
         if deffit is not None:
             if deffit not in univdef.keys():
                 raise ValidationError("""BasisSet::construct: deffit argument invalid: %s""" % (deffit))
 
         # Map of GaussianShells
-        basis_atom_shell = collections.OrderedDict()
+        atom_basis_shell = OrderedDict()
         names = {}
         summary = []
 
@@ -559,6 +650,9 @@ class BasisSet(object):
             symbol = mol.atom_entry(at).symbol()  # O, He
             label = mol.atom_entry(at).label()  # O3, C_Drot, He
             basdict = mol.atom_entry(at).basissets()  # {'BASIS': 'sto-3g', 'DF_BASIS_MP2': 'cc-pvtz-ri'}
+
+            if label not in atom_basis_shell:
+                atom_basis_shell[label] = OrderedDict()
 
             # Establish search parameters for what/where basis entries suitable for atom
             seek = {}
@@ -624,9 +718,7 @@ class BasisSet(object):
                         continue
 
                     # Found!
-                    if bas not in basis_atom_shell:
-                        basis_atom_shell[bas] = collections.OrderedDict()
-                    basis_atom_shell[bas][label] = shells
+                    atom_basis_shell[label][bas] = shells
                     mol.set_basis_by_number(at, bas, role=role)
                     summary.append("""entry %-10s %s %s""" % (entry, msg, index))
                     break
@@ -646,21 +738,23 @@ class BasisSet(object):
                     (at + 1, role, text2))
 
         # Construct the grand BasisSet for mol
-        basisset = BasisSet(role, mol, basis_atom_shell)
+        basisset = BasisSet(role, mol, atom_basis_shell)
 
         # Construct all the one-atom BasisSet-s for mol's CoordEntry-s
         for at in range(mol.natom()):
-            mol.set_shell_by_number(at, BasisSet(basisset, at), role=role)
+            oneatombasis = BasisSet(basisset, at)
+            oneatombasishash = hashlib.sha1(oneatombasis.print_detail(numbersonly=True)).hexdigest()
+            mol.set_shell_by_number(at, oneatombasishash, role=role)
         mol.update_geometry()  # re-evaluate symmetry taking basissets into account
 
 #TODO fix name
         basisset.name = ' + '.join(names)
 
         # Summary printing
-        tmp = collections.defaultdict(list)
+        tmp = defaultdict(list)
         for at, v in enumerate(summary):
             tmp[v].append(at + 1)
-        tmp2 = collections.OrderedDict()
+        tmp2 = OrderedDict()
         maxsats = 0
         for item in sorted(tmp.values()):
             for msg, ats in tmp.items():
@@ -688,6 +782,10 @@ class BasisSet(object):
     def set_name(self, name):
         """Sets the name of this basis set"""
         self.name = name
+
+# JET added but I think should fail
+#+    def atom_shell_map(self):
+#+        return self.atom_shell_map
 
     def nprimitive(self):
         """Number of primitives.
@@ -855,6 +953,7 @@ class BasisSet(object):
         text += """    Number of Cartesian functions: %d\n""" % (self.nao())
         text += """    Spherical Harmonics?: %s\n""" % ('true' if self.has_puream() else 'false')
         text += """    Max angular momentum: %d\n\n""" % (self.max_am())
+        #text += """    Source:\n%s\n""" % (self.source())  # TODO
 
         if out is None:
             return text
@@ -921,22 +1020,24 @@ class BasisSet(object):
             with open(out, mode='w') as handle:
                 handle.write(text)
 
-    def print_detail(self, out=None):
+    def print_detail(self, out=None, numbersonly=False):
         """Prints a detailed PSI3-style summary of the basis (per-atom)
         *  @param out The file stream to use for printing. Defaults to outfile.
 
         """
-        text = self.print_summary(out=None)
-
-        text += """  ==> AO Basis Functions <==\n"""
-        text += '\n'
-        text += """    [ %s ]\n""" % (self.name)
+        text = ''
+        if not numbersonly:
+            text += self.print_summary(out=None)
+            text += """  ==> AO Basis Functions <==\n"""
+            text += '\n'
+            text += """    [ %s ]\n""" % (self.name)
         text += """    spherical\n""" if self.has_puream() else """    cartesian\n"""
         text += """    ****\n"""
 
         for uA in range(self.molecule.nunique()):
             A = self.molecule.unique(uA)
-            text += """   %2s %3d\n""" % (self.molecule.symbol(A), A + 1)
+            if not numbersonly:
+                text += """   %2s %3d\n""" % (self.molecule.symbol(A), A + 1)
             first_shell = self.center_to_shell[A]
             n_shell = self.center_to_nshell[A]
 
@@ -951,19 +1052,16 @@ class BasisSet(object):
             with open(out, mode='w') as handle:
                 handle.write(text)
 
-    def export_for_libmints(self):
-        """From complete BasisSet object, returns array whose first
-        element is basis name, second element is basis puream, and
-        additional pairs of elements are each unique atom label and the
+    def export_for_libmints(self, role):
+        """From complete BasisSet object, returns array where
+        triplets of elements are each unique atom label, the hash
+        of the string shells entry in gbs format and the
         shells entry in gbs format for that label. This packaging is
         intended for return to libmints BasisSet::pyconstruct for
         instantiation of a libmints BasisSet clone of *self*.
 
         """
         basstrings = []
-        basstrings.append(self.name)
-        basstrings.append('spherical' if self.has_puream() else 'cartesian')
-
         tally = []
         for A in range(self.molecule.natom()):
             if self.molecule.label(A) not in tally:
@@ -972,6 +1070,7 @@ class BasisSet(object):
                 n_shell = self.center_to_nshell[A]
 
                 basstrings.append(label)
+                basstrings.append(self.molecule.atoms[A].shell(key=role))
                 text = """   %s  0\n""" % (label)
                 for Q in range(n_shell):
                     text += self.shells[Q + first_shell].pyprint(outfile=None)
@@ -979,6 +1078,38 @@ class BasisSet(object):
                 basstrings.append(text)
 
         return basstrings
+
+    def print_detail_gamess(self, out=None, numbersonly=False):
+        """Prints a detailed PSI3-style summary of the basis (per-atom)
+        *  @param out The file stream to use for printing. Defaults to outfile.
+
+        """
+        text = ''
+        if not numbersonly:
+            text += self.print_summary(out=None)
+            text += """  ==> AO Basis Functions <==\n"""
+            text += '\n'
+            text += """    [ %s ]\n""" % (self.name)
+        text += """    spherical\n""" if self.has_puream() else """    cartesian\n"""
+        text += """    ****\n"""
+
+        for uA in range(self.molecule.nunique()):
+            A = self.molecule.unique(uA)
+            if not numbersonly:
+                text += """%s\n""" % (z2element[self.molecule.Z(A)])
+            first_shell = self.center_to_shell[A]
+            n_shell = self.center_to_nshell[A]
+
+            for Q in range(n_shell):
+                text += self.shells[Q + first_shell].pyprint_gamess(outfile=None)
+            #text += """    ****\n"""
+        text += """\n"""
+
+        if out is None:
+            return text
+        else:
+            with open(out, mode='w') as handle:
+                handle.write(text)
 
     def print_detail_cfour(self, out=None):
         """Returns a string in CFOUR-style of the basis (per-atom)

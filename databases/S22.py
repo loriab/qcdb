@@ -65,6 +65,11 @@ S11 = [1, 2, 3, 4, 8, 9, 10, 16, 17, 18, 19]
 WATER = [2]
 MXDDPP = [11, 12, 13, 14, 15]
 MXDDNP = [8, 9, 10, 16, 17, 18, 19, 20, 21, 22]
+weak = [1, 2, 8, 9, 10, 11, 12, 14, 16, 17, 18, 19, 20, 21]
+weak_hb = [1, 2]
+weak_mx = [16, 17, 18, 19, 21]
+weak_dd = [8, 9, 10, 11, 12, 14, 20]
+
 
 # <<< Chemical Systems Involved >>>
 RXNM = {}     # reaction matrix of reagent contributions per reaction
@@ -300,6 +305,18 @@ TAGL['%s-%s-monoA-CP'   % (dbse, 22)] =      'Phenol from Phenol Dimer'
 TAGL['%s-%s-monoB-CP'   % (dbse, 22)] =      'Phenol from Phenol Dimer'
 TAGL['%s-%s-monoA-unCP' % (dbse, 22)] =      'Phenol from Phenol Dimer'
 TAGL['%s-%s-monoB-unCP' % (dbse, 22)] =      'Phenol from Phenol Dimer'
+
+TAGL['dbse'] = 'interaction energies for organic bimolecular complexes'
+TAGL['default'] = 'entire database'
+TAGL['small'] = 'few computationally quick systems'
+TAGL['large'] = 'most computationally expensive systems'
+TAGL['HB'] = 'hydrogen-bonded systems'
+TAGL['MX'] = 'mixed-influence systems'
+TAGL['DD'] = 'dispersion-dominated systems'
+TAGL['S11'] = 'smaller systems in S22'
+TAGL['WATER'] = 'water dimer'
+TAGL['MXDDPP'] = 'pi-pi-type mixed and dispersion systems'
+TAGL['MXDDNP'] = 'non-pi-pi-type mixed and dispersion systems'
 
 # <<< Geometry Specification Strings >>>
 GEOS = {}

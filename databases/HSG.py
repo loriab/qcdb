@@ -52,6 +52,11 @@ HRXN_LG = [14]
 HB = [4, 5, 21]
 MX = [6, 9, 10, 11]
 DD = [1, 2, 3, 7, 8, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+weak = [1, 2, 3, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+weak_hb = []
+weak_mx = [6, 9, 11]
+weak_dd = [1, 2, 3, 7, 8, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+
 
 # <<< Chemical Systems Involved >>>
 RXNM = {}     # reaction matrix of reagent contributions per reaction
@@ -255,6 +260,14 @@ TAGL['%s-%s-monoA-CP'   % (dbse, 21)] = 'water from wat200'
 TAGL['%s-%s-monoB-CP'   % (dbse, 21)] = 'indinavir from wat200'
 TAGL['%s-%s-monoA-unCP' % (dbse, 21)] = 'water from wat200'
 TAGL['%s-%s-monoB-unCP' % (dbse, 21)] = 'indinavir from wat200'
+
+TAGL['dbse'] = 'interaction energies for bimolecular complexes from protein-indinavir reaction site'
+TAGL['HB'] = 'hydrogen-bonded systems'
+TAGL['MX'] = 'mixed-influence systems'
+TAGL['DD'] = 'dispersion-dominated systems'
+TAGL['large'] = 'most computationally expensive systems'
+TAGL['default'] = 'entire database'
+TAGL['small'] = 'few computationally quick systems'
 
 # <<< Geometry Specification Strings >>>
 GEOS = {}

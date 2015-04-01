@@ -33,7 +33,7 @@ import subprocess
 import socket
 import shutil
 import random
-import collections
+from collections import defaultdict
 from libmintsmolecule import *
 
 
@@ -96,8 +96,11 @@ class Molecule(LibmintsMolecule):
 
         xyz1 = re.compile(r"^\s*(\d+)\s*(bohr|au)?\s*$", re.IGNORECASE)
         xyz2 = re.compile(r'^\s*(-?\d+)\s+(\d+)\s+(.*)\s*$')
-        xyzN = re.compile(r"(?:\s*)([A-Z](?:[a-z])?)(?:\s+)(-?\d+\.\d+)(?:\s+)(-?\d+\.\d+)(?:\s+)(-?\d+\.\d+)(?:\s*)", re.IGNORECASE)
-        xyzC = re.compile(r"(?:\s*)(\d+\.?\d*)(?:\s+)(-?\d+\.\d+)(?:\s+)(-?\d+\.\d+)(?:\s+)(-?\d+\.\d+)(?:\s*)", re.IGNORECASE)
+        NUMBER = "((?:[-+]?\\d*\\.\\d+(?:[DdEe][-+]?\\d+)?)|(?:[-+]?\\d+\\.\\d*(?:[DdEe][-+]?\\d+)?))"
+        xyzN = re.compile(r'(?:\s*)([A-Z](?:[a-z])?)(?:\s+)' + 
+            NUMBER + '(?:\s+)' + NUMBER + '(?:\s+)' + NUMBER + '(?:\s*)', re.IGNORECASE)
+        xyzC = re.compile(r'(?:\s*)(\d+\.?\d*)(?:\s+)' + 
+            NUMBER + '(?:\s+)' + NUMBER + '(?:\s+)' + NUMBER + '(?:\s*)', re.IGNORECASE)
 
         # Try to match the first line
         if xyz1.match(text[0]):
@@ -244,56 +247,101 @@ class Molecule(LibmintsMolecule):
         text += '}\n'
         return text
 
-    def format_molecule_for_qchem(self):
-        """
+    def format_molecule_for_qchem(self, mixedbas=True):
+        """Returns geometry section of input file formatted for Q-Chem. 
+        For ghost atoms, prints **Gh** as elemental symbol, with expectation 
+        that element identity will be established in mixed basis section. 
+        For ghost atoms when *mixedbas* is False, prints @ plus element symbol.
 
         """
         factor = 1.0 if self.PYunits == 'Angstrom' else psi_bohr2angstroms
 
         text = ""
+        text += '$molecule\n'
         text += '%d %d %s\n' % (self.molecular_charge(), self.multiplicity(), self.tagline)
 
         for i in range(self.natom()):
             [x, y, z] = self.atoms[i].compute()
-            text += '%2s %17.12f %17.12f %17.12f\n' % ((self.symbol(i) if self.Z(i) else "Gh"), \
-                x * factor, y * factor, z * factor)
+            if mixedbas:
+                text += '%2s ' % (self.symbol(i) if self.Z(i) else "Gh")
+            else:
+                text += '%-3s ' % (('' if self.Z(i) else '@') + self.symbol(i))
+            text += '%17.12f %17.12f %17.12f\n' % (x * factor, y * factor, z * factor)
+        text += '$end\n'
         return text
-        pass
+
+    def format_molecule_for_psi4_xyz(self):
+        """not much examined
+
+        """
+        text = ""
+        if self.nallatom():
+
+            factor = 1.0 if self.PYunits == 'Angstrom' else psi_bohr2angstroms
+            text += "units Angstrom\n"
+            # append units and any other non-default molecule keywords
+            #text += "    units %-s\n" % ("Angstrom" if self.units() == 'Angstrom' else "Bohr")
+            if not self.PYmove_to_com:
+                text += "no_com\n"
+            if self.PYfix_orientation:
+                text += "no_reorient\n"
+
+            # append atoms and coordentries and fragment separators with charge and multiplicity
+            Pfr = 0
+            for fr in range(self.nfragments()):
+                if self.fragment_types[fr] == 'Absent' and not self.has_zmatrix():
+                    continue
+                text += "%s%s%d %d\n" % (
+                    "" if Pfr == 0 else "--\n",
+                    "#" if self.fragment_types[fr] == 'Ghost' or self.fragment_types[fr] == 'Absent' else "",
+                    self.fragment_charges[fr], self.fragment_multiplicities[fr])
+                Pfr += 1
+                for at in range(self.fragments[fr][0], self.fragments[fr][1] + 1):
+                    if self.fragment_types[fr] == 'Absent' or self.fsymbol(at) == "X":
+                        pass
+                    else:
+                        if self.fZ(at):
+                            text += "%-8s" % (self.flabel(at))
+                        else:
+                            text += "%-8s" % ("Gh(" + self.flabel(at) + ")")
+                        [x, y, z] = self.full_atoms[at].compute()
+                        text += '%17.12f %17.12f %17.12f\n' % \
+                            (x * factor, y * factor, z * factor)
+            text += "\n"
+
+        wtext = 'molecule mol {\n'
+        for line in text.splitlines():
+            wtext += '   ' + line + '\n'
+        wtext += '}\n'
+        return wtext
 
     def format_molecule_for_molpro(self):
         """
 
         """
         factor = 1.0 if self.PYunits == 'Angstrom' else psi_bohr2angstroms
-        # TODO keep fix_or?
-        self.fix_orientation(True)
-        self.PYmove_to_com = False
+        # TODO keep fix_or?  # Jan 2015 turning off fix_or
+        #self.fix_orientation(True)
+        #self.PYmove_to_com = False
         self.update_geometry()
 
         text = ""
         text += 'angstrom\n'
         text += 'geometry={\n'
+        dummy = []
 
-        for fr in range(self.nfragments()):
-            if self.fragment_types[fr] == 'Absent':
-                pass
-            else:
-                for at in range(self.fragments[fr][0], self.fragments[fr][1] + 1):
-                    [x, y, z] = self.atoms[at].compute()
-                    text += '%2s %17.12f %17.12f %17.12f\n' % (self.symbol(at), \
-                        x * factor, y * factor, z * factor)
+        for i in range(self.natom()):
+            [x, y, z] = self.atoms[i].compute()
+            text += '%-2s %17.12f %17.12f %17.12f\n' % (self.symbol(i), \
+                x * factor, y * factor, z * factor)
+            if not self.Z(i):
+                dummy.append(str(i + 1))  # Molpro atom number is 1-indexed
+
         text += '}\n\n'
         text += 'SET,CHARGE=%d\n' % (self.molecular_charge())
         text += 'SET,SPIN=%d\n' % (self.multiplicity() - 1)  # Molpro wants (mult-1)
-
-        textDummy = "dummy"
-        for fr in range(self.nfragments()):
-            if self.fragment_types[fr] == 'Ghost':
-                for at in range(self.fragments[fr][0], self.fragments[fr][1] + 1):
-                    textDummy += """,%d""" % (at + 1)  # Molpro atom numbering is 1-indexed
-        textDummy += '\n'
-        if len(textDummy) > 6:
-            text += textDummy
+        if len(dummy) > 0:
+            text += 'dummy,' + ','.join(dummy) + '\n'
         return text
 
     def format_molecule_for_cfour(self):
@@ -307,18 +355,23 @@ class Molecule(LibmintsMolecule):
         text = 'auto-generated by qcdb from molecule %s\n' % (self.tagline)
 
         # append atoms and coordentries
-        for fr in range(self.nfragments()):
-            if self.fragment_types[fr] == 'Absent':
-                pass
-            else:
-                for at in range(self.fragments[fr][0], self.fragments[fr][1] + 1):
-                    [x, y, z] = self.atoms[at].compute()
-                    text += '%-2s %17.12f %17.12f %17.12f\n' % ((self.symbol(at) if self.Z(at) else "GH"), \
-                        x * factor, y * factor, z * factor)
+        for i in range(self.natom()):
+            [x, y, z] = self.atoms[i].compute()
+            text += '%-2s %17.12f %17.12f %17.12f\n' % ((self.symbol(i) if self.Z(i) else "GH"), \
+                x * factor, y * factor, z * factor)
+
+        #for fr in range(self.nfragments()):
+        #    if self.fragment_types[fr] == 'Absent':
+        #        pass
+        #    else:
+        #        for at in range(self.fragments[fr][0], self.fragments[fr][1] + 1):
+        #            [x, y, z] = self.atoms[at].compute()
+        #            text += '%-2s %17.12f %17.12f %17.12f\n' % ((self.symbol(at) if self.Z(at) else "GH"), \
+        #                x * factor, y * factor, z * factor)
         text += '\n'
 
         # prepare molecule keywords to be set as c-side keywords
-        options = collections.defaultdict(lambda: collections.defaultdict(dict))
+        options = defaultdict(lambda: defaultdict(dict))
         options['CFOUR']['CFOUR_CHARGE']['value'] = self.molecular_charge()
         options['CFOUR']['CFOUR_MULTIPLICITY']['value'] = self.multiplicity()
         options['CFOUR']['CFOUR_UNITS']['value'] = 'ANGSTROM'
@@ -353,7 +406,7 @@ class Molecule(LibmintsMolecule):
                     cr += 1
         text += '\n'
 
-        options = collections.defaultdict(lambda: collections.defaultdict(dict))
+        options = defaultdict(lambda: defaultdict(dict))
         options['CFOUR']['CFOUR_BASIS']['value'] = 'SPECIAL'
         options['CFOUR']['CFOUR_SPHERICAL']['value'] = puream
 
@@ -362,6 +415,39 @@ class Molecule(LibmintsMolecule):
 
         options['CFOUR']['CFOUR_BASIS']['superclobber'] = True
         options['CFOUR']['CFOUR_SPHERICAL']['superclobber'] = True
+
+        return text, options
+
+    def format_molecule_for_orca(self):
+        """
+        Format the molecule into an orca xyz format
+        """
+        options = defaultdict(lambda: defaultdict(dict))
+        self.update_geometry()
+        factor = 1.0 if self.PYunits == 'Angstrom' else psi_bohr2angstroms
+
+        text = ""
+        text += '* xyz {} {}\n'.format(self.molecular_charge(), self.multiplicity())
+
+        n_frags = self.nfragments()
+        for fr in range(n_frags):
+            if self.fragment_types[fr] == 'Absent':
+                pass
+            else:
+                for at in range(self.fragments[fr][0], self.fragments[fr][1] + 1):
+                    if self.fragment_types[fr] == 'Ghost':
+                        # TODO: add support for ghost atoms
+                        # atom += ':'
+                        continue
+                    x, y, z = self.atoms[at].compute()
+                    atom = self.symbol(at)
+                    if n_frags > 1:
+                        text += '    {:2s}({:d}) {:> 17.12f} {:> 17.12f} {:> 17.12f}\n'.format(\
+                                atom, fr + 1, x*factor, y*factor, z*factor)
+                    else:
+                        text += '    {:2s} {:> 17.12f} {:> 17.12f} {:> 17.12f}\n'.format(\
+                                atom, x*factor, y*factor, z*factor)
+        text += '*'
 
         return text, options
 
@@ -421,7 +507,7 @@ class Molecule(LibmintsMolecule):
             text += "\n"
 
         # prepare molecule keywords to be set as c-side keywords
-        options = collections.defaultdict(lambda: collections.defaultdict(dict))
+        options = defaultdict(lambda: defaultdict(dict))
         options['CFOUR']['CFOUR_CHARGE']['value'] = self.molecular_charge()
         options['CFOUR']['CFOUR_MULTIPLICITY']['value'] = self.multiplicity()
         options['CFOUR']['CFOUR_UNITS']['value'] = self.units()
@@ -815,6 +901,10 @@ class Molecule(LibmintsMolecule):
         coc = scale(self.center_of_charge(), -1.0)
         self.translate(coc)
 
-# Attach method to qcdb.Molecule class
+# Attach methods to qcdb.Molecule class
 from interface_dftd3 import run_dftd3 as _dftd3_qcdb_yo
 Molecule.run_dftd3 = _dftd3_qcdb_yo
+from parker import xyz2mol as _parker_xyz2mol_yo
+Molecule.format_molecule_for_mol2 = _parker_xyz2mol_yo
+from parker import bond_profile as _parker_bondprofile_yo
+Molecule.bond_profile = _parker_bondprofile_yo

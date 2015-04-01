@@ -28,11 +28,11 @@ import os
 import glob
 
 sys.path.append(os.path.dirname(__file__) + '/../python')
-sys.path.append(os.environ.get('PSIDATADIR')+'/python')
+sys.path.append(os.environ.get('PSIDATADIR') + '/python')
 try:
     import qcdb
 except ImportError:
-    print """Cannot load qcdb python module. Run this script in situ or append the psi4/lib/python directory to $PYTHONPATH.""" 
+    print """Cannot load qcdb python module. Run this script in situ or append the psi4/lib/python directory to $PYTHONPATH."""
     exit(1)
 
 """
@@ -52,7 +52,7 @@ Last Modified: Tuesday, September 10, 2013, LAB
 # instructions
 print """
  Welcome to ixyz2database.
-    Just fill in the variables when prompted. 
+    Just fill in the variables when prompted.
     Hit ENTER to accept default.
     Strings should not be in quotes.
     Elements in arrays should be space-delimited.

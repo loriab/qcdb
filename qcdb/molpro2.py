@@ -21,8 +21,7 @@
 #
 
 import math
-import collections
-
+from collections import defaultdict
 from exceptions import *
 import qcformat
 import molpro_basissets
@@ -46,12 +45,16 @@ class Infile(qcformat.InputFormat2):
     def muster_basis_options(self):
         text = ''
         lowername = self.method.lower()
-        options = collections.defaultdict(lambda: collections.defaultdict(dict))
+        options = defaultdict(lambda: defaultdict(dict))
     
         options['BASIS']['ORBITAL']['value'] = self.basis
     
+        # this f12 basis setting may be totally messed up
         if self.method in ['ccsd(t)-f12-optri']:
-            pass
+            if self.basis == 'cc-pvdz-f12':
+                options['BASIS']['JKFIT']['value'] = 'aug-cc-pvtz/jkfit'
+                options['BASIS']['JKFITC']['value'] = self.basis + '/optri'
+                options['BASIS']['MP2FIT']['value'] = 'aug-cc-pvtz/mp2fit'
         elif self.method in ['ccsd(t)-f12-cabsfit']:
             if self.unaugbasis and self.auxbasis:
                 #options['BASIS']['JKFIT']['value'] = self.auxbasis + '/jkfit'
@@ -148,7 +151,7 @@ class Infile(qcformat.InputFormat2):
 def muster_cdsgroup_options(name):
     text = ''
     lowername = name.lower()
-    options = collections.defaultdict(lambda: collections.defaultdict(dict))
+    options = defaultdict(lambda: defaultdict(dict))
 
     options['GTHRESH']['ZERO']['value'] = 1.0e-14
     options['GTHRESH']['ONEINT']['value'] = 1.0e-14
@@ -213,7 +216,7 @@ def muster_modelchem(name, dertype, mol):
     """
     text = ''
     lowername = name.lower()
-    options = collections.defaultdict(lambda: collections.defaultdict(dict))
+    options = defaultdict(lambda: defaultdict(dict))
     proc = []
 
     if dertype == 0:
@@ -241,7 +244,7 @@ def muster_modelchem(name, dertype, mol):
     elif lowername == 'ccsd(t)-f12-optri':
         proc.append('rhf')
         proc.append('ccsd(t)-f12')
-        #options['CCSD(T)-F12']['OPTIONS']['value'] = ',df_basis=mp2fit,df_basis_exch=jkfitb,ri_basis=jkfitb'
+        options['CCSD(T)-F12']['OPTIONS']['value'] = ',df_basis=mp2fit,df_basis_exch=jkfit,ri_basis=jkfitc'
 
     elif lowername == 'ccsd(t)-f12-cabsfit':
         proc.append('rhf')

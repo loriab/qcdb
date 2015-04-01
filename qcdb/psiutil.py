@@ -43,15 +43,17 @@ def _success(label):
 
 def compare_values(expected, computed, digits, label):
     """Function to compare two values. Prints :py:func:`util.success`
-    when value *computed* matches value *expected* to number of *digits*.
-    Performs a system exit on failure. Used in input files in the test suite.
+    when value *computed* matches value *expected* to number of *digits*
+    (or to *digits* itself when *digits* > 1 e.g. digits=0.04). Performs
+    a system exit on failure. Used in input files in the test suite.
 
     """
-    if abs(expected - computed) > 10 ** (-digits):
-        print("\t%s: computed value (%f) does not match (%f) to %d digits." % (label, computed, expected, digits))
+    thresh = 10 ** -digits if digits > 1 else digits
+    if abs(expected - computed) > thresh:
+        print("\t%s: computed value (%f) does not match (%f) to %f digits." % (label, computed, expected, digits))
         sys.exit(1)
     if math.isnan(computed):
-        print("\t%s: computed value (%f) does not match (%f) to %d digits.\n" % (label, computed, expected, digits))
+        print("\t%s: computed value (%f) does not match (%f)\n" % (label, computed, expected))
         print("\tprobably because the computed value is nan.")
         sys.exit(1)
     _success(label)
@@ -134,7 +136,7 @@ def query_yes_no(question, default=True):
     while True:
         sys.stdout.write(question + prompt)
         choice = raw_input().strip().lower()
-        if default is not None and choice == "":
+        if default is not None and choice == '':
             return default
         elif yes.match(choice):
             return True
@@ -183,7 +185,7 @@ def all_casings(input_string):
 
     """
     if not input_string:
-        yield ""
+        yield ''
     else:
         first = input_string[:1]
         if first.lower() == first.upper():
@@ -229,3 +231,20 @@ def import_ignorecase(module):
             break
 
     return modobj
+
+def findfile_ignorecase(fil, pre='', post=''):
+    """Function to locate a file *pre* + *fil* + *post* in any possible 
+    lettercase permutation of *fil*. Returns *pre* + *fil* + *post* if 
+    available, None if not.
+
+    """
+    afil = None
+    for per in list(all_casings(fil)):
+        if os.path.isfile(pre + per + post):
+            afil = pre + per + post
+            break
+        else:
+            pass
+
+    return afil
+
