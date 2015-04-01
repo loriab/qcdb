@@ -49,16 +49,20 @@ parser.add_argument('-s', '--style', help='stype of usemefile (3col or Wt)')
 args = parser.parse_args()
 
 actionable_data = {
-    'SCF TOTAL ENERGY': '.usemeraw',
-    'MP2 CORRELATION ENERGY': '.mp2.usemecorl',
-    'MP3 CORRELATION ENERGY': '.mp3.usemecorl',
-    'MP4 CORRELATION ENERGY': '.mp4.usemecorl',
-    'CCSD CORRELATION ENERGY': '.ccsd.usemecorl',
-    'CCSD(T) CORRELATION ENERGY': '.ccsdt.usemecorl',
-    'CCSDT CORRELATION ENERGY': '.ccsdfullt.usemecorl',
-    'CCSDT(Q) CORRELATION ENERGY': '.ccsdtq.usemecorl',
-    }
-
+    #'SCF TOTAL ENERGY': 'usemeraw'
+    'HF TOTAL ENERGY': 'usemeraw',
+    'MP2 CORRELATION ENERGY': 'mp2.usemecorl',
+    'MP3 CORRELATION ENERGY': 'mp3.usemecorl',
+    'MP4 CORRELATION ENERGY': 'mp4.usemecorl',
+    'CCSD CORRELATION ENERGY': 'ccsd.usemecorl',
+    'CCSD(T) CORRELATION ENERGY': 'ccsdt.usemecorl',
+    'CCSDT CORRELATION ENERGY': 'ccsdfullt.usemecorl',
+    'CCSDT(Q) CORRELATION ENERGY': 'ccsdtq.usemecorl',
+    
+    'DFT FUNCTIONAL TOTAL ENERGY': 'DFT.usemeraw',
+    'DISPERSION CORRECTION ENERGY': '-nobas.DFTdX.usemedash',
+    'DOUBLE-HYBRID CORRECTION ENERGY': 'DHDFT.usemeraw',  # violation of conventions to get plain dhdft E!
+}
 
 def identify_qcprog(filename):
     """
@@ -178,6 +182,8 @@ for i in range(max([len(ACTV[rgt]) for rgt in ACTV])):
         footer += '%16s %4s ' % ('Reagent' + string.uppercase[i], 'Wt')
 footer += '\n'
 
+isDHDFT = True if 'DOUBLE-HYBRID CORRECTION ENERGY' in psivar.keys() else False
+
 # print main results to useme
 print ''
 for datum in psivar.keys():
@@ -188,6 +194,9 @@ for datum in psivar.keys():
     except KeyError:
         continue
 
+    if isDHDFT and usemeext in ['DFT.usemeraw', 'mp2.usemecorl']:  # sad hack
+        continue
+
     for rxn in HRXN:
         index = dbse + '-' + str(rxn)
         textline = ''
@@ -196,8 +205,16 @@ for datum in psivar.keys():
         for rgt in ACTV[index]:
             rxnm_wt = RXNM[index][ACTV[index][ACTV[index].index(rgt)]]
             try:
-                #textline += '%16.8f %4d ' % (psivar[datum][rgt], rxnm_wt)
-                textline += '%16.8f ' % (psivar[datum][rgt])
+                value = psivar[datum][rgt]
+                if datum == 'DOUBLE-HYBRID CORRECTION ENERGY':
+                    value += psivar['DFT FUNCTIONAL TOTAL ENERGY'][rgt]
+
+                if usemeold:
+                    textline += '%16.8f ' % (value)
+                    if rxnm_wt == -2:
+                        textline += '%16.8f ' % (value)
+                else:
+                    textline += '%16.8f %4d ' % (value, rxnm_wt)
             except KeyError:
                 textline += '%16s ' % ('')
                 complete = False
