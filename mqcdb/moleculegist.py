@@ -3,6 +3,7 @@
 """
 from __future__ import print_function
 import re
+import itertools
 import periodictable
 from xcpt import *
 
@@ -13,7 +14,8 @@ atom = re.compile(r"""^(?P<isotope>[0-9]{1,3})?  # optional isotope
 
 
 class AtomGist(object):
-    """
+    """Stores essential characteristics of a location, and provides basic
+    interaction with them.
 
     """
 
@@ -53,19 +55,27 @@ class AtomGist(object):
             self.tags[item.lower()] = val
 
     def __str__(self):
-        #return """  %-23s %16.8f %16.8f %16.8f    %6.2f    %8.3f %s""" % (
-        #    self.label + ' / ' + self.symbol + ' / ' + str(self.Z),
-        #    self.x, self.y, self.z, self.charge, self.mass,
-        #    ', '.join(['{}={}'.format(k, v) for k, v in self.tags.iteritems()]))
-        return """  %-23s %16.8f %16.8f %16.8f    %8.3f""" % (
-            self.label + ' / ' + self.symbol + ' / ' + str(self.Z),
-            self.x, self.y, self.z, self.mass)
+        label = '{0:>18s}'.format(
+            self.label + ' / ' + self.symbol + ' / ' + str(self.Z))
+        xyz = '{0:16.8f} {1:16.8f} {2:16.8f}'.format(
+            self.x, self.y, self.z)
+        mass = '{0:8.3f}'.format(self.mass)
+        tags = '{0}'.format(', '.join('{}={}'.format(k, v) for k, v in
+                            self.tags.iteritems()) if self.tags else '')
+        return """  {0} {1} {2} {3}""".format(label, xyz, mass, tags)
 
-#    def __copy__(self):
-#        cls = self.__class__
-#        result = cls.__new__(cls)
-#        result.__dict__.update(self.__dict__)
-#        return result
+        #return ("""  {l:>18s} {x:16.8f} {y:16.8f} {z:16.8f}"""
+        #        """ {m:8.3f} {t}""".format(
+        #           l=self.label + ' / ' + self.symbol + ' / ' + str(self.Z),
+        #           x=self.x, y=self.y, z=self.z,
+        #           m=self.mass,
+        #           t=', '.join('{}={}'.format(k, v) for k, v in
+        #                       self.tags.iteritems()) if self.tags else ''))
+
+    #def __repr__(self):
+    #    text = """AtomGist(
+    #def __init__(self, label, x, y, z, mass=None, charge=None, tags={}):
+
 
     @property
     def label(self):
@@ -183,13 +193,88 @@ class MoleculeGist(object):
 
     """
 
-    def __init__(self, atoms):
+    def __init__(self, atoms, name=None):
         """
 
         """
+        #: Molecule name
+        self.__name = None
+
         #: atom info vector
-        self.atoms = []
+        self.__atoms = []
 
+        self.name = name
+        self.atoms = atoms
+
+    @property
+    def name(self):
+        """label for object"""
+        return '' if self.__name is None else self.__name
+
+    @name.setter
+    def name(self, val):
+        if val is not None:
+            if val.isalnum():
+                self.__name = val.lower()
+            else:
+                raise ValidationError(
+                    """Molecule name not alphanumeric: {}""".format(
+                        val))
+
+    @property
+    def atoms(self):
+        """array of locations which Molecule comprises"""
+        return self.__atoms
+
+    @atoms.setter
+    def atoms(self, val):
+        for at in val:
+            if isinstance(at, AtomGist):
+                self.__atoms.append(at)
+            else:
+                raise ValidationError(
+                    """Building Molecule not from AtomGist: {}""".format(
+                        at))
+
+    def __str__(self):
+        return self.print_out()
+
+    def print_out(self, angstrom=False, sset=None):
+        atomGenerator = self.dissect_sset(sset)
+        text = ''
+        text += """  ==> {} MoleculeGist <==\n\n""".format(self.name)
+        text += """  Geometry (in {}):\n""".format(
+            'Angstrom' if angstrom else 'Bohr')
+        for at in atomGenerator:
+            text += at.__str__() + '\n'
+        return text
+
+    def dissect_sset(self, sset):
+        """"""
+        if sset in ['all', 'real']:
+            if sset == 'all':
+                return (at for at in self.atoms)
+            elif sset == 'real':
+                return (at for at in self.atoms if at.Z > 0)
+                # TODO not right test
+        else:
+            return itertools.ifilter(sset, self.atoms)
+
+    def generateAllAtom(self):
+        for at in self.atoms:
+            yield at
+
+    def hastag(self, tag):
+        """Returns generator of atoms with *tag*"""
+        for at in self.atoms:
+            if tag.lower() in at.tags:
+                yield at
+
+#    def real(self):
+#        """"""
+#        for at in self.atoms:
+#            if at.Z > 0:  # TODO not right test
+#                yield at
 
 if __name__ == '__main__':
     import sys
@@ -265,3 +350,20 @@ if __name__ == '__main__':
 
     # expect = {'mass': , 'Z': , 'label': }
     # checkAtom(expect, a2)
+
+    ams = [
+        AtomGist('O', 0.0, 0.0, 0.0),
+        AtomGist('H', 1.0, 0.0, 0.0, tags={'star': True, 'galaxy': 'five'}),
+        AtomGist('H', 0.0, 1.0, 0.0, tags={'star': False}),
+        AtomGist('X', 1.0, 0.0, 3.0),
+        AtomGist('H_dim', 0.0, 1.0, 3.0),
+        AtomGist('H_dim', 0.0, 1.0, 3.0)]
+
+    mol1 = MoleculeGist(ams)
+    mol1.name = 'mymol'
+    print(mol1.print_out())
+    print(mol1.print_out(sset='real'))
+    print(mol1.print_out(sset=lambda a: a.label.endswith('H_dim') or a.Z == 8))
+    print(mol1.print_out(sset=lambda a: 'star' in a.tags))
+    print(mol1.print_out(
+        sset=lambda a: 'star' in a.tags and a.tags['star'] is False))
