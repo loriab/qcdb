@@ -3,6 +3,7 @@
 """
 from __future__ import print_function
 import re
+import math
 import itertools
 import periodictable
 from xcpt import *
@@ -24,7 +25,7 @@ class AtomGist(object):
 
         """
         #: atomic number
-        self.__z = None
+        self.__Z = None
 
         #: mass in Daltons
         self.__mass = None
@@ -64,7 +65,7 @@ class AtomGist(object):
                             self.tags.iteritems()) if self.tags else '')
         return """  {0} {1} {2} {3}""".format(label, xyz, mass, tags)
 
-        #return ("""  {l:>18s} {x:16.8f} {y:16.8f} {z:16.8f}"""
+        # return ("""  {l:>18s} {x:16.8f} {y:16.8f} {z:16.8f}"""
         #        """ {m:8.3f} {t}""".format(
         #           l=self.label + ' / ' + self.symbol + ' / ' + str(self.Z),
         #           x=self.x, y=self.y, z=self.z,
@@ -72,10 +73,9 @@ class AtomGist(object):
         #           t=', '.join('{}={}'.format(k, v) for k, v in
         #                       self.tags.iteritems()) if self.tags else ''))
 
-    #def __repr__(self):
+    # def __repr__(self):
     #    text = """AtomGist(
-    #def __init__(self, label, x, y, z, mass=None, charge=None, tags={}):
-
+    # def __init__(self, label, x, y, z, mass=None, charge=None, tags={}):
 
     @property
     def label(self):
@@ -105,14 +105,14 @@ class AtomGist(object):
     @property
     def Z(self):
         """nuclear charge for position"""
-        return self.__z
+        return self.__Z
 
     @Z.setter
     def Z(self, val):
-        oldZ = self.__z
+        oldZ = self.__Z
         val = int(val)
         if val in periodictable.z2el.keys():
-            self.__z = val
+            self.__Z = val
             if val != oldZ:
                 self.__mass = None
                 self.__charge = None
@@ -121,7 +121,7 @@ class AtomGist(object):
     @property
     def symbol(self):
         """element label for position, cleaned-up (C2 => C, CO_iii = Co)"""
-        return periodictable.z2el[self.__z].title()
+        return periodictable.z2el[self.__Z].title()
 
     @symbol.setter
     def symbol(self, val):
@@ -145,14 +145,25 @@ class AtomGist(object):
     def mass(self, val):
         if val is not None:
             self.__mass = float(val)
+        nucleon = int(round(self.mass, 0))
+        eliso = self.symbol.upper() + str(nucleon)
+        if eliso not in periodictable.eliso2mass:
+            print("""  Warning: Mass {} outside recognized """
+                  """range for element {}""".format(
+                     self.__mass, self.symbol))
 
     @property
     def A(self):
         """nucleon number for position"""
         nucleon = int(round(self.mass, 0))
-        libMass = periodictable.eliso2mass[self.symbol.upper() + str(nucleon)]
-        if abs(libMass - self.mass) < 1.0e-3:
-            return nucleon
+        eliso = self.symbol.upper() + str(nucleon)
+        try:
+            libMass = periodictable.eliso2mass[eliso]
+        except KeyError:
+            pass
+        else:
+            if abs(libMass - self.mass) < 1.0e-3:
+                return nucleon
 
     @A.setter
     def A(self, val):
@@ -186,6 +197,24 @@ class AtomGist(object):
     def charge(self, val):
         if val is not None:
             self.__charge = float(val)
+
+    def __eq__(self, other):
+        if self.__Z != other.__Z:
+            return False
+        if abs(self.mass - other.mass) > 1.0e-3:
+            return False
+        if self.__lbl != other.__lbl:
+            return False
+        if ((self.x - other.x) ** 2 + (self.y - other.y) ** 2 +
+           (self.z - other.z) ** 2) > 1.0e-12:
+            return False
+        # TODO need charge
+        if self.tags != other.tags:
+            return False
+        return True
+
+    def __ne__(self, other):
+        return not self == other
 
 
 class MoleculeGist(object):
@@ -240,35 +269,42 @@ class MoleculeGist(object):
         return self.print_out()
 
     def print_out(self, angstrom=False, sset=None):
-        atomGenerator = self.dissect_sset(sset)
-        text = ''
-        text += """  ==> {} MoleculeGist <==\n\n""".format(self.name)
+        text = """  ==> {}MoleculeGist <==\n\n""".format(
+            self.name + ' ' if self.name else '')
         text += """  Geometry (in {}):\n""".format(
             'Angstrom' if angstrom else 'Bohr')
-        for at in atomGenerator:
+        for at in self.atoms_generator(sset):
             text += at.__str__() + '\n'
         return text
 
-    def dissect_sset(self, sset):
+    def atoms_generator(self, sset):
         """"""
-        if sset in ['all', 'real']:
-            if sset == 'all':
-                return (at for at in self.atoms)
-            elif sset == 'real':
-                return (at for at in self.atoms if at.Z > 0)
-                # TODO not right test
+        if sset == 'all':
+            return (at for at in self.atoms)
+        elif sset == 'real':
+            return (at for at in self.atoms if at.Z > 0)
+            # TODO not right test
         else:
             return itertools.ifilter(sset, self.atoms)
 
-    def generateAllAtom(self):
-        for at in self.atoms:
-            yield at
+    def new_filtered(self, sset=None):
+        """Returns new MoleculeGist with same name if set and same atom list
+        filtered by *sset*.
 
-    def hastag(self, tag):
-        """Returns generator of atoms with *tag*"""
-        for at in self.atoms:
-            if tag.lower() in at.tags:
-                yield at
+        """
+        filtered_atoms = [copy.copy(at) for at in self.atoms_generator(sset)]
+        instance = MoleculeGist(filtered_atoms, self.__name)
+        return instance
+
+    def __eq__(self, other):
+        if self.__name != other.__name:
+            return False
+        if self.__atoms != other.__atoms:
+            return False
+        return True
+
+    def __ne__(self, other):
+        return not self == other
 
 #    def real(self):
 #        """"""
@@ -351,19 +387,75 @@ if __name__ == '__main__':
     # expect = {'mass': , 'Z': , 'label': }
     # checkAtom(expect, a2)
 
-    ams = [
-        AtomGist('O', 0.0, 0.0, 0.0),
-        AtomGist('H', 1.0, 0.0, 0.0, tags={'star': True, 'galaxy': 'five'}),
-        AtomGist('H', 0.0, 1.0, 0.0, tags={'star': False}),
-        AtomGist('X', 1.0, 0.0, 3.0),
-        AtomGist('H_dim', 0.0, 1.0, 3.0),
-        AtomGist('H_dim', 0.0, 1.0, 3.0)]
+    print('\n      AtomGist comparison')
+    ag = AtomGist('60co_IiI', 0.0, 0.0, 0.0, tags={'star': math.pi})
+    agchg = AtomGist('60co_IiI', 0.0, 0.0, 0.0, tags={'star': math.pi})
+    compare_integers(ag == agchg, True, 'atm == atm')
+    agchg = AtomGist('60co_Ii', 0.0, 0.0, 0.0, tags={'star': math.pi})
+    compare_integers(ag != agchg, True, 'atm != atm w/diff label')
+    agchg = AtomGist('co_Iii', 0.0, 0.0, 0.0, tags={'star': math.pi})
+    compare_integers(ag != agchg, True, 'atm != atm w/diff isotope')
+    agchg = AtomGist('co_Iii', 0.0, 0.0, 0.0, tags={'star': math.pi})
+    agchg.mass = 60
+    compare_integers(ag != agchg, True, 'atm != atm w/diff mass')
+    agchg = AtomGist('60co_Iii', 0.00000001, 1.0e-7, 0.0,
+                     tags={'star': math.pi})
+    compare_integers(ag == agchg, True, 'atm == atm w/slightly diff geom')
+    agchg = AtomGist('60co_Iii', 0.0, 0.0001, 0.0001, tags={'star': math.pi})
+    compare_integers(ag != agchg, True, 'atm != atm w/appreciably diff geom')
+    agchg = AtomGist('60co_Iii', 0.0, 0.0, 0.0, tags={'star2': math.pi})
+    compare_integers(ag != agchg, True, 'atm != atm w/diff tag key')
+    agchg = AtomGist('60co_Iii', 0.0, 0.0, 0.0, tags={'star': 'l'})
+    compare_integers(ag != agchg, True, 'atm != atm w/diff tag val')
+    agchg = AtomGist('60co_Iii', 0.0, 0.0, 0.0,
+                     tags={'star': math.pi, 'nova': 0})
+    compare_integers(ag != agchg, True, 'atm != atm w/extra tag key')
+    agchg = AtomGist('60co_Iii', 0.0, 0.0, 0.0)
+    compare_integers(ag != agchg, True, 'atm != atm w/no tags')
 
-    mol1 = MoleculeGist(ams)
-    mol1.name = 'mymol'
-    print(mol1.print_out())
-    print(mol1.print_out(sset='real'))
-    print(mol1.print_out(sset=lambda a: a.label.endswith('H_dim') or a.Z == 8))
-    print(mol1.print_out(sset=lambda a: 'star' in a.tags))
-    print(mol1.print_out(
-        sset=lambda a: 'star' in a.tags and a.tags['star'] is False))
+    print('\n      MoleculeGist comparison')
+    g1 = AtomGist('O', 0.0, 0.0, 0.0)
+    g2 = AtomGist('H', 1.0, 0.0, 0.0, tags={'star': True, 'galaxy': 'five'})
+    g3 = AtomGist('H', 0.0, 1.0, 0.0, tags={'star': False})
+    g4 = AtomGist('X', 1.0, 0.0, 3.0)
+    g5 = AtomGist('H_dim', 0.0, 1.0, 3.0)
+    g6 = AtomGist('H_dim', 0.0, 1.0, 3.0)
+    g5orig = AtomGist('H_dim', 0.0, 1.0, 3.0)
+    g5alt = AtomGist('H_dim', 2.5, 1.0, 3.0, mass=12)
+
+    mg = MoleculeGist([g1, g2, g3, g4, g5, g6], name='mymol')
+    mgchg = mg.new_filtered()
+    compare_integers(mg == mgchg, True, 'mol == mol')
+    mgref = MoleculeGist([g1, g2, g3, g5, g6], name='mymol')
+    mgchg = mg.new_filtered(sset='real')
+    compare_integers(mgref == mgchg, True, 'mol == mol, reals only')
+    mgref = MoleculeGist([g1, g5, g6], name='mymol')
+    mgchg = mg.new_filtered(
+            sset=lambda a: a.label.endswith('H_dim') or a.Z == 8)
+    compare_integers(mgref == mgchg, True, 'mol == mol, H_dim & O only')
+    mgref = MoleculeGist([g2, g3], name='mymol')
+    mgchg = mg.new_filtered(sset=lambda a: 'star' in a.tags)
+    compare_integers(mgref == mgchg, True, 'mol == mol, starred only')
+    mgref = MoleculeGist([g3], name='mymol')
+    mgchg = mg.new_filtered(
+            sset=lambda a: 'star' in a.tags and a.tags['star'] is False)
+    compare_integers(mgref == mgchg, True, 'mol == mol, false stars only')
+
+    mgref = MoleculeGist([g2, g3, g5, g6], name='mymol')
+    mgchg = mg.new_filtered(lambda at: at.Z == 1)
+    compare_integers(mgref == mgchg, True, 'mol == mol, H only')
+    mgchg.name = 'newmol'
+    compare_integers(mgref != mgchg, True, 'mol != mol, w/diff name')
+    mgchg.name = 'mymol'
+    compare_integers(mgref == mgchg, True, 'mol == mol, restored')
+    g5.mass = 12
+    g5.x = 2.5
+    compare_integers(mgref != mgchg, True, 'mol != mol, w/diff atom')
+
+    compare_integers(mg.atoms == [g1, g2, g3, g4, g5, g6],
+                     True, 'mol.atoms == mol.atoms')
+    compare_integers(mg.atoms != [g1, g2, g3, g4, g5orig, g6],
+                     True, 'mol.atoms != orig')
+    compare_integers(mg.atoms == [g1, g2, g3, g4, g5alt, g6],
+                     True, 'mol.atoms == equiv')
+    compare_integers(mgchg.atoms == [g2, g3, g5orig, g6], True, 'Mol2')
