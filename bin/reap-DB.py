@@ -22,6 +22,10 @@ pd.set_option('display.width', 200)
 verbose = True
 homewrite = '/Users/loriab/'
 homewrite = '/Users/loriab/linux/qcdb/sandbox/bfdb'
+homewrite = '/Users/loriab/linux/qcdb/sandbox/flow'
+homewrite = '/Users/loriab/linux/qcdb/sandbox/refitting_dashd'
+#homewrite = '/Users/loriab/linux/qcdb/sandbox/ssapt0_for_slipchenko'
+#homewrite = '/Users/loriab/linux/qcdb/sandbox/f12dilabio_workup'
 
 # pass --> pass
 #dbse = 'A24'
@@ -35,18 +39,18 @@ project = 'dft'
 path = r"""/Users/loriab/linux/qcdb/data/dftusemefiles/"""
 
 # pass --> pass
-#dbse = 'A24'
-#project = 'f12dilabio'
-#path = r"""/Users/loriab/linux/qcdb/data/f12dilabiousemefiles/"""
+dbse = 'A24'
+project = 'f12dilabio'
+path = r"""/Users/loriab/linux/qcdb/data/f12dilabiousemefiles/"""
 
 # fail --> pass
 #dbse = 'S22'
 #project = 'dhdft'
 #path = r"""/Users/loriab/linux/qcdb/data/dhdftusemefiles/"""
 
-dbse = 'S22'
-project = 'dhdft2'
-path = r"""/Users/loriab/linux/qcdb/data/dhdftusemefiles/DSD/"""
+#dbse = 'NBC10'
+#project = 'dhdft2'
+#path = r"""/Users/loriab/linux/qcdb/data/dhdftusemefiles/DSD/"""
 
 # pass --> pass
 #dbse = 'A24'
@@ -74,15 +78,37 @@ path = r"""/Users/loriab/linux/qcdb/data/dhdftusemefiles/DSD/"""
 #project = 'aep'
 #path = r"""/Users/loriab/linux/qcdb/data/pt2usemefiles/"""
 
-dbse = 'S22'
-project = 'sflow'
-path = r"""/Users/loriab/linux/qcdb/data/flowusemefiles/"""
+#dbse = 'S22'
+#project = 'sflow'
+#path = r"""/Users/loriab/linux/qcdb/data/flowusemefiles/"""
 
-dbobj = qcdb.Database(dbse)
+#dbse = 'NBC10ext'
+dbse = 'ACONF'
+project = 'dfit'
+path = r"""/Users/loriab/linux/Refitting_DFT_D/Databases/usemefiles/"""
+
+dbobj = qcdb.Database(dbse)  #, loadfrompickle=True)
 dbse = dbobj.dbse
 print '<<<', dbse, '>>>'
-rxns = ['%s-%s' % (dbse, rxn) for rxn in dbobj.dbdict[dbobj.dbse].hrxn.keys()]
-names = ['rxn', 'dimer', 'monoA', 'monoB']
+modes = []
+stoich = {}
+for orxn in dbobj.hrxn.itervalues():
+    tdict = {}
+    for mode, rxnm in orxn.rxnm.iteritems():
+        modes.append(mode)
+        rgtindx = 0
+        for wt in rxnm.itervalues():
+            tdict[(mode, 'Rgt' + str(rgtindx))] = wt
+            rgtindx += 1
+    stoich[orxn.dbrxn] = tdict
+dfstoich = pd.DataFrame.from_dict(stoich, orient='index')
+modes = set(modes)
+names = ['rxn']
+names.extend(['Rgt' + str(i) for i in range(12)])
+maxrgt = 0
+for mode in modes:
+    maxrgt = max(maxrgt, dfstoich[mode].shape[1])
+print names[:maxrgt+1]
 h2kc = qcdb.psi_hartree2kcalmol
 
 rawdata = collections.defaultdict(lambda: collections.defaultdict(lambda: collections.defaultdict(dict)))
@@ -113,7 +139,7 @@ for useme in usemeglob:
         raise ValidationError('Error: useme %s needs adding to useme2psivar in psivarrosetta.py' % (e))
         
     if piece.endswith('usemedash'):
-        tmp = pd.read_csv('%s' % (useme), index_col=0, sep='\s+', comment='#', na_values='None', names=names)
+        tmp = pd.read_csv('%s' % (useme), index_col=0, sep='\s+', comment='#', na_values='None', names=names[:maxrgt+1])
         rawdata[basis][useme2psivar[piece]][optns]['unCP'] = tmp.dropna(how='all')
         rawdata[basis][useme2psivar[piece]][optns]['CP'] = tmp.dropna(how='all')
     elif piece.endswith('usemesapt') or piece.endswith('usemedftsapt') or piece.endswith('usemempsapt'):
@@ -140,7 +166,7 @@ for useme in usemeglob:
                     rawdata[basis][useme2psivar[pv]][optns]['unCP'] = tmp2
                     rawdata[basis][useme2psivar[pv]][optns]['CP'] = tmp2
     else:
-        tmp = pd.read_csv('%s' % (useme), index_col=0, sep='\s+', comment='#', na_values='None', names=names)
+        tmp = pd.read_csv('%s' % (useme), index_col=0, sep='\s+', comment='#', na_values='None', names=names[:maxrgt+1])
         rawdata[basis][useme2psivar[piece]][optns][cpmode] = tmp.dropna(how='all')
     #print tmp.head(4)
 
@@ -163,6 +189,20 @@ df.index.names = ['bstrt', 'psivar', 'meta', 'rxn']
 
 # <<< define utility functions >>>
 
+
+def ie2(rgts):
+    cpmode = 'CP'
+    hjkl = pd.DataFrame(dfstoich[cpmode] * rgts[cpmode])
+    return hjkl.sum(axis=1)
+
+def ie_uncp2(rgts):
+    hjkl = pd.DataFrame(dfstoich['default'] * rgts['unCP'])
+    return hjkl.sum(axis=1)
+
+def default(rgts):
+    cpmode = 'default'
+    hjkl = pd.DataFrame(dfstoich[cpmode] * rgts[cpmode])
+    return hjkl.sum(axis=1)
 
 def ie(rgts):
     cpmode = 'CP'
@@ -302,10 +342,12 @@ pv0['B3LYP TOTAL ENERGY'] = {'func': sum, 'args': ['B3LYP FUNCTIONAL TOTAL ENERG
 pv0['B970 TOTAL ENERGY'] = {'func': sum, 'args': ['B970 FUNCTIONAL TOTAL ENERGY']}
 pv0['B97 TOTAL ENERGY'] = {'func': sum, 'args': ['B97 FUNCTIONAL TOTAL ENERGY']}
 pv0['BP86 TOTAL ENERGY'] = {'func': sum, 'args': ['BP86 FUNCTIONAL TOTAL ENERGY']}
+pv0['BLYP TOTAL ENERGY'] = {'func': sum, 'args': ['BLYP FUNCTIONAL TOTAL ENERGY']}
 pv0['M05-2X TOTAL ENERGY'] = {'func': sum, 'args': ['M05-2X FUNCTIONAL TOTAL ENERGY']}
 pv0['M06-2X TOTAL ENERGY'] = {'func': sum, 'args': ['M06-2X FUNCTIONAL TOTAL ENERGY']}
 pv0['PBE0 TOTAL ENERGY'] = {'func': sum, 'args': ['PBE0 FUNCTIONAL TOTAL ENERGY']}
 pv0['PBE TOTAL ENERGY'] = {'func': sum, 'args': ['PBE FUNCTIONAL TOTAL ENERGY']}
+pv0['WPBE TOTAL ENERGY'] = {'func': sum, 'args': ['WPBE FUNCTIONAL TOTAL ENERGY']}
 pv0['HF TOTAL ENERGY'] = {'func': sum, 'args': ['SCF TOTAL ENERGY']}
 pv0['MP3 CORRELATION ENERGY'] = {'func': difference, 'args': ['MP3 FNO CORRELATION ENERGY', 'FNO CORRECTION ENERGY']}  # TODO not checked
 pv0['CCSD CORRELATION ENERGY'] = {'func': difference, 'args': ['CCSD FNO CORRELATION ENERGY', 'FNO CORRECTION ENERGY']}  # TODO not checked
@@ -551,6 +593,9 @@ pv1['B97-D3BJ TOTAL ENERGY'] = {'func': sum, 'args': ['B97 FUNCTIONAL TOTAL ENER
 pv1['BP86-D2 TOTAL ENERGY'] = {'func': sum, 'args': ['BP86 FUNCTIONAL TOTAL ENERGY', 'BP86-D2 DISPERSION CORRECTION ENERGY']}
 pv1['BP86-D3 TOTAL ENERGY'] = {'func': sum, 'args': ['BP86 FUNCTIONAL TOTAL ENERGY', 'BP86-D3 DISPERSION CORRECTION ENERGY']}
 pv1['BP86-D3BJ TOTAL ENERGY'] = {'func': sum, 'args': ['BP86 FUNCTIONAL TOTAL ENERGY', 'BP86-D3BJ DISPERSION CORRECTION ENERGY']}
+pv1['BLYP-D2 TOTAL ENERGY'] = {'func': sum, 'args': ['BLYP FUNCTIONAL TOTAL ENERGY', 'BLYP-D2 DISPERSION CORRECTION ENERGY']}
+pv1['BLYP-D3 TOTAL ENERGY'] = {'func': sum, 'args': ['BLYP FUNCTIONAL TOTAL ENERGY', 'BLYP-D3 DISPERSION CORRECTION ENERGY']}
+pv1['BLYP-D3BJ TOTAL ENERGY'] = {'func': sum, 'args': ['BLYP FUNCTIONAL TOTAL ENERGY', 'BLYP-D3BJ DISPERSION CORRECTION ENERGY']}
 pv1['PBE-D2 TOTAL ENERGY'] = {'func': sum, 'args': ['PBE FUNCTIONAL TOTAL ENERGY', 'PBE-D2 DISPERSION CORRECTION ENERGY']}
 pv1['PBE-D3 TOTAL ENERGY'] = {'func': sum, 'args': ['PBE FUNCTIONAL TOTAL ENERGY', 'PBE-D3 DISPERSION CORRECTION ENERGY']}
 pv1['PBE-D3BJ TOTAL ENERGY'] = {'func': sum, 'args': ['PBE FUNCTIONAL TOTAL ENERGY', 'PBE-D3BJ DISPERSION CORRECTION ENERGY']}
@@ -783,12 +828,46 @@ for pvar, action in pv1.iteritems():
         if verbose:
             print """FAILED, missing %s""" % (e)
 
+if project == 'merz3':
+    qlvl = 'SAPT0'
+    qbas = 'jadz'
+    print '{}/{} for {} in {}:  RXN, TOT, ELST, EXCH, IND, DISP'.format(qlvl, qbas, len(rxns), dbse)
+    for rxn in rxns:
+        qtotl = h2kc * df.xs('{} TOTAL ENERGY'.format(qlvl), level='psivar').xs(qbas, level='bstrt').xs(rxn, level='rxn')['CP']['dimer']
+        qelst = h2kc * df.xs('{} ELST ENERGY'.format(qlvl), level='psivar').xs(qbas, level='bstrt').xs(rxn, level='rxn')['CP']['dimer']
+        qexch = h2kc * df.xs('{} EXCH ENERGY'.format(qlvl), level='psivar').xs(qbas, level='bstrt').xs(rxn, level='rxn')['CP']['dimer']
+        qindc = h2kc * df.xs('{} INDC ENERGY'.format(qlvl), level='psivar').xs(qbas, level='bstrt').xs(rxn, level='rxn')['CP']['dimer']
+        qdisp = h2kc * df.xs('{} DISP ENERGY'.format(qlvl), level='psivar').xs(qbas, level='bstrt').xs(rxn, level='rxn')['CP']['dimer']
+        print """%-23s %8.4f   %8.4f %8.4f %8.4f %8.4f""" % (rxn, qtotl, qelst, qexch, qindc, qdisp)
+
+    qlvl = 'SSAPT0'
+    print '{}/{} for {} in {}:  RXN, TOT, ELST, EXCH, IND, DISP'.format(qlvl, qbas, len(rxns), dbse)
+    for rxn in rxns:
+        qtotl = h2kc * df.xs('{} TOTAL ENERGY'.format(qlvl), level='psivar').xs(qbas, level='bstrt').xs(rxn, level='rxn')['CP']['dimer']
+        qelst = h2kc * df.xs('{} ELST ENERGY'.format(qlvl), level='psivar').xs(qbas, level='bstrt').xs(rxn, level='rxn')['CP']['dimer']
+        qexch = h2kc * df.xs('{} EXCH ENERGY'.format(qlvl), level='psivar').xs(qbas, level='bstrt').xs(rxn, level='rxn')['CP']['dimer']
+        qindc = h2kc * df.xs('{} INDC ENERGY'.format(qlvl), level='psivar').xs(qbas, level='bstrt').xs(rxn, level='rxn')['CP']['dimer']
+        qdisp = h2kc * df.xs('{} DISP ENERGY'.format(qlvl), level='psivar').xs(qbas, level='bstrt').xs(rxn, level='rxn')['CP']['dimer']
+        print """%-23s %8.4f   %8.4f %8.4f %8.4f %8.4f""" % (rxn, qtotl, qelst, qexch, qindc, qdisp)
+    
+
+#for ml in mlist:
+#    mdf = df.xs(ml, level='psivar').xs('jadz', level='bstrt') #.xs('BBI-004GLU-063LEU-2', level='rxn')
+#    #print ml, '\n'#, categories(mdf, 0)
+#    mdf *= h2kc
+#    print mdf.head(5)
+
 #mlist = ['SAPT0 TOTAL ENERGY', 'SAPT0 DISP ENERGY', 'SAPT EXCHSCAL', 'SAPT HF(2) ENERGY']
 #for ml in mlist:
 #    mdf = df.xs(ml, level='psivar').xs('adz', level='bstrt').xs('S22-2', level='rxn')
 #    print ml, '\n'#, categories(mdf, 0)
 #    #print h2kc * mdf
 #    print mdf.head(5)
+
+#print df.xs('B3LYP TOTAL ENERGY', level='psivar').head(10)
+#print df.xs('B3LYP-D3 TOTAL ENERGY', level='psivar').head(10)
+#print df.xs('B3LYP TOTAL ENERGY', level='psivar').xs('dfhf', level='meta').head(10)
+#print df.xs('B3LYP-D3 TOTAL ENERGY', level='psivar').xs('dfhf', level='meta').head(10)
 
 # <<< define extra Method and BasisSet objects >>>
 
@@ -981,19 +1060,30 @@ def build(method, option, cpmode, basis):
     baslist = generic_bas(Nstage, basis)
     mtdlist = generic_mtd(Nstage, methods[method].fullname.upper())
     optlist = ['-'.join([opt for opt in option.split('-') if (opt == '' or pcs in optclue2psivar[opt])]) for pcs in mtdlist]
-    func = {'CP': ie, 'unCP': ie_uncp, 'ave': ie_ave}[cpmode]
+    # not sure about how this will hold up to multistage
+    #   purpose is to prevent duplicate IE with irrelevant option labels surviving
+    for alw in option.split('-'):
+        found = False
+        for piece in optlist:
+            if alw in piece:
+                found = True
+        if not found:
+            return 'Overly'
+    func = {'CP': ie2, 'unCP': ie_uncp2, 'ave': ie_ave, 'default': default}[cpmode]
     if baslist is None:
         raise KeyError  # TODO a more specific message that mtd/bas don't mix wouldn't hurt
         #print '\n <<<', methods[method].fullname, '/', bases[basis].fullname, '>>>'
         #print 'stages:', 'M:', compute_max_mtd(method), 'B:', compute_max_bas(basis), 'U:', Nstage
     if method in [] and basis in []:
+    #if method in ['MP2'] and basis in ['aqz']:
     #if method in ['MP2C', 'MP2CF12'] and basis in ['atqzadz', 'adz']:
+    #if method in ['B3LYPD3'] and basis in ['def2qzvp']:
         print '\n', method, option, cpmode, basis
         print 'pcss:', mtdlist
         print 'bass:', baslist
         print 'opts:', optlist
         for pcs, bas, opt in zip(mtdlist, baslist, optlist):
-            print df.loc[bas].loc[pcs].loc[opt].loc['S22-1'] #'A24-1'] #'BBI-150LYS-158LEU-2'] #'S22-2']
+            print df.loc[bas].loc[pcs].loc[opt].loc['ACONF-15'] #'NBC1-BzBz_S-5.0'] #'S22-2'] #'A24-1'] #'BBI-150LYS-158LEU-2'] #'S22-2']
     return func(sum([df.loc[bas].loc[pcs].loc[opt] for pcs, bas, opt in zip(mtdlist, baslist, optlist)]))
 
 # <<< assemble all model chemistries into columns of new DataFrame >>>
@@ -1088,10 +1178,13 @@ elif project == 'saptone':
     cpmd = ['CP']
 
 elif project == 'merz3':
-    mtds = ['MP2', 'SCSMP2', 'SCSNMP2', 'SCSMIMP2', 'DWMP2', 'MP2C',
-            'MP2CF12', 'DWCCSDTF12']
-    bass = ['adz', 'atz', 'aqz', 'addz', 'adtz', 'atqz', 'qz', 'atqzadz']
-    opts = ['', 'dfhf-dfmp']
+    #mtds = ['MP2', 'SCSMP2', 'SCSNMP2', 'SCSMIMP2', 'DWMP2', 'MP2C',
+    #        'MP2CF12', 'DWCCSDTF12']
+    #bass = ['adz', 'atz', 'aqz', 'addz', 'adtz', 'atqz', 'qz', 'atqzadz']
+    #opts = ['', 'dfhf-dfmp']
+    mtds = ['SAPT0', 'SAPT0S']
+    bass = ['jadz']
+    opts = ['']  # should SAPT0 be coming through with a dfmp label?
     cpmd = ['CP']
     
 elif project == 'aep':
@@ -1103,9 +1196,15 @@ elif project == 'aep':
 elif project == 'sflow':
     mtds = ['MP2']
     bass = ['aqz']
-    #opts = ['', 'dfhf-dfmp-dsrgs0p1', 'dfhf-dfmp-dsrgs0p5', 'dfhf-dfmp-dsrgs1p0']
-    opts = ['dfhf-dfmp-dsrgs0p1', 'dfhf-dfmp-dsrgs1p0']
+    opts = ['dfhf-dfmp-dsrgs0p1', 'dfhf-dfmp-dsrgs0p5', 'dfhf-dfmp-dsrgs1p0']
     cpmd = ['CP']
+
+elif project == 'dfit':
+    mtds = ['B3LYP', 'B97', 'BLYP', 'BP86', 'PBE', 'PBE0', 'WPBE', 'B2PLYP',
+            'B3LYPD3', 'B97D3', 'BLYPD3', 'BP86D3', 'PBED3', 'PBE0D3', 'B2PLYPD3',]
+    bass = ['def2qzvp']
+    opts = ['', 'dfhf', 'dfhf-dfmp']  # why B2PLYP with no or dfhf label; why B3LYP w dfhf-dfmp label?
+    cpmd = ['CP', 'unCP']
 
 for cpm in cpmd:
     for mtd in mtds:
@@ -1114,13 +1213,16 @@ for cpm in cpmd:
                 mc = '-'.join([mtd, cpm, bas]) if opt == '' else '-'.join([mtd, opt, cpm, bas])
                 try:
                     tmp = build(mtd, opt, cpm, bas)
-                    #print """Built model chemistry %s""" % (mc)
+                    print """Built model chemistry %s""" % (mc)
                 except KeyError, e:
-                    #print """Error building rxn mc: empty '%s' b/c no %s""" % (mc, e)
+                    print """Error building rxn mc: empty '%s' b/c no %s""" % (mc, e)
                     pass
                 else:
-                    if tmp.empty or tmp.dropna(how='all').empty:  # invalid for canopy python
-                        #print """Empty rxn mc: empty '%s'""" % (mc)
+                    if isinstance(tmp, basestring) and tmp == 'Overly':
+                        print """Overly optioned rxn mc: {} for {}""".format(opt, mc)
+                        pass
+                    elif tmp.empty or tmp.dropna(how='all').empty:  # invalid for canopy python
+                        print """Empty rxn mc: empty '%s'""" % (mc)
                         pass
                     else:
                         mine[mc] = tmp

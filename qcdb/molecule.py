@@ -135,7 +135,7 @@ class Molecule(LibmintsMolecule):
                         raise ValidationError('Illegal atom symbol in geometry specification: %s' % (fileAtom))
 
                     # Add it to the molecule.
-                    instance.add_atom(el2z[fileAtom], fileX, fileY, fileZ, fileAtom, el2masses[fileAtom], el2z[fileAtom])
+                    instance.add_atom(el2z[fileAtom], fileX, fileY, fileZ, fileAtom, el2mass[fileAtom], el2z[fileAtom])
 
                 elif xyzC.match(text[2 + i]):
 
@@ -149,7 +149,7 @@ class Molecule(LibmintsMolecule):
                         raise ValidationError('Illegal atom symbol in geometry specification: %d' % (fileAtom))
 
                     # Add it to the molecule.
-                    instance.add_atom(fileAtom, fileX, fileY, fileZ, z2el[fileAtom], z2masses[fileAtom], fileAtom)
+                    instance.add_atom(fileAtom, fileX, fileY, fileZ, z2el[fileAtom], z2mass[fileAtom], fileAtom)
 
                 else:
                     raise ValidationError("Molecule::init_with_xyz: Malformed atom information line %d." % (i + 3))
