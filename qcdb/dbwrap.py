@@ -2133,10 +2133,19 @@ reinitialize
 
             orgts = orxn.rxnm['default'].keys()
             omolD = Molecule(orgts[0].mol)  # TODO this is only going to work with Reaction ~= Reagent databases
-            dictorxn['Geometry'] = omolD.format_molecule_for_numpy()
+            npmolD = omolD.format_molecule_for_numpy()
             omolA = Molecule(orgts[1].mol)  # TODO this is only going to work with Reaction ~= Reagent databases
             omolA.update_geometry()
             dictorxn['MonA'] = omolA.natom()
+
+            # this whole member fn not well defined for db of varying stoichiometry
+            if self.dbse in ['ACONF', 'SCONF', 'PCONF', 'CYCONF']:
+                npmolD = omolD.format_molecule_for_numpy()
+                npmolA = omolA.format_molecule_for_numpy()
+                dictorxn['Geometry'] = np.vstack([npmolD, npmolA])
+            else:
+                dictorxn['Geometry'] = omolD.format_molecule_for_numpy()
+            #print '\nD', npmolD.shape[0], npmolA.shape[0], dictorxn['MonA'], npmolD, npmolA, dictorxn['Geometry']
 
             for mc in modelchem:
                 try:
