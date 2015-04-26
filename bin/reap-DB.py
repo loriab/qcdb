@@ -2,6 +2,7 @@ import os
 import sys
 import glob
 import math
+import argparse
 import itertools
 import collections
 sys.path.append('/Users/loriab/linux/qcdb')
@@ -16,56 +17,72 @@ pd.set_option('display.max_columns', 10)
 pd.set_option('display.width', 200)
 
 
+# <<< setup >>>
+
+parser = argparse.ArgumentParser(description='Expand quantum chemical terms into reaction quantities.')
+parser.add_argument('-d', '--dbmodule', help='force choice of database module, defaults to project value')
+parser.add_argument('-p', '--project', help='select pre-configured project')
+parser.add_argument('-v', '--verbose', type=int, default=1, help='amount of printing')
+parser.add_argument('-o', '--outdir', default='.', help='directory to write output files')
+args = parser.parse_args()
+
+project = args.project
+homewrite = args.outdir
+verbose = args.verbose
+
+if verbose > 1:
+    print args
+
 # <<< read usemefiles and convert to giant DataFrame >>>
 
 #path = r"""C:\Users\Owner\Documents\f12dilabiousemefiles\usemefiles"""
-verbose = True
-homewrite = '/Users/loriab/'
-homewrite = '/Users/loriab/linux/qcdb/sandbox/bfdb'
-homewrite = '/Users/loriab/linux/qcdb/sandbox/flow'
-homewrite = '/Users/loriab/linux/qcdb/sandbox/refitting_dashd'
-#homewrite = '/Users/loriab/linux/qcdb/sandbox/ssapt0_for_slipchenko'
-#homewrite = '/Users/loriab/linux/qcdb/sandbox/f12dilabio_workup'
+#verbose = True
+#homewrite = '/Users/loriab/'
+#homewrite = '/Users/loriab/linux/qcdb/sandbox/bfdb'
+#homewrite = '/Users/loriab/linux/qcdb/sandbox/flow'
+#homewrite = '/Users/loriab/linux/qcdb/sandbox/refitting_dashd'
+##homewrite = '/Users/loriab/linux/qcdb/sandbox/ssapt0_for_slipchenko'
+##homewrite = '/Users/loriab/linux/qcdb/sandbox/f12dilabio_workup'
 
 # pass --> pass
-#dbse = 'A24'
-#project = 'parenq'
-##path = r"""/Users/loriab/linux/qcdb/data/parenqusemefiles/"""
-#path = r"""/Users/loriab/linux/qcdb/data/newparenq/"""
+if project == 'parenq':
+    dbse = 'A24'
+    ##path = r"""/Users/loriab/linux/qcdb/data/parenqusemefiles/"""
+    path = r"""/Users/loriab/linux/qcdb/data/newparenq/"""
 
 # fail --> pass
-dbse = 'S22'
-project = 'dft'
-path = r"""/Users/loriab/linux/qcdb/data/dftusemefiles/"""
+elif project == 'dft':
+    dbse = 'S22'
+    path = r"""/Users/loriab/linux/qcdb/data/dftusemefiles/"""
 
 # pass --> pass
-dbse = 'A24'
-project = 'f12dilabio'
-path = r"""/Users/loriab/linux/qcdb/data/f12dilabiousemefiles/"""
+elif project == 'f12dilabio':
+    dbse = 'A24'
+    path = r"""/Users/loriab/linux/qcdb/data/f12dilabiousemefiles/"""
 
 # fail --> pass
-#dbse = 'S22'
-#project = 'dhdft'
-#path = r"""/Users/loriab/linux/qcdb/data/dhdftusemefiles/"""
+elif project == 'dhdft':
+    dbse = 'S22'
+    path = r"""/Users/loriab/linux/qcdb/data/dhdftusemefiles/"""
 
 #dbse = 'NBC10'
-#project = 'dhdft2'
+#project == 'dhdft2':
 #path = r"""/Users/loriab/linux/qcdb/data/dhdftusemefiles/DSD/"""
 
 # pass --> pass
-#dbse = 'A24'
-#project = 'dilabio'
-#path = r"""/Users/loriab/linux/qcdb/data/dilabiousemefiles/"""
+elif project == 'dilabio':
+    dbse = 'A24'
+    path = r"""/Users/loriab/linux/qcdb/data/dilabiousemefiles/"""
 
 # pass --> pass
-#dbse = 'S22'
-#project = 'pt2'
-#path = r"""/Users/loriab/linux/qcdb/data/pt2usemefiles/"""
+elif project == 'pt2':
+    dbse = 'S22'
+    path = r"""/Users/loriab/linux/qcdb/data/pt2usemefiles/"""
 
 # pass --> pass
-#dbse = 'S22'
-#project = 'saptone'
-#path = r"""/Users/loriab/linux/qcdb/data/pt2usemefiles/"""
+elif project == 'saptone':
+    dbse = 'S22'
+    path = r"""/Users/loriab/linux/qcdb/data/pt2usemefiles/"""
 
 # not tested
 #dbse = 'BBI'
@@ -78,16 +95,29 @@ path = r"""/Users/loriab/linux/qcdb/data/f12dilabiousemefiles/"""
 #project = 'aep'
 #path = r"""/Users/loriab/linux/qcdb/data/pt2usemefiles/"""
 
-#dbse = 'S22'
-#project = 'sflow'
-#path = r"""/Users/loriab/linux/qcdb/data/flowusemefiles/"""
+elif project == 'sflow':
+    dbse = 'S22'
+    path = r"""/Users/loriab/linux/qcdb/data/flowusemefiles/"""
 
-#dbse = 'NBC10ext'
-dbse = 'ACONF'
-project = 'dfit'
-path = r"""/Users/loriab/linux/Refitting_DFT_D/Databases/usemefiles/"""
+elif project == 'dfit':
+    dbse = 'HBC6'
+    #dbse = 'NBC10ext'
+    #dbse = 'ACONF'
+    path = r"""/Users/loriab/linux/Refitting_DFT_D/Databases/usemefiles/"""
 
-dbobj = qcdb.Database(dbse)  #, loadfrompickle=True)
+elif project == 'nbcref':
+    dbse = 'NBC10ext'
+    path = r"""/Users/loriab/linux/Refitting_DFT_D/Databases/usemefiles/"""
+
+elif project == 'curveref':
+    dbse = 'S22by7'
+    path = r"""/Users/loriab/linux/Refitting_DFT_D/Databases/usemefiles/"""
+
+else:
+    raise ValidationError("""Project %s not defined.""" % (project))
+
+dbse = dbse if args.dbmodule is None else args.dbmodule
+dbobj = qcdb.Database(dbse, loadfrompickle=True)
 dbse = dbobj.dbse
 print '<<<', dbse, '>>>'
 modes = []
@@ -178,12 +208,12 @@ for baskey, basval in sorted(rawdata.iteritems()):
     pvzip = {}
     for pvkey, pvval in sorted(basval.iteritems()):
         metazip = {}
-        if verbose:
+        if verbose > 0:
             print """reading  %s %s""" % (pvkey, '.' * (40 - len(pvkey))),
         for metakey, metaval, in pvval.iteritems():
             metazip[metakey] = pd.concat(metaval, axis=1)  # merge CP/unCP
         pvzip[pvkey] = pd.concat(metazip)
-        if verbose:
+        if verbose > 0:
             print """SUCCESS w/ %s %s""" % (baskey, ', '.join(metazip.keys()))
     baszip[baskey] = pd.concat(pvzip)
 df = pd.concat(baszip)
@@ -392,14 +422,14 @@ pv0['CCSD TOTAL ENERGY'] = {'func': sum, 'args': ['HF TOTAL ENERGY', 'CCSD CORRE
 pv0['MP3 TOTAL ENERGY'] = {'func': sum, 'args': ['HF TOTAL ENERGY', 'MP3 CORRELATION ENERGY']}
 for pvar, action in pv0.iteritems():
     try:
-        if verbose:
+        if verbose > 0:
             print """building %s %s""" % (pvar, '.' * (50 - len(pvar))),
         df = append_result_of_func_with_funcargs_to_master_DataFrame_atlevel_with_label(
             master=df, label=pvar, atlevel=lvl, func=action['func'], funcargs=action['args'])
-        if verbose:
+        if verbose > 0:
             print """SUCCESS"""
     except KeyError, e:
-        if verbose:
+        if verbose > 0:
             print """FAILED, missing %s""" % (e)
 
 # <<< miscellaneous pre-computing >>>
@@ -808,14 +838,14 @@ pv1['DFT-SAPT DISP ENERGY'] = {'func': sum, 'args': ['DFT-SAPT DISP20 ENERGY', '
 pv1['DFT-SAPT TOTAL ENERGY'] = {'func': sum, 'args': ['DFT-SAPT ELST ENERGY', 'DFT-SAPT EXCH ENERGY', 'DFT-SAPT INDC ENERGY', 'DFT-SAPT DISP ENERGY']}
 for pvar, action in pv1.iteritems():
     try:
-        if verbose:
+        if verbose > 0:
             print """building %s %s""" % (pvar, '.' * (50 - len(pvar))),
         df = append_result_of_func_with_funcargs_to_master_DataFrame_atlevel_with_label(
             master=df, label=pvar, atlevel=lvl, func=action['func'], funcargs=action['args'])
-        if verbose:
+        if verbose > 0:
             print """SUCCESS"""
     except KeyError, e:
-        if verbose:
+        if verbose > 0:
             print """FAILED, missing %s""" % (e)
 
 if project == 'merz3':
@@ -905,14 +935,14 @@ pv2['hillt_adtz'] = {'func': xtpl_power, 'args': [2.790300, 3, 'atz', 'adz']}
 pv2['hillt_dtzf12'] = {'func': xtpl_power, 'args': [2.615472, 3, 'tzf12', 'dzf12']}
 for pvar, action in pv2.iteritems():
     try:
-        if verbose:
+        if verbose > 0:
             print """building %s %s""" % (pvar, '.' * (50 - len(pvar))),
         df = append_result_of_func_with_funcargs_to_master_DataFrame_atlevel_with_label(
             master=df, label=pvar, atlevel=lvl, func=action['func'], funcargs=action['args'])
-        if verbose:
+        if verbose > 0:
             print """SUCCESS"""
     except KeyError, e:
-        if verbose:
+        if verbose > 0:
             print """FAILED, missing %s""" % (e)
 
 
@@ -980,14 +1010,14 @@ pv3['SCS(MI)-MP2-F12 CORRELATION ENERGY'] = {'func': spin_component_scaling, 'ar
 pv3['SCS(MI)-MP2-F12 TOTAL ENERGY'] = {'func': sum, 'args': ['HF-CABS TOTAL ENERGY', 'SCS(MI)-MP2-F12 CORRELATION ENERGY']}
 for pvar, action in pv3.iteritems():
     try:
-        if verbose:
+        if verbose > 0:
             print """building %s %s""" % (pvar, '.' * (50 - len(pvar))),
         df = append_result_of_func_with_funcargs_to_master_DataFrame_atlevel_with_label(
             master=df, label=pvar, atlevel=lvl, func=action['func'], funcargs=action['args'])
-        if verbose:
+        if verbose > 0:
             print """SUCCESS"""
     except KeyError, e:
-        if verbose:
+        if verbose > 0:
             print """FAILED, missing %s""" % (e)
 
 
@@ -1196,6 +1226,19 @@ elif project == 'dfit':
     opts = ['', 'dfhf', 'dfhf-dfmp']  # why B2PLYP with no or dfhf label; why B3LYP w dfhf-dfmp label?
     cpmd = ['CP', 'unCP']
 
+elif project == 'nbcref':
+    mtds = ['CCSDT']
+    bass = ['atqzhatz', 'atqzatz', 'atqzadz', 'atqz']
+    opts = ['', 'dfhf-dfmp']
+    cpmd = ['CP']
+
+elif project == 'curveref':
+    mtds = ['CCSDT', 'DWCCSDTF12',
+            'SCMICCSDAF12', 'CCSDTAF12', 'SCMICCSDBF12', 'CCSDTBF12', 'SCMICCSDCF12', 'CCSDTCF12']
+    bass = ['atz', 'aqz', 'a5z', 'atqz', 'aq5z']
+    opts = ['']
+    cpmd = ['CP']
+
 for cpm in cpmd:
     for mtd in mtds:
         for bas in bass:
@@ -1203,17 +1246,18 @@ for cpm in cpmd:
                 mc = '-'.join([mtd, cpm, bas]) if opt == '' else '-'.join([mtd, opt, cpm, bas])
                 try:
                     tmp = build(mtd, opt, cpm, bas)
-                    print """Built model chemistry %s""" % (mc)
+                    if verbose > 1:
+                        print """Built model chemistry %s""" % (mc)
                 except KeyError, e:
-                    print """Error building rxn mc: empty '%s' b/c no %s""" % (mc, e)
-                    pass
+                    if verbose > 1:
+                        print """Error building rxn mc: empty '%s' b/c no %s""" % (mc, e)
                 else:
                     if isinstance(tmp, basestring) and tmp == 'Overly':
-                        print """Overly optioned rxn mc: {} for {}""".format(opt, mc)
-                        pass
+                        if verbose > 1:
+                            print """Overly optioned rxn mc: {} for {}""".format(opt, mc)
                     elif tmp.empty or tmp.dropna(how='all').empty:  # invalid for canopy python
-                        print """Empty rxn mc: empty '%s'""" % (mc)
-                        pass
+                        if verbose > 1:
+                            print """Empty rxn mc: empty '%s'""" % (mc)
                     else:
                         mine[mc] = tmp
 
@@ -1296,7 +1340,8 @@ if False:
     #threadtheframe(minelistatz)
     #threadtheframe(['CCSDTQ-fno1e4-CP-adz', 'CCSDTQ-fno1e4-CP-atz', 'CCSDTQ-fno1e4-CP-adtz', 'CCSDTQ-fno1e5-CP-adtz', 'CCSDTQ-fno1e5-CP-atz', 'CCSDTQ-fno1e5-CP-adz', 'CCSDT-CP-aq5z'], xlimit=7.0)
 
-print mine.columns
+if verbose > 1:
+    print 'Reaction Energies', mine.columns
 
 # <<< test cases >>>
 
