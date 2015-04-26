@@ -109,6 +109,7 @@ maxrgt = 0
 for mode in modes:
     maxrgt = max(maxrgt, dfstoich[mode].shape[1])
 print names[:maxrgt+1]
+dfstoich.index.names = ['rxn']
 h2kc = qcdb.psi_hartree2kcalmol
 
 rawdata = collections.defaultdict(lambda: collections.defaultdict(lambda: collections.defaultdict(dict)))
@@ -120,11 +121,13 @@ for useme in usemeglob:
     basis = spl[0].split('-')[-1]
     piece = '.'.join(spl[1:])
     optns = spl[0].split('-')[2:-1]
-    cpmode = 'unCP'
+    cpmode = 'default'
     optns2 = []
     for opt in sorted(optns):
-        if opt in ['CP', 'unCP']:
+        if opt == 'CP':
             cpmode = opt
+        elif opt == 'unCP':
+            cpmode = 'default'
         else:
             try:
                 if useme2psivar[piece] in optclue2psivar[opt]:
@@ -140,7 +143,7 @@ for useme in usemeglob:
         
     if piece.endswith('usemedash'):
         tmp = pd.read_csv('%s' % (useme), index_col=0, sep='\s+', comment='#', na_values='None', names=names[:maxrgt+1])
-        rawdata[basis][useme2psivar[piece]][optns]['unCP'] = tmp.dropna(how='all')
+        rawdata[basis][useme2psivar[piece]][optns]['default'] = tmp.dropna(how='all')
         rawdata[basis][useme2psivar[piece]][optns]['CP'] = tmp.dropna(how='all')
     elif piece.endswith('usemesapt') or piece.endswith('usemedftsapt') or piece.endswith('usemempsapt'):
         # moved labels to top, removed comment marker for labels line, col relabeled to mp2cDisp20 for mpsapt
@@ -189,6 +192,28 @@ df.index.names = ['bstrt', 'psivar', 'meta', 'rxn']
 
 # <<< define utility functions >>>
 
+def rxnm_contract_expand(rgts):
+    """Applies the stoichiometry array to the pd.DataFrame *rgts*, then sums 
+    across the reagents in each ACTV mode separately thus computing a reaction 
+    quantity. The reaction quantity is copied to every reagent within each ACTV 
+    mode for ease of further computation and returned.
+
+    """
+    stoich_scaled_rgts = dfstoich.mul(rgts)
+    micols = stoich_scaled_rgts.columns.values
+    modes, rgts = zip(*micols)
+    modezip = {}
+    for mode in set(modes):
+        rgts = [rg for md, rg in micols if md == mode]
+        contracted_rxn = stoich_scaled_rgts[mode].sum(axis=1)
+        rgtzip = {rg: contracted_rxn for rg in rgts}
+        modezip[mode] = pd.concat(rgtzip, axis=1)
+    expanded_rgts = pd.concat(modezip, axis=1)
+    return expanded_rgts
+
+def reactionate(cpmode, rgts):
+    hjkl = pd.DataFrame(dfstoich[cpmode] * rgts[cpmode])
+    return hjkl.sum(axis=1)
 
 def ie2(rgts):
     cpmode = 'CP'
@@ -196,7 +221,8 @@ def ie2(rgts):
     return hjkl.sum(axis=1)
 
 def ie_uncp2(rgts):
-    hjkl = pd.DataFrame(dfstoich['default'] * rgts['unCP'])
+    hjkl = pd.DataFrame(dfstoich['default'] * rgts['default'])
+    #hjkl = pd.DataFrame(dfstoich['default'] * rgts['unCP'])
     return hjkl.sum(axis=1)
 
 def default(rgts):
@@ -204,19 +230,19 @@ def default(rgts):
     hjkl = pd.DataFrame(dfstoich[cpmode] * rgts[cpmode])
     return hjkl.sum(axis=1)
 
-def ie(rgts):
-    cpmode = 'CP'
-    return rgts[cpmode]['dimer'] - rgts[cpmode]['monoA'] - rgts[cpmode]['monoB']
-
-
-def ie_uncp(rgts):
-    cpmode = 'unCP'
-    return rgts[cpmode]['dimer'] - rgts[cpmode]['monoA'] - rgts[cpmode]['monoB']
-
-
-def ie_ave(rgts):
-    return 0.5 * (rgts['CP']['dimer'] - rgts['CP']['monoA'] - rgts['CP']['monoB'] +
-                  rgts['unCP']['dimer'] - rgts['unCP']['monoA'] - rgts['unCP']['monoB'])
+#def ie(rgts):
+#    cpmode = 'CP'
+#    return rgts[cpmode]['dimer'] - rgts[cpmode]['monoA'] - rgts[cpmode]['monoB']
+#
+#
+#def ie_uncp(rgts):
+#    cpmode = 'unCP'
+#    return rgts[cpmode]['dimer'] - rgts[cpmode]['monoA'] - rgts[cpmode]['monoB']
+#
+#
+#def ie_ave(rgts):
+#    return 0.5 * (rgts['CP']['dimer'] - rgts['CP']['monoA'] - rgts['CP']['monoB'] +
+#                  rgts['unCP']['dimer'] - rgts['unCP']['monoA'] - rgts['unCP']['monoB'])
 
 
 def categories(df, lvl):
@@ -409,75 +435,48 @@ else:
 
 #     <<< DW-MP2 & DW-MP2-F12 >>>
 
-dwmp2 = collections.defaultdict(lambda: collections.defaultdict(dict))
-try:
-    dwmp2['DW-MP2 OMEGA']['']['CP'] = pd.DataFrame(ie(df.xs('HF TOTAL ENERGY', level='psivar').xs('', level='meta')) /
-        ie(df.xs('MP2 TOTAL ENERGY', level='psivar').xs('', level='meta')), columns=['dimer'])
-except KeyError, e:
-    pass
-try:
-    dwmp2['DW-MP2 OMEGA']['']['unCP'] = pd.DataFrame(ie_uncp(df.xs('HF TOTAL ENERGY', level='psivar').xs('', level='meta')) /
-        ie(df.xs('MP2 TOTAL ENERGY', level='psivar').xs('', level='meta')), columns=['dimer'])
-except KeyError, e:
-    pass
-try:
-    dwmp2['DW-MP2 OMEGA']['dfmp']['CP'] = pd.DataFrame(ie(df.xs('HF TOTAL ENERGY', level='psivar').xs('dfhf', level='meta')) /
-        ie(df.xs('MP2 TOTAL ENERGY', level='psivar').xs('dfhf-dfmp', level='meta')), columns=['dimer'])
-except KeyError, e:
-    pass
-try:
-    dwmp2['DW-MP2 OMEGA']['dfmp']['unCP'] = pd.DataFrame(ie_uncp(df.xs('HF TOTAL ENERGY', level='psivar').xs('dfhf', level='meta')) /
-        ie(df.xs('MP2 TOTAL ENERGY', level='psivar').xs('dfhf-dfmp', level='meta')), columns=['dimer'])
-except KeyError, e:
-    pass
-try:
-    dwmp2['DW-MP2-F12 OMEGA']['']['CP'] = pd.DataFrame(ie(df.xs('HF-CABS TOTAL ENERGY', level='psivar').xs('', level='meta')) /
-        ie(df.xs('MP2-F12 TOTAL ENERGY', level='psivar').xs('', level='meta')), columns=['dimer'])
-except KeyError, e:
-    pass
-try:
-    dwmp2['DW-MP2-F12 OMEGA']['']['unCP'] = pd.DataFrame(ie_uncp(df.xs('HF-CABS TOTAL ENERGY', level='psivar').xs('', level='meta')) /
-        ie(df.xs('MP2-F12 TOTAL ENERGY', level='psivar').xs('', level='meta')), columns=['dimer'])
-except KeyError, e:
-    pass
-try:
-    dwmp2['DW-MP2-F12 OMEGA']['dfmp']['CP'] = pd.DataFrame(ie(df.xs('HF-CABS TOTAL ENERGY', level='psivar').xs('dfhf', level='meta')) /
-        ie(df.xs('MP2-F12 TOTAL ENERGY', level='psivar').xs('dfhf-dfmp', level='meta')), columns=['dimer'])
-except KeyError, e:
-    pass
-try:
-    dwmp2['DW-MP2-F12 OMEGA']['dfmp']['unCP'] = pd.DataFrame(ie_uncp(df.xs('HF-CABS TOTAL ENERGY', level='psivar').xs('dfhf', level='meta')) /
-        ie(df.xs('MP2-F12 TOTAL ENERGY', level='psivar').xs('dfhf-dfmp', level='meta')), columns=['dimer'])
-except KeyError, e:
-    pass
-if len(dwmp2) > 0:
-    pvzip = {}
-    for pvkey, pvval in dwmp2.iteritems():
-        print pvkey
-        metazip = {}
-        for metakey, metaval, in pvval.iteritems():
-            print metakey
-            print baskey, pvkey, metakey
-            for cpkey, cpval in metaval.iteritems():
-                print cpkey
-                cpval['monoA'] = cpval['dimer']
-                cpval['monoB'] = cpval['dimer']
-            metazip[metakey] = pd.concat(metaval, axis=1)  # merge CP/unCP
-        pvzip[pvkey] = pd.concat(metazip)
-    df_omega = pd.concat(pvzip)
-    df_omega = df_omega.reorder_levels([2, 0, 1, 3])
-    df_omega.index.names = ['bstrt', 'psivar', 'meta', 'rxn']
-    print 'pre omega'
+if verbose > 0:
+    print 'building intermediates DW-MP2 OMEGA, DW-MP2-F12-OMEGA ...',
+dwmp2 = collections.defaultdict(dict)  #lambda: collections.defaultdict(dict))
+meta_combos = {
+    '': ['', ''],
+    'dfmp': ['dfhf', 'dfhf-dfmp']}  # TODO comprehensive? right?
+
+for mt, mtl in meta_combos.iteritems():
     try:
-        df_omega['CP'] = omega([0.15276, 1.89952, df_omega['CP']])
+        dwmp2['DW-MP2 OMEGA'][mt] = \
+            rxnm_contract_expand(df.xs('HF TOTAL ENERGY', level='psivar').xs(mtl[0], level='meta')) / \
+            rxnm_contract_expand(df.xs('MP2 TOTAL ENERGY', level='psivar').xs(mtl[1], level='meta'))
     except KeyError, e:
         pass
-    print 'post omega'
-    #try:
-    #df_omega['unCP'] = omega([0.15276, 1.89952, df_omega['unCP']])  #TODO
-    #except KeyError, e:
-    #    pass
+    try:
+        dwmp2['DW-MP2-F12 OMEGA'][mt] = \
+            rxnm_contract_expand(df.xs('HF-CABS TOTAL ENERGY', level='psivar').xs(mtl[0], level='meta')) / \
+            rxnm_contract_expand(df.xs('MP2-F12 TOTAL ENERGY', level='psivar').xs(mtl[1], level='meta'))
+    except KeyError, e:
+        pass
+
+if dwmp2:
+    pvzip = {}
+    for pvkey, pvval in dwmp2.iteritems():
+        metazip = {}
+        for metakey, metaval, in pvval.iteritems():
+            metazip[metakey] = metaval                
+        pvzip[pvkey] = pd.concat(metazip)
+    df_omega = pd.concat(pvzip)
+
+    df_omega = df_omega.reorder_levels([2, 0, 1, 3])
+    df_omega.index.names = ['bstrt', 'psivar', 'meta', 'rxn']
+    try:
+        df_omega = omega([0.15276, 1.89952, df_omega])
+    except KeyError, e:
+        pass
+    if verbose > 0:
+        print 'SUCCESS'
     df = df.append(df_omega, verify_integrity=True)
+else:
+    if verbose > 0:
+        print 'Not Handled'
 
 #     <<< DW-CCSD(T)-F12 >>>
 
@@ -487,39 +486,31 @@ try:
 except KeyError, e:
     print 'Not handled: DW-CCSD(T) OMEGA', e
 else:
-    ratio_HFCABS_MP2F12 = ie(df.xs('HF-CABS TOTAL ENERGY', level='psivar')) / ie(df.xs('MP2-F12 TOTAL ENERGY', level='psivar'))
-    #ratio_HFCABS_MP2F12_unCP = ie_uncp(df.xs('HF-CABS TOTAL ENERGY', level='psivar')) / ie(df.xs('MP2-F12 TOTAL ENERGY', level='psivar'))
-    #print ratio_HFCABS_MP2F12
+    # LAB 23 Apr 2015 switching from ie
+    #print df.xs('HF-CABS TOTAL ENERGY', level='psivar').to_dict()
+    ratio_HFCABS_MP2F12 = rxnm_contract_expand(df.xs('HF-CABS TOTAL ENERGY', level='psivar')) / \
+                          rxnm_contract_expand(df.xs('MP2-F12 TOTAL ENERGY', level='psivar'))
+    print 'ratio_HFCABS_MP2F12\n', ratio_HFCABS_MP2F12
+    # TODO possibly set SA or other rxnm to NaN as inapplicable
     dwcc = {}
     try:
-        dwcc['adz'] = omega([-1, 4, ratio_HFCABS_MP2F12['adz']])
+        dwcc['adz'] = omega([-1, 4, ratio_HFCABS_MP2F12.xs('adz', level='bstrt')])
         print 'post dwcc adz'
     except KeyError as e:
         pass
     try:
-        dwcc['addz'] = omega([-1, 4, ratio_HFCABS_MP2F12['addz']])  #todo
-        print 'post dwcc addz'
+        dwcc['atz'] = omega([0.4, 0.6, ratio_HFCABS_MP2F12.xs('atz', level='bstrt')])
+        print 'post dwcc atz'
     except KeyError as e:
         pass
-    try:
-        dwcc['atz'] = omega([0.4, 0.6, ratio_HFCABS_MP2F12['atz']])
-        print 'post dwxx atz'
-    except KeyError as e:
-        pass
-    print 'asdf1'   
     df_omega = pd.concat(dwcc)
-    df_omega = pd.DataFrame(df_omega, columns=['dimer'])
+    print 'DFOM#GA0\n', df_omega
     df_omega['psivar'] = 'DW-CCSD(T)-F12 OMEGA'
-    df_omega['monoA'] = df_omega['dimer']
-    df_omega['monoB'] = df_omega['dimer']
     df_omega.set_index('psivar', append=True, inplace=True)
-    df_omega_uncp = df_omega.copy()  # utterly wrong! TODO
-    df_omega2 = pd.concat([df_omega, df_omega_uncp], keys=['CP', 'unCP'], axis=1)
-    df_omega = df_omega2.copy()
+    print 'DFOM#GA1\n', df_omega
     df_omega = df_omega.reorder_levels([0, 3, 1, 2])
     df_omega.index.names = ['bstrt', 'psivar', 'meta', 'rxn']
-    df_omega['unCP'] = np.nan
-    print 'asdf2'
+    print 'DFOM#GA2\n', df_omega
     df = df.append(df_omega, verify_integrity=True)
 
 #     <<< (T*)-F12 & (T**)-F12 >>>
@@ -539,10 +530,9 @@ else:
     print 'post tstart'
         
     tstarstar = ratio_MP2F12_MP2.copy()
-    tstarstar.loc[:, ('CP', 'monoA')] = tstarstar['CP']['dimer']
-    tstarstar.loc[:, ('CP', 'monoB')] = tstarstar['CP']['dimer']
-    tstarstar.loc[:, ('unCP', 'monoA')] = tstarstar['unCP']['dimer']
-    tstarstar.loc[:, ('unCP', 'monoB')] = tstarstar['unCP']['dimer']
+    for md, rg in tstarstar.columns.values:
+        if rg != 'Rgt0':
+            tstarstar.loc[:, (md, rg)] = tstarstar[md]['Rgt0']
     tstarstar['psivar'] = '(T**)-F12 SCALE'
     tstarstar.set_index('psivar', append=True, inplace=True)
     tstarstar = tstarstar.reorder_levels([0, 3, 1, 2])
