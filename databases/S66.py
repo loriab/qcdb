@@ -542,6 +542,14 @@ TAGL['%s-%s-monoB-CP'   % (dbse, '66'                    )] = """Monomer B from 
 TAGL['%s-%s-monoA-unCP' % (dbse, '66'                    )] = """Monomer A from Methylamine-Pyridine """
 TAGL['%s-%s-monoB-unCP' % (dbse, '66'                    )] = """Monomer B from Methylamine-Pyridine """
 
+TAGL['dbse'] = 'interaction energies for organic bimolecular complexes'
+TAGL['default'] = 'entire database'
+TAGL['small'] = 'few computationally quick systems'
+TAGL['large'] = 'most computationally expensive systems'
+TAGL['HB'] = 'hydrogen-bonded systems'
+TAGL['MX'] = 'mixed-influence systems'
+TAGL['DD'] = 'dispersion-dominated systems'
+
 # <<< Geometry Specification Strings >>>
 GEOS = {}
 
