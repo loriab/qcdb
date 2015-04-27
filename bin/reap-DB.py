@@ -180,10 +180,8 @@ for useme in usemeglob:
         # moved labels to top, removed comment marker for labels line, col relabeled to mp2cDisp20 for mpsapt
         tmp = pd.read_csv('%s' % (useme), index_col=0, sep='\s+', comment='#', na_values='None')
         sapt_cols = tmp.columns.tolist()
-        tmp = pd.DataFrame(tmp.stack(), columns=['dimer'])
-        tmp['dimer'] *= 0.001  # useme in mHartree
-        tmp['monoA'] = 0.0
-        tmp['monoB'] = 0.0
+        tmp = pd.DataFrame(tmp.stack(), columns=['Rgt0'])
+        tmp['Rgt0'] *= 0.001  # useme in mHartree
         tmp = tmp.reorder_levels([1, 0])
         tmp.index.names = ['psivar', 'rxn']
         for pv in sapt_cols:
@@ -197,12 +195,13 @@ for useme in usemeglob:
                 except KeyError as e:
                     pass  # bypass empty columns
                 else:
-                    rawdata[basis][useme2psivar[pv]][optns]['unCP'] = tmp2
-                    rawdata[basis][useme2psivar[pv]][optns]['CP'] = tmp2
+                    rawdata[basis][useme2psivar[pv]][optns]['SA'] = tmp2
     else:
         tmp = pd.read_csv('%s' % (useme), index_col=0, sep='\s+', comment='#', na_values='None', names=names[:maxrgt+1])
+        cpmode.replace('unCP', 'default')
         rawdata[basis][useme2psivar[piece]][optns][cpmode] = tmp.dropna(how='all')
-    #print tmp.head(4)
+    if verbose > 1:
+        print tmp.head(4)
 
 baszip = {}
 for baskey, basval in sorted(rawdata.iteritems()):
@@ -242,39 +241,31 @@ def rxnm_contract_expand(rgts):
     expanded_rgts = pd.concat(modezip, axis=1)
     return expanded_rgts
 
+def cp2sa(rgts):
+    stoich_scaled_rgts = dfstoich.mul(rgts)
+    micols = stoich_scaled_rgts.columns.values
+    modes, rgts = zip(*micols)
+    modezip = {}
+    for mode in set(modes):
+        rgts = [rg for md, rg in micols if md == mode]
+        contracted_rxn = stoich_scaled_rgts[mode].sum(axis=1)
+        modezip[mode] = contracted_rxn
+    expanded_rgts = pd.concat(modezip, axis=1)
+    return expanded_rgts
+
 def reactionate(cpmode, rgts):
-    hjkl = pd.DataFrame(dfstoich[cpmode] * rgts[cpmode])
-    return hjkl.sum(axis=1)
+    """Apply the stoichiometry that turns reagent energies *rgts* into returned
+    reaction energies, according to active mode *cpmode*.
 
-def ie2(rgts):
-    cpmode = 'CP'
-    hjkl = pd.DataFrame(dfstoich[cpmode] * rgts[cpmode])
-    return hjkl.sum(axis=1)
-
-def ie_uncp2(rgts):
-    hjkl = pd.DataFrame(dfstoich['default'] * rgts['default'])
-    #hjkl = pd.DataFrame(dfstoich['default'] * rgts['unCP'])
-    return hjkl.sum(axis=1)
-
-def default(rgts):
-    cpmode = 'default'
-    hjkl = pd.DataFrame(dfstoich[cpmode] * rgts[cpmode])
-    return hjkl.sum(axis=1)
-
-#def ie(rgts):
-#    cpmode = 'CP'
-#    return rgts[cpmode]['dimer'] - rgts[cpmode]['monoA'] - rgts[cpmode]['monoB']
-#
-#
-#def ie_uncp(rgts):
-#    cpmode = 'unCP'
-#    return rgts[cpmode]['dimer'] - rgts[cpmode]['monoA'] - rgts[cpmode]['monoB']
-#
-#
-#def ie_ave(rgts):
-#    return 0.5 * (rgts['CP']['dimer'] - rgts['CP']['monoA'] - rgts['CP']['monoB'] +
-#                  rgts['unCP']['dimer'] - rgts['unCP']['monoA'] - rgts['unCP']['monoB'])
-
+    """
+    if cpmode == 'ave':
+        cp = pd.DataFrame(dfstoich['CP'] * rgts['CP'])
+        uncp = pd.DataFrame(dfstoich['default'] * rgts['default'])
+        ave = 0.5 * (cp + uncp)
+        return ave.sum(axis=1)
+    else:
+        hjkl = pd.DataFrame(dfstoich[cpmode] * rgts[cpmode])
+        return hjkl.sum(axis=1)
 
 def categories(df, lvl):
     return sorted(set([tup[lvl] for tup in df.index.values]))
@@ -461,46 +452,43 @@ else:
     exsc.set_index('psivar', append=True, inplace=True)
     exsc = exsc.reorder_levels([0, 3, 1, 2])
     exsc.index.names = ['bstrt', 'psivar', 'meta', 'rxn']
+
+    df = df.append(exsc, verify_integrity=True)
     if verbose > 0:
         print 'SUCCESS'
-        if verbose > 1:
-            print 'SAPT EXCHSCAL\n', exsc
-    df = df.append(exsc, verify_integrity=True)
 
-def cp2sa(rgts):
-    stoich_scaled_rgts = dfstoich.mul(rgts)
-    micols = stoich_scaled_rgts.columns.values
-    modes, rgts = zip(*micols)
-    modezip = {}
-    for mode in set(modes):
-        rgts = [rg for md, rg in micols if md == mode]
-        contracted_rxn = stoich_scaled_rgts[mode].sum(axis=1)
-        modezip[mode] = contracted_rxn
-    expanded_rgts = pd.concat(modezip, axis=1)
-    return expanded_rgts
 
 #     <<< SA MP2 CORL >>>
-try:
-    if verbose > 0:
-        print 'building intermediate SA MP2 CORRELATION ENERGY ...',
-    mp2corl = df.xs('MP2 CORRELATION ENERGY', level='psivar') * 1.0
-except KeyError, e:
-    if verbose > 0:
-        print 'NOT HANDLED', e
-else:
-    ans = cp2sa(mp2corl)
-    mp2corl.loc[:,('SA','Rgt0')] = ans['CP']
 
-    # separate variable is a hack b/c won't let overwrite df
-    mp2corl['psivar'] = 'SAPT MP2 CORRELATION ENERGY'
-    mp2corl.set_index('psivar', append=True, inplace=True)
-    mp2corl = mp2corl.reorder_levels([0, 3, 1, 2])
-    mp2corl.index.names = ['bstrt', 'psivar', 'meta', 'rxn']
-    if verbose > 0:
-        print 'SUCCESS'
-    df = df.append(mp2corl, verify_integrity=True)
+for pv in ['HF TOTAL ENERGY', 'MP2 CORRELATION ENERGY', 'HF-CABS TOTAL ENERGY',
+           'MP2-F12 CORRELATION ENERGY']:
+    try:
+        if verbose > 0:
+            print 'building intermediate SA %s ...' % (pv),
+        target = df.xs(pv, level='psivar') * 1.0
+    except KeyError, e:
+        if verbose > 0:
+            print 'NOT HANDLED, missing', e
+    else:
+        ans = cp2sa(target)
+        target.loc[:,('SA','Rgt0')] = ans['CP']
+        for md in ['CP', 'default']:
+            try:
+                target.drop(md, axis=1, inplace=True)
+            except KeyError, e:
+                pass
 
-#     <<< DW-MP2 & DW-MP2-F12 >>>
+        target['psivar'] = pv
+        target.set_index('psivar', append=True, inplace=True)
+        target = target.reorder_levels([0, 3, 1, 2])
+        target.index.names = ['bstrt', 'psivar', 'meta', 'rxn']
+
+        df.update(target, raise_conflict=True)
+        if verbose > 0:
+            print 'SUCCESS'
+
+
+#     <<< MP2 OMEGA >>>
 
 if verbose > 0:
     print 'building intermediates DW-MP2 OMEGA, DW-MP2-F12-OMEGA ...',
@@ -575,9 +563,11 @@ else:
     df_omega.set_index('psivar', append=True, inplace=True)
     df_omega = df_omega.reorder_levels([0, 3, 1, 2])
     df_omega.index.names = ['bstrt', 'psivar', 'meta', 'rxn']
+
+    df = df.append(df_omega, verify_integrity=True)
     if verbose > 0:
         print 'SUCCESS'
-    df = df.append(df_omega, verify_integrity=True)
+
 
 #     <<< (T*)-F12 & (T**)-F12 >>>
 
@@ -590,7 +580,8 @@ except KeyError, e:
     if verbose > 0:
         print 'NOT HANDLED', e
 else:
-    ratio_MP2F12_MP2 = df.xs('MP2-F12 CORRELATION ENERGY', level='psivar') / df.xs('MP2 CORRELATION ENERGY', level='psivar')
+    ratio_MP2F12_MP2 = df.xs('MP2-F12 CORRELATION ENERGY', level='psivar') / \
+                       df.xs('MP2 CORRELATION ENERGY', level='psivar')
     tstar = ratio_MP2F12_MP2.copy()
     tstar['psivar'] = '(T*)-F12 SCALE'
     tstar.set_index('psivar', append=True, inplace=True)
@@ -608,18 +599,26 @@ else:
     tstarstar.set_index('psivar', append=True, inplace=True)
     tstarstar = tstarstar.reorder_levels([0, 3, 1, 2])
     tstarstar.index.names = ['bstrt', 'psivar', 'meta', 'rxn']
+
+    df = df.append(tstarstar, verify_integrity=True)
     if verbose > 0:
         print 'SUCCESS'
-    df = df.append(tstarstar, verify_integrity=True)
+
 
 #     <<< DASH-D >>>
 try:
-    df.xs('nobas', level='bstrt')
+    dashes = df.xs('nobas', level='bstrt')
 except KeyError, e:
     print 'Not handled: DASH-D', e
 else:
     print 'indash'
-    df_nobas = pd.concat({tup[0]: df.xs('nobas', level='bstrt') for tup in df.index.values if tup[0] != 'nobas'})
+    #df_nobas = pd.concat({tup[0]: df.xs('nobas', level='bstrt') for tup in df.index.values if tup[0] != 'nobas'})
+    df_nobas = pd.concat({tup[0]: dashes for tup in df.index.values if tup[0] != 'nobas'})
+#    baszip = {}
+#    for tup in df.index.values:
+#        if tup[0] != 'nobas'
+#            baszip[tup[0]] = dashes
+#    df_nobas = pd.concat(baszip)
     print df_nobas.head(50)
     df_nobas.index.names = ['bstrt', 'psivar', 'meta', 'rxn']
     print 'postdash'
@@ -758,7 +757,7 @@ pv1['SAPT HF(2) ENERGY'] = {'func': lambda x: x[1] + (1.0 - x[0]) * x[2],
 pv1['SAPT HF(3) ENERGY'] = {'func': lambda x: x[1] - (x[2] + x[0] * x[3]),
                             'args': ['SAPT EXCHSCAL', 'SAPT HF(2) ENERGY', 'SAPT IND30,R ENERGY', 'SAPT EXCH-IND30,R ENERGY']}
 pv1['SAPT MP2(2) ENERGY'] = {'func': lambda x: x[1] - (x[2] + x[3] + x[4] + x[0] * (x[5] + x[6] + x[7] + x[8])),
-                             'args': ['SAPT EXCHSCAL', 'SAPT MP2 CORRELATION ENERGY', 'SAPT ELST12,R ENERGY',
+                             'args': ['SAPT EXCHSCAL', 'MP2 CORRELATION ENERGY', 'SAPT ELST12,R ENERGY',
                                       'SAPT IND22 ENERGY', 'SAPT DISP20 ENERGY', 'SAPT EXCH11(S^2) ENERGY',
                                       'SAPT EXCH12(S^2) ENERGY', 'SAPT EXCH-IND22 ENERGY', 'SAPT EXCH-DISP20 ENERGY']}
 pv1['SAPT MP2(3) ENERGY'] = {'func': lambda x: x[1] - (x[2] + x[0] * x[3]),
@@ -1101,11 +1100,13 @@ def generic_mtd(Nstage, stub):
     if Nstage == 1:
         return ['%s TOTAL ENERGY' % (stub)]
     elif Nstage == 2:
-        return ['%s TOTAL ENERGY' % ('HF-CABS' if 'F12' in stub else 'SCF'),
+        #return ['%s TOTAL ENERGY' % ('HF-CABS' if 'F12' in stub else 'SCF'),
+        return ['%s TOTAL ENERGY' % ('HF-CABS' if 'F12' in stub else 'HF'),
                 '%s CORRELATION ENERGY' % (stub)]
     elif Nstage == 3:
         #return ['%s TOTAL ENERGY' % ('HF-CABS' if 'F12' in stub else 'SCF'), '%s CORRELATION ENERGY' % (stub), '%s CC CORRECTION ENERGY' % (stub)]
-        return ['%s TOTAL ENERGY' % ('HF-CABS' if 'F12' in stub else 'SCF'),
+        #return ['%s TOTAL ENERGY' % ('HF-CABS' if 'F12' in stub else 'SCF'),
+        return ['%s TOTAL ENERGY' % ('HF-CABS' if 'F12' in stub else 'HF'),
                 '%s CORRELATION ENERGY' % ('MP2-F12' if 'F12' in stub else 'MP2'),
                 '%s CC CORRECTION ENERGY' % (stub)]
 
@@ -1113,7 +1114,10 @@ def generic_mtd(Nstage, stub):
 def build_from_lists(mtdlist, baslist, optlist=None):
     if optlist is None:
         optlist = [''] * len(mtdlist)
-    return ie(sum([df.loc[bas].loc[pcs].loc[opt] for pcs, bas, opt in zip(mtdlist, baslist, optlist)]))
+    #return ie2(sum([df.loc[bas].loc[pcs].loc[opt] for pcs, bas, opt in zip(mtdlist, baslist, optlist)]))
+    # TODO handle mode
+    return reactionate('CP', sum([df.loc[bas].loc[pcs].loc[opt] for pcs, bas, opt in zip(mtdlist, baslist, optlist)]))
+
 
 
 def build(method, option, cpmode, basis):
@@ -1131,28 +1135,33 @@ def build(method, option, cpmode, basis):
                 found = True
         if not found:
             return 'Overly'
-    func = {'CP': ie2, 'unCP': ie_uncp2, 'ave': ie_ave, 'default': default}[cpmode]
+    #func = {'CP': ie2, 'unCP': ie_uncp2, 'ave': ie_ave, 'default': default}[cpmode]
     if baslist is None:
         raise KeyError  # TODO a more specific message that mtd/bas don't mix wouldn't hurt
         #print '\n <<<', methods[method].fullname, '/', bases[basis].fullname, '>>>'
         #print 'stages:', 'M:', compute_max_mtd(method), 'B:', compute_max_bas(basis), 'U:', Nstage
     if method in [] and basis in []:
     #if method in ['MP2'] and basis in ['aqz']:
-    #if method in ['MP2C', 'MP2CF12'] and basis in ['atqzadz', 'adz']:
+    #if method in ['MP2C', 'MP2CF12'] and basis in ['atqzadz', 'adz', 'adtz']:
     #if method in ['B3LYPD3'] and basis in ['def2qzvp']:
         print '\n', method, option, cpmode, basis
         print 'pcss:', mtdlist
         print 'bass:', baslist
         print 'opts:', optlist
         for pcs, bas, opt in zip(mtdlist, baslist, optlist):
-            print df.loc[bas].loc[pcs].loc[opt].loc['ACONF-15'] #'NBC1-BzBz_S-5.0'] #'S22-2'] #'A24-1'] #'BBI-150LYS-158LEU-2'] #'S22-2']
-    return func(sum([df.loc[bas].loc[pcs].loc[opt] for pcs, bas, opt in zip(mtdlist, baslist, optlist)]))
+            print df.loc[bas].loc[pcs].loc[opt].loc['S22-2']  #ACONF-15'] #'NBC1-BzBz_S-5.0'] #'S22-2'] #'A24-1'] #'BBI-150LYS-158LEU-2'] #'S22-2']
+    acting_cpmode = 'default' if cpmode == 'unCP' else cpmode
+    return reactionate(acting_cpmode, sum([df.loc[bas].loc[pcs].loc[opt] for pcs, bas, opt in zip(mtdlist, baslist, optlist)]))
+
 
 # <<< assemble all model chemistries into columns of new DataFrame >>>
 
 rxns = ['%s-%s' % (dbse, rxn) for rxn in dbobj.dbdict[dbobj.dbse].hrxn.keys()]
 mine = pd.DataFrame({}, index=rxns)
 mine.index.names = ['rxn']
+df.sortlevel(inplace=True)
+if verbose > 0:
+    print 'SORTEDNESS OF DF:', df.index.lexsort_depth
 
 if project == 'dft':
     mtds = ['B3LYP', 'B3LYPD2', 'B3LYPD3', 'B2PLYP', 'B2PLYPD2', 'B2PLYPD3',
@@ -1225,7 +1234,7 @@ elif project == 'pt2':
             'atzhadz', 'adtzhadz', 'atqzhadz', 'atqzhatz', 'atzhadtz', 'atqzhadtz',
             'dzf12', 'tzf12']
     opts = ['', 'dfhf', 'dfmp', 'dfhf-dfmp']
-    cpmd = ['CP']
+    cpmd = ['CP', 'SA']
 
 elif project == 'saptone':
     mtds = ['SAPT0', 'SAPT0S', 'SAPTSCS', 'SAPTDFT', 'SAPT2',
@@ -1237,7 +1246,7 @@ elif project == 'saptone':
             'tz', 'matz', 'jatz', 'hatz',
             'qz', 'aaqz', 'maqz', 'jaqz', 'haqz']
     opts = ['', 'dfmp']
-    cpmd = ['CP']
+    cpmd = ['SA']
 
 elif project == 'merz3':
     #mtds = ['MP2', 'SCSMP2', 'SCSNMP2', 'SCSMIMP2', 'DWMP2', 'MP2C',
@@ -1317,7 +1326,8 @@ def threadtheframe(modelchem, xlimit=4.0):
 if project == 'f12dilabio':
     mine['CCSDTNSBF12-CP-hill2_adtz'] = build_from_lists(['HF-CABS TOTAL ENERGY', 'CCSD-F12B CORRELATION ENERGY', '(T)-F12AB CORRECTION ENERGY'], ['atz', 'hillcc_adtz', 'hillt_adtz'])
 
-if project == 'parenq':
+# commented 27 April 2015, missing MP2-full
+if False and project == 'parenq':
     mine['DELTQ-full-CP-hadz'] = mine['CCSDTQ-full-CP-hadz'] - mine['CCSDT-full-CP-hadz']
     mine['DELTQ-full-CP-jadz'] = mine['CCSDTQ-full-CP-jadz'] - mine['CCSDT-full-CP-jadz']
 
@@ -1393,26 +1403,25 @@ test_pandas(h2kc, project, mine)
 
 # <<< write qcdb data loader >>>
 
-f1 = open('%s/%s_%s.py' % (homewrite, dbse, project), 'w')
-print 'Writing to %s/%s_%s.py ...' % (homewrite, dbse, project)
-f1.write('\ndef load_%s(dbinstance):\n\n' % (project))
+with open('%s/%s_%s.py' % (homewrite, dbse, project), 'w') as handle:
+    print 'Writing to %s/%s_%s.py ...' % (homewrite, dbse, project)
+    handle.write('\ndef load_%s(dbinstance):\n\n' % (project))
 
-for mc in mine.columns:
-    lmc = mc.split('-')  # TODO could be done better
-    method = lmc[0]
-    bsse = '_'.join(lmc[1:-1])
-    basis = lmc[-1]
-    for rxn in dbobj.dbdict[dbobj.dbse].hrxn.keys():
-        value = h2kc * mine[mc]['%s-%s' % (dbse, rxn)]
-        if pd.isnull(value):
-            if rxn == 2:
-                print 'dropping', mc
-            pass
-        else:
-            f1.write("""    dbinstance.add_ReactionDatum(dbse='%s', rxn=%s, method='%s', mode='%s', basis='%s', value=%.4f)\n""" %
-                (dbse, repr(rxn), method, bsse, basis, value))
+    for mc in mine.columns:
+        lmc = mc.split('-')  # TODO could be done better
+        method = lmc[0]
+        bsse = '_'.join(lmc[1:-1])
+        basis = lmc[-1]
+        for rxn in dbobj.dbdict[dbobj.dbse].hrxn.keys():
+            value = h2kc * mine[mc]['%s-%s' % (dbse, rxn)]
+            if pd.isnull(value):
+                if rxn == 2:
+                    print 'dropping', mc
+                pass
+            else:
+                handle.write("""    dbinstance.add_ReactionDatum(dbse='%s', rxn=%s, method='%s', mode='%s', basis='%s', value=%.4f)\n""" %
+                    (dbse, repr(rxn), method, bsse, basis, value))
 
-f1.close()
 
 # <<< write hdf5 >>>
 
