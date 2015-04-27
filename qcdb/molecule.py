@@ -203,6 +203,26 @@ class Molecule(LibmintsMolecule):
                     x * factor, y * factor, z * factor)
         return text
 
+    def format_molecule_for_numpy(self, npobj=True):
+        """Returns a NumPy array of the non-dummy atoms of the geometry
+        in Cartesian coordinates in Angstroms with element encoded as
+        atomic number. If *npobj* is False, returns representation of
+        NumPy array.
+
+        """
+        import numpy as np
+        factor = 1.0 if self.PYunits == 'Angstrom' else psi_bohr2angstroms
+        self.update_geometry()
+
+        # TODO fn title is format_mol... but return args not compatible
+        geo = []
+        for i in range(self.natom()):
+            [x, y, z] = self.atoms[i].compute()
+            geo.append([self.Z(i), x * factor, y * factor, z * factor])
+
+        nparr = np.array(geo)
+        return nparr if npobj else np.array_repr(nparr)
+
 #    def save_string_for_psi4(self):
 #        """Returns a string of Molecule formatted for psi4.
 #        Includes fragments and reorienting, if specified.
