@@ -282,17 +282,22 @@ def valerr(data, color=None, title='', xtitle='', view=True,
     # plot reaction errors and threads
     for rxn in data:
         clr = segment_color(color, rxn['color'] if 'color' in rxn else None)
-
-        ax1.plot(rxn['axis'], rxn['bmdata'], 'o', color='black', markersize=6.0)
-        ax1.plot(rxn['axis'], rxn['mcdata'], '^', color=clr, markersize=8.0)
         xmin = min(xmin, rxn['axis'])
         xmax = max(xmax, rxn['axis'])
-        vmin = min(0, vmin, rxn['mcdata'], rxn['bmdata'])
-        vmax = max(0, vmax, rxn['mcdata'], rxn['bmdata'])
 
-        ax2.plot(rxn['axis'], rxn['error'][0], 's', color=clr)
-        emin = min(0, emin, rxn['error'][0])
-        emax = max(0, emax, rxn['error'][0])
+        ax1.plot(rxn['axis'], rxn['mcdata'], '^', color=clr, markersize=8.0)
+        vmin = min(0, vmin, rxn['mcdata'])
+        vmax = max(0, vmax, rxn['mcdata'])
+
+        if rxn['bmdata'] is not None:
+            ax1.plot(rxn['axis'], rxn['bmdata'], 'o', color='black', markersize=6.0)
+            vmin = min(0, vmin, rxn['bmdata'])
+            vmax = max(0, vmax, rxn['bmdata'])
+
+        if rxn['error'][0] is not None:
+            ax2.plot(rxn['axis'], rxn['error'][0], 's', color=clr)
+            emin = min(0, emin, rxn['error'][0])
+            emax = max(0, emax, rxn['error'][0])
 
     xbuf = max(0.05, abs(0.02 * xmax))
     vbuf = max(0.1, abs(0.02 * vmax))

@@ -667,7 +667,6 @@ class WrappedDatabase(object):
             dbrxn = database.dbse + '-' + str(rxn)
             for ref, info in oBIND.iteritems():
                 bindval = getattr(database, info[3])[dbrxn]
-                print rxn, ref, bindval
                 if bindval is not None:
                     oHRXN[rxn].data[ref] = ReactionDatum(dbse=database.dbse,
                                                          rxn=rxn,

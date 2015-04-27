@@ -1292,9 +1292,8 @@ elif project == 'nbcref':
     cpmd = ['CP']
 
 elif project == 'curveref':
-    mtds = ['CCSDT', 'DWCCSDTF12',
-            'SCMICCSDAF12', 'CCSDTAF12', 'SCMICCSDBF12', 'CCSDTBF12', 'SCMICCSDCF12', 'CCSDTCF12']
-    bass = ['atz', 'aqz', 'a5z', 'atqz', 'aq5z']
+    mtds = ['CCSDT', 'DWCCSDTF12', 'SCMICCSDAF12', 'CCSDTAF12', 'CCSDTBF12', 'CCSDTCF12']
+    bass = ['adz', 'atz', 'aqz', 'a5z', 'adtz', 'atqz', 'aq5z']
     opts = ['']
     cpmd = ['CP']
 
