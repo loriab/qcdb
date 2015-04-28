@@ -68,7 +68,7 @@ class Infile(qcformat.InputFormat2):
     def __init__(self, mem, mol, mtd, der, opt):
         qcformat.InputFormat2.__init__(self, mem, mol, mtd, der, opt)
 
-        print self.method, self.molecule.nactive_fragments()
+        #print self.method, self.molecule.nactive_fragments()
         if 'sapt' in self.method and self.molecule.nactive_fragments() != 2:
             raise FragmentCountError("""Requested molecule has %d, not 2, fragments.""" % (self.molecule.nactive_fragments()))
 

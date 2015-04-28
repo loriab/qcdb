@@ -284,13 +284,13 @@ def valerr(data, color=None, title='', xtitle='', view=True,
         clr = segment_color(color, rxn['color'] if 'color' in rxn else None)
 
         ax1.plot(rxn['axis'], rxn['bmdata'], 'o', color='black', markersize=6.0)
-        ax1.plot(rxn['axis'], rxn['mcdata'], '^', color=clr, markersize=8.0)
+        ax1.plot(rxn['axis'], rxn['mcdata'], '^', color=clr, markersize=6.0, mew=0)
         xmin = min(xmin, rxn['axis'])
         xmax = max(xmax, rxn['axis'])
         vmin = min(0, vmin, rxn['mcdata'], rxn['bmdata'])
         vmax = max(0, vmax, rxn['mcdata'], rxn['bmdata'])
 
-        ax2.plot(rxn['axis'], rxn['error'][0], 's', color=clr)
+        ax2.plot(rxn['axis'], rxn['error'][0], 's', color=clr, mew=0)
         emin = min(0, emin, rxn['error'][0])
         emax = max(0, emax, rxn['error'][0])
 
@@ -498,7 +498,11 @@ def threads(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None,
     plt.xlim([-xlimit, xlimit])
     plt.ylim([-1 * Nweft - 1, 0])
     plt.yticks([])
-    plt.xticks([])  #new
+    ax.set_frame_on(False)
+    ax.set_xticks([-2.0, -1.0, 0.0, 1.0, 2.0])
+    for tick in ax.xaxis.get_major_ticks():
+        tick.tick1line.set_markersize(0)
+        tick.tick2line.set_markersize(0)
 
     # label plot and tiers
     ax.text(-0.9 * xlimit, -0.25, title,
@@ -552,7 +556,7 @@ def threads(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None,
         ax.plot([-x for x in mae], positions, 's', color='black')
     if mape is not None:  # equivalent to MAE for a 10 kcal/mol IE
         ax.plot([0.025 * x for x in mape], positions, 'o', color='black')
-    plt.axvline(0, color='black')
+    plt.axvline(0, color='#cccc00')
 
     # save and show
     pltuid = title + '_' + hashlib.sha1(title + repr(labels) + repr(xlimit)).hexdigest()
@@ -585,21 +589,21 @@ def threads(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None,
         htmlcode += """}\n"""
         htmlcode += """</SCRIPT>\n"""
 
-        #htmlcode += """%s <BR>""" % (mousetitle)
-        #htmlcode += """Mouseover:<BR><a id="cid"></a><br>\n"""
         if mousediv:
             htmlcode += """%s\n""" % (mousediv[0])
         if mousetitle:
             htmlcode += """%s <BR>""" % (mousetitle)
         htmlcode += """<h4>Mouseover</h4><a id="cid"></a><br>\n"""
+        if mouseimag:
+            htmlcode += """<div class="text-center">"""
+            htmlcode += """<IMG ID="cmpd_img" WIDTH="%d" HEIGHT="%d">\n""" % (200, 160)
+            htmlcode += """</div>"""
         if mousediv:
             htmlcode += """%s\n""" % (mousediv[1])
-        htmlcode += """<IMG SRC="%s" ismap usemap="#points" WIDTH="%d" HEIGHT="%d">\n""" % \
-            (pltfile + '.png', img_width, img_height)
-        #htmlcode += """<IMG SRC="%s" ismap usemap="#points" WIDTH="%d">\n""" % \
-        #    (pltfile + '.png', img_width)
-        if mouseimag:
-            htmlcode += """<IMG ID="cmpd_img" WIDTH="%d" HEIGHT="%d">\n""" % (200, 160)
+        #htmlcode += """<IMG SRC="%s" ismap usemap="#points" WIDTH="%d" HEIGHT="%d">\n""" % \
+        #    (pltfile + '.png', img_width, img_height)
+        htmlcode += """<IMG SRC="%s" ismap usemap="#points" WIDTH="%d">\n""" % \
+            (pltfile + '.png', img_width)
         htmlcode += """<MAP name="points">\n"""
 
         # generating html image map code
