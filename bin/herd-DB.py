@@ -28,6 +28,7 @@ import sys
 import glob
 #import math
 import string
+import argparse
 import importlib
 import collections
 
@@ -40,22 +41,43 @@ sys.path.append(qcdbpkg_path + '/../databases')
 
 
 # instructions
-print """
- Welcome to herd-db.
-#    Just execute in a directory of output files.
-"""
+parser = argparse.ArgumentParser(description='Process quantum chemical results from output files.')
+parser.add_argument('-d', '--dbmodule', help='force choice of database module')
+parser.add_argument('-p', '--prefix', help='force prefix for usemefiles, defaults to dir name')
+parser.add_argument('-q', '--qcprog', help='force choice of QC program parser')
+parser.add_argument('-s', '--style', help='stype of usemefile (3col or Wt)')
+args = parser.parse_args()
 
 actionable_data = {
-    'SCF TOTAL ENERGY': '.usemeraw',
-    'MP2 CORRELATION ENERGY': '.mp2.usemecorl',
-    'MP3 CORRELATION ENERGY': '.mp3.usemecorl',
-    'MP4 CORRELATION ENERGY': '.mp4.usemecorl',
-    'CCSD CORRELATION ENERGY': '.ccsd.usemecorl',
-    'CCSD(T) CORRELATION ENERGY': '.ccsdt.usemecorl',
-    'CCSDT CORRELATION ENERGY': '.ccsdfullt.usemecorl',
-    'CCSDT(Q) CORRELATION ENERGY': '.ccsdtq.usemecorl',
-    }
+    #'SCF TOTAL ENERGY': 'usemeraw'
+    'HF TOTAL ENERGY': 'usemeraw',
+    'MP2 CORRELATION ENERGY': 'mp2.usemecorl',
+    'MP2 SAME-SPIN CORRELATION ENERGY': 'mp2.usemetrip',
+    'MP3 CORRELATION ENERGY': 'mp3.usemecorl',
+    'MP4 CORRELATION ENERGY': 'mp4.usemecorl',
+    'CCSD CORRELATION ENERGY': 'ccsd.usemecorl',
+    'CCSD SAME-SPIN CORRELATION ENERGY': 'ccsd.usemetrip',
+    'CCSD(T) CORRELATION ENERGY': 'ccsdt.usemecorl',
+    'CCSDT CORRELATION ENERGY': 'ccsdfullt.usemecorl',
+    'CCSDT(Q) CORRELATION ENERGY': 'ccsdtq.usemecorl',
+    
+    'HF-CABS TOTAL ENERGY': 'f12.usemeraw',
+    'MP2-F12 CORRELATION ENERGY': 'mp2f12.usemecorl',
+    'MP2-F12 SAME-SPIN CORRELATION ENERGY': 'mp2f12.usemetrip',
 
+    'CCSD-F12A CORRELATION ENERGY': 'ccsdaf12.usemecorl',
+    'CCSD-F12A SAME-SPIN CORRELATION ENERGY': 'ccsdaf12.usemetrip',
+    'CCSD-F12B CORRELATION ENERGY': 'ccsdbf12.usemecorl',
+    'CCSD-F12B SAME-SPIN CORRELATION ENERGY': 'ccsdbf12.usemetrip',
+    '(T)-F12AB CORRECTION ENERGY': 'ccsdnstabf12.usemecrct',
+    'CCSD-F12C CORRELATION ENERGY': 'ccsdcf12.usemecorl',
+    'CCSD-F12C SAME-SPIN CORRELATION ENERGY': 'ccsdcf12.usemetrip',
+    '(T)-F12C CORRECTION ENERGY': 'ccsdnstcf12.usemecrct',
+
+    'DFT FUNCTIONAL TOTAL ENERGY': 'DFT.usemeraw',
+    'DISPERSION CORRECTION ENERGY': '-nobas.DFTdX.usemedash',
+    'DOUBLE-HYBRID CORRECTION ENERGY': 'DHDFT.usemeraw',  # violation of conventions to get plain dhdft E!
+}
 
 def identify_qcprog(filename):
     """
@@ -63,6 +85,7 @@ def identify_qcprog(filename):
     """
     qcprogs = {
         'PSI4: An Open-Source Ab Initio Electronic Structure Package': 'psi4',
+        '***  PROGRAM SYSTEM MOLPRO  ***': 'molpro2',
         }
 
     with open(sample, 'r') as handle:
@@ -72,14 +95,23 @@ def identify_qcprog(filename):
             if target in line:
                 return qcprogs[target]
 
+
 # query database, qcprog, and directory name
 sample = glob.glob('*.out')[0]
 db_name = sample.split('-')[0]
-qcprog = identify_qcprog(sample)
-dirprefix = os.path.split(os.getcwd())[-1]
+if db_name == 'NBC1':  # TODO
+    db_name = 'NBC10'
+if db_name == 'HBC1':
+    db_name = 'HBC6'
+db_name = db_name if args.dbmodule is None else args.dbmodule
+qcprog = identify_qcprog(sample) if args.qcprog is None else args.qcprog
+dirprefix = os.path.split(os.getcwd())[-1] if args.prefix is None else args.prefix
+usemeold = False if args.prefix is 'new' else True
 if len(glob.glob('*-CP.out')) > 0:
     mode = 'ACTV_CP'
 elif len(glob.glob('*-unCP.out')) > 0:
+    mode = 'ACTV'
+elif len(glob.glob('*reagent.out')) > 0:
     mode = 'ACTV'
 else:
     mode = 'ACTV_SA'
@@ -123,12 +155,14 @@ print """
         <<< SCANNED SETTINGS  SCANNED SETTINGS  SCANNED SETTINGS  SCANNED SETTINGS >>>
 
                           dbse = %s
+                      dbmodule = %s
                         qcprog = %s
+                          actv = %s
                      dirprefix = %s
 
         <<< SCANNED SETTINGS  DISREGARD RESULTS IF INAPPROPRIATE  SCANNED SETTINGS >>>
 
-""" % (dbse, qcprog, dirprefix)
+""" % (dbse, db_name, qcprog, mode, dirprefix)
 
 # commence iteration through reactions
 psivar = collections.defaultdict(dict)
@@ -158,34 +192,59 @@ for rxn in HRXN:
 # prepare useme footer
 footer = '%-23s ' % ('#__elecE_in_hartree')
 for i in range(max([len(ACTV[rgt]) for rgt in ACTV])):
-    #footer += '%16s %4s ' % ('Reagent' + string.uppercase[i], 'Wt')
-    footer += '%16s ' % ('Reagent' + string.uppercase[i])
+    if usemeold:
+        footer += '%16s ' % ('Reagent' + string.uppercase[i])
+    else:
+        footer += '%16s %4s ' % ('Reagent' + string.uppercase[i], 'Wt')
 footer += '\n'
 
+isDHDFT = True if 'DOUBLE-HYBRID CORRECTION ENERGY' in psivar.keys() else False
+
 # print main results to useme
+print ''
 for datum in psivar.keys():
     usemecontents = ''
+    tally = 0
     try:
         usemeext = actionable_data[datum]
     except KeyError:
         continue
 
+    if isDHDFT and usemeext in ['DFT.usemeraw', 'mp2.usemecorl']:  # sad hack
+        continue
+
     for rxn in HRXN:
         index = dbse + '-' + str(rxn)
-        textline = '%-23s ' % (index)
+        textline = ''
+        complete = True
 
         for rgt in ACTV[index]:
             rxnm_wt = RXNM[index][ACTV[index][ACTV[index].index(rgt)]]
             try:
-                #textline += '%16.8f %4d ' % (psivar[datum][rgt], rxnm_wt)
-                textline += '%16.8f ' % (psivar[datum][rgt])
+                value = psivar[datum][rgt]
+                if datum == 'DOUBLE-HYBRID CORRECTION ENERGY':
+                    value += psivar['DFT FUNCTIONAL TOTAL ENERGY'][rgt]
+
+                if usemeold:
+                    textline += '%16.8f ' % (value)
+                    if rxnm_wt == -2:
+                        textline += '%16.8f ' % (value)
+                else:
+                    textline += '%16.8f %4d ' % (value, rxnm_wt)
             except KeyError:
-                break
-        else:
-            usemecontents += textline + '\n'
-            continue
+                textline += '%16s ' % ('')
+                complete = False
+
+        if len(textline.strip()) > 0:
+            if complete:
+                usemecontents += '%-23s %s\n' % (index, textline)
+                tally += 1
+            else:
+                usemecontents += '#%-22s %s\n' % (index, textline)
 
     if len(usemecontents) > 0:
-        with open(dirprefix + usemeext, 'w') as handle:
+        with open(dirprefix + '.' + usemeext, 'w') as handle:
             handle.write(usemecontents)
             handle.write(footer)
+            print '        writing %4d entries to %s' % (tally, dirprefix + '.' + usemeext)
+

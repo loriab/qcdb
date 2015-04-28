@@ -161,8 +161,11 @@ def table_generic(dbse, serrors,
 
     text = '\n'.join(text)
     print text
-    with open('supmat_table', 'w') as handle:
-         handle.write(text)
+
+    if filename is not None:
+        with open(filename, 'w') as handle:
+             handle.write(text)
+        print 'latex table written to %s' % (filename)
 
 
 if __name__ == "__main__":

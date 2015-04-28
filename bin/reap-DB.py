@@ -1,7 +1,7 @@
 import os
 import sys
 import glob
-import math
+import argparse
 import itertools
 import collections
 sys.path.append('/Users/loriab/linux/qcdb')
@@ -16,74 +16,130 @@ pd.set_option('display.max_columns', 10)
 pd.set_option('display.width', 200)
 
 
-# <<< read usemefiles and convert to giant DataFrame >>>
+# <<< setup >>>
 
-#path = r"""C:\Users\Owner\Documents\f12dilabiousemefiles\usemefiles"""
-verbose = True
-homewrite = '/Users/loriab/'
-homewrite = '/Users/loriab/linux/qcdb/sandbox/bfdb'
+parser = argparse.ArgumentParser(description='Expand quantum chemical terms into reaction quantities.')
+parser.add_argument('-d', '--dbmodule', help='force choice of database module, defaults to project value')
+parser.add_argument('-p', '--project', help='select pre-configured project')
+parser.add_argument('-v', '--verbose', type=int, default=1, help='amount of printing')
+parser.add_argument('-o', '--outdir', default='.', help='directory to write output files')
+args = parser.parse_args()
+
+project = args.project
+homewrite = args.outdir
+verbose = args.verbose
+
+if verbose > 1:
+    print args
+
+
+# <<< define projects >>>
 
 # pass --> pass
-#dbse = 'A24'
-#project = 'parenq'
-##path = r"""/Users/loriab/linux/qcdb/data/parenqusemefiles/"""
-#path = r"""/Users/loriab/linux/qcdb/data/newparenq/"""
+if project == 'parenq':
+    dbse = 'A24'
+    ##path = r"""/Users/loriab/linux/qcdb/data/parenqusemefiles/"""
+    path = r"""/Users/loriab/linux/qcdb/data/newparenq/"""
 
 # fail --> pass
-dbse = 'S22'
-project = 'dft'
-path = r"""/Users/loriab/linux/qcdb/data/dftusemefiles/"""
+elif project == 'dft':
+    dbse = 'S22'
+    path = r"""/Users/loriab/linux/qcdb/data/dftusemefiles/"""
 
 # pass --> pass
-#dbse = 'A24'
-#project = 'f12dilabio'
-#path = r"""/Users/loriab/linux/qcdb/data/f12dilabiousemefiles/"""
+elif project == 'f12dilabio':
+    dbse = 'A24'
+    path = r"""/Users/loriab/linux/qcdb/data/f12dilabiousemefiles/"""
 
 # fail --> pass
-#dbse = 'S22'
-#project = 'dhdft'
-#path = r"""/Users/loriab/linux/qcdb/data/dhdftusemefiles/"""
+elif project == 'dhdft':
+    dbse = 'S22'
+    path = r"""/Users/loriab/linux/qcdb/data/dhdftusemefiles/"""
 
-dbse = 'S22'
-project = 'dhdft2'
-path = r"""/Users/loriab/linux/qcdb/data/dhdftusemefiles/DSD/"""
-
-# pass --> pass
-#dbse = 'A24'
-#project = 'dilabio'
-#path = r"""/Users/loriab/linux/qcdb/data/dilabiousemefiles/"""
+#dbse = 'NBC10'
+#project == 'dhdft2':
+#path = r"""/Users/loriab/linux/qcdb/data/dhdftusemefiles/DSD/"""
 
 # pass --> pass
-#dbse = 'S22'
-#project = 'pt2'
-#path = r"""/Users/loriab/linux/qcdb/data/pt2usemefiles/"""
+elif project == 'dilabio':
+    dbse = 'A24'
+    path = r"""/Users/loriab/linux/qcdb/data/dilabiousemefiles/"""
 
 # pass --> pass
-#dbse = 'S22'
-#project = 'saptone'
-#path = r"""/Users/loriab/linux/qcdb/data/pt2usemefiles/"""
+elif project == 'pt2':
+    dbse = 'S22'
+    path = r"""/Users/loriab/linux/qcdb/data/pt2usemefiles/"""
+    #path = r"""/Users/loriab/linux/qcdb/data/pt2usemefiles/mini"""
+
+# pass --> pass
+elif project == 'saptone':
+    dbse = 'S22'
+    path = r"""/Users/loriab/linux/qcdb/data/pt2usemefiles/"""
 
 # not tested
 #dbse = 'BBI'
-#dbse = 'SSI'
-#project = 'merz3'
-#path = r"""/Users/loriab/linux/qcdb/data/merz3usemefiles/"""
+elif project == 'merz3':
+    dbse = 'SSI'
+    path = r"""/Users/loriab/linux/qcdb/data/merz3usemefiles/"""
 
 # not tested
 #dbse = 'S22'
 #project = 'aep'
 #path = r"""/Users/loriab/linux/qcdb/data/pt2usemefiles/"""
 
-dbse = 'S22'
-project = 'sflow'
-path = r"""/Users/loriab/linux/qcdb/data/flowusemefiles/"""
+elif project == 'sflow':
+    dbse = 'S22'
+    path = r"""/Users/loriab/linux/qcdb/data/flowusemefiles/"""
 
-dbobj = qcdb.Database(dbse)
+elif project == 'dfit':
+    dbse = 'HBC6'
+    #dbse = 'NBC10ext'
+    #dbse = 'ACONF'
+    path = r"""/Users/loriab/linux/Refitting_DFT_D/Databases/usemefiles/"""
+
+elif project == 'nbcref':
+    dbse = 'NBC10ext'
+    path = r"""/Users/loriab/linux/Refitting_DFT_D/Databases/usemefiles/"""
+
+elif project == 'curveref':
+    dbse = 'S22by7'
+    path = r"""/Users/loriab/linux/Refitting_DFT_D/Databases/usemefiles/"""
+
+else:
+    raise ValidationError("""Project %s not defined.""" % (project))
+
+
+# <<< learn about Database: rgts, rxns, modes, and stoichiometry
+
+dbse = dbse if args.dbmodule is None else args.dbmodule
+dbobj = qcdb.Database(dbse, loadfrompickle=True)
 dbse = dbobj.dbse
 print '<<<', dbse, '>>>'
-rxns = ['%s-%s' % (dbse, rxn) for rxn in dbobj.dbdict[dbobj.dbse].hrxn.keys()]
-names = ['rxn', 'dimer', 'monoA', 'monoB']
+modes = []
+stoich = {}
+for orxn in dbobj.hrxn.itervalues():
+    tdict = {}
+    for mode, rxnm in orxn.rxnm.iteritems():
+        modes.append(mode)
+        rgtindx = 0
+        for wt in rxnm.itervalues():
+            tdict[(mode, 'Rgt' + str(rgtindx))] = wt
+            rgtindx += 1
+    stoich[orxn.dbrxn] = tdict
+dfstoich = pd.DataFrame.from_dict(stoich, orient='index')
+modes = set(modes)
+names = ['rxn']
+names.extend(['Rgt' + str(i) for i in range(12)])
+maxrgt = 0
+for mode in modes:
+    maxrgt = max(maxrgt, dfstoich[mode].shape[1])
+dfstoich.index.names = ['rxn']
 h2kc = qcdb.psi_hartree2kcalmol
+if verbose > 1:
+    print 'DFSTOICH\n', names[:maxrgt+1], dfstoich.head(5)
+
+
+# <<< read usemefiles and convert to giant DataFrame >>>
 
 rawdata = collections.defaultdict(lambda: collections.defaultdict(lambda: collections.defaultdict(dict)))
 usemeglob = glob.glob('%s/%s*useme*' % (path, dbse))
@@ -94,11 +150,13 @@ for useme in usemeglob:
     basis = spl[0].split('-')[-1]
     piece = '.'.join(spl[1:])
     optns = spl[0].split('-')[2:-1]
-    cpmode = 'unCP'
+    cpmode = 'default'
     optns2 = []
     for opt in sorted(optns):
-        if opt in ['CP', 'unCP']:
+        if opt == 'CP':
             cpmode = opt
+        elif opt == 'unCP':
+            cpmode = 'default'
         else:
             try:
                 if useme2psivar[piece] in optclue2psivar[opt]:
@@ -106,24 +164,24 @@ for useme in usemeglob:
             except KeyError as e:
                 raise ValidationError('Error: option %s needs adding to to optclue2psivar is psivarrosetta.py: %s' % (opt, e))
     optns = '-'.join(optns2)
-    #print useme, basis, piece, optns, useme2psivar[piece]
+    if verbose > 2:
+        print useme, basis, piece, optns, useme2psivar[piece]
+
     try:
         print 'Reading useme: %6s %50s %15s %5s' % (basis, useme2psivar[piece], optns, cpmode)
     except KeyError as e:
         raise ValidationError('Error: useme %s needs adding to useme2psivar in psivarrosetta.py' % (e))
-        
+
     if piece.endswith('usemedash'):
-        tmp = pd.read_csv('%s' % (useme), index_col=0, sep='\s+', comment='#', na_values='None', names=names)
-        rawdata[basis][useme2psivar[piece]][optns]['unCP'] = tmp.dropna(how='all')
+        tmp = pd.read_csv('%s' % (useme), index_col=0, sep='\s+', comment='#', na_values='None', names=names[:maxrgt+1])
+        rawdata[basis][useme2psivar[piece]][optns]['default'] = tmp.dropna(how='all')
         rawdata[basis][useme2psivar[piece]][optns]['CP'] = tmp.dropna(how='all')
     elif piece.endswith('usemesapt') or piece.endswith('usemedftsapt') or piece.endswith('usemempsapt'):
         # moved labels to top, removed comment marker for labels line, col relabeled to mp2cDisp20 for mpsapt
         tmp = pd.read_csv('%s' % (useme), index_col=0, sep='\s+', comment='#', na_values='None')
         sapt_cols = tmp.columns.tolist()
-        tmp = pd.DataFrame(tmp.stack(), columns=['dimer'])
-        tmp['dimer'] *= 0.001  # useme in mHartree
-        tmp['monoA'] = 0.0
-        tmp['monoB'] = 0.0
+        tmp = pd.DataFrame(tmp.stack(), columns=['Rgt0'])
+        tmp['Rgt0'] *= 0.001  # useme in mHartree
         tmp = tmp.reorder_levels([1, 0])
         tmp.index.names = ['psivar', 'rxn']
         for pv in sapt_cols:
@@ -137,24 +195,25 @@ for useme in usemeglob:
                 except KeyError as e:
                     pass  # bypass empty columns
                 else:
-                    rawdata[basis][useme2psivar[pv]][optns]['unCP'] = tmp2
-                    rawdata[basis][useme2psivar[pv]][optns]['CP'] = tmp2
+                    rawdata[basis][useme2psivar[pv]][optns]['SA'] = tmp2
     else:
-        tmp = pd.read_csv('%s' % (useme), index_col=0, sep='\s+', comment='#', na_values='None', names=names)
+        tmp = pd.read_csv('%s' % (useme), index_col=0, sep='\s+', comment='#', na_values='None', names=names[:maxrgt+1])
+        cpmode.replace('unCP', 'default')
         rawdata[basis][useme2psivar[piece]][optns][cpmode] = tmp.dropna(how='all')
-    #print tmp.head(4)
+    if verbose > 1:
+        print tmp.head(4)
 
 baszip = {}
 for baskey, basval in sorted(rawdata.iteritems()):
     pvzip = {}
     for pvkey, pvval in sorted(basval.iteritems()):
         metazip = {}
-        if verbose:
+        if verbose > 0:
             print """reading  %s %s""" % (pvkey, '.' * (40 - len(pvkey))),
         for metakey, metaval, in pvval.iteritems():
             metazip[metakey] = pd.concat(metaval, axis=1)  # merge CP/unCP
         pvzip[pvkey] = pd.concat(metazip)
-        if verbose:
+        if verbose > 0:
             print """SUCCESS w/ %s %s""" % (baskey, ', '.join(metazip.keys()))
     baszip[baskey] = pd.concat(pvzip)
 df = pd.concat(baszip)
@@ -163,20 +222,52 @@ df.index.names = ['bstrt', 'psivar', 'meta', 'rxn']
 
 # <<< define utility functions >>>
 
+def rxnm_contract_expand(rgts):
+    """Applies the stoichiometry array to the pd.DataFrame *rgts*, then sums
+    across the reagents in each ACTV mode separately thus computing a reaction
+    quantity. The reaction quantity is copied to every reagent within each ACTV
+    mode for ease of further computation and returned.
 
-def ie(rgts):
-    cpmode = 'CP'
-    return rgts[cpmode]['dimer'] - rgts[cpmode]['monoA'] - rgts[cpmode]['monoB']
+    """
+    stoich_scaled_rgts = dfstoich.mul(rgts)
+    micols = stoich_scaled_rgts.columns.values
+    modes, rgts = zip(*micols)
+    modezip = {}
+    for mode in set(modes):
+        rgts = [rg for md, rg in micols if md == mode]
+        contracted_rxn = stoich_scaled_rgts[mode].sum(axis=1)
+        rgtzip = {rg: contracted_rxn for rg in rgts}
+        modezip[mode] = pd.concat(rgtzip, axis=1)
+    expanded_rgts = pd.concat(modezip, axis=1)
+    return expanded_rgts
 
 
-def ie_uncp(rgts):
-    cpmode = 'unCP'
-    return rgts[cpmode]['dimer'] - rgts[cpmode]['monoA'] - rgts[cpmode]['monoB']
+def cp2sa(rgts):
+    stoich_scaled_rgts = dfstoich.mul(rgts)
+    micols = stoich_scaled_rgts.columns.values
+    modes, rgts = zip(*micols)
+    modezip = {}
+    for mode in set(modes):
+        rgts = [rg for md, rg in micols if md == mode]
+        contracted_rxn = stoich_scaled_rgts[mode].sum(axis=1)
+        modezip[mode] = contracted_rxn
+    expanded_rgts = pd.concat(modezip, axis=1)
+    return expanded_rgts
 
 
-def ie_ave(rgts):
-    return 0.5 * (rgts['CP']['dimer'] - rgts['CP']['monoA'] - rgts['CP']['monoB'] +
-                  rgts['unCP']['dimer'] - rgts['unCP']['monoA'] - rgts['unCP']['monoB'])
+def reactionate(cpmode, rgts):
+    """Apply the stoichiometry that turns reagent energies *rgts* into returned
+    reaction energies, according to active mode *cpmode*.
+
+    """
+    if cpmode == 'ave':
+        cp = pd.DataFrame(dfstoich['CP'] * rgts['CP'])
+        uncp = pd.DataFrame(dfstoich['default'] * rgts['default'])
+        ave = 0.5 * (cp + uncp)
+        return ave.sum(axis=1)
+    else:
+        hjkl = pd.DataFrame(dfstoich[cpmode] * rgts[cpmode])
+        return hjkl.sum(axis=1)
 
 
 def categories(df, lvl):
@@ -201,7 +292,7 @@ def append_result_of_func_with_funcargs_to_master_DataFrame_atlevel_with_label(m
             #    print '    s1:', bnbn
             #    bnbn2 = set(['-'.join(sorted(set(bn.split('-')))) for bn in bnbn])
             #    print '    s2:', bnbn2
-                #bnbn3 = 
+                #bnbn3 =
                 #print '    s3:', bnbn3
             #    print '   tup:', ['-'.join(sorted(set(tup[1].split('-')))) for tup in item.index.values]
                 #print '   set:', set([tup[1] for tup in item.index.values])
@@ -225,7 +316,7 @@ def append_result_of_func_with_funcargs_to_master_DataFrame_atlevel_with_label(m
         #if label.startswith('SCS(MI)-MP2-F12') or label == 'adtz':
         #    print label, optlabel
         #    print data_rich_args_2
-        
+
         candidate = func(data_rich_args_2)
         candidate = candidate.dropna(axis=0, how='all')
         if len(candidate) > 0:
@@ -274,12 +365,12 @@ def product(args):
 def spin_component_scaling(args):
     os_scale, ss_scale, tot_corl, ss_corl = args
     return os_scale * (tot_corl - ss_corl) + ss_scale * ss_corl
-    
-    
+
+
 def correction(args):
     base, plus, minus = args
     return base + plus - minus
-    
+
 
 # <<< append to main DataFrame basic psivar equalities not explicit to useme structure >>>
 
@@ -302,10 +393,12 @@ pv0['B3LYP TOTAL ENERGY'] = {'func': sum, 'args': ['B3LYP FUNCTIONAL TOTAL ENERG
 pv0['B970 TOTAL ENERGY'] = {'func': sum, 'args': ['B970 FUNCTIONAL TOTAL ENERGY']}
 pv0['B97 TOTAL ENERGY'] = {'func': sum, 'args': ['B97 FUNCTIONAL TOTAL ENERGY']}
 pv0['BP86 TOTAL ENERGY'] = {'func': sum, 'args': ['BP86 FUNCTIONAL TOTAL ENERGY']}
+pv0['BLYP TOTAL ENERGY'] = {'func': sum, 'args': ['BLYP FUNCTIONAL TOTAL ENERGY']}
 pv0['M05-2X TOTAL ENERGY'] = {'func': sum, 'args': ['M05-2X FUNCTIONAL TOTAL ENERGY']}
 pv0['M06-2X TOTAL ENERGY'] = {'func': sum, 'args': ['M06-2X FUNCTIONAL TOTAL ENERGY']}
 pv0['PBE0 TOTAL ENERGY'] = {'func': sum, 'args': ['PBE0 FUNCTIONAL TOTAL ENERGY']}
 pv0['PBE TOTAL ENERGY'] = {'func': sum, 'args': ['PBE FUNCTIONAL TOTAL ENERGY']}
+pv0['WPBE TOTAL ENERGY'] = {'func': sum, 'args': ['WPBE FUNCTIONAL TOTAL ENERGY']}
 pv0['HF TOTAL ENERGY'] = {'func': sum, 'args': ['SCF TOTAL ENERGY']}
 pv0['MP3 CORRELATION ENERGY'] = {'func': difference, 'args': ['MP3 FNO CORRELATION ENERGY', 'FNO CORRECTION ENERGY']}  # TODO not checked
 pv0['CCSD CORRELATION ENERGY'] = {'func': difference, 'args': ['CCSD FNO CORRELATION ENERGY', 'FNO CORRECTION ENERGY']}  # TODO not checked
@@ -324,201 +417,212 @@ pv0['CCSD TOTAL ENERGY'] = {'func': sum, 'args': ['HF TOTAL ENERGY', 'CCSD CORRE
 pv0['MP3 TOTAL ENERGY'] = {'func': sum, 'args': ['HF TOTAL ENERGY', 'MP3 CORRELATION ENERGY']}
 for pvar, action in pv0.iteritems():
     try:
-        if verbose:
+        if verbose > 0:
             print """building %s %s""" % (pvar, '.' * (50 - len(pvar))),
         df = append_result_of_func_with_funcargs_to_master_DataFrame_atlevel_with_label(
             master=df, label=pvar, atlevel=lvl, func=action['func'], funcargs=action['args'])
-        if verbose:
+        if verbose > 0:
             print """SUCCESS"""
     except KeyError, e:
-        if verbose:
+        if verbose > 0:
             print """FAILED, missing %s""" % (e)
 
+
 # <<< miscellaneous pre-computing >>>
-    
+
 #    <<< SAPT EXCHSCAL >>>
 
 try:
+    if verbose > 0:
+        print 'building intermediate SAPT EXCHSCAL ...',
     ex10 = df.xs('SAPT EXCH10 ENERGY', level='psivar')
     ex10ss = df.xs('SAPT EXCH10(S^2) ENERGY', level='psivar')
 except KeyError, e:
-    print 'Not handled: SAPT EXCHSCAL', e
+    if verbose > 0:
+        print 'NOT HANDLED, missing', e
 else:
-    ex10ss.loc[:,('CP','monoA')] = np.nan
-    ex10ss.loc[:,('CP','monoB')] = np.nan
-    ex10ss.loc[:,('unCP','monoA')] = np.nan
-    ex10ss.loc[:,('unCP','monoB')] = np.nan
     ratio = ex10 / ex10ss
     ones = ratio.copy()
-    ones['dimer'] = 1.0
+    ones['Rgt0'] = 1.0
     logic = ex10 > 1.0e-5
     # return 1.0 if ex10 < 1.0e-5 else ex10 / ex10ss
     exsc = ratio.where(logic, ones)
-    exsc.loc[:,('CP','monoA')] = 0.0
-    exsc.loc[:,('CP','monoB')] = 0.0
-    exsc.loc[:,('unCP','monoA')] = 0.0
-    exsc.loc[:,('unCP','monoB')] = 0.0
+
     exsc['psivar'] = 'SAPT EXCHSCAL'
     exsc.set_index('psivar', append=True, inplace=True)
     exsc = exsc.reorder_levels([0, 3, 1, 2])
     exsc.index.names = ['bstrt', 'psivar', 'meta', 'rxn']
-    print 'building SAPT EXCHSCAL'
+
     df = df.append(exsc, verify_integrity=True)
+    if verbose > 0:
+        print 'SUCCESS'
 
-#     <<< DW-MP2 & DW-MP2-F12 >>>
 
-dwmp2 = collections.defaultdict(lambda: collections.defaultdict(dict))
-try:
-    dwmp2['DW-MP2 OMEGA']['']['CP'] = pd.DataFrame(ie(df.xs('HF TOTAL ENERGY', level='psivar').xs('', level='meta')) /
-        ie(df.xs('MP2 TOTAL ENERGY', level='psivar').xs('', level='meta')), columns=['dimer'])
-except KeyError, e:
-    pass
-try:
-    dwmp2['DW-MP2 OMEGA']['']['unCP'] = pd.DataFrame(ie_uncp(df.xs('HF TOTAL ENERGY', level='psivar').xs('', level='meta')) /
-        ie(df.xs('MP2 TOTAL ENERGY', level='psivar').xs('', level='meta')), columns=['dimer'])
-except KeyError, e:
-    pass
-try:
-    dwmp2['DW-MP2 OMEGA']['dfmp']['CP'] = pd.DataFrame(ie(df.xs('HF TOTAL ENERGY', level='psivar').xs('dfhf', level='meta')) /
-        ie(df.xs('MP2 TOTAL ENERGY', level='psivar').xs('dfhf-dfmp', level='meta')), columns=['dimer'])
-except KeyError, e:
-    pass
-try:
-    dwmp2['DW-MP2 OMEGA']['dfmp']['unCP'] = pd.DataFrame(ie_uncp(df.xs('HF TOTAL ENERGY', level='psivar').xs('dfhf', level='meta')) /
-        ie(df.xs('MP2 TOTAL ENERGY', level='psivar').xs('dfhf-dfmp', level='meta')), columns=['dimer'])
-except KeyError, e:
-    pass
-try:
-    dwmp2['DW-MP2-F12 OMEGA']['']['CP'] = pd.DataFrame(ie(df.xs('HF-CABS TOTAL ENERGY', level='psivar').xs('', level='meta')) /
-        ie(df.xs('MP2-F12 TOTAL ENERGY', level='psivar').xs('', level='meta')), columns=['dimer'])
-except KeyError, e:
-    pass
-try:
-    dwmp2['DW-MP2-F12 OMEGA']['']['unCP'] = pd.DataFrame(ie_uncp(df.xs('HF-CABS TOTAL ENERGY', level='psivar').xs('', level='meta')) /
-        ie(df.xs('MP2-F12 TOTAL ENERGY', level='psivar').xs('', level='meta')), columns=['dimer'])
-except KeyError, e:
-    pass
-try:
-    dwmp2['DW-MP2-F12 OMEGA']['dfmp']['CP'] = pd.DataFrame(ie(df.xs('HF-CABS TOTAL ENERGY', level='psivar').xs('dfhf', level='meta')) /
-        ie(df.xs('MP2-F12 TOTAL ENERGY', level='psivar').xs('dfhf-dfmp', level='meta')), columns=['dimer'])
-except KeyError, e:
-    pass
-try:
-    dwmp2['DW-MP2-F12 OMEGA']['dfmp']['unCP'] = pd.DataFrame(ie_uncp(df.xs('HF-CABS TOTAL ENERGY', level='psivar').xs('dfhf', level='meta')) /
-        ie(df.xs('MP2-F12 TOTAL ENERGY', level='psivar').xs('dfhf-dfmp', level='meta')), columns=['dimer'])
-except KeyError, e:
-    pass
-if len(dwmp2) > 0:
-    pvzip = {}
-    for pvkey, pvval in dwmp2.iteritems():
-        print pvkey
-        metazip = {}
-        for metakey, metaval, in pvval.iteritems():
-            print metakey
-            print baskey, pvkey, metakey
-            for cpkey, cpval in metaval.iteritems():
-                print cpkey
-                cpval['monoA'] = cpval['dimer']
-                cpval['monoB'] = cpval['dimer']
-            metazip[metakey] = pd.concat(metaval, axis=1)  # merge CP/unCP
-        pvzip[pvkey] = pd.concat(metazip)
-    df_omega = pd.concat(pvzip)
-    df_omega = df_omega.reorder_levels([2, 0, 1, 3])
-    df_omega.index.names = ['bstrt', 'psivar', 'meta', 'rxn']
-    print 'pre omega'
+#     <<< SA MP2 CORL >>>
+
+for pv in ['HF TOTAL ENERGY', 'MP2 CORRELATION ENERGY', 'HF-CABS TOTAL ENERGY',
+           'MP2-F12 CORRELATION ENERGY']:
     try:
-        df_omega['CP'] = omega([0.15276, 1.89952, df_omega['CP']])
+        if verbose > 0:
+            print 'building intermediate SA %s ...' % (pv),
+        target = df.xs(pv, level='psivar') * 1.0
+    except KeyError, e:
+        if verbose > 0:
+            print 'NOT HANDLED, missing', e
+    else:
+        ans = cp2sa(target)
+        target.loc[:, ('SA', 'Rgt0')] = ans['CP']
+        for md in ['CP', 'default']:
+            try:
+                target.drop(md, axis=1, inplace=True)
+            except KeyError, e:
+                pass
+
+        target['psivar'] = pv
+        target.set_index('psivar', append=True, inplace=True)
+        target = target.reorder_levels([0, 3, 1, 2])
+        target.index.names = ['bstrt', 'psivar', 'meta', 'rxn']
+
+        df.update(target, raise_conflict=True)
+        if verbose > 0:
+            print 'SUCCESS'
+
+
+#     <<< MP2 OMEGA >>>
+
+if verbose > 0:
+    print 'building intermediates DW-MP2 OMEGA, DW-MP2-F12-OMEGA ...',
+dwmp2 = collections.defaultdict(dict)
+meta_combos = {
+    '': ['', ''],
+    'dfmp': ['dfhf', 'dfhf-dfmp']}  # TODO comprehensive? right?
+
+for mt, mtl in meta_combos.iteritems():
+    try:
+        dwmp2['DW-MP2 OMEGA'][mt] = \
+            rxnm_contract_expand(df.xs('HF TOTAL ENERGY', level='psivar').xs(mtl[0], level='meta')) / \
+            rxnm_contract_expand(df.xs('MP2 TOTAL ENERGY', level='psivar').xs(mtl[1], level='meta'))
     except KeyError, e:
         pass
-    print 'post omega'
-    #try:
-    #df_omega['unCP'] = omega([0.15276, 1.89952, df_omega['unCP']])  #TODO
-    #except KeyError, e:
-    #    pass
+    try:
+        dwmp2['DW-MP2-F12 OMEGA'][mt] = \
+            rxnm_contract_expand(df.xs('HF-CABS TOTAL ENERGY', level='psivar').xs(mtl[0], level='meta')) / \
+            rxnm_contract_expand(df.xs('MP2-F12 TOTAL ENERGY', level='psivar').xs(mtl[1], level='meta'))
+    except KeyError, e:
+        pass
+
+if not dwmp2:
+    if verbose > 0:
+        print 'NOT HANDLED'
+else:
+    pvzip = {}
+    for pvkey, pvval in dwmp2.iteritems():
+        metazip = {}
+        for metakey, metaval, in pvval.iteritems():
+            metazip[metakey] = metaval
+        pvzip[pvkey] = pd.concat(metazip)
+    df_omega = pd.concat(pvzip)
+
+    df_omega = df_omega.reorder_levels([2, 0, 1, 3])
+    df_omega.index.names = ['bstrt', 'psivar', 'meta', 'rxn']
+    try:
+        df_omega = omega([0.15276, 1.89952, df_omega])
+    except KeyError, e:
+        pass
+
     df = df.append(df_omega, verify_integrity=True)
+    if verbose > 0:
+        print 'SUCCESS'
+
 
 #     <<< DW-CCSD(T)-F12 >>>
 
 try:
+    if verbose > 0:
+        print 'building intermediate DW-CCSD(T) OMEGA ...',
     df.xs('HF-CABS TOTAL ENERGY', level='psivar')
     df.xs('MP2-F12 TOTAL ENERGY', level='psivar')
 except KeyError, e:
-    print 'Not handled: DW-CCSD(T) OMEGA', e
+    print 'NOT HANDLED, missing', e
 else:
-    ratio_HFCABS_MP2F12 = ie(df.xs('HF-CABS TOTAL ENERGY', level='psivar')) / ie(df.xs('MP2-F12 TOTAL ENERGY', level='psivar'))
-    #ratio_HFCABS_MP2F12_unCP = ie_uncp(df.xs('HF-CABS TOTAL ENERGY', level='psivar')) / ie(df.xs('MP2-F12 TOTAL ENERGY', level='psivar'))
-    #print ratio_HFCABS_MP2F12
+    ratio_HFCABS_MP2F12 = rxnm_contract_expand(df.xs('HF-CABS TOTAL ENERGY', level='psivar')) / \
+                          rxnm_contract_expand(df.xs('MP2-F12 TOTAL ENERGY', level='psivar'))
+    # TODO possibly set SA or other rxnm to NaN as inapplicable
     dwcc = {}
     try:
-        dwcc['adz'] = omega([-1, 4, ratio_HFCABS_MP2F12['adz']])
-        print 'post dwcc adz'
+        dwcc['adz'] = omega([-1, 4, ratio_HFCABS_MP2F12.xs('adz', level='bstrt')])
     except KeyError as e:
         pass
     try:
-        dwcc['addz'] = omega([-1, 4, ratio_HFCABS_MP2F12['addz']])  #todo
-        print 'post dwcc addz'
+        dwcc['atz'] = omega([0.4, 0.6, ratio_HFCABS_MP2F12.xs('atz', level='bstrt')])
     except KeyError as e:
         pass
-    try:
-        dwcc['atz'] = omega([0.4, 0.6, ratio_HFCABS_MP2F12['atz']])
-        print 'post dwxx atz'
-    except KeyError as e:
-        pass
-    print 'asdf1'   
     df_omega = pd.concat(dwcc)
-    df_omega = pd.DataFrame(df_omega, columns=['dimer'])
+
     df_omega['psivar'] = 'DW-CCSD(T)-F12 OMEGA'
-    df_omega['monoA'] = df_omega['dimer']
-    df_omega['monoB'] = df_omega['dimer']
     df_omega.set_index('psivar', append=True, inplace=True)
-    df_omega_uncp = df_omega.copy()  # utterly wrong! TODO
-    df_omega2 = pd.concat([df_omega, df_omega_uncp], keys=['CP', 'unCP'], axis=1)
-    df_omega = df_omega2.copy()
     df_omega = df_omega.reorder_levels([0, 3, 1, 2])
     df_omega.index.names = ['bstrt', 'psivar', 'meta', 'rxn']
-    df_omega['unCP'] = np.nan
-    print 'asdf2'
+
     df = df.append(df_omega, verify_integrity=True)
+    if verbose > 0:
+        print 'SUCCESS'
+
 
 #     <<< (T*)-F12 & (T**)-F12 >>>
+
 try:
+    if verbose > 0:
+        print 'building intermediates (T*)-F12 & (T**)-F12 SCALE ...',
     df.xs('MP2 CORRELATION ENERGY', level='psivar')
     df.xs('MP2-F12 CORRELATION ENERGY', level='psivar')
 except KeyError, e:
-    print 'Not handled: (T*)-F12 & (T**)-F12 SCALE', e
+    if verbose > 0:
+        print 'NOT HANDLED, missing', e
 else:
-    ratio_MP2F12_MP2 = df.xs('MP2-F12 CORRELATION ENERGY', level='psivar') / df.xs('MP2 CORRELATION ENERGY', level='psivar')
+    ratio_MP2F12_MP2 = df.xs('MP2-F12 CORRELATION ENERGY', level='psivar') / \
+                       df.xs('MP2 CORRELATION ENERGY', level='psivar')
     tstar = ratio_MP2F12_MP2.copy()
+
     tstar['psivar'] = '(T*)-F12 SCALE'
     tstar.set_index('psivar', append=True, inplace=True)
     tstar = tstar.reorder_levels([0, 3, 1, 2])
     tstar.index.names = ['bstrt', 'psivar', 'meta', 'rxn']
+
     df = df.append(tstar, verify_integrity=True)
-    print 'post tstart'
-        
+    if verbose > 0:
+        print 'SUCCESS',
+
     tstarstar = ratio_MP2F12_MP2.copy()
-    tstarstar.loc[:, ('CP', 'monoA')] = tstarstar['CP']['dimer']
-    tstarstar.loc[:, ('CP', 'monoB')] = tstarstar['CP']['dimer']
-    tstarstar.loc[:, ('unCP', 'monoA')] = tstarstar['unCP']['dimer']
-    tstarstar.loc[:, ('unCP', 'monoB')] = tstarstar['unCP']['dimer']
+    for md, rg in tstarstar.columns.values:
+        if rg != 'Rgt0':
+            tstarstar.loc[:, (md, rg)] = tstarstar[md]['Rgt0']
+
     tstarstar['psivar'] = '(T**)-F12 SCALE'
     tstarstar.set_index('psivar', append=True, inplace=True)
     tstarstar = tstarstar.reorder_levels([0, 3, 1, 2])
     tstarstar.index.names = ['bstrt', 'psivar', 'meta', 'rxn']
-    print 'post tsrarstar'
+
     df = df.append(tstarstar, verify_integrity=True)
+    if verbose > 0:
+        print 'SUCCESS'
+
 
 #     <<< DASH-D >>>
+
 try:
-    df.xs('nobas', level='bstrt')
+    if verbose > 0:
+        print 'building intermediates -D ...',
+    dashes = df.xs('nobas', level='bstrt')
 except KeyError, e:
-    print 'Not handled: DASH-D', e
+    if verbose > 0:
+        print 'NOT HANDLED', e
 else:
-    print 'indash'
-    df_nobas = pd.concat({tup[0]: df.xs('nobas', level='bstrt') for tup in df.index.values if tup[0] != 'nobas'})
-    print df_nobas.head(50)
+    df_nobas = pd.concat({tup[0]: dashes for tup in df.index.values if tup[0] != 'nobas'})
     df_nobas.index.names = ['bstrt', 'psivar', 'meta', 'rxn']
-    print 'postdash'
+
+    if verbose > 0:
+        print 'SUCCESS'
     df = df.append(df_nobas, verify_integrity=True)
 
 
@@ -529,6 +633,7 @@ else:
 #    print ml, '\n'#, categories(mdf, 0)
 #    #print h2kc * mdf
 #    print mdf.head(5)
+
 
 # <<< append to main DataFrame computable method quantities >>>
 
@@ -551,6 +656,9 @@ pv1['B97-D3BJ TOTAL ENERGY'] = {'func': sum, 'args': ['B97 FUNCTIONAL TOTAL ENER
 pv1['BP86-D2 TOTAL ENERGY'] = {'func': sum, 'args': ['BP86 FUNCTIONAL TOTAL ENERGY', 'BP86-D2 DISPERSION CORRECTION ENERGY']}
 pv1['BP86-D3 TOTAL ENERGY'] = {'func': sum, 'args': ['BP86 FUNCTIONAL TOTAL ENERGY', 'BP86-D3 DISPERSION CORRECTION ENERGY']}
 pv1['BP86-D3BJ TOTAL ENERGY'] = {'func': sum, 'args': ['BP86 FUNCTIONAL TOTAL ENERGY', 'BP86-D3BJ DISPERSION CORRECTION ENERGY']}
+pv1['BLYP-D2 TOTAL ENERGY'] = {'func': sum, 'args': ['BLYP FUNCTIONAL TOTAL ENERGY', 'BLYP-D2 DISPERSION CORRECTION ENERGY']}
+pv1['BLYP-D3 TOTAL ENERGY'] = {'func': sum, 'args': ['BLYP FUNCTIONAL TOTAL ENERGY', 'BLYP-D3 DISPERSION CORRECTION ENERGY']}
+pv1['BLYP-D3BJ TOTAL ENERGY'] = {'func': sum, 'args': ['BLYP FUNCTIONAL TOTAL ENERGY', 'BLYP-D3BJ DISPERSION CORRECTION ENERGY']}
 pv1['PBE-D2 TOTAL ENERGY'] = {'func': sum, 'args': ['PBE FUNCTIONAL TOTAL ENERGY', 'PBE-D2 DISPERSION CORRECTION ENERGY']}
 pv1['PBE-D3 TOTAL ENERGY'] = {'func': sum, 'args': ['PBE FUNCTIONAL TOTAL ENERGY', 'PBE-D3 DISPERSION CORRECTION ENERGY']}
 pv1['PBE-D3BJ TOTAL ENERGY'] = {'func': sum, 'args': ['PBE FUNCTIONAL TOTAL ENERGY', 'PBE-D3BJ DISPERSION CORRECTION ENERGY']}
@@ -643,16 +751,16 @@ pv1['MP2C-F12 CC CORRECTION ENERGY'] = {'func': sum, 'args': ['MP2C CC CORRECTIO
 pv1['MP2C-F12 CORRELATION ENERGY'] = {'func': sum, 'args': ['MP2C CC CORRECTION ENERGY', 'MP2-F12 CORRELATION ENERGY']}
 pv1['MP2C-F12 TOTAL ENERGY'] = {'func': sum, 'args': ['HF-CABS TOTAL ENERGY', 'MP2C-F12 CORRELATION ENERGY']}
 pv1['SAPT EXCHSCAL3'] = {'func': lambda x: x[0] ** 3, 'args': ['SAPT EXCHSCAL']}
-pv1['SAPT HF(2) ALPHA=0.0 ENERGY'] = {'func': lambda x: x[0] - (x[1] + x[2] + x[3] + x[4]), 
-                            'args': ['SAPT HF TOTAL ENERGY', 'SAPT ELST10,R ENERGY', 'SAPT EXCH10 ENERGY', 
-                                     'SAPT IND20,R ENERGY', 'SAPT EXCH-IND20,R ENERGY']}
+pv1['SAPT HF(2) ALPHA=0.0 ENERGY'] = {'func': lambda x: x[0] - (x[1] + x[2] + x[3] + x[4]),
+                                      'args': ['SAPT HF TOTAL ENERGY', 'SAPT ELST10,R ENERGY', 'SAPT EXCH10 ENERGY',
+                                               'SAPT IND20,R ENERGY', 'SAPT EXCH-IND20,R ENERGY']}
 pv1['SAPT HF(2) ENERGY'] = {'func': lambda x: x[1] + (1.0 - x[0]) * x[2],
-                                      'args': ['SAPT EXCHSCAL', 'SAPT HF(2) ALPHA=0.0 ENERGY', 'SAPT EXCH-IND20,R ENERGY']}
+                            'args': ['SAPT EXCHSCAL', 'SAPT HF(2) ALPHA=0.0 ENERGY', 'SAPT EXCH-IND20,R ENERGY']}
 pv1['SAPT HF(3) ENERGY'] = {'func': lambda x: x[1] - (x[2] + x[0] * x[3]),
                             'args': ['SAPT EXCHSCAL', 'SAPT HF(2) ENERGY', 'SAPT IND30,R ENERGY', 'SAPT EXCH-IND30,R ENERGY']}
 pv1['SAPT MP2(2) ENERGY'] = {'func': lambda x: x[1] - (x[2] + x[3] + x[4] + x[0] * (x[5] + x[6] + x[7] + x[8])),
-                             'args': ['SAPT EXCHSCAL', 'MP2 CORRELATION ENERGY', 'SAPT ELST12,R ENERGY', 
-                                      'SAPT IND22 ENERGY', 'SAPT DISP20 ENERGY', 'SAPT EXCH11(S^2) ENERGY', 
+                             'args': ['SAPT EXCHSCAL', 'MP2 CORRELATION ENERGY', 'SAPT ELST12,R ENERGY',
+                                      'SAPT IND22 ENERGY', 'SAPT DISP20 ENERGY', 'SAPT EXCH11(S^2) ENERGY',
                                       'SAPT EXCH12(S^2) ENERGY', 'SAPT EXCH-IND22 ENERGY', 'SAPT EXCH-DISP20 ENERGY']}
 pv1['SAPT MP2(3) ENERGY'] = {'func': lambda x: x[1] - (x[2] + x[0] * x[3]),
                              'args': ['SAPT EXCHSCAL', 'SAPT MP2(2) ENERGY', 'SAPT IND-DISP30 ENERGY', 'SAPT EXCH-IND-DISP30 ENERGY']}
@@ -660,42 +768,42 @@ pv1['SAPT MP4 DISP'] = {'func': lambda x: x[0] * x[1] + x[2] + x[3] + x[4] + x[5
                         'args': ['SAPT EXCHSCAL', 'SAPT EXCH-DISP20 ENERGY', 'SAPT DISP20 ENERGY',
                                  'SAPT DISP21 ENERGY', 'SAPT DISP22(SDQ) ENERGY', 'SAPT EST.DISP22(T) ENERGY']}
 pv1['SAPT CCD DISP'] = {'func': lambda x: x[0] * x[1] + x[2] + x[3] + x[4],
-                        'args': ['SAPT EXCHSCAL', 'SAPT EXCH-DISP20 ENERGY', 'SAPT DISP2(CCD) ENERGY', 
+                        'args': ['SAPT EXCHSCAL', 'SAPT EXCH-DISP20 ENERGY', 'SAPT DISP2(CCD) ENERGY',
                                  'SAPT DISP22(S)(CCD) ENERGY', 'SAPT EST.DISP22(T)(CCD) ENERGY']}
 pv1['SAPT0 ELST ENERGY'] = {'func': sum, 'args': ['SAPT ELST10,R ENERGY']}
 pv1['SAPT0 EXCH ENERGY'] = {'func': sum, 'args': ['SAPT EXCH10 ENERGY']}
-pv1['SAPT0 INDC ENERGY'] = {'func': lambda x: x[1] + x[2] + x[0] * x[3], 
+pv1['SAPT0 INDC ENERGY'] = {'func': lambda x: x[1] + x[2] + x[0] * x[3],
                             'args': ['SAPT EXCHSCAL', 'SAPT HF(2) ENERGY', 'SAPT IND20,R ENERGY', 'SAPT EXCH-IND20,R ENERGY']}
-pv1['SAPT0 DISP ENERGY'] = {'func': lambda x: x[0] * x[1] + x[2], 
+pv1['SAPT0 DISP ENERGY'] = {'func': lambda x: x[0] * x[1] + x[2],
                             'args': ['SAPT EXCHSCAL', 'SAPT EXCH-DISP20 ENERGY', 'SAPT DISP20 ENERGY']}
 pv1['SAPT0 TOTAL ENERGY'] = {'func': sum, 'args': ['SAPT0 ELST ENERGY', 'SAPT0 EXCH ENERGY', 'SAPT0 INDC ENERGY', 'SAPT0 DISP ENERGY']}
 pv1['SSAPT0 ELST ENERGY'] = {'func': sum, 'args': ['SAPT0 ELST ENERGY']}
 pv1['SSAPT0 EXCH ENERGY'] = {'func': sum, 'args': ['SAPT0 EXCH ENERGY']}
 pv1['SSAPT0 INDC ENERGY'] = {'func': lambda x: x[1] + (x[0] - 1.0) * x[2],
-                            'args': ['SAPT EXCHSCAL3', 'SAPT0 INDC ENERGY', 'SAPT EXCH-IND20,R ENERGY']}
-pv1['SSAPT0 DISP ENERGY'] = {'func': lambda x: x[0] * x[1] + x[2], 
-                            'args': ['SAPT EXCHSCAL3', 'SAPT EXCH-DISP20 ENERGY', 'SAPT DISP20 ENERGY']}
+                             'args': ['SAPT EXCHSCAL3', 'SAPT0 INDC ENERGY', 'SAPT EXCH-IND20,R ENERGY']}
+pv1['SSAPT0 DISP ENERGY'] = {'func': lambda x: x[0] * x[1] + x[2],
+                             'args': ['SAPT EXCHSCAL3', 'SAPT EXCH-DISP20 ENERGY', 'SAPT DISP20 ENERGY']}
 pv1['SSAPT0 TOTAL ENERGY'] = {'func': sum, 'args': ['SSAPT0 ELST ENERGY', 'SSAPT0 EXCH ENERGY', 'SSAPT0 INDC ENERGY', 'SSAPT0 DISP ENERGY']}
 pv1['SCS-SAPT0 ELST ENERGY'] = {'func': sum, 'args': ['SAPT0 ELST ENERGY']}
 pv1['SCS-SAPT0 EXCH ENERGY'] = {'func': sum, 'args': ['SAPT0 EXCH ENERGY']}
 pv1['SCS-SAPT0 INDC ENERGY'] = {'func': sum, 'args': ['SAPT0 INDC ENERGY']}
-pv1['SCS-SAPT0 DISP ENERGY'] = {'func': lambda x: x[0] * (x[1] + x[2]) + x[3] * (x[4] + x[5]), 
-                              'args': [0.66, 'SAPT EXCH-DISP20(SS) ENERGY', 'SAPT DISP20(SS) ENERGY',
-                                       1.2, 'SAPT EXCH-DISP20(OS) ENERGY', 'SAPT DISP20(OS) ENERGY']}  # note no xs for SCS disp
+pv1['SCS-SAPT0 DISP ENERGY'] = {'func': lambda x: x[0] * (x[1] + x[2]) + x[3] * (x[4] + x[5]),
+                                'args': [0.66, 'SAPT EXCH-DISP20(SS) ENERGY', 'SAPT DISP20(SS) ENERGY',
+                                         1.2, 'SAPT EXCH-DISP20(OS) ENERGY', 'SAPT DISP20(OS) ENERGY']}  # note no xs for SCS disp
 pv1['SCS-SAPT0 TOTAL ENERGY'] = {'func': sum, 'args': ['SCS-SAPT0 ELST ENERGY', 'SCS-SAPT0 EXCH ENERGY', 'SCS-SAPT0 INDC ENERGY', 'SCS-SAPT0 DISP ENERGY']}
 pv1['SAPT2 ELST ENERGY'] = {'func': sum, 'args': ['SAPT ELST10,R ENERGY', 'SAPT ELST12,R ENERGY']}
-pv1['SAPT2 EXCH ENERGY'] = {'func': lambda x: x[1] + x[0] * (x[2] + x[3]), 
+pv1['SAPT2 EXCH ENERGY'] = {'func': lambda x: x[1] + x[0] * (x[2] + x[3]),
                             'args': ['SAPT EXCHSCAL', 'SAPT EXCH10 ENERGY', 'SAPT EXCH11(S^2) ENERGY', 'SAPT EXCH12(S^2) ENERGY']}
-pv1['SAPT2 INDC ENERGY'] = {'func': lambda x: x[1] + x[2] + x[0] * x[3] + x[4] + x[0] * x[5], 
+pv1['SAPT2 INDC ENERGY'] = {'func': lambda x: x[1] + x[2] + x[0] * x[3] + x[4] + x[0] * x[5],
                             'args': ['SAPT EXCHSCAL', 'SAPT HF(2) ENERGY', 'SAPT IND20,R ENERGY', 'SAPT EXCH-IND20,R ENERGY',
                                      'SAPT IND22 ENERGY', 'SAPT EXCH-IND22 ENERGY']}
-pv1['SAPT2 DISP ENERGY'] = {'func': lambda x: x[0] * x[1] + x[2], 
+pv1['SAPT2 DISP ENERGY'] = {'func': lambda x: x[0] * x[1] + x[2],
                             'args': ['SAPT EXCHSCAL', 'SAPT EXCH-DISP20 ENERGY', 'SAPT DISP20 ENERGY']}
 pv1['SAPT2 TOTAL ENERGY'] = {'func': sum, 'args': ['SAPT2 ELST ENERGY', 'SAPT2 EXCH ENERGY', 'SAPT2 INDC ENERGY', 'SAPT2 DISP ENERGY']}
 pv1['SAPT2+ ELST ENERGY'] = {'func': sum, 'args': ['SAPT ELST10,R ENERGY', 'SAPT ELST12,R ENERGY']}
-pv1['SAPT2+ EXCH ENERGY'] = {'func': lambda x: x[1] + x[0] * (x[2] + x[3]), 
+pv1['SAPT2+ EXCH ENERGY'] = {'func': lambda x: x[1] + x[0] * (x[2] + x[3]),
                              'args': ['SAPT EXCHSCAL', 'SAPT EXCH10 ENERGY', 'SAPT EXCH11(S^2) ENERGY', 'SAPT EXCH12(S^2) ENERGY']}
-pv1['SAPT2+ INDC ENERGY'] = {'func': lambda x: x[1] + x[2] + x[0] * x[3] + x[4] + x[0] * x[5], 
+pv1['SAPT2+ INDC ENERGY'] = {'func': lambda x: x[1] + x[2] + x[0] * x[3] + x[4] + x[0] * x[5],
                              'args': ['SAPT EXCHSCAL', 'SAPT HF(2) ENERGY', 'SAPT IND20,R ENERGY', 'SAPT EXCH-IND20,R ENERGY',
                                       'SAPT IND22 ENERGY', 'SAPT EXCH-IND22 ENERGY']}
 pv1['SAPT2+ DISP ENERGY'] = {'func': sum, 'args': ['SAPT MP4 DISP']}
@@ -716,9 +824,9 @@ pv1['SAPT2+(CCD)DMP2 INDC ENERGY'] = {'func': sum, 'args': ['SAPT2+DMP2 INDC ENE
 pv1['SAPT2+(CCD)DMP2 DISP ENERGY'] = {'func': sum, 'args': ['SAPT2+(CCD) DISP ENERGY']}
 pv1['SAPT2+(CCD)DMP2 TOTAL ENERGY'] = {'func': sum, 'args': ['SAPT2+(CCD)DMP2 ELST ENERGY', 'SAPT2+(CCD)DMP2 EXCH ENERGY', 'SAPT2+(CCD)DMP2 INDC ENERGY', 'SAPT2+(CCD)DMP2 DISP ENERGY']}
 pv1['SAPT2+(3) ELST ENERGY'] = {'func': sum, 'args': ['SAPT ELST10,R ENERGY', 'SAPT ELST12,R ENERGY', 'SAPT ELST13,R ENERGY']}
-pv1['SAPT2+(3) EXCH ENERGY'] = {'func': lambda x: x[1] + x[0] * (x[2] + x[3]), 
+pv1['SAPT2+(3) EXCH ENERGY'] = {'func': lambda x: x[1] + x[0] * (x[2] + x[3]),
                                 'args': ['SAPT EXCHSCAL', 'SAPT EXCH10 ENERGY', 'SAPT EXCH11(S^2) ENERGY', 'SAPT EXCH12(S^2) ENERGY']}
-pv1['SAPT2+(3) INDC ENERGY'] = {'func': lambda x: x[1] + x[2] + x[0] * x[3] + x[4] + x[0] * x[5], 
+pv1['SAPT2+(3) INDC ENERGY'] = {'func': lambda x: x[1] + x[2] + x[0] * x[3] + x[4] + x[0] * x[5],
                                 'args': ['SAPT EXCHSCAL', 'SAPT HF(2) ENERGY', 'SAPT IND20,R ENERGY', 'SAPT EXCH-IND20,R ENERGY',
                                          'SAPT IND22 ENERGY', 'SAPT EXCH-IND22 ENERGY']}
 pv1['SAPT2+(3) DISP ENERGY'] = {'func': sum, 'args': ['SAPT MP4 DISP', 'SAPT DISP30 ENERGY']}
@@ -739,7 +847,7 @@ pv1['SAPT2+(3)(CCD)DMP2 INDC ENERGY'] = {'func': sum, 'args': ['SAPT2+(3)DMP2 IN
 pv1['SAPT2+(3)(CCD)DMP2 DISP ENERGY'] = {'func': sum, 'args': ['SAPT2+(3)(CCD) DISP ENERGY']}
 pv1['SAPT2+(3)(CCD)DMP2 TOTAL ENERGY'] = {'func': sum, 'args': ['SAPT2+(3)(CCD)DMP2 ELST ENERGY', 'SAPT2+(3)(CCD)DMP2 EXCH ENERGY', 'SAPT2+(3)(CCD)DMP2 INDC ENERGY', 'SAPT2+(3)(CCD)DMP2 DISP ENERGY']}
 pv1['SAPT2+3 ELST ENERGY'] = {'func': sum, 'args': ['SAPT ELST10,R ENERGY', 'SAPT ELST12,R ENERGY', 'SAPT ELST13,R ENERGY']}
-pv1['SAPT2+3 EXCH ENERGY'] = {'func': lambda x: x[1] + x[0] * (x[2] + x[3]), 
+pv1['SAPT2+3 EXCH ENERGY'] = {'func': lambda x: x[1] + x[0] * (x[2] + x[3]),
                               'args': ['SAPT EXCHSCAL', 'SAPT EXCH10 ENERGY', 'SAPT EXCH11(S^2) ENERGY', 'SAPT EXCH12(S^2) ENERGY']}
 pv1['SAPT2+3 INDC ENERGY'] = {'func': lambda x: x[1] + x[2] + x[0] * x[3] + x[4] + x[0] * x[5] + x[6] + x[0] * x[7],
                               'args': ['SAPT EXCHSCAL', 'SAPT HF(3) ENERGY', 'SAPT IND20,R ENERGY', 'SAPT EXCH-IND20,R ENERGY',
@@ -753,7 +861,7 @@ pv1['SAPT2+3(CCD) EXCH ENERGY'] = {'func': sum, 'args': ['SAPT2+3 EXCH ENERGY']}
 pv1['SAPT2+3(CCD) INDC ENERGY'] = {'func': sum, 'args': ['SAPT2+3 INDC ENERGY']}
 pv1['SAPT2+3(CCD) DISP ENERGY'] = {'func': lambda x: x[1] + x[2] + x[0] * x[3] + x[4] + x[0] * x[5],
                                    'args': ['SAPT EXCHSCAL', 'SAPT CCD DISP', 'SAPT DISP30 ENERGY', 'SAPT EXCH-DISP30 ENERGY',
-                                         'SAPT IND-DISP30 ENERGY', 'SAPT EXCH-IND-DISP30 ENERGY']}
+                                            'SAPT IND-DISP30 ENERGY', 'SAPT EXCH-IND-DISP30 ENERGY']}
 pv1['SAPT2+3(CCD) TOTAL ENERGY'] = {'func': sum, 'args': ['SAPT2+3(CCD) ELST ENERGY', 'SAPT2+3(CCD) EXCH ENERGY', 'SAPT2+3(CCD) INDC ENERGY', 'SAPT2+3(CCD) DISP ENERGY']}
 pv1['SAPT2+3DMP2 ELST ENERGY'] = {'func': sum, 'args': ['SAPT2+3 ELST ENERGY']}
 pv1['SAPT2+3DMP2 EXCH ENERGY'] = {'func': sum, 'args': ['SAPT2+3 EXCH ENERGY']}
@@ -767,28 +875,31 @@ pv1['SAPT2+3(CCD)DMP2 DISP ENERGY'] = {'func': sum, 'args': ['SAPT2+3(CCD) DISP 
 pv1['SAPT2+3(CCD)DMP2 TOTAL ENERGY'] = {'func': sum, 'args': ['SAPT2+3(CCD)DMP2 ELST ENERGY', 'SAPT2+3(CCD)DMP2 EXCH ENERGY', 'SAPT2+3(CCD)DMP2 INDC ENERGY', 'SAPT2+3(CCD)DMP2 DISP ENERGY']}
 pv1['DFT-SAPT ELST ENERGY'] = {'func': sum, 'args': ['DFT-SAPT ELST10,R ENERGY']}
 pv1['DFT-SAPT EXCH ENERGY'] = {'func': sum, 'args': ['DFT-SAPT EXCH10 ENERGY']}
-pv1['DFT-SAPT INDC ENERGY'] = {'func': sum, 'args': ['SAPT HF(2) ALPHA=0.0 ENERGY', 
+pv1['DFT-SAPT INDC ENERGY'] = {'func': sum, 'args': ['SAPT HF(2) ALPHA=0.0 ENERGY',
                                                      'DFT-SAPT IND20,R ENERGY', 'DFT-SAPT EXCH-IND20,R ENERGY']}
 pv1['DFT-SAPT DISP ENERGY'] = {'func': sum, 'args': ['DFT-SAPT DISP20 ENERGY', 'DFT-SAPT EXCH-DISP20 ENERGY']}
 pv1['DFT-SAPT TOTAL ENERGY'] = {'func': sum, 'args': ['DFT-SAPT ELST ENERGY', 'DFT-SAPT EXCH ENERGY', 'DFT-SAPT INDC ENERGY', 'DFT-SAPT DISP ENERGY']}
 for pvar, action in pv1.iteritems():
     try:
-        if verbose:
+        if verbose > 0:
             print """building %s %s""" % (pvar, '.' * (50 - len(pvar))),
         df = append_result_of_func_with_funcargs_to_master_DataFrame_atlevel_with_label(
             master=df, label=pvar, atlevel=lvl, func=action['func'], funcargs=action['args'])
-        if verbose:
+        if verbose > 0:
             print """SUCCESS"""
     except KeyError, e:
-        if verbose:
+        if verbose > 0:
             print """FAILED, missing %s""" % (e)
 
 #mlist = ['SAPT0 TOTAL ENERGY', 'SAPT0 DISP ENERGY', 'SAPT EXCHSCAL', 'SAPT HF(2) ENERGY']
+#mlist = ['MP2 CORRELATION ENERGY', 'MP2C CC CORRECTION ENERGY', 'MP2C CORRELATION ENERGY', 'MP2C TOTAL ENERGY']
 #for ml in mlist:
 #    mdf = df.xs(ml, level='psivar').xs('adz', level='bstrt').xs('S22-2', level='rxn')
 #    print ml, '\n'#, categories(mdf, 0)
 #    #print h2kc * mdf
+#    mdf *= h2kc
 #    print mdf.head(5)
+
 
 # <<< define extra Method and BasisSet objects >>>
 
@@ -798,6 +909,7 @@ for pvar, action in pv1.iteritems():
 #bases['hill1_adtz'] = BasisSet('hill1_adtz', build=[['hillcc_adtz'], ['atz', 'hillcc_adtz']])  # TODO should have None or non-xtpl first element?
 #bases['hill2_dtzf12'] = BasisSet('hill2_dtzf12', build=[None, None, ['tzf12', 'hillcc_dtzf12', 'hillt_dtzf12']])
 #methods['CCSDTNSAF12'] = Method('CCSDTNSAF12', fullname='CCSD(T)-F12a')
+
 
 # <<< append to main DataFrame computable basis treatment quantities >>>
 
@@ -836,41 +948,40 @@ pv2['hillt_adtz'] = {'func': xtpl_power, 'args': [2.790300, 3, 'atz', 'adz']}
 pv2['hillt_dtzf12'] = {'func': xtpl_power, 'args': [2.615472, 3, 'tzf12', 'dzf12']}
 for pvar, action in pv2.iteritems():
     try:
-        if verbose:
+        if verbose > 0:
             print """building %s %s""" % (pvar, '.' * (50 - len(pvar))),
         df = append_result_of_func_with_funcargs_to_master_DataFrame_atlevel_with_label(
             master=df, label=pvar, atlevel=lvl, func=action['func'], funcargs=action['args'])
-        if verbose:
+        if verbose > 0:
             print """SUCCESS"""
     except KeyError, e:
-        if verbose:
+        if verbose > 0:
             print """FAILED, missing %s""" % (e)
-
-
 
 
 #     <<< SCS(MI)-MP2 & SCS(MI)-F12 >>>
 try:
+    if verbose > 0:
+        print 'building intermediates SCS(MI)-MP2 ...',
     df.xs('MP2-F12 CORRELATION ENERGY', level='psivar')
     df.xs('MP2 CORRELATION ENERGY', level='psivar')
-    pass  # TODO
 except KeyError, e:
-    print 'Not handled: SCS(MI)-MP2 OMEGA', e
+    print 'NOT HANDLED, missing', e
 else:
-    mi_os = {'atz': 0.17,  'adtz': 0.29,  'aqz': 0.31,  'atqz': 0.40,
-            'hatz': 0.17, 'hadtz': 0.29, 'haqz': 0.31, 'hatqz': 0.40,
-            'jatz': 0.17, 'jadtz': 0.29, 'jaqz': 0.31, 'jatqz': 0.40,
-            'matz': 0.17,                'maqz': 0.31, 'matqz': 0.40,
-                                         'aaqz': 0.31,
-              'tz': 0.17,   'dtz': 0.29,   'qz': 0.31,   'tqz': 0.40,
-           'tzf12': 0.17}
-    mi_ss = {'atz': 1.75,  'adtz': 1.46,  'aqz': 1.46,  'atqz': 1.29,
-            'hatz': 1.75, 'hadtz': 1.46, 'haqz': 1.46, 'hatqz': 1.29,
-            'jatz': 1.75, 'jadtz': 1.46, 'jaqz': 1.46, 'jatqz': 1.29,
-            'matz': 1.75,                'maqz': 1.46, 'matqz': 1.29,
-                                         'aaqz': 1.46,
-              'tz': 1.75,   'dtz': 1.46,   'qz': 1.46,   'tqz': 1.29,
-           'tzf12': 1.75}
+    mi_os = {  'atz': 0.17,  'adtz': 0.29,  'aqz': 0.31,  'atqz': 0.40,
+              'hatz': 0.17, 'hadtz': 0.29, 'haqz': 0.31, 'hatqz': 0.40,
+              'jatz': 0.17, 'jadtz': 0.29, 'jaqz': 0.31, 'jatqz': 0.40,
+              'matz': 0.17,                'maqz': 0.31, 'matqz': 0.40,
+                                           'aaqz': 0.31,
+                'tz': 0.17,   'dtz': 0.29,   'qz': 0.31,   'tqz': 0.40,
+             'tzf12': 0.17}
+    mi_ss = {  'atz': 1.75,  'adtz': 1.46,  'aqz': 1.46,  'atqz': 1.29,
+              'hatz': 1.75, 'hadtz': 1.46, 'haqz': 1.46, 'hatqz': 1.29,
+              'jatz': 1.75, 'jadtz': 1.46, 'jaqz': 1.46, 'jatqz': 1.29,
+              'matz': 1.75,                'maqz': 1.46, 'matqz': 1.29,
+                                           'aaqz': 1.46,
+                'tz': 1.75,   'dtz': 1.46,   'qz': 1.46,   'tqz': 1.29,
+             'tzf12': 1.75}
     mi_os = collections.defaultdict(lambda: np.nan, mi_os)
     mi_ss = collections.defaultdict(lambda: np.nan, mi_ss)
     merge = {}
@@ -896,12 +1007,16 @@ else:
         merge_ss[bstrt] = temp_ss
     merge['SCS(MI)-MP2-F12 SCS-OS'] = pd.concat(merge_os)
     merge['SCS(MI)-MP2-F12 SCS-SS'] = pd.concat(merge_ss)
+
     df_mi = pd.concat(merge)
     df_mi = df_mi.reorder_levels([1, 0, 2, 3])
     df_mi.index.names = ['bstrt', 'psivar', 'meta', 'rxn']
     df_mi = df_mi.dropna(how='all')
     if len(df_mi) > 0:
         df = df.append(df_mi, verify_integrity=True)
+        if verbose > 0:
+            print 'SUCCESS'
+
 
 lvl = 'psivar'
 pv3 = collections.OrderedDict()
@@ -911,14 +1026,14 @@ pv3['SCS(MI)-MP2-F12 CORRELATION ENERGY'] = {'func': spin_component_scaling, 'ar
 pv3['SCS(MI)-MP2-F12 TOTAL ENERGY'] = {'func': sum, 'args': ['HF-CABS TOTAL ENERGY', 'SCS(MI)-MP2-F12 CORRELATION ENERGY']}
 for pvar, action in pv3.iteritems():
     try:
-        if verbose:
+        if verbose > 0:
             print """building %s %s""" % (pvar, '.' * (50 - len(pvar))),
         df = append_result_of_func_with_funcargs_to_master_DataFrame_atlevel_with_label(
             master=df, label=pvar, atlevel=lvl, func=action['func'], funcargs=action['args'])
-        if verbose:
+        if verbose > 0:
             print """SUCCESS"""
     except KeyError, e:
-        if verbose:
+        if verbose > 0:
             print """FAILED, missing %s""" % (e)
 
 
@@ -937,7 +1052,6 @@ for pvar, action in pv3.iteritems():
 #CC/adtz    2    3          1           2
 #CC/atqzadz 3    3          2           3
 #   stages = min(max_mtd, max_bas)
-
 
 def compute_max_bas(bas):
     return len(bases[bas].build)
@@ -960,11 +1074,13 @@ def generic_mtd(Nstage, stub):
     if Nstage == 1:
         return ['%s TOTAL ENERGY' % (stub)]
     elif Nstage == 2:
-        return ['%s TOTAL ENERGY' % ('HF-CABS' if 'F12' in stub else 'SCF'), 
+        #return ['%s TOTAL ENERGY' % ('HF-CABS' if 'F12' in stub else 'SCF'),
+        return ['%s TOTAL ENERGY' % ('HF-CABS' if 'F12' in stub else 'HF'),
                 '%s CORRELATION ENERGY' % (stub)]
     elif Nstage == 3:
         #return ['%s TOTAL ENERGY' % ('HF-CABS' if 'F12' in stub else 'SCF'), '%s CORRELATION ENERGY' % (stub), '%s CC CORRECTION ENERGY' % (stub)]
-        return ['%s TOTAL ENERGY' % ('HF-CABS' if 'F12' in stub else 'SCF'), 
+        #return ['%s TOTAL ENERGY' % ('HF-CABS' if 'F12' in stub else 'SCF'),
+        return ['%s TOTAL ENERGY' % ('HF-CABS' if 'F12' in stub else 'HF'),
                 '%s CORRELATION ENERGY' % ('MP2-F12' if 'F12' in stub else 'MP2'),
                 '%s CC CORRECTION ENERGY' % (stub)]
 
@@ -972,7 +1088,9 @@ def generic_mtd(Nstage, stub):
 def build_from_lists(mtdlist, baslist, optlist=None):
     if optlist is None:
         optlist = [''] * len(mtdlist)
-    return ie(sum([df.loc[bas].loc[pcs].loc[opt] for pcs, bas, opt in zip(mtdlist, baslist, optlist)]))
+    #return ie2(sum([df.loc[bas].loc[pcs].loc[opt] for pcs, bas, opt in zip(mtdlist, baslist, optlist)]))
+    # TODO handle mode
+    return reactionate('CP', sum([df.loc[bas].loc[pcs].loc[opt] for pcs, bas, opt in zip(mtdlist, baslist, optlist)]))
 
 
 def build(method, option, cpmode, basis):
@@ -981,26 +1099,42 @@ def build(method, option, cpmode, basis):
     baslist = generic_bas(Nstage, basis)
     mtdlist = generic_mtd(Nstage, methods[method].fullname.upper())
     optlist = ['-'.join([opt for opt in option.split('-') if (opt == '' or pcs in optclue2psivar[opt])]) for pcs in mtdlist]
-    func = {'CP': ie, 'unCP': ie_uncp, 'ave': ie_ave}[cpmode]
+    # not sure about how this will hold up to multistage
+    #   purpose is to prevent duplicate IE with irrelevant option labels surviving
+    for alw in option.split('-'):
+        found = False
+        for piece in optlist:
+            if alw in piece:
+                found = True
+        if not found:
+            return 'Overly'
+    #func = {'CP': ie2, 'unCP': ie_uncp2, 'ave': ie_ave, 'default': default}[cpmode]
     if baslist is None:
         raise KeyError  # TODO a more specific message that mtd/bas don't mix wouldn't hurt
         #print '\n <<<', methods[method].fullname, '/', bases[basis].fullname, '>>>'
         #print 'stages:', 'M:', compute_max_mtd(method), 'B:', compute_max_bas(basis), 'U:', Nstage
     if method in [] and basis in []:
-    #if method in ['MP2C', 'MP2CF12'] and basis in ['atqzadz', 'adz']:
+    #if method in ['MP2'] and basis in ['aqz']:
+    #if method in ['MP2C', 'MP2CF12'] and basis in ['atqzadz', 'adz', 'adtz']:
+    #if method in ['B3LYPD3'] and basis in ['def2qzvp']:
         print '\n', method, option, cpmode, basis
         print 'pcss:', mtdlist
         print 'bass:', baslist
         print 'opts:', optlist
         for pcs, bas, opt in zip(mtdlist, baslist, optlist):
-            print df.loc[bas].loc[pcs].loc[opt].loc['S22-1'] #'A24-1'] #'BBI-150LYS-158LEU-2'] #'S22-2']
-    return func(sum([df.loc[bas].loc[pcs].loc[opt] for pcs, bas, opt in zip(mtdlist, baslist, optlist)]))
+            print df.loc[bas].loc[pcs].loc[opt].loc['S22-2']  #ACONF-15'] #'NBC1-BzBz_S-5.0'] #'S22-2'] #'A24-1'] #'BBI-150LYS-158LEU-2'] #'S22-2']
+    acting_cpmode = 'default' if cpmode == 'unCP' else cpmode
+    return reactionate(acting_cpmode, sum([df.loc[bas].loc[pcs].loc[opt] for pcs, bas, opt in zip(mtdlist, baslist, optlist)]))
+
 
 # <<< assemble all model chemistries into columns of new DataFrame >>>
 
 rxns = ['%s-%s' % (dbse, rxn) for rxn in dbobj.dbdict[dbobj.dbse].hrxn.keys()]
 mine = pd.DataFrame({}, index=rxns)
 mine.index.names = ['rxn']
+df.sortlevel(inplace=True)
+if verbose > 0:
+    print 'SORTEDNESS OF DF:', df.index.lexsort_depth
 
 if project == 'dft':
     mtds = ['B3LYP', 'B3LYPD2', 'B3LYPD3', 'B2PLYP', 'B2PLYPD2', 'B2PLYPD3',
@@ -1041,20 +1175,20 @@ elif project == 'dhdft':
     bass = ['adz', 'atz']
     opts = ['', 'nfc']
     cpmd = ['CP', 'unCP']
-    
+
 elif project == 'dhdft2':
     mtds = ['DSDPBEP86', 'DSDPBEP86D2', 'DSDPBEP86D3BJ']
     bass = ['adz', 'atz']
     opts = ['', 'nfc']
     cpmd = ['CP', 'unCP']
-    
+
 elif project == 'pt2':
     mtds = ['HF', 'MP2', 'SCSMP2', 'SCSNMP2', 'SCSMIMP2', 'DWMP2', 'MP2C',
             'MP25', 'MP3',
             'HFCABS', 'MP2F12', 'SCSMP2F12', 'SCSNMP2F12', 'SCSMIMP2F12', 'DWMP2F12', 'MP2CF12',
             'CCSDAF12', 'SCSCCSDAF12', 'SCMICCSDAF12', 'CCSDTAF12', 'CCSDTSAF12', 'CCSDTNSAF12',
-            'CCSDBF12', 'SCSCCSDBF12', 'SCMICCSDBF12', 'CCSDTBF12', 'CCSDTSBF12', 'CCSDTNSBF12', 
-            'DWCCSDTF12', 'DWCCSDTSF12', 'DWCCSDTNSF12',        
+            'CCSDBF12', 'SCSCCSDBF12', 'SCMICCSDBF12', 'CCSDTBF12', 'CCSDTSBF12', 'CCSDTNSBF12',
+            'DWCCSDTF12', 'DWCCSDTSF12', 'DWCCSDTNSF12',
             'SAPT0', 'SAPT0S', 'SAPTSCS', 'SAPTDFT', 'SAPT2',
             'SAPT2P', 'SAPT2PC', 'SAPT2PM', 'SAPT2PCM',
             'SAPT3', 'SAPT3C', 'SAPT3M', 'SAPT3CM',
@@ -1073,8 +1207,8 @@ elif project == 'pt2':
             'atzhadz', 'adtzhadz', 'atqzhadz', 'atqzhatz', 'atzhadtz', 'atqzhadtz',
             'dzf12', 'tzf12']
     opts = ['', 'dfhf', 'dfmp', 'dfhf-dfmp']
-    cpmd = ['CP']
-    
+    cpmd = ['CP', 'SA']
+
 elif project == 'saptone':
     mtds = ['SAPT0', 'SAPT0S', 'SAPTSCS', 'SAPTDFT', 'SAPT2',
             'SAPT2P', 'SAPT2PC', 'SAPT2PM', 'SAPT2PCM',
@@ -1085,15 +1219,18 @@ elif project == 'saptone':
             'tz', 'matz', 'jatz', 'hatz',
             'qz', 'aaqz', 'maqz', 'jaqz', 'haqz']
     opts = ['', 'dfmp']
-    cpmd = ['CP']
+    cpmd = ['SA']
 
 elif project == 'merz3':
-    mtds = ['MP2', 'SCSMP2', 'SCSNMP2', 'SCSMIMP2', 'DWMP2', 'MP2C',
-            'MP2CF12', 'DWCCSDTF12']
-    bass = ['adz', 'atz', 'aqz', 'addz', 'adtz', 'atqz', 'qz', 'atqzadz']
-    opts = ['', 'dfhf-dfmp']
+    #mtds = ['MP2', 'SCSMP2', 'SCSNMP2', 'SCSMIMP2', 'DWMP2', 'MP2C',
+    #        'MP2CF12', 'DWCCSDTF12']
+    #bass = ['adz', 'atz', 'aqz', 'addz', 'adtz', 'atqz', 'qz', 'atqzadz']
+    #opts = ['', 'dfhf-dfmp']
+    mtds = ['SAPT0', 'SAPT0S']
+    bass = ['jadz']
+    opts = ['']  # should SAPT0 be coming through with a dfmp label?
     cpmd = ['CP']
-    
+
 elif project == 'aep':
     mtds = ['SCSMICCSD']
     bass = ['adz', 'atz', 'adtz', 'atqzadz', 'atqzatz']
@@ -1103,8 +1240,26 @@ elif project == 'aep':
 elif project == 'sflow':
     mtds = ['MP2']
     bass = ['aqz']
-    #opts = ['', 'dfhf-dfmp-dsrgs0p1', 'dfhf-dfmp-dsrgs0p5', 'dfhf-dfmp-dsrgs1p0']
-    opts = ['dfhf-dfmp-dsrgs0p1', 'dfhf-dfmp-dsrgs1p0']
+    opts = ['dfhf-dfmp-dsrgs0p1', 'dfhf-dfmp-dsrgs0p5', 'dfhf-dfmp-dsrgs1p0']
+    cpmd = ['CP']
+
+elif project == 'dfit':
+    mtds = ['B3LYP', 'B97', 'BLYP', 'BP86', 'PBE', 'PBE0', 'WPBE', 'B2PLYP',
+            'B3LYPD3', 'B97D3', 'BLYPD3', 'BP86D3', 'PBED3', 'PBE0D3', 'B2PLYPD3']
+    bass = ['def2qzvp']
+    opts = ['', 'dfhf', 'dfhf-dfmp']  # why B2PLYP with no or dfhf label; why B3LYP w dfhf-dfmp label?
+    cpmd = ['CP', 'unCP']
+
+elif project == 'nbcref':
+    mtds = ['CCSDT']
+    bass = ['atqzhatz', 'atqzatz', 'atqzadz', 'atqz']
+    opts = ['', 'dfhf-dfmp']
+    cpmd = ['CP']
+
+elif project == 'curveref':
+    mtds = ['CCSDT', 'DWCCSDTF12', 'SCMICCSDAF12', 'CCSDTAF12', 'CCSDTBF12', 'CCSDTCF12']
+    bass = ['adz', 'atz', 'aqz', 'a5z', 'adtz', 'atqz', 'aq5z']
+    opts = ['']
     cpmd = ['CP']
 
 for cpm in cpmd:
@@ -1114,14 +1269,18 @@ for cpm in cpmd:
                 mc = '-'.join([mtd, cpm, bas]) if opt == '' else '-'.join([mtd, opt, cpm, bas])
                 try:
                     tmp = build(mtd, opt, cpm, bas)
-                    #print """Built model chemistry %s""" % (mc)
+                    if verbose > 1:
+                        print """Built model chemistry %s""" % (mc)
                 except KeyError, e:
-                    #print """Error building rxn mc: empty '%s' b/c no %s""" % (mc, e)
-                    pass
+                    if verbose > 1:
+                        print """Error building rxn mc: empty '%s' b/c no %s""" % (mc, e)
                 else:
-                    if tmp.empty or tmp.dropna(how='all').empty:  # invalid for canopy python
-                        #print """Empty rxn mc: empty '%s'""" % (mc)
-                        pass
+                    if isinstance(tmp, basestring) and tmp == 'Overly':
+                        if verbose > 1:
+                            print """Overly optioned rxn mc: {} for {}""".format(opt, mc)
+                    elif tmp.empty or tmp.dropna(how='all').empty:  # invalid for canopy python
+                        if verbose > 1:
+                            print """Empty rxn mc: empty '%s'""" % (mc)
                     else:
                         mine[mc] = tmp
 
@@ -1139,14 +1298,15 @@ def threadtheframe(modelchem, xlimit=4.0):
 if project == 'f12dilabio':
     mine['CCSDTNSBF12-CP-hill2_adtz'] = build_from_lists(['HF-CABS TOTAL ENERGY', 'CCSD-F12B CORRELATION ENERGY', '(T)-F12AB CORRECTION ENERGY'], ['atz', 'hillcc_adtz', 'hillt_adtz'])
 
-if project == 'parenq':
+# commented 27 April 2015, missing MP2-full
+if False and project == 'parenq':
     mine['DELTQ-full-CP-hadz'] = mine['CCSDTQ-full-CP-hadz'] - mine['CCSDT-full-CP-hadz']
     mine['DELTQ-full-CP-jadz'] = mine['CCSDTQ-full-CP-jadz'] - mine['CCSDT-full-CP-jadz']
 
     mine['DELTQ-full-CP-adz'] = mine['CCSDTQ-full-CP-adz'] - mine['CCSDT-full-CP-adz']
     mine['DELTQ-full-CP-atz'] = mine['CCSDTQ-full-CP-atz'] - mine['CCSDT-full-CP-atz']
     mine['DELTQ-full-CP-adtz'] = mine['CCSDTQ-full-CP-adtz'] - mine['CCSDT-full-CP-adtz']
-    
+
     mine['DELTQ-fno1e4-CP-adz'] = mine['CCSDTQ-fno1e4-CP-adz'] - mine['CCSDT-fno1e4-CP-adz']
     mine['DELTQ-fno1e4-CP-atz'] = mine['CCSDTQ-fno1e4-CP-atz'] - mine['CCSDT-fno1e4-CP-atz']
     mine['DELTQ-fno1e4-CP-adtz'] = mine['CCSDTQ-fno1e4-CP-adtz'] - mine['CCSDT-fno1e4-CP-adtz']
@@ -1159,14 +1319,13 @@ if project == 'parenq':
     mine['DELTQ-fno1e6-CP-adz'] = mine['CCSDTQ-fno1e6-CP-adz'] - mine['CCSDT-fno1e6-CP-adz']
     mine['DELTQ-fno5e5-CP-adz'] = mine['CCSDTQ-fno5e5-CP-adz'] - mine['CCSDT-fno5e5-CP-adz']
 
-
     mine['DEL2T-full-CP-hadz'] = mine['CCSDT-full-CP-hadz'] - mine['MP2-full-CP-hadz']
     mine['DEL2T-full-CP-jadz'] = mine['CCSDT-full-CP-jadz'] - mine['MP2-full-CP-jadz']
 
     mine['DEL2T-full-CP-adz'] = mine['CCSDT-full-CP-adz'] - mine['MP2-full-CP-adz']
     mine['DEL2T-full-CP-atz'] = mine['CCSDT-full-CP-atz'] - mine['MP2-full-CP-atz']
     mine['DEL2T-full-CP-adtz'] = mine['CCSDT-full-CP-adtz'] - mine['MP2-full-CP-adtz']
-    
+
     mine['DEL2T-fno1e4-CP-adz'] = mine['CCSDT-fno1e4-CP-adz'] - mine['MP2-fno1e4-CP-adz']
     mine['DEL2T-fno1e4-CP-atz'] = mine['CCSDT-fno1e4-CP-atz'] - mine['MP2-fno1e4-CP-atz']
     mine['DEL2T-fno1e4-CP-adtz'] = mine['CCSDT-fno1e4-CP-adtz'] - mine['MP2-fno1e4-CP-adtz']
@@ -1178,7 +1337,7 @@ if project == 'parenq':
     #mine['DEL2T-fno1e3-CP-adz'] = mine['CCSDT-fno1e3-CP-adz'] - mine['MP2-fno1e3-CP-adz']
     mine['DEL2T-fno1e6-CP-adz'] = mine['CCSDT-fno1e6-CP-adz'] - mine['MP2-fno1e6-CP-adz']
     mine['DEL2T-fno5e5-CP-adz'] = mine['CCSDT-fno5e5-CP-adz'] - mine['MP2-fno5e5-CP-adz']
-   
+
 if False:
 #if project == 'parenq':
     # TODO these aren't actually interaction energies!
@@ -1204,41 +1363,84 @@ if False:
     #threadtheframe(minelistatz)
     #threadtheframe(['CCSDTQ-fno1e4-CP-adz', 'CCSDTQ-fno1e4-CP-atz', 'CCSDTQ-fno1e4-CP-adtz', 'CCSDTQ-fno1e5-CP-adtz', 'CCSDTQ-fno1e5-CP-atz', 'CCSDTQ-fno1e5-CP-adz', 'CCSDT-CP-aq5z'], xlimit=7.0)
 
-print mine.columns
+if verbose > 1:
+    print 'Reaction Energies', mine.columns
+    print 'MINE top\n', mine.head(5), '\n', mine.tail(5)
+
 
 # <<< test cases >>>
 
 from qcdb.pandas_test import test_pandas
 test_pandas(h2kc, project, mine)
 
+
 # <<< write qcdb data loader >>>
 
-f1 = open('%s/%s_%s.py' % (homewrite, dbse, project), 'w')
-print 'Writing to %s/%s_%s.py ...' % (homewrite, dbse, project)
-f1.write('\ndef load_%s(dbinstance):\n\n' % (project))
+with open('%s/%s_%s.py' % (homewrite, dbse, project), 'w') as handle:
+    print 'Writing to %s/%s_%s.py ...' % (homewrite, dbse, project)
+    handle.write('\ndef load_%s(dbinstance):\n\n' % (project))
 
-for mc in mine.columns:
-    lmc = mc.split('-')  # TODO could be done better
-    method = lmc[0]
-    bsse = '_'.join(lmc[1:-1])
-    basis = lmc[-1]
-    for rxn in dbobj.dbdict[dbobj.dbse].hrxn.keys():
-        value = h2kc * mine[mc]['%s-%s' % (dbse, rxn)]
-        if pd.isnull(value):
-            if rxn == 2:
-                print 'dropping', mc
-            pass
-        else:
-            f1.write("""    dbinstance.add_ReactionDatum(dbse='%s', rxn=%s, method='%s', mode='%s', basis='%s', value=%.4f)\n""" %
-                (dbse, repr(rxn), method, bsse, basis, value))
+    for mc in mine.columns:
+        lmc = mc.split('-')  # TODO could be done better
+        method = lmc[0]
+        bsse = '_'.join(lmc[1:-1])
+        basis = lmc[-1]
+        for rxn in dbobj.dbdict[dbobj.dbse].hrxn.keys():
+            value = h2kc * mine[mc]['%s-%s' % (dbse, rxn)]
+            if pd.isnull(value):
+                if rxn == 2:
+                    print 'dropping', mc
+                pass
+            else:
+                handle.write("""    dbinstance.add_ReactionDatum(dbse='%s', rxn=%s, method='%s', mode='%s', basis='%s', value=%.4f)\n""" %
+                             (dbse, repr(rxn), method, bsse, basis, value))
 
-f1.close()
 
 # <<< write hdf5 >>>
 
 with pd.get_store('%s/%s_%s.h5' % (homewrite, dbse, project)) as handle:
     handle['pdie'] = mine * h2kc
-    print 'hdf5', handle
+    print 'Writing to %s/%s_%s.h5 ...' % (homewrite, dbse, project)
+
+
+# <<< SAPT components interlude >>>
+
+try:
+    qlvl = 'SAPT2+3(CCD)'
+    qbas = 'atz'
+    code = 'SAPT3FC-SA-atz'
+    df.xs('{} TOTAL ENERGY'.format(qlvl), level='psivar').xs(qbas, level='bstrt')
+except KeyError, e:
+    try:
+        qlvl = 'SSAPT0'
+        qbas = 'jadz'
+        code = 'SAPT0S-SA-jadz'
+        df.xs('{} TOTAL ENERGY'.format(qlvl), level='psivar').xs(qbas, level='bstrt')
+    except KeyError, e:
+        code = None
+
+if code:
+    with open('%s/%s_%s.py' % (homewrite, 'sapt', dbse), 'w') as handle:
+        print 'Writing to %s/%s_%s.py ...' % (homewrite, 'sapt', dbse)
+        handle.write("""DATA = {}\n\n""")
+        handle.write("""DATA['SAPT MODELCHEM'] = '%s'\n""" % (code))
+        rxns = ['%s-%s' % (dbse, rxn) for rxn in dbobj.dbdict[dbobj.dbse].hrxn.keys()]
+
+        for bit in ['ELST', 'EXCH', 'INDC', 'DISP']:
+            dfbit = h2kc * df.xs('{} {} ENERGY'.format(qlvl, bit), level='psivar').xs(qbas, level='bstrt')
+            handle.write("""DATA['SAPT %s ENERGY'] = {}\n""" % (bit))
+            for rxn in rxns:
+                handle.write("""DATA['SAPT %s ENERGY']['%s'] = %10.4f\n""" %
+                             (bit, rxn, dfbit.xs(rxn, level='rxn')['SA']['Rgt0']))
+
+#    print '{}/{} for {} in {}:  RXN, TOT, ELST, EXCH, IND, DISP'.format(qlvl, qbas, len(rxns), dbse)
+#    for rxn in rxns:
+#        qtotl = h2kc * df.xs('{} TOTAL ENERGY'.format(qlvl), level='psivar').xs(qbas, level='bstrt').xs(rxn, level='rxn')['SA']['Rgt0']
+#        qelst = h2kc * df.xs('{} ELST ENERGY'.format(qlvl), level='psivar').xs(qbas, level='bstrt').xs(rxn, level='rxn')['SA']['Rgt0']
+#        qexch = h2kc * df.xs('{} EXCH ENERGY'.format(qlvl), level='psivar').xs(qbas, level='bstrt').xs(rxn, level='rxn')['SA']['Rgt0']
+#        qindc = h2kc * df.xs('{} INDC ENERGY'.format(qlvl), level='psivar').xs(qbas, level='bstrt').xs(rxn, level='rxn')['SA']['Rgt0']
+#        qdisp = h2kc * df.xs('{} DISP ENERGY'.format(qlvl), level='psivar').xs(qbas, level='bstrt').xs(rxn, level='rxn')['SA']['Rgt0']
+#        print """%-23s %8.4f   %8.4f %8.4f %8.4f %8.4f""" % (rxn, qtotl, qelst, qexch, qindc, qdisp)
 
 
 

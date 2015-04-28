@@ -31,15 +31,14 @@ def muster_memory(mem):
     """Transform input *mem* in MB into psi4-type options for orca.
 
     """
-    text = """%MaxCore {}\n""".format(int(mem))
-
     # prepare memory keywords to be set as c-side keywords
     options = defaultdict(lambda: defaultdict(dict))
-    #options['ORCA']['ORCA_MAXCORE']['value'] = int(mem)
-    #options['CFOUR']['CFOUR_MEM_UNIT']['value'] = 'MB' # orca expects always mb
+    options['ORCA']['ORCA_MAXCORE']['value'] = int(mem)
+    text = "%MaxCore {}\n".format(options['ORCA']['ORCA_MAXCORE']['value'])
 
     for item in options['ORCA']:
         options['ORCA'][item]['clobber'] = True
+
     return text, options
 
 
@@ -60,23 +59,23 @@ def muster_modelchem(name, dertype):
         options['ORCA']['ORCA_RUNTYP']['value'] = 'ENERGY'
     elif dertype == 1:
         options['ORCA']['ORCA_RUNTYP']['value'] = 'ENGRAD'
-    #elif dertype == 2:
-    #    options['ORCA']['ORCA_RUNTYP']['value'] = 'SECOND'
     else:
-        raise ValidationError("""Requested Cfour dertype %d is not available.""" % (dertype))
+        raise ValidationError("Requested Orca dertype {} is not available."
+                              .format(dertype))
 
-    #if lowername == 'cfour':
-    #    pass
-    if lowername == 'oc-b3lyp':
-        options['ORCA']['ORCA_FUNCTIONAL']['value'] = 'B3LYP_G'
-
-    elif lowername == 'c4-ccsdt':
+    if lowername == 'orca':
         pass
-        options['CFOUR']['CFOUR_CALC_LEVEL']['value'] = 'CCSDT'
-        options['CFOUR']['CFOUR_CC_PROGRAM']['value'] = 'ECC'
-
+    elif lowername == 'orca-b3lyp':
+        options['ORCA']['ORCA_FUNCTIONAL']['value'] = 'B3LYP_G'
+    elif lowername == 'orca-mp2':
+        options['ORCA']['ORCA_CALC_LEVEL']['value'] = 'MP2'
+    elif lowername == 'orca-ccsd':
+        options['ORCA']['ORCA_CALC_LEVEL']['value'] = 'CCSD'
+    elif lowername == 'orca-ccsd(t)':
+        options['ORCA']['ORCA_CALC_LEVEL']['value'] = 'CCSD(T)'
     else:
-        raise ValidationError("""Requested Orca computational methods %d is not available.""" % (lowername))
+        raise ValidationError("Requested Orca computational methods {} is not "
+                              "available." .format(lowername))
 
     # Set clobbering
     if 'ORCA_RUNTYP' in options['ORCA']:
@@ -85,8 +84,6 @@ def muster_modelchem(name, dertype):
     if 'ORCA_FUNCTIONAL' in options['ORCA']:
         options['ORCA']['ORCA_FUNCTIONAL']['clobber'] = True
         options['ORCA']['ORCA_FUNCTIONAL']['superclobber'] = True
-    #if 'CFOUR_CC_PROGRAM' in options['CFOUR']:
-    #    options['CFOUR']['CFOUR_CC_PROGRAM']['clobber'] = False
 
     return text, options
 
@@ -97,7 +94,8 @@ def orca_list():
 
     """
     val = []
-    val.append('oc-b3lyp')
+    val.append('orca')
+    val.append('orca-b3lyp')
     return val
 
 

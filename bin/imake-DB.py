@@ -140,8 +140,6 @@ while not user_obedient:
             methods = []
             break
 
-# set up options dict
-options = collections.defaultdict(lambda: collections.defaultdict(dict))
 
 # query basis set(s)
 print """
@@ -179,7 +177,7 @@ user_obedient = False
 while not user_obedient:
     castup = qcdb.query_yes_no('    castup [F] = ', False)
     user_obedient = True
-options['SCF']['BASIS_GUESS']['value'] = castup
+    # below, options['SCF']['BASIS_GUESS']['value'] = castup
 
 # query directory prefix
 print """
@@ -292,7 +290,10 @@ else:
 temp = []
 for rxn in HRXN:
     temp.append(database.ACTV['%s-%s' % (dbse, rxn)])
-    temp.append(database.ACTV_CP['%s-%s' % (dbse, rxn)])
+    try:
+        temp.append(database.ACTV_CP['%s-%s' % (dbse, rxn)])
+    except AttributeError:
+        pass
 HSYS = qcdb.drop_duplicates(temp)
 
 # commence the file-writing loop
@@ -303,7 +304,7 @@ except OSError:
     print 'Warning: directory %s already present.' % (tdir)
 
 for basis in bases:
-    options['GLOBALS']['BASIS']['value'] = basis
+    # below, options['GLOBALS']['BASIS']['value'] = basis
     basdir = qcdb.basislist.sanitize_basisname(basis)
     basdir = re.sub('-', '', basdir)
 
@@ -320,6 +321,11 @@ for basis in bases:
         # TODO: forcing c1 symm skipped - still needed for xdm and molpro
 
         for system in HSYS:
+            # set up options dict
+            options = collections.defaultdict(lambda: collections.defaultdict(dict))
+            options['GLOBALS']['BASIS']['value'] = basis
+            options['SCF']['BASIS_GUESS']['value'] = castup
+
             # QC program may reorient but at least input file geometry will match database
             GEOS[system].fix_orientation(True)
             GEOS[system].PYmove_to_com = False

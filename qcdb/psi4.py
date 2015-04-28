@@ -231,9 +231,36 @@ def muster_modelchem(name, dertype):
         options['SCF']['DFT_RADIAL_POINTS']['value'] = 100
         text += """b3lyp-d3')\n\n"""
 
+    elif lowername == 'dfdf-b2plyp-d3':
+        options['GLOBALS']['FREEZE_CORE']['value'] = True
+        options['SCF']['SCF_TYPE']['value'] = 'df'
+        options['DFMP2']['MP2_TYPE']['value'] = 'df'
+        options['SCF']['DFT_SPHERICAL_POINTS']['value'] = 302
+        options['SCF']['DFT_RADIAL_POINTS']['value'] = 100
+        text += """b2plyp-d3')\n\n"""
+
+    elif lowername == 'df-wpbe':
+        options['SCF']['SCF_TYPE']['value'] = 'df'
+        options['SCF']['DFT_SPHERICAL_POINTS']['value'] = 302
+        options['SCF']['DFT_RADIAL_POINTS']['value'] = 100
+        text += """wpbe')\n\n"""
+
     elif lowername == 'ccsd-polarizability':
         options['GLOBALS']['FREEZE_CORE']['value'] = True
         text = """property('ccsd', properties=['polarizability'])\n\n"""
+
+    elif lowername == 'mrccsdt(q)':
+        options['SCF']['SCF_TYPE']['value'] = 'pk'
+        options['GLOBALS']['FREEZE_CORE']['value'] = True
+        options['GLOBALS']['NAT_ORBS']['value'] = True  # needed by mrcc but not recognized by mrcc
+        options['FNOCC']['OCC_TOLERANCE']['value'] = 6
+        text += """mrccsdt(q)')\n\n"""
+
+    elif lowername == 'c4-ccsdt(q)':
+        options['CFOUR']['CFOUR_SCF_CONV']['value'] = 11
+        options['CFOUR']['CFOUR_CC_CONV']['value'] = 10
+        options['CFOUR']['CFOUR_FROZEN_CORE']['value'] = True
+        text += """c4-ccsdt(q)')\n\n"""
 
     else:
         raise ValidationError("""Requested Cfour computational methods %d is not available.""" % (lowername))
@@ -261,7 +288,11 @@ procedures = {
         'sapt2+'        : muster_modelchem,
         'sapt2+(3)'     : muster_modelchem,
         'sapt2+3(ccd)'  : muster_modelchem,
-        'ccsd-polarizability'  : muster_modelchem,
+        'mrccsdt(q)'    : muster_modelchem,
+        'c4-ccsdt(q)'   : muster_modelchem,
+        'ccsd-polarizability' : muster_modelchem,
+        'dfdf-b2plyp-d3': muster_modelchem,
+        'df-wpbe'       : muster_modelchem,
     }
 }
 

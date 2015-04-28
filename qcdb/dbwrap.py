@@ -366,7 +366,10 @@ class Reaction(object):
         text += """  LaTeX representation: %s\n""" % (self.latex)
         text += """  Tagline:              %s\n""" % (self.tagl)
         text += """  Comment:              %s\n""" % (self.comment)
-        text += """  Benchmark:            %f\n""" % (self.data[self.benchmark].value)
+        if self.benchmark is None:
+            text += """  Benchmark:            %s\n""" % ('UNDEFINED')
+        else:
+            text += """  Benchmark:            %f\n""" % (self.data[self.benchmark].value)
         text += """  Color:                %s\n""" % (str(self.color))
         text += """  Reaction matrix:\n"""
         for mode, rxnm in self.rxnm.iteritems():
@@ -664,14 +667,17 @@ class WrappedDatabase(object):
         for rxn in database.HRXN:
             dbrxn = database.dbse + '-' + str(rxn)
             for ref, info in oBIND.iteritems():
-                oHRXN[rxn].data[ref] = ReactionDatum(dbse=database.dbse,
-                                                     rxn=rxn,
-                                                     method=info[0],
-                                                     mode=info[1],
-                                                     basis=info[2],
-                                                     value=getattr(database, info[3])[dbrxn])
-                if info[4]:
-                    oHRXN[rxn].benchmark = ref
+                bindval = getattr(database, info[3])[dbrxn]
+                if bindval is not None:
+                    oHRXN[rxn].data[ref] = ReactionDatum(dbse=database.dbse,
+                                                         rxn=rxn,
+                                                         method=info[0],
+                                                         mode=info[1],
+                                                         basis=info[2],
+                                                         value=bindval)
+                                                         #value=getattr(database, info[3])[dbrxn])
+                    if info[4]:
+                        oHRXN[rxn].benchmark = ref
 
         # Process subsets
         oSSET = {}
@@ -833,12 +839,16 @@ class WrappedDatabase(object):
             lbench = oRxn.benchmark if benchmark == 'default' else benchmark
             try:
                 mcLesser = oRxn.data[modelchem].value
-                mcGreater = oRxn.data[lbench].value
             except KeyError, e:
                 if failoninc:
                     raise ValidationError("""Reaction %s missing datum %s.""" % (str(rxn), str(e)))
                 else:
                     continue
+            try:
+                mcGreater = oRxn.data[lbench].value
+            except KeyError, e:
+                print """Reaction %s missing benchmark""" % (str(rxn))
+                continue
 
             err[rxn] = [mcLesser - mcGreater,
                         (mcLesser - mcGreater) / abs(mcGreater),
@@ -1009,7 +1019,15 @@ class WrappedDatabase(object):
 
     def benchmark(self):
         """Returns the model chemistry label for the database's benchmark."""
-        return self.hrxn.itervalues().next().benchmark
+        bm = None
+        rxns = self.hrxn.itervalues()
+        while bm is None:
+            try:
+                bm = rxns.next().benchmark
+            except StopIteration:
+                break
+        return bm
+        #return self.hrxn.itervalues().next().benchmark
         # TODO all rxns have same bench in db module so all have same here in obj
         #   but the way things stored in Reactions, this doesn't have to be so
 
@@ -1311,7 +1329,7 @@ class WrappedDatabase(object):
         mcs = ['-'.join(prod) for prod in itertools.product(mtd, opt, bas)]
 
         if plotpath == 'autogen':
-            plotpath = os.environ['HOME'] + os.sep + 'mplflat_'
+            plotpath = os.environ['HOME'] + os.sep + 'flat_'
             for mc in mcs:
                 self.plot_flat(mc)
             # TODO isn't going to work if sset in rowplan
@@ -1332,7 +1350,7 @@ class WrappedDatabase(object):
             landscape=landscape, standalone=standalone, subjoin=subjoin,
             plotpath=plotpath, theme=theme, filename=filename)
 
-    def table_simple1(self, mtd, bas, opt=['CP'], err=['mae'], benchmark='default', failoninc=True, plotpath='analysis/flats/mplflat_', theme='smmerge'):
+    def table_simple1(self, mtd, bas, opt=['CP'], err=['mae'], benchmark='default', failoninc=True, plotpath='analysis/flats/flat_', theme='smmerge'):
         """Specialization of table_generic into table with minimal statistics
         (three S22 and three overall) plus embedded slat diagram as suitable
         for main paper. A single table is formed in sections by *bas* with
@@ -1354,7 +1372,7 @@ class WrappedDatabase(object):
             landscape=False, standalone=True, subjoin=True,
             plotpath=plotpath, theme=theme, filename=None)
 
-    def table_simple2(self, mtd, bas, opt=['CP'], err=['mae'], benchmark='default', failoninc=True, plotpath='analysis/flats/mplflat_', theme='smmerge'):
+    def table_simple2(self, mtd, bas, opt=['CP'], err=['mae'], benchmark='default', failoninc=True, plotpath='analysis/flats/flat_', theme='smmerge'):
         """Specialization of table_generic into table with minimal statistics
         (three S22 and three overall) plus embedded slat diagram as suitable
         for main paper. A single table is formed in sections by *bas* with
@@ -1384,7 +1402,7 @@ class WrappedDatabase(object):
             landscape=False, standalone=True, subjoin=True,
             plotpath=plotpath, theme=theme, filename=None)
 
-    def table_simple3(self, mtd, bas, opt=['CP'], err=['mae'], benchmark='default', failoninc=True, plotpath='analysis/flats/mplflat_', theme='smmerge'):
+    def table_simple3(self, mtd, bas, opt=['CP'], err=['mae'], benchmark='default', failoninc=True, plotpath='analysis/flats/flat_', theme='smmerge'):
         """Specialization of table_generic into table with minimal statistics
         (three S22 and three overall) plus embedded slat diagram as suitable
         for main paper. A single table is formed in sections by *bas* with
@@ -1406,7 +1424,7 @@ class WrappedDatabase(object):
             landscape=False, standalone=True, subjoin=True,
             plotpath=plotpath, theme=theme, filename=None)
 
-    def table_simple4(self, mtd, bas, opt=['CP'], err=['mae'], benchmark='default', failoninc=True, plotpath='analysis/flats/mplflat_', theme='smmerge'):
+    def table_simple4(self, mtd, bas, opt=['CP'], err=['mae'], benchmark='default', failoninc=True, plotpath='analysis/flats/flat_', theme='smmerge'):
         """Specialization of table_generic into table with minimal statistics
         (three S22 and three overall) plus embedded slat diagram as suitable
         for main paper. A single table is formed in sections by *bas* with
@@ -1527,8 +1545,11 @@ class Database(object):
         #text += """  Reactions:            %s\n""" % (self.hrxn.keys())
         text += """  Subsets:              %s\n""" % (self.sset.keys())
         #text += """  Reference:            %s\n""" % ('default: ' + ' + '.join(self.mcs['default']))
-        text += """  Reference:            %s\n""" % (self.benchmark + ': ' + ' + '.join(self.mcs[self.benchmark]))
-        text += """  Model Chemistries:    %s\n""" % (', '.join(sorted(self.mcs.keys())))
+        try:
+            text += """  Reference:            %s\n""" % (self.benchmark + ': ' + ' + '.join(self.mcs[self.benchmark]))
+        except TypeError:
+            text += """  Reference:            %s\n""" % ('UNDEFINED')
+        text += """  Model Chemistries:    %s\n""" % (', '.join(sorted([mc for mc in self.mcs.keys() if mc is not None])))
         text += """\n"""
         for db in self.dbdict.keys():
             text += self.dbdict[db].__str__()
@@ -1661,6 +1682,21 @@ class Database(object):
     #    for db, odb in self.dbdict.items():
     #        for rxn, orxn in odb.hrxn.items():
     #            yield orxn
+
+    def get_hrxn(self, sset='default'):
+        """
+
+        """
+        rhrxn = OrderedDict()
+        for db, odb in self.dbdict.items():
+            dbix = self.dbdict.keys().index(db)
+            for rxn, orxn in odb.hrxn.iteritems():
+                lss = self.sset[sset][dbix]
+                if lss is not None:
+                    if rxn in odb.sset[lss].keys():
+                        #rhrxn[rxn] = orxn
+                        rhrxn[orxn.dbrxn] = orxn  # this is a change and conflict with vergil version
+        return rhrxn
 
     def compute_statistics(self, modelchem, benchmark='default', sset='default',
         failoninc=True, verbose=False, returnindiv=False):
@@ -1797,15 +1833,26 @@ class Database(object):
             # TODO may need to make axis name distributable across wrappeddbs
             # TODO not handling mc present bm absent
             if indiv[db] is not None:
-                for rxn in indiv[db].keys():
+                for rxn in oss.hrxn:
                     rxnix = oss.hrxn.index(rxn)
-                    dbdat.append({'db': db,
+                    bm = self.mcs[benchmark][dbix]
+                    if bm is None or bm not in odb.hrxn[rxn].data:
+                        dbdat.append({'db': db,
+                                  'sys': str(rxn),
+                                  'color': odb.hrxn[rxn].color,
+                                  'mcdata': odb.hrxn[rxn].data[self.mcs[mc][dbix]].value,
+                                  'bmdata': None,
+                                  'error': [None],
+                                  'axis': oss.axis[axis][rxnix]})
+
+                    else:
+                        dbdat.append({'db': db,
                                   'sys': str(rxn),
                                   'color': odb.hrxn[rxn].color,
                                   'mcdata': odb.hrxn[rxn].data[self.mcs[mc][dbix]].value,
                                   'bmdata': odb.hrxn[rxn].data[self.mcs[benchmark][dbix]].value,
-                                  'axis': oss.axis[axis][rxnix],
-                                  'error': [indiv[db][rxn][0]]})
+                                  'error': [indiv[db][rxn][0]],
+                                  'axis': oss.axis[axis][rxnix]})
         title = """%s vs %s axis %s for %s subset %s""" % (mc, benchmark, axis, self.dbse, sset)
         # generate matplotlib instructions and call or print
         try:
@@ -1858,7 +1905,8 @@ class Database(object):
         pre, suf, mid = string_contrast(mc)
         title = self.dbse + '-' + sset + ' ' + pre + '[]' + suf
         mae = errors[self.dbse]['mae']
-        mape = 100 * errors[self.dbse]['mape']
+        mape = None
+        # mape = 100 * errors[self.dbse]['mape']
         mapbe = None
         # generate matplotlib instructions and call or print
         try:
@@ -2138,8 +2186,68 @@ reinitialize
             filedict, htmlcode = mpl.threads(dbdat, color=color, title=title, labels=ixmid, mae=mae, mape=mape, xlimit=xlimit, saveas=saveas, mousetext=mousetext, mouselink=mouselink, mouseimag=mouseimag, mousetitle=mousetitle, mousediv=mousediv, relpath=relpath, graphicsformat=graphicsformat)
             return filedict, htmlcode
 
+    def export_pandas(self, modelchem=[], benchmark='default', sset='default', modelchemlabels=None,
+        failoninc=True):
+        """
+        *modelchem* is array of model chemistries, if modelchem is empty, get only benchmark
+        is benchmark needed?
+        """
+        import pandas as pd
+        import numpy as np
 
+        listodicts = []
+        rhrxn = self.get_hrxn(sset=sset)
+        for dbrxn, orxn in rhrxn.iteritems():
+            wdb = dbrxn.split('-')[0]
+            dbix = self.dbdict.keys().index(wdb)
+            wbm = self.mcs[benchmark][dbix]
+            wss = self.sset[sset][dbix]
+            woss = self.dbdict[wdb].oss[wss]
+            try:
+                Rrat = woss.axis['Rrat'][woss.hrxn.index(orxn.name)]
+            except KeyError:
+                Rrat = 1.0  # TODO generic soln?
 
+            dictorxn = {}
+            dictorxn['DB'] = wdb
+            dictorxn['System'] = orxn.tagl
+            dictorxn['Name'] = orxn.name
+            dictorxn['R'] = Rrat
+            dictorxn['System #'] = orxn.indx
+            dictorxn['Benchmark'] = np.NaN if orxn.benchmark is None else orxn.data[wbm].value  # this NaN exception is new and experimental
+
+            orgts = orxn.rxnm['default'].keys()
+            omolD = Molecule(orgts[0].mol)  # TODO this is only going to work with Reaction ~= Reagent databases
+            npmolD = omolD.format_molecule_for_numpy()
+            omolA = Molecule(orgts[1].mol)  # TODO this is only going to work with Reaction ~= Reagent databases
+            omolA.update_geometry()
+            dictorxn['MonA'] = omolA.natom()
+
+            # this whole member fn not well defined for db of varying stoichiometry
+            if self.dbse in ['ACONF', 'SCONF', 'PCONF', 'CYCONF']:
+                npmolD = omolD.format_molecule_for_numpy()
+                npmolA = omolA.format_molecule_for_numpy()
+                dictorxn['Geometry'] = np.vstack([npmolD, npmolA])
+            else:
+                dictorxn['Geometry'] = omolD.format_molecule_for_numpy()
+            #print '\nD', npmolD.shape[0], npmolA.shape[0], dictorxn['MonA'], npmolD, npmolA, dictorxn['Geometry']
+
+            for mc in modelchem:
+                try:
+                    wmc = self.mcs[mc][dbix]
+                except KeyError:
+                    # modelchem not in Database at all
+                    print mc, 'not found'
+                    continue
+                key = mc if modelchemlabels is None else modelchemlabels[modelchem.index(mc)]
+                dictorxn[key] = orxn.data[wmc].value
+            listodicts.append(dictorxn)
+
+        df = pd.DataFrame(listodicts)
+        pd.set_option('display.width', 500)
+        print df.head(5)
+        print df.tail(5)
+        return df
 
     def table_generic(self, mtd, bas, columnplan, rowplan=['bas', 'mtd'],
         opt=['CP'], err=['mae'], sset=['tt'],
@@ -2174,7 +2282,7 @@ reinitialize
             landscape=landscape, standalone=standalone, subjoin=subjoin,
             plotpath=plotpath, theme=theme, filename=filename)
 
-    def table_merge_abbr(self, mtd, bas, opt=['CP'], err=['mae'], benchmark='default', failoninc=True, plotpath='analysis/flats/mplflat_', theme='smmerge'):
+    def table_merge_abbr(self, mtd, bas, opt=['CP'], err=['mae'], benchmark='default', failoninc=True, plotpath='analysis/flats/flat_', theme='smmerge', standalone=True, filename=None):
         """Specialization of table_generic into table with minimal statistics
         (three S22 and three overall) plus embedded slat diagram as suitable
         for main paper. A single table is formed in sections by *bas* with
@@ -2197,11 +2305,11 @@ reinitialize
         self.table_generic(mtd=mtd, bas=bas, columnplan=columnplan, rowplan=rowplan,
             opt=opt, err=err,
             benchmark=benchmark, failoninc=failoninc,
-            landscape=False, standalone=True, subjoin=True,
-            plotpath=plotpath, theme=theme, filename=None)
+            landscape=False, standalone=standalone, subjoin=True,
+            plotpath=plotpath, theme=theme, filename=filename)
         # TODO: not handled: filename, TODO switch standalone
 
-    def table_merge_suppmat(self, mtd, bas, opt=['CP'], err=['mae'], benchmark='default', failoninc=True, plotpath='analysis/flats/mplflat_', theme='lgmerge'):
+    def table_merge_suppmat(self, mtd, bas, opt=['CP'], err=['mae'], benchmark='default', failoninc=True, plotpath='analysis/flats/flat_', theme='lgmerge'):
         """Specialization of table_generic into table with as many statistics
         as will fit (mostly fullcurve and a few 5min) plus embedded slat
         diagram as suitable for supplementary material. Multiple tables are
@@ -2322,13 +2430,13 @@ class DB4(Database):
         self.mcs['CCSDT-CP-atqzatz'] = ['CCSDT-CP-atqzatz', 'CCSDT-CP-atqzhatz', 'CCSDT-CP-atqzatz', 'CCSDT-CP-atqzhatz']
 
     #def make_pt2_flats(self):
-    def plot_all_flats(self):
-        """Generate pieces for inclusion into tables for PT2 paper.
-        Note that DB4 flats use near-equilibrium subset.
-
-        """
-        Database.plot_all_flats(self, modelchem=None, sset='tt-5min', xlimit=4.0,
-            graphicsformat=['pdf'])
+    #def plot_all_flats(self):
+    #    """Generate pieces for inclusion into tables for PT2 paper.
+    #    Note that DB4 flats use near-equilibrium subset.
+    #
+    #   """
+        #Database.plot_all_flats(self, modelchem=None, sset='tt-5min', xlimit=4.0,
+        #    graphicsformat=['pdf'])
 
     def make_pt2_Figure_3(self):
         """Plot all the graphics needed for the calendar grey bars plot
@@ -2482,16 +2590,16 @@ class DB4(Database):
 
         self.plot_bars(['B97D3-CP-adz','PBED3-CP-adz','M11L-CP-adz','DLDFD-CP-adz','B3LYPD3-CP-adz','PBE0D3-CP-adz',
             'WB97XD-CP-adz','M052X-CP-adz','M062X-CP-adz','M08HX-CP-adz','M08SO-CP-adz','M11-CP-adz','VV10-CP-adz',
-            'LCVV10-CP-adz','WB97XV-CP-adz','PBE02-CP-adz','WB97X2-CP-adz','B2PLYPD3-CP-adz','DSDPBEP86D2opt-CP-adz','DSDPBEP86D3BJ-CP-adz'])
+            'LCVV10-CP-adz','WB97XV-CP-adz','PBE02-CP-adz','WB97X2-CP-adz','B2PLYPD3-CP-adz','DSDPBEP86D2OPT-CP-adz','MP2-CP-adz'])
         self.plot_bars(['B97D3-unCP-adz','PBED3-unCP-adz','M11L-unCP-adz','DLDFD-unCP-adz','B3LYPD3-unCP-adz','PBE0D3-unCP-adz',
             'WB97XD-unCP-adz','M052X-unCP-adz','M062X-unCP-adz','M08HX-unCP-adz','M08SO-unCP-adz','M11-unCP-adz','VV10-unCP-adz',
-            'LCVV10-unCP-adz','WB97XV-unCP-adz','PBE02-unCP-adz','WB97X2-unCP-adz','B2PLYPD3-unCP-adz','DSDPBEP86D2opt-unCP-adz','DSDPBEP86D3BJ-unCP-adz'])
+            'LCVV10-unCP-adz','WB97XV-unCP-adz','PBE02-unCP-adz','WB97X2-unCP-adz','B2PLYPD3-unCP-adz','DSDPBEP86D2OPT-unCP-adz','MP2-unCP-adz'])
         self.plot_bars(['B97D3-CP-atz','PBED3-CP-atz','M11L-CP-atz','DLDFD-CP-atz','B3LYPD3-CP-atz','PBE0D3-CP-atz',
             'WB97XD-CP-atz','M052X-CP-atz','M062X-CP-atz','M08HX-CP-atz','M08SO-CP-atz','M11-CP-atz','VV10-CP-atz',
-            'LCVV10-CP-atz','WB97XV-CP-atz','PBE02-CP-atz','WB97X2-CP-atz','B2PLYPD3-CP-atz','DSDPBEP86D2opt-CP-atz','DSDPBEP86D3BJ-CP-atz'])
+            'LCVV10-CP-atz','WB97XV-CP-atz','PBE02-CP-atz','WB97X2-CP-atz','B2PLYPD3-CP-atz','DSDPBEP86D2OPT-CP-atz','MP2-CP-atz'])
         self.plot_bars(['B97D3-unCP-atz','PBED3-unCP-atz','M11L-unCP-atz','DLDFD-unCP-atz','B3LYPD3-unCP-atz','PBE0D3-unCP-atz',
             'WB97XD-unCP-atz','M052X-unCP-atz','M062X-unCP-atz','M08HX-unCP-atz','M08SO-unCP-atz','M11-unCP-atz','VV10-unCP-atz',
-            'LCVV10-unCP-atz','WB97XV-unCP-atz','PBE02-unCP-atz','WB97X2-unCP-atz','B2PLYPD3-unCP-atz','DSDPBEP86D2opt-unCP-atz','DSDPBEP86D3BJ-unCP-atz'])
+            'LCVV10-unCP-atz','WB97XV-unCP-atz','PBE02-unCP-atz','WB97X2-unCP-atz','B2PLYPD3-unCP-atz','DSDPBEP86D2OPT-unCP-atz','MP2-unCP-atz'])
 
 
     def plot_dhdft_flats(self):
@@ -2499,16 +2607,16 @@ class DB4(Database):
 
         self.plot_all_flats(['B97D3-CP-adz','PBED3-CP-adz','M11L-CP-adz','DLDFD-CP-adz','B3LYPD3-CP-adz','PBE0D3-CP-adz',
             'WB97XD-CP-adz','M052X-CP-adz','M062X-CP-adz','M08HX-CP-adz','M08SO-CP-adz','M11-CP-adz','VV10-CP-adz',
-            'LCVV10-CP-adz','WB97XV-CP-adz','PBE02-CP-adz','WB97X2-CP-adz','B2PLYPD3-CP-adz','DSDPBEP86D2opt-CP-adz','DSDPBEP86D3BJ-CP-adz'],sset='tt-5min')
+            'LCVV10-CP-adz','WB97XV-CP-adz','PBE02-CP-adz','WB97X2-CP-adz','B2PLYPD3-CP-adz','DSDPBEP86D2OPT-CP-adz','MP2-CP-adz'], sset='tt-5min')
         self.plot_all_flats(['B97D3-unCP-adz','PBED3-unCP-adz','M11L-unCP-adz','DLDFD-unCP-adz','B3LYPD3-unCP-adz','PBE0D3-unCP-adz',
             'WB97XD-unCP-adz','M052X-unCP-adz','M062X-unCP-adz','M08HX-unCP-adz','M08SO-unCP-adz','M11-unCP-adz','VV10-unCP-adz',
-            'LCVV10-unCP-adz','WB97XV-unCP-adz','PBE02-unCP-adz','WB97X2-unCP-adz','B2PLYPD3-unCP-adz','DSDPBEP86D2opt-unCP-adz','DSDPBEP86D3BJ-unCP-adz'],sset='tt-5min')
+            'LCVV10-unCP-adz','WB97XV-unCP-adz','PBE02-unCP-adz','WB97X2-unCP-adz','B2PLYPD3-unCP-adz','DSDPBEP86D2OPT-unCP-adz','MP2-unCP-adz'], sset='tt-5min')
         self.plot_all_flats(['B97D3-CP-atz','PBED3-CP-atz','M11L-CP-atz','DLDFD-CP-atz','B3LYPD3-CP-atz','PBE0D3-CP-atz',
             'WB97XD-CP-atz','M052X-CP-atz','M062X-CP-atz','M08HX-CP-atz','M08SO-CP-atz','M11-CP-atz','VV10-CP-atz',
-            'LCVV10-CP-atz','WB97XV-CP-atz','PBE02-CP-atz','WB97X2-CP-atz','B2PLYPD3-CP-atz','DSDPBEP86D2opt-CP-atz','DSDPBEP86D3BJ-CP-atz'],sset='tt-5min')
+            'LCVV10-CP-atz','WB97XV-CP-atz','PBE02-CP-atz','WB97X2-CP-atz','B2PLYPD3-CP-atz','DSDPBEP86D2OPT-CP-atz','MP2-CP-atz'], sset='tt-5min')
         self.plot_all_flats(['B97D3-unCP-atz','PBED3-unCP-atz','M11L-unCP-atz','DLDFD-unCP-atz','B3LYPD3-unCP-atz','PBE0D3-unCP-atz',
             'WB97XD-unCP-atz','M052X-unCP-atz','M062X-unCP-atz','M08HX-unCP-atz','M08SO-unCP-atz','M11-unCP-atz','VV10-unCP-atz',
-            'LCVV10-unCP-atz','WB97XV-unCP-atz','PBE02-unCP-atz','WB97X2-unCP-atz','B2PLYPD3-unCP-atz','DSDPBEP86D2opt-unCP-atz','DSDPBEP86D3BJ-unCP-atz'],sset='tt-5min')
+            'LCVV10-unCP-atz','WB97XV-unCP-atz','PBE02-unCP-atz','WB97X2-unCP-atz','B2PLYPD3-unCP-atz','DSDPBEP86D2OPT-unCP-atz','MP2-unCP-atz'], sset='tt-5min')
 
 
     def plot_dhdft_figure(self):
@@ -2531,8 +2639,8 @@ class DB4(Database):
         self.plot_bars(['PBE02-unCP-adz','PBE02-CP-adz','PBE02-unCP-atz','PBE02-CP-atz'],sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
         self.plot_bars(['WB97X2-unCP-adz','WB97X2-CP-adz','WB97X2-unCP-atz','WB97X2-CP-atz'],sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
         self.plot_bars(['B2PLYPD3-unCP-adz','B2PLYPD3-CP-adz','B2PLYPD3-unCP-atz','B2PLYPD3-CP-atz'],sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
-        self.plot_bars(['DSDPBEP86D2opt-unCP-adz','DSDPBEP86D2opt-CP-adz','DSDPBEP86D2opt-unCP-atz','DSDPBEP86D2opt-CP-atz'],sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
-        self.plot_bars(['DSDPBEP86D3BJ-unCP-adz','DSDPBEP86D3BJ-CP-adz','DSDPBEP86D3BJ-unCP-atz','DSDPBEP86D3BJ-CP-atz'],sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
+        self.plot_bars(['DSDPBEP86D2OPT-unCP-adz','DSDPBEP86D2OPT-CP-adz','DSDPBEP86D2OPT-unCP-atz','DSDPBEP86D2OPT-CP-atz'],sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
+        self.plot_bars(['MP2-unCP-adz','MP2-CP-adz','MP2-unCP-atz','MP2-CP-atz'],sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
         
         
     def plot_minn_bars(self):
@@ -2547,16 +2655,16 @@ class DB4(Database):
 
         self.plot_modelchems(['B97D3-CP-adz','PBED3-CP-adz','M11L-CP-adz','DLDFD-CP-adz','B3LYPD3-CP-adz','PBE0D3-CP-adz',
             'WB97XD-CP-adz','M052X-CP-adz','M062X-CP-adz','M08HX-CP-adz','M08SO-CP-adz','M11-CP-adz','VV10-CP-adz',
-            'LCVV10-CP-adz','WB97XV-CP-adz','PBE02-CP-adz','WB97X2-CP-adz','B2PLYPD3-CP-adz','DSDPBEP86D2opt-CP-adz','DSDPBEP86D3BJ-CP-adz'], sset='tt-5min')
+            'LCVV10-CP-adz','WB97XV-CP-adz','PBE02-CP-adz','WB97X2-CP-adz','B2PLYPD3-CP-adz','DSDPBEP86D2OPT-CP-adz','MP2-CP-adz'], sset='tt-5min')
         self.plot_modelchems(['B97D3-unCP-adz','PBED3-unCP-adz','M11L-unCP-adz','DLDFD-unCP-adz','B3LYPD3-unCP-adz','PBE0D3-unCP-adz',
             'WB97XD-unCP-adz','M052X-unCP-adz','M062X-unCP-adz','M08HX-unCP-adz','M08SO-unCP-adz','M11-unCP-adz','VV10-unCP-adz',
-            'LCVV10-unCP-adz','WB97XV-unCP-adz','PBE02-unCP-adz','WB97X2-unCP-adz','B2PLYPD3-unCP-adz','DSDPBEP86D2opt-unCP-adz','DSDPBEP86D3BJ-unCP-adz'], sset='tt-5min')
+            'LCVV10-unCP-adz','WB97XV-unCP-adz','PBE02-unCP-adz','WB97X2-unCP-adz','B2PLYPD3-unCP-adz','DSDPBEP86D2OPT-unCP-adz','MP2-unCP-adz'], sset='tt-5min')
         self.plot_modelchems(['B97D3-CP-atz','PBED3-CP-atz','M11L-CP-atz','DLDFD-CP-atz','B3LYPD3-CP-atz','PBE0D3-CP-atz',
             'WB97XD-CP-atz','M052X-CP-atz','M062X-CP-atz','M08HX-CP-atz','M08SO-CP-atz','M11-CP-atz','VV10-CP-atz',
-            'LCVV10-CP-atz','WB97XV-CP-atz','PBE02-CP-atz','WB97X2-CP-atz','B2PLYPD3-CP-atz','DSDPBEP86D2opt-CP-atz','DSDPBEP86D3BJ-CP-atz'], sset='tt-5min')
+            'LCVV10-CP-atz','WB97XV-CP-atz','PBE02-CP-atz','WB97X2-CP-atz','B2PLYPD3-CP-atz','DSDPBEP86D2OPT-CP-atz','MP2-CP-atz'], sset='tt-5min')
         self.plot_modelchems(['B97D3-unCP-atz','PBED3-unCP-atz','M11L-unCP-atz','DLDFD-unCP-atz','B3LYPD3-unCP-atz','PBE0D3-unCP-atz',
             'WB97XD-unCP-atz','M052X-unCP-atz','M062X-unCP-atz','M08HX-unCP-atz','M08SO-unCP-atz','M11-unCP-atz','VV10-unCP-atz',
-            'LCVV10-unCP-atz','WB97XV-unCP-atz','PBE02-unCP-atz','WB97X2-unCP-atz','B2PLYPD3-unCP-atz','DSDPBEP86D2opt-unCP-atz','DSDPBEP86D3BJ-unCP-atz'], sset='tt-5min')
+            'LCVV10-unCP-atz','WB97XV-unCP-atz','PBE02-unCP-atz','WB97X2-unCP-atz','B2PLYPD3-unCP-atz','DSDPBEP86D2OPT-unCP-atz','MP2-unCP-atz'], sset='tt-5min')
 
 
     def plot_minn_modelchems(self):

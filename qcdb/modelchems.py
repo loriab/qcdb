@@ -296,6 +296,7 @@ _tlist = [
     BasisSet('631pgs',     fullname='6-31+G(d)'),
     BasisSet('6311pg_3df_2p_', fullname='6-311+G(3df,2p)'),
     BasisSet('6311ppg_3df_2p_', fullname='6-311++G(3df,2p)'),
+    BasisSet('def2qzvp', fullname='def2-QZVP'),
 ]
 bases = {}
 for item in _tlist:
@@ -402,6 +403,7 @@ _tlist = [
     Method('PBE0D3',          fullname='PBE0-D3'),
     Method('PBE0D3BJ',        fullname='PBE0-D3bj'),
     Method('PBE02',           fullname='PBE0-2'),
+    Method('WPBE',            fullname='wPBE', latex="""$\omega$PBE"""),
     Method('CCSDTNSAF12',     fullname='CCSD(T)-F12a'),
     Method('CCSDTNSBF12',     fullname='CCSD(T)-F12b'),
     Method('CCSDTNSCF12',     fullname='CCSD(T)-F12c'),
@@ -411,6 +413,10 @@ _tlist = [
     Method('BP86D2',          fullname='BP86-D2'),
     Method('BP86D3',          fullname='BP86-D3'),
     Method('BP86D3BJ',        fullname='BP86-D3bj'),
+    Method('BLYP',            fullname='BLYP'),
+    Method('BLYPD2',          fullname='BLYP-D2'),
+    Method('BLYPD3',          fullname='BLYP-D3'),
+    Method('BLYPD3BJ',        fullname='BLYP-D3bj'),
     Method('CCSDTQ',          fullname='CCSDT(Q)'),
     Method('CCSDFULLT',       fullname='CCSDT'),
     Method('CCSDTSAF12',      fullname='CCSD(T*)-F12a'),
