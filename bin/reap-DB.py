@@ -78,9 +78,9 @@ elif project == 'saptone':
 
 # not tested
 #dbse = 'BBI'
-#dbse = 'SSI'
-#project = 'merz3'
-#path = r"""/Users/loriab/linux/qcdb/data/merz3usemefiles/"""
+elif project == 'merz3':
+    dbse = 'SSI'
+    path = r"""/Users/loriab/linux/qcdb/data/merz3usemefiles/"""
 
 # not tested
 #dbse = 'S22'
@@ -610,26 +610,16 @@ else:
 
 #     <<< DASH-D >>>
 
-if verbose > 0:
-    print 'building intermediates -D ...',
-
 try:
+    if verbose > 0:
+        print 'building intermediates -D ...',
     dashes = df.xs('nobas', level='bstrt')
 except KeyError, e:
     if verbose > 0:
         print 'NOT HANDLED', e
 else:
-    print 'indash'
-    #df_nobas = pd.concat({tup[0]: df.xs('nobas', level='bstrt') for tup in df.index.values if tup[0] != 'nobas'})
     df_nobas = pd.concat({tup[0]: dashes for tup in df.index.values if tup[0] != 'nobas'})
-#    baszip = {}
-#    for tup in df.index.values:
-#        if tup[0] != 'nobas'
-#            baszip[tup[0]] = dashes
-#    df_nobas = pd.concat(baszip)
-    print df_nobas.head(50)
     df_nobas.index.names = ['bstrt', 'psivar', 'meta', 'rxn']
-    print 'postdash'
 
     if verbose > 0:
         print 'SUCCESS'
@@ -900,31 +890,6 @@ for pvar, action in pv1.iteritems():
     except KeyError, e:
         if verbose > 0:
             print """FAILED, missing %s""" % (e)
-
-
-# <<< SAPT components interlude >>>
-
-if project == 'merz3':
-    qlvl = 'SAPT0'
-    qbas = 'jadz'
-    print '{}/{} for {} in {}:  RXN, TOT, ELST, EXCH, IND, DISP'.format(qlvl, qbas, len(rxns), dbse)
-    for rxn in rxns:
-        qtotl = h2kc * df.xs('{} TOTAL ENERGY'.format(qlvl), level='psivar').xs(qbas, level='bstrt').xs(rxn, level='rxn')['CP']['dimer']
-        qelst = h2kc * df.xs('{} ELST ENERGY'.format(qlvl), level='psivar').xs(qbas, level='bstrt').xs(rxn, level='rxn')['CP']['dimer']
-        qexch = h2kc * df.xs('{} EXCH ENERGY'.format(qlvl), level='psivar').xs(qbas, level='bstrt').xs(rxn, level='rxn')['CP']['dimer']
-        qindc = h2kc * df.xs('{} INDC ENERGY'.format(qlvl), level='psivar').xs(qbas, level='bstrt').xs(rxn, level='rxn')['CP']['dimer']
-        qdisp = h2kc * df.xs('{} DISP ENERGY'.format(qlvl), level='psivar').xs(qbas, level='bstrt').xs(rxn, level='rxn')['CP']['dimer']
-        print """%-23s %8.4f   %8.4f %8.4f %8.4f %8.4f""" % (rxn, qtotl, qelst, qexch, qindc, qdisp)
-
-    qlvl = 'SSAPT0'
-    print '{}/{} for {} in {}:  RXN, TOT, ELST, EXCH, IND, DISP'.format(qlvl, qbas, len(rxns), dbse)
-    for rxn in rxns:
-        qtotl = h2kc * df.xs('{} TOTAL ENERGY'.format(qlvl), level='psivar').xs(qbas, level='bstrt').xs(rxn, level='rxn')['CP']['dimer']
-        qelst = h2kc * df.xs('{} ELST ENERGY'.format(qlvl), level='psivar').xs(qbas, level='bstrt').xs(rxn, level='rxn')['CP']['dimer']
-        qexch = h2kc * df.xs('{} EXCH ENERGY'.format(qlvl), level='psivar').xs(qbas, level='bstrt').xs(rxn, level='rxn')['CP']['dimer']
-        qindc = h2kc * df.xs('{} INDC ENERGY'.format(qlvl), level='psivar').xs(qbas, level='bstrt').xs(rxn, level='rxn')['CP']['dimer']
-        qdisp = h2kc * df.xs('{} DISP ENERGY'.format(qlvl), level='psivar').xs(qbas, level='bstrt').xs(rxn, level='rxn')['CP']['dimer']
-        print """%-23s %8.4f   %8.4f %8.4f %8.4f %8.4f""" % (rxn, qtotl, qelst, qexch, qindc, qdisp)
 
 #mlist = ['SAPT0 TOTAL ENERGY', 'SAPT0 DISP ENERGY', 'SAPT EXCHSCAL', 'SAPT HF(2) ENERGY']
 #mlist = ['MP2 CORRELATION ENERGY', 'MP2C CC CORRECTION ENERGY', 'MP2C CORRELATION ENERGY', 'MP2C TOTAL ENERGY']
@@ -1436,6 +1401,47 @@ with open('%s/%s_%s.py' % (homewrite, dbse, project), 'w') as handle:
 with pd.get_store('%s/%s_%s.h5' % (homewrite, dbse, project)) as handle:
     handle['pdie'] = mine * h2kc
     print 'Writing to %s/%s_%s.h5 ...' % (homewrite, dbse, project)
+
+
+# <<< SAPT components interlude >>>
+
+try:
+    qlvl = 'SAPT2+3(CCD)'
+    qbas = 'atz'
+    code = 'SAPT3FC-SA-atz'
+    df.xs('{} TOTAL ENERGY'.format(qlvl), level='psivar').xs(qbas, level='bstrt')
+except KeyError, e:
+    try:
+        qlvl = 'SSAPT0'
+        qbas = 'jadz'
+        code = 'SAPT0S-SA-jadz'
+        df.xs('{} TOTAL ENERGY'.format(qlvl), level='psivar').xs(qbas, level='bstrt')
+    except KeyError, e:
+        code = None
+
+if code:
+    with open('%s/%s_%s.py' % (homewrite, 'sapt', dbse), 'w') as handle:
+        print 'Writing to %s/%s_%s.py ...' % (homewrite, 'sapt', dbse)
+        handle.write("""DATA = {}\n\n""")
+        handle.write("""DATA['SAPT MODELCHEM'] = '%s'\n""" % (code))
+        rxns = ['%s-%s' % (dbse, rxn) for rxn in dbobj.dbdict[dbobj.dbse].hrxn.keys()]
+
+        for bit in ['ELST', 'EXCH', 'INDC', 'DISP']:
+            dfbit = h2kc * df.xs('{} {} ENERGY'.format(qlvl, bit), level='psivar').xs(qbas, level='bstrt')
+            handle.write("""DATA['SAPT %s ENERGY'] = {}\n""" % (bit))
+            for rxn in rxns:
+                handle.write("""DATA['SAPT %s ENERGY']['%s'] = %10.4f\n""" %
+                             (bit, rxn, dfbit.xs(rxn, level='rxn')['SA']['Rgt0']))
+
+#    print '{}/{} for {} in {}:  RXN, TOT, ELST, EXCH, IND, DISP'.format(qlvl, qbas, len(rxns), dbse)
+#    for rxn in rxns:
+#        qtotl = h2kc * df.xs('{} TOTAL ENERGY'.format(qlvl), level='psivar').xs(qbas, level='bstrt').xs(rxn, level='rxn')['SA']['Rgt0']
+#        qelst = h2kc * df.xs('{} ELST ENERGY'.format(qlvl), level='psivar').xs(qbas, level='bstrt').xs(rxn, level='rxn')['SA']['Rgt0']
+#        qexch = h2kc * df.xs('{} EXCH ENERGY'.format(qlvl), level='psivar').xs(qbas, level='bstrt').xs(rxn, level='rxn')['SA']['Rgt0']
+#        qindc = h2kc * df.xs('{} INDC ENERGY'.format(qlvl), level='psivar').xs(qbas, level='bstrt').xs(rxn, level='rxn')['SA']['Rgt0']
+#        qdisp = h2kc * df.xs('{} DISP ENERGY'.format(qlvl), level='psivar').xs(qbas, level='bstrt').xs(rxn, level='rxn')['SA']['Rgt0']
+#        print """%-23s %8.4f   %8.4f %8.4f %8.4f %8.4f""" % (rxn, qtotl, qelst, qexch, qindc, qdisp)
+
 
 
 # <<< collecting section >>>
