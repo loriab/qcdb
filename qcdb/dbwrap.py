@@ -1936,6 +1936,33 @@ reinitialize
             filedict[mc] = minifiledict
         return filedict
 
+    def get_hrxn(self, sset='default'):
+        """
+
+        """
+        rhrxn = OrderedDict()
+        for db, odb in self.dbdict.items():
+            dbix = self.dbdict.keys().index(db)
+            for rxn, orxn in odb.hrxn.iteritems():
+                lss = self.sset[sset][dbix]
+                if lss is not None:
+                    if rxn in odb.sset[lss].keys():
+                        rhrxn[rxn] = orxn
+        return rhrxn
+
+    def get_hrgt(self, sset='default', actv='default'):
+        """
+
+        """
+        rhrxn = self.get_hrxn(sset=sset)
+        rhrgt = OrderedDict()
+        for rxn, orxn in rhrxn.iteritems():
+            for orgt in orxn.rxnm[actv].keys():
+                rhrgt[orgt.name] = orgt
+        # TODO prob need to avoid duplicates or pass
+
+        return rhrgt
+
     def get_reactions(self, modelchem, sset='default', benchmark='default',
         failoninc=True):
         """Collects the reactions present in *sset* from each WrappedDatabase, 
@@ -1946,6 +1973,7 @@ reinitialize
         the Reaction object.
 
         """
+        # TODO merge/extend with get_hrxn above
         # repackage
         dbdat = []
         for db, odb in self.dbdict.items():
