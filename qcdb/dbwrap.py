@@ -1960,7 +1960,8 @@ reinitialize
                 lss = self.sset[sset][dbix]
                 if lss is not None:
                     if rxn in odb.sset[lss].keys():
-                        rhrxn[rxn] = orxn
+                        #rhrxn[rxn] = orxn
+                        rhrxn[orxn.dbrxn] = orxn  # this is a change and conflict with vergil version
         return rhrxn
 
     def get_hrgt(self, sset='default', actv='default'):
