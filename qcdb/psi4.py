@@ -262,8 +262,14 @@ def muster_modelchem(name, dertype):
         options['CFOUR']['CFOUR_FROZEN_CORE']['value'] = True
         text += """c4-ccsdt(q)')\n\n"""
 
+    elif lowername == 'df-m05-2x':
+        options['SCF']['SCF_TYPE']['value'] = 'df'
+        options['SCF']['DFT_SPHERICAL_POINTS']['value'] = 302
+        options['SCF']['DFT_RADIAL_POINTS']['value'] = 100
+        text += """m05-2x')\n\n"""
+
     else:
-        raise ValidationError("""Requested Cfour computational methods %d is not available.""" % (lowername))
+        raise ValidationError("""Requested Psi4 computational methods %d is not available.""" % (lowername))
 
 #    # Set clobbering
 #    if 'CFOUR_DERIV_LEVEL' in options['CFOUR']:
@@ -293,6 +299,7 @@ procedures = {
         'ccsd-polarizability' : muster_modelchem,
         'dfdf-b2plyp-d3': muster_modelchem,
         'df-wpbe'       : muster_modelchem,
+        'df-m05-2x'     : muster_modelchem,
     }
 }
 
