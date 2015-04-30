@@ -282,17 +282,22 @@ def valerr(data, color=None, title='', xtitle='', view=True,
     # plot reaction errors and threads
     for rxn in data:
         clr = segment_color(color, rxn['color'] if 'color' in rxn else None)
-
-        ax1.plot(rxn['axis'], rxn['bmdata'], 'o', color='black', markersize=6.0)
-        ax1.plot(rxn['axis'], rxn['mcdata'], '^', color=clr, markersize=8.0)
         xmin = min(xmin, rxn['axis'])
         xmax = max(xmax, rxn['axis'])
-        vmin = min(0, vmin, rxn['mcdata'], rxn['bmdata'])
-        vmax = max(0, vmax, rxn['mcdata'], rxn['bmdata'])
 
-        ax2.plot(rxn['axis'], rxn['error'][0], 's', color=clr)
-        emin = min(0, emin, rxn['error'][0])
-        emax = max(0, emax, rxn['error'][0])
+        ax1.plot(rxn['axis'], rxn['mcdata'], '^', color=clr, markersize=6.0, mew=0)
+        vmin = min(0, vmin, rxn['mcdata'])
+        vmax = max(0, vmax, rxn['mcdata'])
+
+        if rxn['bmdata'] is not None:
+            ax1.plot(rxn['axis'], rxn['bmdata'], 'o', color='black', markersize=6.0)
+            vmin = min(0, vmin, rxn['bmdata'])
+            vmax = max(0, vmax, rxn['bmdata'])
+
+        if rxn['error'][0] is not None:
+            ax2.plot(rxn['axis'], rxn['error'][0], 's', color=clr, mew=0)
+            emin = min(0, emin, rxn['error'][0])
+            emax = max(0, emax, rxn['error'][0])
 
     xbuf = max(0.05, abs(0.02 * xmax))
     vbuf = max(0.1, abs(0.02 * vmax))
@@ -332,8 +337,9 @@ def disthist(data, title='', xtitle='', xmin=None, xmax=None,
 
     me = me if me is not None else np.mean(data)
     stde = stde if stde is not None else np.std(data, ddof=1)
-    xmin = xmin if xmin is not None else me - 4.0 * stde
-    xmax = xmax if xmax is not None else me + 4.0 * stde
+    evenerr = max(abs(me - 4.0 * stde), abs(me + 4.0 * stde))
+    xmin = xmin if xmin is not None else -1 * evenerr
+    xmax = xmax if xmax is not None else evenerr
 
     dx = (xmax - xmin) / 40.
     nx = int(round((xmax - xmin) / dx)) + 1
@@ -344,11 +350,11 @@ def disthist(data, title='', xtitle='', xmin=None, xmax=None,
         pdfx.append(ix)
         pdfy.append(gaussianpdf(me, pow(stde, 2), ix))
 
-    fig, ax = plt.subplots(figsize=(8, 6))
+    fig, ax = plt.subplots(figsize=(16, 6))
     plt.axvline(0.0, color='#cccc00')
     ax1 = fig.add_subplot(111)
     ax1.set_xlim(xmin, xmax)
-    ax1.hist(data, bins=30, range=(xmin, xmax), color='#224477', alpha=0.7)
+    ax1.hist(data, bins=30, range=(xmin, xmax), color='#2d4065', alpha=0.7)
     ax1.set_xlabel(xtitle)
     ax1.set_ylabel('Count')
 
@@ -491,11 +497,17 @@ def threads(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None,
 
     # initialize plot
     fht = Nweft * 0.8
-    fig, ax = plt.subplots(figsize=(12, fht))
+    #fig, ax = plt.subplots(figsize=(12, fht))
+    fig, ax = plt.subplots(figsize=(11, fht))
     plt.subplots_adjust(left=0.01, right=0.99, hspace=0.3)
     plt.xlim([-xlimit, xlimit])
     plt.ylim([-1 * Nweft - 1, 0])
     plt.yticks([])
+    ax.set_frame_on(False)
+    ax.set_xticks([-2.0, -1.0, 0.0, 1.0, 2.0])
+    for tick in ax.xaxis.get_major_ticks():
+        tick.tick1line.set_markersize(0)
+        tick.tick2line.set_markersize(0)
 
     # label plot and tiers
     ax.text(-0.9 * xlimit, -0.25, title,
@@ -549,7 +561,7 @@ def threads(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None,
         ax.plot([-x for x in mae], positions, 's', color='black')
     if mape is not None:  # equivalent to MAE for a 10 kcal/mol IE
         ax.plot([0.025 * x for x in mape], positions, 'o', color='black')
-    plt.axvline(0, color='black')
+    plt.axvline(0, color='#cccc00')
 
     # save and show
     pltuid = title + '_' + hashlib.sha1(title + repr(labels) + repr(xlimit)).hexdigest()
@@ -582,19 +594,21 @@ def threads(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None,
         htmlcode += """}\n"""
         htmlcode += """</SCRIPT>\n"""
 
-        #htmlcode += """%s <BR>""" % (mousetitle)
-        #htmlcode += """Mouseover:<BR><a id="cid"></a><br>\n"""
         if mousediv:
             htmlcode += """%s\n""" % (mousediv[0])
         if mousetitle:
             htmlcode += """%s <BR>""" % (mousetitle)
         htmlcode += """<h4>Mouseover</h4><a id="cid"></a><br>\n"""
+        if mouseimag:
+            htmlcode += """<div class="text-center">"""
+            htmlcode += """<IMG ID="cmpd_img" WIDTH="%d" HEIGHT="%d">\n""" % (200, 160)
+            htmlcode += """</div>"""
         if mousediv:
             htmlcode += """%s\n""" % (mousediv[1])
-        htmlcode += """<IMG SRC="%s" ismap usemap="#points" WIDTH="%d" HEIGHT="%d">\n""" % \
-            (pltfile + '.png', img_width, img_height)
-        if mouseimag:
-            htmlcode += """<IMG ID="cmpd_img" WIDTH="%d" HEIGHT="%d">\n""" % (200, 160)
+        #htmlcode += """<IMG SRC="%s" ismap usemap="#points" WIDTH="%d" HEIGHT="%d">\n""" % \
+        #    (pltfile + '.png', img_width, img_height)
+        htmlcode += """<IMG SRC="%s" ismap usemap="#points" WIDTH="%d">\n""" % \
+            (pltfile + '.png', img_width)
         htmlcode += """<MAP name="points">\n"""
 
         # generating html image map code
@@ -736,13 +750,15 @@ def composition_tile(db, aa1, aa2):
     return np.reshape(np.array(tiles), (dim, dim))
 
 
-def iowa(mcdat, mclbl, title='', xlimit=2.0):
+def iowa(mcdat, mclbl, title='', xtitle='', xlimit=2.0,
+    saveas=None, relpath=False, graphicsformat=['pdf']):
     """Saves a plot with (extensionless) name *pltfile* with an Iowa
     representation of the modelchems errors in *mcdat* for BBI/SSI-style
     *labels*.
 
     """
     import numpy as np
+    import hashlib
     import matplotlib
     import matplotlib.pyplot as plt
 
@@ -762,7 +778,7 @@ def iowa(mcdat, mclbl, title='', xlimit=2.0):
     axt.xaxis.set_tick_params(width=0, length=0)
     axt.yaxis.set_tick_params(width=0, length=0)
     #axt.set_title('%s' % (title), fontsize=16, verticalalignment='bottom')
-    axt.text(10.0, -1.5, title, horizontalalignment='center', fontsize=16)
+    #axt.text(10.0, -1.5, title, horizontalalignment='center', fontsize=16)
 
     # nill spacing between 20x20 heatmaps
     plt.subplots_adjust(hspace=0.001, wspace=0.001)
@@ -779,10 +795,18 @@ def iowa(mcdat, mclbl, title='', xlimit=2.0):
             ax.set_yticks([])
             index += 1
 
-    title = '_'.join(title.split())
-    plt.savefig('iowa_' + title + '.pdf', bbox_inches='tight', transparent=True, format='PDF')
+    #plt.title(title)
+
+    # save and show
+    pltuid = title + '_' + hashlib.sha1(title + str(xlimit)).hexdigest()
+    pltfile = expand_saveas(saveas, pltuid, def_prefix='iowa_', relpath=relpath)
+    files_saved = {}
+    for ext in graphicsformat:
+        savefile = pltfile + '.' + ext.lower()
+        plt.savefig(savefile, transparent=True, format=ext, bbox_inches='tight')
+        files_saved[ext.lower()] = savefile
     plt.show()
-    #plt.savefig(os.environ['HOME'] + os.sep + 'iowa_' + title + '.pdf', bbox_inches='tight', transparent=True, format='PDF')
+    return files_saved
 
 
 if __name__ == "__main__":

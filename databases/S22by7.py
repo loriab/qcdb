@@ -47,52 +47,53 @@ import qcdb
 dbse = 'S22by7'
 
 # <<< Database Members >>>
-mol1  = []
-mol2  = []
-mol3  = []
-mol4  = []
-mol5  = []
-mol6  = []
-mol7  = []
-mol8  = []
-mol9  = []
-mol10 = []
-mol11 = []
-mol12 = []
-mol13 = []
-mol14 = []
-mol15 = []
-mol16 = []
-mol17 = []
-mol18 = []
-mol19 = []
-mol20 = []
-mol21 = []
-mol22 = []
+AXIS_Rrat = {}
+
 dist = [0.7, 0.8, 0.9, 1.0, 1.2, 1.5, 2.0]
-for d in dist:
-    mol1.append('1-' + str(d))
-    mol2.append('2-' + str(d))
-    mol3.append('3-' + str(d))
-    mol4.append('4-' + str(d))
-    mol5.append('5-' + str(d))
-    mol6.append('6-' + str(d))
-    mol7.append('7-' + str(d))
-    mol8.append('8-' + str(d))
-    mol9.append('9-' + str(d))
-    mol10.append('10-' + str(d))
-    mol11.append('11-' + str(d))
-    mol12.append('12-' + str(d))
-    mol13.append('13-' + str(d))
-    mol14.append('14-' + str(d))
-    mol15.append('15-' + str(d))
-    mol16.append('16-' + str(d))
-    mol17.append('17-' + str(d))
-    mol18.append('18-' + str(d))
-    mol19.append('19-' + str(d))
-    mol20.append('20-' + str(d))
-    mol21.append('21-' + str(d))
-    mol22.append('22-' + str(d))
+mol1 = ['1-' + str(d) for d in dist]
+mol2 = ['2-' + str(d) for d in dist]
+mol3 = ['3-' + str(d) for d in dist]
+mol4 = ['4-' + str(d) for d in dist]
+mol5 = ['5-' + str(d) for d in dist]
+mol6 = ['6-' + str(d) for d in dist]
+mol7 = ['7-' + str(d) for d in dist]
+mol8 = ['8-' + str(d) for d in dist]
+mol9 = ['9-' + str(d) for d in dist]
+mol10 = ['10-' + str(d) for d in dist]
+mol11 = ['11-' + str(d) for d in dist]
+mol12 = ['12-' + str(d) for d in dist]
+mol13 = ['13-' + str(d) for d in dist]
+mol14 = ['14-' + str(d) for d in dist]
+mol15 = ['15-' + str(d) for d in dist]
+mol16 = ['16-' + str(d) for d in dist]
+mol17 = ['17-' + str(d) for d in dist]
+mol18 = ['18-' + str(d) for d in dist]
+mol19 = ['19-' + str(d) for d in dist]
+mol20 = ['20-' + str(d) for d in dist]
+mol21 = ['21-' + str(d) for d in dist]
+mol22 = ['22-' + str(d) for d in dist]
+AXIS_Rrat.update(dict(zip(mol1, dist)))
+AXIS_Rrat.update(dict(zip(mol2, dist)))
+AXIS_Rrat.update(dict(zip(mol3, dist)))
+AXIS_Rrat.update(dict(zip(mol4, dist)))
+AXIS_Rrat.update(dict(zip(mol5, dist)))
+AXIS_Rrat.update(dict(zip(mol6, dist)))
+AXIS_Rrat.update(dict(zip(mol7, dist)))
+AXIS_Rrat.update(dict(zip(mol8, dist)))
+AXIS_Rrat.update(dict(zip(mol9, dist)))
+AXIS_Rrat.update(dict(zip(mol10, dist)))
+AXIS_Rrat.update(dict(zip(mol11, dist)))
+AXIS_Rrat.update(dict(zip(mol12, dist)))
+AXIS_Rrat.update(dict(zip(mol13, dist)))
+AXIS_Rrat.update(dict(zip(mol14, dist)))
+AXIS_Rrat.update(dict(zip(mol15, dist)))
+AXIS_Rrat.update(dict(zip(mol16, dist)))
+AXIS_Rrat.update(dict(zip(mol17, dist)))
+AXIS_Rrat.update(dict(zip(mol18, dist)))
+AXIS_Rrat.update(dict(zip(mol19, dist)))
+AXIS_Rrat.update(dict(zip(mol20, dist)))
+AXIS_Rrat.update(dict(zip(mol21, dist)))
+AXIS_Rrat.update(dict(zip(mol22, dist)))
 
 temp = [mol1, mol2, mol3, mol4,  mol5, mol6, mol7, mol8, mol9, mol10, mol11,
         mol12, mol13, mol14, mol15,  mol16, mol17, mol18, mol19, mol20, mol21, mol22]
@@ -100,9 +101,10 @@ HRXN = sum(temp, [])
 
 HRXN_SM = ['1-0.9', '2-1.0', '8-1.5', '16-2.0']
 HRXN_LG = ['15-0.9']
-HRXN_EQ = []
-for m in range(1, 23):
-    HRXN_EQ.append(str(m) + '-1.0')
+HRXN_EQ = [str(m) + '-1.0' for m in range(1, 23)]
+HB = sum([mol1, mol2, mol3, mol4, mol5, mol6, mol7], [])
+MX = sum([mol13, mol15, mol16, mol17, mol18, mol19, mol21, mol22], [])
+DD = sum([mol8, mol9, mol10, mol11, mol12, mol14, mol20], [])
 
 # <<< Chemical Systems Involved >>>
 RXNM = {}     # reaction matrix of reagent contributions per reaction
@@ -131,111 +133,155 @@ for rxn in HRXN:
 # <<< Reference Values >>>
 BIND = {}
 # TODO by7
+BIND['%s-1-0.7'  % (dbse)] =   None
+BIND['%s-1-0.8'  % (dbse)] =   None
 BIND['%s-1-0.9'  % (dbse)] =  -2.41
 BIND['%s-1-1.0'  % (dbse)] =  -3.14
 BIND['%s-1-1.2'  % (dbse)] =  -2.36
 BIND['%s-1-1.5'  % (dbse)] =  -1.11
 BIND['%s-1-2.0'  % (dbse)] =  -0.36
+BIND['%s-2-0.7'  % (dbse)] =   None
+BIND['%s-2-0.8'  % (dbse)] =   None
 BIND['%s-2-0.9'  % (dbse)] =  -4.32
 BIND['%s-2-1.0'  % (dbse)] =  -4.97
 BIND['%s-2-1.2'  % (dbse)] =  -4.04
 BIND['%s-2-1.5'  % (dbse)] =  -2.29
 BIND['%s-2-2.0'  % (dbse)] =  -0.96
+BIND['%s-3-0.7'  % (dbse)] =   None
+BIND['%s-3-0.8'  % (dbse)] =   None
 BIND['%s-3-0.9'  % (dbse)] = -16.34
 BIND['%s-3-1.0'  % (dbse)] = -18.59
 BIND['%s-3-1.2'  % (dbse)] = -15.62
 BIND['%s-3-1.5'  % (dbse)] =  -9.24
 BIND['%s-3-2.0'  % (dbse)] =  -3.63
+BIND['%s-4-0.7'  % (dbse)] =   None
+BIND['%s-4-0.8'  % (dbse)] =   None
 BIND['%s-4-0.9'  % (dbse)] = -14.14
 BIND['%s-4-1.0'  % (dbse)] = -15.95
 BIND['%s-4-1.2'  % (dbse)] = -13.40
 BIND['%s-4-1.5'  % (dbse)] =  -8.10
 BIND['%s-4-2.0'  % (dbse)] =  -3.51
+BIND['%s-5-0.7'  % (dbse)] =   None
+BIND['%s-5-0.8'  % (dbse)] =   None
 BIND['%s-5-0.9'  % (dbse)] = -18.73
 BIND['%s-5-1.0'  % (dbse)] = -20.46
 BIND['%s-5-1.2'  % (dbse)] = -17.16
 BIND['%s-5-1.5'  % (dbse)] = -10.46
 BIND['%s-5-2.0'  % (dbse)] =  -4.58
+BIND['%s-6-0.7'  % (dbse)] =   None
+BIND['%s-6-0.8'  % (dbse)] =   None
 BIND['%s-6-0.9'  % (dbse)] = -15.13
 BIND['%s-6-1.0'  % (dbse)] = -16.70
 BIND['%s-6-1.2'  % (dbse)] = -13.93
 BIND['%s-6-1.5'  % (dbse)] =  -8.18
 BIND['%s-6-2.0'  % (dbse)] =  -3.26
+BIND['%s-7-0.7'  % (dbse)] =   None
+BIND['%s-7-0.8'  % (dbse)] =   None
 BIND['%s-7-0.9'  % (dbse)] = -15.02
 BIND['%s-7-1.0'  % (dbse)] = -16.37
 BIND['%s-7-1.2'  % (dbse)] = -13.30
 BIND['%s-7-1.5'  % (dbse)] =  -7.43
 BIND['%s-7-2.0'  % (dbse)] =  -2.59
+BIND['%s-8-0.7'  % (dbse)] =   None
+BIND['%s-8-0.8'  % (dbse)] =   None
 BIND['%s-8-0.9'  % (dbse)] =  -0.34
 BIND['%s-8-1.0'  % (dbse)] =  -0.53
 BIND['%s-8-1.2'  % (dbse)] =  -0.25
 BIND['%s-8-1.5'  % (dbse)] =  -0.06
 BIND['%s-8-2.0'  % (dbse)] =  -0.01
+BIND['%s-9-0.7'  % (dbse)] =   None
+BIND['%s-9-0.8'  % (dbse)] =   None
 BIND['%s-9-0.9'  % (dbse)] =  -0.68
 BIND['%s-9-1.0'  % (dbse)] =  -1.48
 BIND['%s-9-1.2'  % (dbse)] =  -0.81
 BIND['%s-9-1.5'  % (dbse)] =  -0.20
 BIND['%s-9-2.0'  % (dbse)] =  -0.03
+BIND['%s-10-0.7' % (dbse)] =   None
+BIND['%s-10-0.8' % (dbse)] =   None
 BIND['%s-10-0.9' % (dbse)] =  -1.09
 BIND['%s-10-1.0' % (dbse)] =  -1.50
 BIND['%s-10-1.2' % (dbse)] =  -1.13
 BIND['%s-10-1.5' % (dbse)] =  -0.48
 BIND['%s-10-2.0' % (dbse)] =  -0.12
+BIND['%s-11-0.7' % (dbse)] =   None
+BIND['%s-11-0.8' % (dbse)] =   None
 BIND['%s-11-0.9' % (dbse)] =  -0.15
 BIND['%s-11-1.0' % (dbse)] =  -2.81
 BIND['%s-11-1.2' % (dbse)] =  -1.92
 BIND['%s-11-1.5' % (dbse)] =  -0.53
 BIND['%s-11-2.0' % (dbse)] =  -0.07
+BIND['%s-12-0.7' % (dbse)] =   None
+BIND['%s-12-0.8' % (dbse)] =   None
 BIND['%s-12-0.9' % (dbse)] =  -1.69
 BIND['%s-12-1.0' % (dbse)] =  -4.51
 BIND['%s-12-1.2' % (dbse)] =  -3.02
 BIND['%s-12-1.5' % (dbse)] =  -0.98
 BIND['%s-12-2.0' % (dbse)] =  -0.19
+BIND['%s-13-0.7' % (dbse)] =   None
+BIND['%s-13-0.8' % (dbse)] =   None
 BIND['%s-13-0.9' % (dbse)] =  -6.76
 BIND['%s-13-1.0' % (dbse)] =  -9.87
 BIND['%s-13-1.2' % (dbse)] =  -6.26
 BIND['%s-13-1.5' % (dbse)] =  -2.42
 BIND['%s-13-2.0' % (dbse)] =  -0.69
+BIND['%s-14-0.7' % (dbse)] =   None
+BIND['%s-14-0.8' % (dbse)] =   None
 BIND['%s-14-0.9' % (dbse)] =  -2.13
 BIND['%s-14-1.0' % (dbse)] =  -5.18
 BIND['%s-14-1.2' % (dbse)] =  -3.61
 BIND['%s-14-1.5' % (dbse)] =  -1.08
 BIND['%s-14-2.0' % (dbse)] =  -0.10
+BIND['%s-15-0.7' % (dbse)] =   None
+BIND['%s-15-0.8' % (dbse)] =   None
 BIND['%s-15-0.9' % (dbse)] =  -7.99
 BIND['%s-15-1.0' % (dbse)] = -12.22
 BIND['%s-15-1.2' % (dbse)] =  -8.23
 BIND['%s-15-1.5' % (dbse)] =  -3.25
 BIND['%s-15-2.0' % (dbse)] =  -0.92
+BIND['%s-16-0.7' % (dbse)] =   None
+BIND['%s-16-0.8' % (dbse)] =   None
 BIND['%s-16-0.9' % (dbse)] =  -1.17
 BIND['%s-16-1.0' % (dbse)] =  -1.49
 BIND['%s-16-1.2' % (dbse)] =  -1.08
 BIND['%s-16-1.5' % (dbse)] =  -0.49
 BIND['%s-16-2.0' % (dbse)] =  -0.15
+BIND['%s-17-0.7' % (dbse)] =   None
+BIND['%s-17-0.8' % (dbse)] =   None
 BIND['%s-17-0.9' % (dbse)] =  -3.01
 BIND['%s-17-1.0' % (dbse)] =  -3.27
 BIND['%s-17-1.2' % (dbse)] =  -2.47
 BIND['%s-17-1.5' % (dbse)] =  -1.30
 BIND['%s-17-2.0' % (dbse)] =  -0.49
+BIND['%s-18-0.7' % (dbse)] =   None
+BIND['%s-18-0.8' % (dbse)] =   None
 BIND['%s-18-0.9' % (dbse)] =  -2.04
 BIND['%s-18-1.0' % (dbse)] =  -2.35
 BIND['%s-18-1.2' % (dbse)] =  -1.75
 BIND['%s-18-1.5' % (dbse)] =  -0.85
 BIND['%s-18-2.0' % (dbse)] =  -0.28
+BIND['%s-19-0.7' % (dbse)] =   None
+BIND['%s-19-0.8' % (dbse)] =   None
 BIND['%s-19-0.9' % (dbse)] =  -4.02
 BIND['%s-19-1.0' % (dbse)] =  -4.52
 BIND['%s-19-1.2' % (dbse)] =  -3.68
 BIND['%s-19-1.5' % (dbse)] =  -2.09
 BIND['%s-19-2.0' % (dbse)] =  -0.85
+BIND['%s-20-0.7' % (dbse)] =   None
+BIND['%s-20-0.8' % (dbse)] =   None
 BIND['%s-20-0.9' % (dbse)] =  -2.20
 BIND['%s-20-1.0' % (dbse)] =  -2.80
 BIND['%s-20-1.2' % (dbse)] =  -2.25
 BIND['%s-20-1.5' % (dbse)] =  -1.12
 BIND['%s-20-2.0' % (dbse)] =  -0.35
+BIND['%s-21-0.7' % (dbse)] =   None
+BIND['%s-21-0.8' % (dbse)] =   None
 BIND['%s-21-0.9' % (dbse)] =  -4.99
 BIND['%s-21-1.0' % (dbse)] =  -5.74
 BIND['%s-21-1.2' % (dbse)] =  -4.88
 BIND['%s-21-1.5' % (dbse)] =  -2.80
 BIND['%s-21-2.0' % (dbse)] =  -1.10
+BIND['%s-22-0.7' % (dbse)] =   None
+BIND['%s-22-0.8' % (dbse)] =   None
 BIND['%s-22-0.9' % (dbse)] =  -6.42
 BIND['%s-22-1.0' % (dbse)] =  -7.05
 BIND['%s-22-1.2' % (dbse)] =  -5.79
@@ -442,6 +488,37 @@ for item in mol22:
     TAGL['%s-%s-monoB-CP'   % (dbse, item)] =      'Phenol from Phenol Dimer at %s Req' % (molname.group(2))
     TAGL['%s-%s-monoA-unCP' % (dbse, item)] =      'Phenol from Phenol Dimer at %s Req' % (molname.group(2))
     TAGL['%s-%s-monoB-unCP' % (dbse, item)] =      'Phenol from Phenol Dimer at %s Req' % (molname.group(2))
+
+TAGL['dbse'] = 'interaction energies for dissociation curves of organic bimolecular complexes'
+TAGL['default'] = 'entire database'
+TAGL['small'] = 'few computationally quick systems'
+TAGL['large'] = 'most computationally expensive systems'
+TAGL['equilibrium'] = 'minimum-energy systems on dissociation curves'
+TAGL['HB'] = 'hydrogen-bonded systems'
+TAGL['MX'] = 'mixed-influence systems'
+TAGL['DD'] = 'dispersion-dominated systems'
+TAGL['mol1'] = 'dissociation curve for ammonia dimer'
+TAGL['mol2'] = 'dissociation curve for water dimer'
+TAGL['mol3'] = 'dissociation curve for formic acid dimer'
+TAGL['mol4'] = 'dissociation curve for formamide dimer'
+TAGL['mol5'] = 'dissociation curve for uracil dimer, HB'
+TAGL['mol6'] = 'dissociation curve for 2-Pyridone-2-Aminopyridine'
+TAGL['mol7'] = 'dissociation curve for adenine-thymine, WC'
+TAGL['mol8'] = 'dissociation curve for methane dimer'
+TAGL['mol9'] = 'dissociation curve for ethene dimer'
+TAGL['mol10'] = 'dissociation curve for benzene-methane'
+TAGL['mol11'] = 'dissociation curve for benzene-dimer, parallel-displaced'
+TAGL['mol12'] = 'dissociation curve for pyrazine'
+TAGL['mol13'] = 'dissociation curve for uracil dimer, stacked'
+TAGL['mol14'] = 'dissociation curve for indole-benzene, stacked'
+TAGL['mol15'] = 'dissociation curve for adenine-thymine, stacked'
+TAGL['mol16'] = 'dissociation curve for ethene-ethyne'
+TAGL['mol17'] = 'dissociation curve for benzene-water'
+TAGL['mol18'] = 'dissociation curve for benzene-ammonia'
+TAGL['mol19'] = 'dissociation curve for benzene-HCN'
+TAGL['mol20'] = 'dissociation curve for benzene dimer, t-shaped'
+TAGL['mol21'] = 'dissociation curve for indole-benzene, t-shaped'
+TAGL['mol22'] = 'dissociation curve for phenol dimer'
 
 # <<< Geometry Specification Strings >>>
 GEOS = {}

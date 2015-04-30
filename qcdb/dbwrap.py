@@ -6,6 +6,7 @@ try:
 except ImportError:
     import pickle
 import itertools
+#from collections import defaultdict
 try:
     from collections import OrderedDict
 except ImportError:
@@ -395,7 +396,7 @@ class Reaction(object):
             # mcset is function that will generate subset of HRXN from sset(self)
             lsslist = [mc for mc in self.data.keys() if mc in mcset(self)]  # untested
         else:
-            # mcset is array containing reactions
+            # mcset is array containing modelchemistries
             lsslist = [mc for mc in self.data.keys() if mc in mcset]
         # assemble dict of qcdb.Reaction objects from array of reaction names
         lsset = OrderedDict()
@@ -667,7 +668,6 @@ class WrappedDatabase(object):
             dbrxn = database.dbse + '-' + str(rxn)
             for ref, info in oBIND.iteritems():
                 bindval = getattr(database, info[3])[dbrxn]
-                print rxn, ref, bindval
                 if bindval is not None:
                     oHRXN[rxn].data[ref] = ReactionDatum(dbse=database.dbse,
                                                          rxn=rxn,
@@ -1279,41 +1279,6 @@ class WrappedDatabase(object):
     #        # if running from Canopy, call mpl directly
     #        mpl.bar(dbdat, title=title)
 
-    def plot_iowa(self, modelchem, benchmark='default', sset='default', failoninc=True, verbose=False, xlimit=2.0):
-        """Computes individual errors for single *modelchem* versus
-        *benchmark* over subset *sset*. Coloring green-to-purple with
-        maximum intensity at *xlimit*. Prepares Iowa plot instructions and
-        either executes them if matplotlib available (Canopy) or prints them.
-
-        """
-        title = self.dbse + ' ' + modelchem
-        # compute errors
-        errors, indiv = self.compute_statistics(modelchem, benchmark=benchmark,
-                sset=sset, failoninc=failoninc, verbose=verbose, returnindiv=True)
-        # repackage
-        mcdat = []
-        mclbl = []
-        for rxn in self.sset[sset].keys():
-            try:
-                mcdat.append(indiv[rxn][0])
-                mclbl.append(str(rxn))
-            except KeyError, e:
-                if failoninc:
-                    raise e
-        # generate matplotlib instructions and call or print
-        try:
-            import mpl
-            import matplotlib.pyplot as plt
-        except ImportError:
-            # if not running from Canopy, print line to execute from Canopy
-            print """mpl.iowa(%s,\n    %s,\n    title='%s',\n    xlimit=%s)\n\n""" % \
-                (mcdat, mclbl, title, str(xlimit))
-        else:
-            # if running from Canopy, call mpl directly
-            mpl.iowa(mcdat, mclbl, title=title, xlimit=xlimit)
-            #print """mpl.iowa(%s,\n    %s,\n    title='%s',\n    xlimit=%s)\n\n""" % \
-            #    (mcdat, mclbl, title, str(xlimit))
-
     def table_generic(self, mtd, bas, columnplan, rowplan=['bas', 'mtd'],
         opt=['CP'], err=['mae'], sset=['default'],
         benchmark='default', failoninc=True,
@@ -1559,21 +1524,45 @@ class Database(object):
 #        """Returns the model chemistry label for the database's benchmark."""
 #        return self.benchmark  #TODO not sure if right way to go about this self.mcs['default']
 
-    def fancy_mcs(self):
+    def fancy_mcs(self, latex=False):
         """
 
         """
         fmcs = {}
         for mc in self.mcs.keys():
-            #print '%30s' % (mc),
             try:
                 mtd, mod, bas = mc.split('-')
             except ValueError:
                 fmcs[mc] = mc
             else:
-                fmcs[mc] = """%20s / %-20s %s""" % (methods[mtd].fullname, bases[bas].fullname, mod)
-            #print fmcs[mc]
+                if latex:
+                    fmcs[mc] = """%20s / %-20s, %s""" % \
+                        (methods[mtd].latex, bases[bas].latex, mod)
+                else:
+                    fmcs[mc] = """%20s / %-20s, %s""" % \
+                        (methods[mtd].fullname, bases[bas].fullname, mod)
         return fmcs
+
+    #def fancy_mcs_nested(self):
+    #    """
+
+    #    """
+    #    fmcs = defaultdict(lambda: defaultdict(dict))
+    #    for mc in self.mcs.keys():
+    #        try:
+    #            mtd, mod, bas = mc.split('-')
+    #        except ValueError:
+    #            fmcs['All']['All'][mc] = mc
+    #            fmcs['Method']['Others'][mc] = mc
+    #            fmcs['Options']['Others'][mc] = mc
+    #            fmcs['Basis Treatment']['Others'][mc] = mc
+    #        else:
+    #            fancyrepr = """%20s / %-20s %s""" % (methods[mtd].latex, bases[bas].latex, mod)
+    #            fmcs['All']['All'][mc] = fancyrepr
+    #            fmcs['Method'][methods[mtd].latex][mc] = fancyrepr
+    #            fmcs['Options'][mod][mc] = fancyrepr
+    #            fmcs['Basis Treatment'][bases[bas].latex][mc] = fancyrepr
+    #    return fmcs
 
     def load_qcdata_byproject(self, project, pythonpath=None):
         """For each component database, loads qcdb.ReactionDatums from
@@ -1960,6 +1949,68 @@ reinitialize
             filedict[mc] = minifiledict
         return filedict
 
+    def get_hrxn(self, sset='default'):
+        """
+
+        """
+        rhrxn = OrderedDict()
+        for db, odb in self.dbdict.items():
+            dbix = self.dbdict.keys().index(db)
+            for rxn, orxn in odb.hrxn.iteritems():
+                lss = self.sset[sset][dbix]
+                if lss is not None:
+                    if rxn in odb.sset[lss].keys():
+                        #rhrxn[rxn] = orxn
+                        rhrxn[orxn.dbrxn] = orxn  # this is a change and conflict with vergil version
+        return rhrxn
+
+    def get_hrgt(self, sset='default', actv='default'):
+        """
+
+        """
+        rhrxn = self.get_hrxn(sset=sset)
+        rhrgt = OrderedDict()
+        for rxn, orxn in rhrxn.iteritems():
+            for orgt in orxn.rxnm[actv].keys():
+                rhrgt[orgt.name] = orgt
+        # TODO prob need to avoid duplicates or pass
+
+        return rhrgt
+
+    def get_reactions(self, modelchem, sset='default', benchmark='default',
+        failoninc=True):
+        """Collects the reactions present in *sset* from each WrappedDatabase, 
+        checks that *modelchem* and *benchmark* ReactionDatum are present 
+        (fails if *failoninc* True), then returns in an array a tuple for 
+        each reaction containing the modelchem key needed to access 
+        *modelchem*, the modelchem key needed to access *benchmark*, and 
+        the Reaction object.
+
+        """
+        # TODO merge/extend with get_hrxn above
+        # repackage
+        dbdat = []
+        for db, odb in self.dbdict.items():
+            dbix = self.dbdict.keys().index(db)
+            for rxn, orxn in odb.hrxn.iteritems():
+                lss = self.sset[sset][dbix]
+                lmc = self.mcs[modelchem][dbix]
+                lbm = self.mcs[benchmark][dbix]
+                if lss is not None:
+                    if rxn in odb.sset[lss].keys():
+                        try:
+                            orxn.data[lmc]
+                            orxn.data[lbm]
+                        except KeyError, e:
+                            if failoninc:
+                                raise e
+                            else:
+                                # not sure yet if should return empties or just pass over
+                                pass
+                        else:
+                            dbdat.append((lmc, lbm, orxn))
+        return dbdat
+
     def plot_disthist(self, modelchem, benchmark='default', sset='default',
         failoninc=True, verbose=False, xtitle='',
         saveas=None, relpath=False, graphicsformat=['pdf']):
@@ -2101,6 +2152,45 @@ reinitialize
             filedict, htmlcode = mpl.threads(dbdat, color=color, title=title, labels=ixmid, mae=mae, mape=mape, xlimit=xlimit, saveas=saveas, mousetext=mousetext, mouselink=mouselink, mouseimag=mouseimag, mousetitle=mousetitle, mousediv=mousediv, relpath=relpath, graphicsformat=graphicsformat)
             return filedict, htmlcode
 
+    def plot_iowa(self, modelchem, benchmark='default', sset='default', 
+        failoninc=True, verbose=False, 
+        title='', xtitle='', xlimit=2.0,
+        saveas=None, relpath=False, graphicsformat=['pdf']):
+        """Computes individual errors for single *modelchem* versus
+        *benchmark* over subset *sset*. Coloring green-to-purple with
+        maximum intensity at *xlimit*. Prepares Iowa plot instructions and
+        either executes them if matplotlib available (Canopy) or prints them.
+
+        """
+        title = self.dbse + ' ' + modelchem
+        # compute errors
+        mc = modelchem
+        errors, indiv = self.compute_statistics(mc, benchmark=benchmark, sset=sset,
+            failoninc=failoninc, verbose=verbose, returnindiv=True)
+        # repackage
+        dbdat = []
+        dblbl = []
+        for db in self.dbdict.keys():
+            if indiv[db] is not None:
+                for rxn in indiv[db].keys():
+                    dbdat.append(indiv[db][rxn][0])
+                    dblbl.append(str(rxn))
+        title = """%s vs %s for %s subset %s""" % (mc, benchmark, self.dbse, sset)
+        me = errors[self.dbse]['me']
+        # generate matplotlib instructions and call or print
+        try:
+            import mpl
+            import matplotlib.pyplot as plt
+        except ImportError:
+            # if not running from Canopy, print line to execute from Canopy
+            print """mpl.iowa(%s,\n    %s,\n    title='%s',\n    xtitle='%s'\n    xlimit=%s,\n    saveas=%s,\n    relpath=%s\n    graphicsformat=%s)\n\n""" % \
+                (dbdat, dblbl, title, xtitle, xlimit, repr(saveas), repr(relpath), repr(graphicsformat))
+        else:
+            # if running from Canopy, call mpl directly
+            filedict = mpl.iowa(dbdat, dblbl, title=title, xtitle=xtitle, xlimit=xlimit,
+                saveas=saveas, relpath=relpath, graphicsformat=graphicsformat)
+            return filedict
+
     def export_pandas(self, modelchem=[], benchmark='default', sset='default', modelchemlabels=None,
         failoninc=True):
         """
@@ -2133,10 +2223,19 @@ reinitialize
 
             orgts = orxn.rxnm['default'].keys()
             omolD = Molecule(orgts[0].mol)  # TODO this is only going to work with Reaction ~= Reagent databases
-            dictorxn['Geometry'] = omolD.format_molecule_for_numpy()
+            npmolD = omolD.format_molecule_for_numpy()
             omolA = Molecule(orgts[1].mol)  # TODO this is only going to work with Reaction ~= Reagent databases
             omolA.update_geometry()
             dictorxn['MonA'] = omolA.natom()
+
+            # this whole member fn not well defined for db of varying stoichiometry
+            if self.dbse in ['ACONF', 'SCONF', 'PCONF', 'CYCONF']:
+                npmolD = omolD.format_molecule_for_numpy()
+                npmolA = omolA.format_molecule_for_numpy()
+                dictorxn['Geometry'] = np.vstack([npmolD, npmolA])
+            else:
+                dictorxn['Geometry'] = omolD.format_molecule_for_numpy()
+            #print '\nD', npmolD.shape[0], npmolA.shape[0], dictorxn['MonA'], npmolD, npmolA, dictorxn['Geometry']
 
             for mc in modelchem:
                 try:

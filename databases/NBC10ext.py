@@ -140,8 +140,8 @@ HRXN_SM = ['BzMe-6.0', 'MeMe-5.0']
 HRXN_LG = ['BzBz_T-5.0']
 HRXN_EQ = ['BzBz_S-3.9', 'BzBz_T-5.0', 'BzBz_PD34-1.8', 'BzH2S-3.8', 'BzMe-3.8',
            'MeMe-3.6', 'PyPy_S2-3.7', 'PyPy_T3-4.9', 'BzBz_PD32-1.9', 'BzBz_PD36-1.7']
-HRXN_WALL = ['BzBz_T-4.3', 'BzBz_T-4.35', 'BzH2S-3.15', 'BzH2S-3.3', 'BzMe-3.15', 'MeMe-3.1', 
-             'MeMe-3.15', 'PyPy_S2-3.2', 'PyPy_T3-4.27', 'PyPy_T3-4.36', 'PyPy_T3-4.44']
+#HRXN_WALL = ['BzBz_T-4.3', 'BzBz_T-4.35', 'BzH2S-3.15', 'BzH2S-3.3', 'BzMe-3.15', 'MeMe-3.1',
+#             'MeMe-3.15', 'PyPy_S2-3.2', 'PyPy_T3-4.27', 'PyPy_T3-4.36', 'PyPy_T3-4.44']
 MX = sum([BzH2S, PyPy_T3, BzBz_PD32], [])
 DD = sum([BzBz_S, BzBz_T, BzBz_PD34, BzMe, MeMe, PyPy_S2, BzBz_PD36], [])
 MXDDPP = sum([BzBz_S, BzBz_PD34, PyPy_S2, BzBz_PD32, BzBz_PD36], [])
@@ -281,8 +281,8 @@ BIND_NBC10A['%s-BzBz_S-6.0'  % (dbse)] = -0.101
 BIND_NBC10A['%s-BzBz_S-6.5'  % (dbse)] = -0.029
 BIND_NBC10A['%s-BzBz_S-10.0' % (dbse)] =  0.018
 
-BIND_NBC10A['%s-BzBz_T-4.3' % (dbse)] =   None
-BIND_NBC10A['%s-BzBz_T-4.35' % (dbse)] =  None
+BIND_NBC10A['%s-BzBz_T-4.3' % (dbse)] =  2.633
+BIND_NBC10A['%s-BzBz_T-4.35' % (dbse)] = 1.535
 BIND_NBC10A['%s-BzBz_T-4.4' % (dbse)] =  0.617
 BIND_NBC10A['%s-BzBz_T-4.5' % (dbse)] = -0.769
 BIND_NBC10A['%s-BzBz_T-4.6' % (dbse)] = -1.682
@@ -321,9 +321,9 @@ BIND_NBC10A['%s-BzBz_PD34-2.6' % (dbse)] = -2.260
 BIND_NBC10A['%s-BzBz_PD34-2.8' % (dbse)] = -2.163
 BIND_NBC10A['%s-BzBz_PD34-3.0' % (dbse)] = -2.093
 
-BIND_NBC10A['%s-BzH2S-3.15' % (dbse)] =   None
+BIND_NBC10A['%s-BzH2S-3.15' % (dbse)] =  2.379
 BIND_NBC10A['%s-BzH2S-3.2'  % (dbse)] =  1.236
-BIND_NBC10A['%s-BzH2S-3.3'  % (dbse)] =   None
+BIND_NBC10A['%s-BzH2S-3.3'  % (dbse)] = -0.471
 BIND_NBC10A['%s-BzH2S-3.4'  % (dbse)] = -1.584
 BIND_NBC10A['%s-BzH2S-3.5'  % (dbse)] = -2.269
 BIND_NBC10A['%s-BzH2S-3.6'  % (dbse)] = -2.649
@@ -343,7 +343,7 @@ BIND_NBC10A['%s-BzH2S-6.5'  % (dbse)] = -0.301
 BIND_NBC10A['%s-BzH2S-7.0'  % (dbse)] = -0.212
 BIND_NBC10A['%s-BzH2S-7.5'  % (dbse)] = -0.154
 
-BIND_NBC10A['%s-BzMe-3.15' % (dbse)] =  None
+BIND_NBC10A['%s-BzMe-3.15' % (dbse)] = 1.283
 BIND_NBC10A['%s-BzMe-3.2' % (dbse)] =  0.686
 BIND_NBC10A['%s-BzMe-3.3' % (dbse)] = -0.213
 BIND_NBC10A['%s-BzMe-3.4' % (dbse)] = -0.805
@@ -364,8 +364,8 @@ BIND_NBC10A['%s-BzMe-5.4' % (dbse)] = -0.332
 BIND_NBC10A['%s-BzMe-5.6' % (dbse)] = -0.268
 BIND_NBC10A['%s-BzMe-6.0' % (dbse)] = -0.177
 
-BIND_NBC10A['%s-MeMe-3.1' % (dbse)] =   None
-BIND_NBC10A['%s-MeMe-3.15' % (dbse)] =  None
+BIND_NBC10A['%s-MeMe-3.1' % (dbse)] =  0.570
+BIND_NBC10A['%s-MeMe-3.15' % (dbse)] = 0.291
 BIND_NBC10A['%s-MeMe-3.2' % (dbse)] =  0.069
 BIND_NBC10A['%s-MeMe-3.3' % (dbse)] = -0.239
 BIND_NBC10A['%s-MeMe-3.4' % (dbse)] = -0.417
@@ -386,7 +386,7 @@ BIND_NBC10A['%s-MeMe-5.4' % (dbse)] = -0.080
 BIND_NBC10A['%s-MeMe-5.8' % (dbse)] = -0.050
 
 BIND_NBC10A['%s-PyPy_S2-3.1' % (dbse)] =  2.387
-BIND_NBC10A['%s-PyPy_S2-3.2' % (dbse)] =   None
+BIND_NBC10A['%s-PyPy_S2-3.2' % (dbse)] =  0.245
 BIND_NBC10A['%s-PyPy_S2-3.3' % (dbse)] = -1.165
 BIND_NBC10A['%s-PyPy_S2-3.4' % (dbse)] = -2.050
 BIND_NBC10A['%s-PyPy_S2-3.5' % (dbse)] = -2.562
@@ -408,10 +408,10 @@ BIND_NBC10A['%s-PyPy_S2-6.5' % (dbse)] = -0.276
 BIND_NBC10A['%s-PyPy_S2-7.0' % (dbse)] = -0.200
 
 BIND_NBC10A['%s-PyPy_T3-4.1' % (dbse)] =  9.341
-BIND_NBC10A['%s-PyPy_T3-4.27' % (dbse)] =  None
+BIND_NBC10A['%s-PyPy_T3-4.27' % (dbse)] = 2.778
 BIND_NBC10A['%s-PyPy_T3-4.3' % (dbse)] =  1.991
-BIND_NBC10A['%s-PyPy_T3-4.36' % (dbse)] =  None
-BIND_NBC10A['%s-PyPy_T3-4.44' % (dbse)] =  None
+BIND_NBC10A['%s-PyPy_T3-4.36' % (dbse)] = 0.671
+BIND_NBC10A['%s-PyPy_T3-4.44' % (dbse)] = -0.650
 BIND_NBC10A['%s-PyPy_T3-4.5' % (dbse)] = -1.377
 BIND_NBC10A['%s-PyPy_T3-4.6' % (dbse)] = -2.203
 BIND_NBC10A['%s-PyPy_T3-4.7' % (dbse)] = -2.673
@@ -543,6 +543,27 @@ TAGL['%s-H2S-mono-unCP' % (dbse)] = 'Hydrogen Sulfide'
 TAGL['%s-Bz2-mono-unCP' % (dbse)] = 'Benzene (alt. geometry)'
 TAGL['%s-Me-mono-unCP'  % (dbse)] = 'Methane'
 TAGL['%s-Py-mono-unCP'  % (dbse)] = 'Pyridine'
+
+TAGL['dbse'] = 'interaction energies for dissociation curves of dispersion-bound bimolecular complexes'
+TAGL['BzBz_S'] = 'dissociation curve for benzene dimer, sandwich'
+TAGL['BzBz_T'] = 'dissociation curve for benzene dimer, t-shaped'
+TAGL['BzBz_PD34'] = 'dissociation curve for benzene dimer, parallel displaced by 3.4A'
+TAGL['BzH2S'] = 'dissociation curve for benzene-H2S'
+TAGL['BzMe'] = 'dissociation curve for benzene-methane'
+TAGL['MeMe'] = 'dissociation curve for methane dimer'
+TAGL['PyPy_S2'] = 'dissociation curve for pyridine dimer, sandwich'
+TAGL['PyPy_T3'] = 'dissociation curve for pyridine dimer, t-shaped'
+TAGL['BzBz_PD32'] = 'dissociation curve for benzene dimer, parallel displaced by 3.2A'
+TAGL['BzBz_PD36'] = 'dissociation curve for benzene dimer, parallel displaced by 3.6A'
+TAGL['5min'] = 'five points on each dissociation curve incl. and surrounding equilibrium'
+TAGL['MX'] = 'mixed-influence systems'
+TAGL['DD'] = 'dispersion-dominated systems'
+TAGL['MXDDPP'] = 'pi-pi-type mixed and dispersion systems'
+TAGL['MXDDNP'] = 'non-pi-pi-type mixed and dispersion systems'
+TAGL['large'] = 'most computationally expensive systems'
+TAGL['default'] = 'entire database'
+TAGL['equilibrium'] = 'minimum-energy systems on dissociation curves'
+TAGL['small'] = 'few computationally quick systems'
 
 #<<< Geometry Specification Strings >>>
 GEOS = {}
