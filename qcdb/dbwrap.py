@@ -1279,41 +1279,6 @@ class WrappedDatabase(object):
     #        # if running from Canopy, call mpl directly
     #        mpl.bar(dbdat, title=title)
 
-    def plot_iowa(self, modelchem, benchmark='default', sset='default', failoninc=True, verbose=False, xlimit=2.0):
-        """Computes individual errors for single *modelchem* versus
-        *benchmark* over subset *sset*. Coloring green-to-purple with
-        maximum intensity at *xlimit*. Prepares Iowa plot instructions and
-        either executes them if matplotlib available (Canopy) or prints them.
-
-        """
-        title = self.dbse + ' ' + modelchem
-        # compute errors
-        errors, indiv = self.compute_statistics(modelchem, benchmark=benchmark,
-                sset=sset, failoninc=failoninc, verbose=verbose, returnindiv=True)
-        # repackage
-        mcdat = []
-        mclbl = []
-        for rxn in self.sset[sset].keys():
-            try:
-                mcdat.append(indiv[rxn][0])
-                mclbl.append(str(rxn))
-            except KeyError, e:
-                if failoninc:
-                    raise e
-        # generate matplotlib instructions and call or print
-        try:
-            import mpl
-            import matplotlib.pyplot as plt
-        except ImportError:
-            # if not running from Canopy, print line to execute from Canopy
-            print """mpl.iowa(%s,\n    %s,\n    title='%s',\n    xlimit=%s)\n\n""" % \
-                (mcdat, mclbl, title, str(xlimit))
-        else:
-            # if running from Canopy, call mpl directly
-            mpl.iowa(mcdat, mclbl, title=title, xlimit=xlimit)
-            #print """mpl.iowa(%s,\n    %s,\n    title='%s',\n    xlimit=%s)\n\n""" % \
-            #    (mcdat, mclbl, title, str(xlimit))
-
     def table_generic(self, mtd, bas, columnplan, rowplan=['bas', 'mtd'],
         opt=['CP'], err=['mae'], sset=['default'],
         benchmark='default', failoninc=True,
@@ -2185,6 +2150,45 @@ reinitialize
             # if running from Canopy, call mpl directly
             filedict, htmlcode = mpl.threads(dbdat, color=color, title=title, labels=ixmid, mae=mae, mape=mape, xlimit=xlimit, saveas=saveas, mousetext=mousetext, mouselink=mouselink, mouseimag=mouseimag, mousetitle=mousetitle, mousediv=mousediv, relpath=relpath, graphicsformat=graphicsformat)
             return filedict, htmlcode
+
+    def plot_iowa(self, modelchem, benchmark='default', sset='default', 
+        failoninc=True, verbose=False, 
+        title='', xtitle='', xlimit=2.0,
+        saveas=None, relpath=False, graphicsformat=['pdf']):
+        """Computes individual errors for single *modelchem* versus
+        *benchmark* over subset *sset*. Coloring green-to-purple with
+        maximum intensity at *xlimit*. Prepares Iowa plot instructions and
+        either executes them if matplotlib available (Canopy) or prints them.
+
+        """
+        title = self.dbse + ' ' + modelchem
+        # compute errors
+        mc = modelchem
+        errors, indiv = self.compute_statistics(mc, benchmark=benchmark, sset=sset,
+            failoninc=failoninc, verbose=verbose, returnindiv=True)
+        # repackage
+        dbdat = []
+        dblbl = []
+        for db in self.dbdict.keys():
+            if indiv[db] is not None:
+                for rxn in indiv[db].keys():
+                    dbdat.append(indiv[db][rxn][0])
+                    dblbl.append(str(rxn))
+        title = """%s vs %s for %s subset %s""" % (mc, benchmark, self.dbse, sset)
+        me = errors[self.dbse]['me']
+        # generate matplotlib instructions and call or print
+        try:
+            import mpl
+            import matplotlib.pyplot as plt
+        except ImportError:
+            # if not running from Canopy, print line to execute from Canopy
+            print """mpl.iowa(%s,\n    %s,\n    title='%s',\n    xtitle='%s'\n    xlimit=%s,\n    saveas=%s,\n    relpath=%s\n    graphicsformat=%s)\n\n""" % \
+                (dbdat, dblbl, title, xtitle, xlimit, repr(saveas), repr(relpath), repr(graphicsformat))
+        else:
+            # if running from Canopy, call mpl directly
+            filedict = mpl.iowa(dbdat, dblbl, title=title, xtitle=xtitle, xlimit=xlimit,
+                saveas=saveas, relpath=relpath, graphicsformat=graphicsformat)
+            return filedict
 
     def export_pandas(self, modelchem=[], benchmark='default', sset='default', modelchemlabels=None,
         failoninc=True):

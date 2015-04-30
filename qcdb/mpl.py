@@ -750,13 +750,15 @@ def composition_tile(db, aa1, aa2):
     return np.reshape(np.array(tiles), (dim, dim))
 
 
-def iowa(mcdat, mclbl, title='', xlimit=2.0):
+def iowa(mcdat, mclbl, title='', xtitle='', xlimit=2.0,
+    saveas=None, relpath=False, graphicsformat=['pdf']):
     """Saves a plot with (extensionless) name *pltfile* with an Iowa
     representation of the modelchems errors in *mcdat* for BBI/SSI-style
     *labels*.
 
     """
     import numpy as np
+    import hashlib
     import matplotlib
     import matplotlib.pyplot as plt
 
@@ -776,7 +778,7 @@ def iowa(mcdat, mclbl, title='', xlimit=2.0):
     axt.xaxis.set_tick_params(width=0, length=0)
     axt.yaxis.set_tick_params(width=0, length=0)
     #axt.set_title('%s' % (title), fontsize=16, verticalalignment='bottom')
-    axt.text(10.0, -1.5, title, horizontalalignment='center', fontsize=16)
+    #axt.text(10.0, -1.5, title, horizontalalignment='center', fontsize=16)
 
     # nill spacing between 20x20 heatmaps
     plt.subplots_adjust(hspace=0.001, wspace=0.001)
@@ -793,10 +795,18 @@ def iowa(mcdat, mclbl, title='', xlimit=2.0):
             ax.set_yticks([])
             index += 1
 
-    title = '_'.join(title.split())
-    plt.savefig('iowa_' + title + '.pdf', bbox_inches='tight', transparent=True, format='PDF')
+    #plt.title(title)
+
+    # save and show
+    pltuid = title + '_' + hashlib.sha1(title + str(xlimit)).hexdigest()
+    pltfile = expand_saveas(saveas, pltuid, def_prefix='iowa_', relpath=relpath)
+    files_saved = {}
+    for ext in graphicsformat:
+        savefile = pltfile + '.' + ext.lower()
+        plt.savefig(savefile, transparent=True, format=ext, bbox_inches='tight')
+        files_saved[ext.lower()] = savefile
     plt.show()
-    #plt.savefig(os.environ['HOME'] + os.sep + 'iowa_' + title + '.pdf', bbox_inches='tight', transparent=True, format='PDF')
+    return files_saved
 
 
 if __name__ == "__main__":
