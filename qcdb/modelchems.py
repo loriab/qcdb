@@ -184,6 +184,9 @@ _tlist = [
     Publication('dilabio', doi='10.1021/ct400149j', dsdbid='Burns:2014:49', owner='LAB',
         fullname="""Comparing Counterpoise-Corrected, Uncorrected, and Averaged Binding Energies for Benchmarking Noncovalent Interactions. L. A. Burns, M. S. Marshall, and C. D. Sherrill, J. Chem. Theory Comput. 10(1), 49-57 (2014)"""),
     Publication('pt2uncp', doi='', dsdbid='', owner='LAB', fullname=''),
+    Publication('dfit', doi='', dsdbid='', owner='DGAS', fullname=''),
+    Publication('merz3', doi='', dsdbid='', owner='LAB', fullname=''),
+    Publication('bfdbmm', doi='', dsdbid='', owner='LAB', fullname=''),
 ]
 pubs = {}
 for item in _tlist:
@@ -297,6 +300,7 @@ _tlist = [
     BasisSet('6311pg_3df_2p_', fullname='6-311+G(3df,2p)'),
     BasisSet('6311ppg_3df_2p_', fullname='6-311++G(3df,2p)'),
     BasisSet('def2qzvp', fullname='def2-QZVP'),
+    BasisSet('na',         fullname='not applicable'),
 ]
 bases = {}
 for item in _tlist:
@@ -426,6 +430,10 @@ _tlist = [
     Method('DWCCSDTSF12',     fullname='DW-CCSD(T*)-F12'),
     Method('DELTQ',           fullname='d(TQ)', latex="""$\delta$(TQ)"""),  # TODO kill this once non-IE impl in reap-DB
     Method('DEL2T',           fullname='d(T)', latex="""$\delta$(T)"""),  # TODO kill this once non-IE impl in reap-DB
+    Method('AM1',             fullname='AM1'),
+    Method('GAFF',            fullname='GAFF'),
+    Method('PM6DH2',          fullname='PM6-DH2'),
+    Method('CHARMM',          fullname='CHARMM'),
     ]
 
 methods = {}
