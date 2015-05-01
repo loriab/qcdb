@@ -171,7 +171,7 @@ def string_contrast(ss):
 
 
 def fancify_mc_tag(mc, latex=False):
-    """From the usual MTD-opt1_opt2-bas model chemistry identifier, return 
+    """From the usual MTD-opt1_opt2-bas model chemistry identifier, return
     string based on fullname, if *latex* is False or latex if *latex is True.
 
     """
@@ -433,7 +433,7 @@ class Reaction(object):
         mousetitle=None, mousediv=None, relpath=False, graphicsformat=['pdf']):
         """Computes individual errors over model chemistries in *mcset* (which
         may be default or an array or a function generating an array) versus
-        *benchmark*. Thread *color* can be 'rgb' for old coloring, a color 
+        *benchmark*. Thread *color* can be 'rgb' for old coloring, a color
         name or 'sapt' for spectrum coloring.
 
         *saveas* conveys directory ('/') and/or filename for saving the
@@ -451,7 +451,7 @@ class Reaction(object):
         """
         # compute errors
         dbse = self.dbrxn.split('-')[0]
-        indiv = self.compute_errors(benchmark=benchmark, mcset=mcset, 
+        indiv = self.compute_errors(benchmark=benchmark, mcset=mcset,
             failoninc=failoninc, verbose=verbose)
 
         # repackage
@@ -948,6 +948,26 @@ class WrappedDatabase(object):
         func = 'load_' + project
         self.load_qcdata(modname=mod, funcname=func, pythonpath=pythonpath)
 
+    def load_qcdata_hrxn_byproject(self, project, path=None):
+        """"""
+        if path is None:
+            path = os.path.dirname(__file__) + '/../data'
+        pklfile = os.path.abspath(path) + os.sep + self.dbse + '_hrxn_' + project + '.pickle'
+        if not os.path.isfile(pklfile):
+            raise ValidationError("Reactions pickle file for loading database data from file %s does not exist" % (pklfile))
+
+        with open(pklfile, 'rb') as handle:
+            hrxns = pickle.load(handle)
+        #print hrxns.keys()[:10]
+        #print hrxns['020ASP-082LYS-1'].data
+
+        # no error checking for speed
+        #for rxn, orxn in hrxns.iteritems():
+        #    self.hrxn[rxn].data.update(orxn.data)
+        for rxn, data in hrxns.iteritems():
+            self.hrxn[rxn].data.update(data)
+
+
     def load_qcdata_hdf5_trusted(self, project, path=None):
         """Loads qcdb.ReactionDatums from HDF5 file at path/dbse_project.h5 .
         If path not given, looks in qcdb/data. This file is written by
@@ -993,7 +1013,7 @@ class WrappedDatabase(object):
         """
         if path is None:
             path = os.path.dirname(__file__) + '/../data'
-        picklefile = psiutil.findfile_ignorecase(dbname, 
+        picklefile = psiutil.findfile_ignorecase(dbname,
             pre=os.path.abspath(path)+os.sep, post='.pickle')
         if not picklefile:
             raise ValidationError("Pickle file for loading database data from file %s does not exist" % (os.path.abspath(path) + os.sep + dbname + '.pickle'))
@@ -1595,6 +1615,11 @@ class Database(object):
             odb.load_qcdata_hdf5_trusted(project, path=path)
         self._intersect_modelchems()
 
+    def load_qcdata_hrxn_byproject(self, project, path=None):
+        for db, odb in self.dbdict.items():
+            odb.load_qcdata_hrxn_byproject(project, path=path)
+        self._intersect_modelchems()
+
     def load_subsets(self, modname='subsetgenerator', pythonpath=None):
         """For each component database, loads subsets from all functions
         in module *modname*. Default *modname* usues standard generators.
@@ -1605,10 +1630,10 @@ class Database(object):
         self._intersect_subsets()
 
     def add_Subset(self, name, func):
-        """Define a new subset labeled *name* by providing a database 
-        *func* whose keys are the keys of dbdict and whose values are a 
+        """Define a new subset labeled *name* by providing a database
+        *func* whose keys are the keys of dbdict and whose values are a
         function that filters each WrappedDatabase's *self.hrxn*.
- 
+
         """
         label = name.lower()
         for db, odb in self.dbdict.iteritems():
@@ -1618,8 +1643,8 @@ class Database(object):
 
     def add_Subset_union(self, name, sslist):
         """
-        Define a new subset labeled *name* (note that there's nothing to 
-        prevent overwriting an existing subset name) from the union of 
+        Define a new subset labeled *name* (note that there's nothing to
+        prevent overwriting an existing subset name) from the union of
         existing named subsets in *sslist*.
 
         """
@@ -1899,10 +1924,10 @@ class Database(object):
             return filedict
 
     def write_xyz_files(self, path=None):
-        """Writes xyz files for every reagent in the Database to directory 
-        in *path* or to directory dbse_xyzfiles that it createsin cwd if 
-        *path* is None. Additionally, writes a script to that directory 
-        that will generate transparent-background ray-traced png files for 
+        """Writes xyz files for every reagent in the Database to directory
+        in *path* or to directory dbse_xyzfiles that it createsin cwd if
+        *path* is None. Additionally, writes a script to that directory
+        that will generate transparent-background ray-traced png files for
         every reagent with PyMol.
 
         """
@@ -2154,7 +2179,15 @@ reinitialize
                     print mc, 'not found'
                     continue
                 key = mc if modelchemlabels is None else modelchemlabels[modelchem.index(mc)]
-                dictorxn[key] = orxn.data[wmc].value
+                try:
+                    dictorxn[key] = orxn.data[wmc].value
+                except KeyError, e:
+                    # reaction not in modelchem
+                    if failoninc:
+                        raise ValidationError("""Reaction %s missing datum %s.""" % (key, str(e)))
+                    else:
+                        print mc, str(e), 'not found'
+                        continue
             listodicts.append(dictorxn)
 
         df = pd.DataFrame(listodicts)
@@ -2498,7 +2531,7 @@ class DB4(Database):
         self.plot_bars(['CCSDTAF12-CP-adz', 'CCSDTAF12-CP-adtzadz', 'CCSDTAF12-CP-atqzadz'])
         self.plot_bars(['CCSDTBF12-CP-adz', 'CCSDTBF12-CP-adtzadz', 'CCSDTBF12-CP-atqzadz'])
         self.plot_bars(['DWCCSDTF12-CP-adz', 'DWCCSDTF12-CP-adtzadz', 'DWCCSDTF12-CP-atqzadz'])
-        
+
     def plot_dhdft_bars(self):
         """Generate pieces for grey bars figure for DH-DFT paper."""
 
@@ -2534,7 +2567,7 @@ class DB4(Database):
 
 
     def plot_dhdft_figure(self):
-        
+
         self.plot_bars(['B97D3-unCP-adz','B97D3-CP-adz','B97D3-unCP-atz','B97D3-CP-atz'],sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
         self.plot_bars(['PBED3-unCP-adz','PBED3-CP-adz','PBED3-unCP-atz','PBED3-CP-atz'],sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
         self.plot_bars(['M11L-unCP-adz','M11L-CP-adz','M11L-unCP-atz','M11L-CP-atz'],sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
@@ -2555,8 +2588,8 @@ class DB4(Database):
         self.plot_bars(['B2PLYPD3-unCP-adz','B2PLYPD3-CP-adz','B2PLYPD3-unCP-atz','B2PLYPD3-CP-atz'],sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
         self.plot_bars(['DSDPBEP86D2OPT-unCP-adz','DSDPBEP86D2OPT-CP-adz','DSDPBEP86D2OPT-unCP-atz','DSDPBEP86D2OPT-CP-atz'],sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
         self.plot_bars(['MP2-unCP-adz','MP2-CP-adz','MP2-unCP-atz','MP2-CP-atz'],sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
-        
-        
+
+
     def plot_minn_bars(self):
 
         self.plot_bars(['DLDFD-unCP-adz','M052X-unCP-adz','M062X-unCP-adz','M08HX-unCP-adz','M08SO-unCP-adz','M11-unCP-adz','M11L-unCP-adz',
