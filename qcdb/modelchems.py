@@ -187,6 +187,7 @@ _tlist = [
     Publication('dfit', doi='', dsdbid='', owner='DGAS', fullname=''),
     Publication('merz3', doi='', dsdbid='', owner='LAB', fullname=''),
     Publication('bfdbmm', doi='', dsdbid='', owner='LAB', fullname=''),
+    Publication('anon', doi='', dsdbid='', owner='', fullname=''),
 ]
 pubs = {}
 for item in _tlist:

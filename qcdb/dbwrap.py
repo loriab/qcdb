@@ -968,7 +968,6 @@ class WrappedDatabase(object):
         for rxn, data in hrxns.iteritems():
             self.hrxn[rxn].data.update(data)
 
-
     def load_qcdata_hdf5_trusted(self, project, path=None):
         """Loads qcdb.ReactionDatums from HDF5 file at path/dbse_project.h5 .
         If path not given, looks in qcdb/data. This file is written by
@@ -1609,6 +1608,24 @@ class Database(object):
         for db, odb in self.dbdict.items():
             odb.load_qcdata_hrxn_byproject(project, path=path)
         self._intersect_modelchems()
+
+    def available_projects(self, path=None):
+        """"""
+        import glob
+        if path is None:
+            path = os.path.dirname(__file__) + '/../data'
+   
+        projects = []
+        for pjfn in glob.glob(path + '/*_hrxn_*.pickle'):
+            pj = pjfn[:-7].split('_')[-1]
+            projects.append(pj)
+   
+        complete_projects = []
+        for pj in set(projects):
+            if all([os.path.isfile(path + '/' + db + '_hrxn_' + pj + '.pickle') for db in self.dbdict.keys()]):
+                complete_projects.append(pj)
+
+        return complete_projects
 
     def load_subsets(self, modname='subsetgenerator', pythonpath=None):
         """For each component database, loads subsets from all functions
