@@ -1610,6 +1610,24 @@ class Database(object):
             odb.load_qcdata_hrxn_byproject(project, path=path)
         self._intersect_modelchems()
 
+    def available_projects(self, path=None):
+        """"""
+        import glob
+        if path is None:
+            path = os.path.dirname(__file__) + '/../data'
+   
+        projects = []
+        for pjfn in glob.glob(path + '/*_hrxn_*.pickle'):
+            pj = pjfn[:-7].split('_')[-1]
+            projects.append(pj)
+   
+        complete_projects = []
+        for pj in set(projects):
+            if all([os.path.isfile(path + '/' + db + '_hrxn_' + pj + '.pickle') for db in self.dbdict.keys()]):
+                complete_projects.append(pj)
+
+        return complete_projects
+
     def load_subsets(self, modname='subsetgenerator', pythonpath=None):
         """For each component database, loads subsets from all functions
         in module *modname*. Default *modname* usues standard generators.
