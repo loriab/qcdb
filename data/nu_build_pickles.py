@@ -32,8 +32,8 @@ for db, lproj in dbnet.iteritems():
     t1 = time.time()
     print '%-70s %8.1f' % ('database.py --> WrappedDatabase', t1-t0)
 
-    filename = homewrite + '/' + db + '.pickle'
-    with open(filename, 'wb') as handle:  # COMMENT for local WDb
+    WDbfilename = homewrite + '/' + db + '_WDb.pickle'
+    with open(WDbfilename, 'wb') as handle:  # COMMENT for local WDb
         pickle.dump(asdf, handle, pickle.HIGHEST_PROTOCOL)  # COMMENT for local WDb
     t2 = time.time()
     print '%-70s %8.1f' % ('* WrappedDatabase --> database.pickle', t2-t1)
@@ -41,7 +41,7 @@ for db, lproj in dbnet.iteritems():
     for pj in lproj:
         print '  * ' + pj
         t3 = time.time()
-        with open(filename, 'rb') as handle:
+        with open(WDbfilename, 'rb') as handle:
             qwer = pickle.load(handle)    
         t4 = time.time()
         qwer.load_qcdata_byproject(pj)
