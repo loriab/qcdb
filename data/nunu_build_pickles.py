@@ -12,11 +12,11 @@ import qcdb
 
 homewrite = '.'
 dbnet = {}
-#dbnet['S22'] = ['dft', 'saptone', 'pt2']
-#dbnet['NBC10'] = ['dft', 'saptone', 'pt2']
-#dbnet['HBC6'] = ['dft', 'saptone', 'pt2']
-#dbnet['HSG'] = ['dft', 'saptone', 'pt2']
-#dbnet['SSI'] = ['bfdbmm', 'merz3', 'dfit']
+dbnet['S22'] = ['dft', 'saptone', 'pt2']
+dbnet['NBC10'] = ['dft', 'saptone', 'pt2']
+dbnet['HBC6'] = ['dft', 'saptone', 'pt2']
+dbnet['HSG'] = ['dft', 'saptone', 'pt2']
+dbnet['SSI'] = ['bfdbmm', 'merz3', 'dfit']
 dbnet['PCONF'] = ['dfit']
 dbnet['DB4'] = ['dft', 'saptone', 'pt2']
 

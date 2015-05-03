@@ -11,15 +11,13 @@ sys.path.append('/Users/loriab/linux/qcdb/databases')
 import qcdb.dbwrap
 
 # S22, A24, S22by7, BBI, NBC10, NBC10ext, S66, HSG, HBC6, SSI
-#databases = ['ACONF', 'PCONF', 'CYCONF', 'SCONF']
-#databases = ['S22', 'NBC10', 'HBC6', 'HSG']
 homewrite = '.'
 dbnet = {}
-#dbnet['S22'] = ['dft', 'saptone', 'pt2']
-#dbnet['NBC10'] = ['dft', 'saptone', 'pt2']
-#dbnet['HBC6'] = ['dft', 'saptone', 'pt2']
-#dbnet['HSG'] = ['dft', 'saptone', 'pt2']
-#dbnet['SSI'] = ['bfdbmm', 'merz3', 'dfit']
+dbnet['S22'] = ['dft', 'saptone', 'pt2']
+dbnet['NBC10'] = ['dft', 'saptone', 'pt2']
+dbnet['HBC6'] = ['dft', 'saptone', 'pt2']
+dbnet['HSG'] = ['dft', 'saptone', 'pt2']
+dbnet['SSI'] = ['bfdbmm', 'merz3', 'dfit']
 dbnet['PCONF'] = ['dfit']
 
 #dbse = 'SSI'  # UNCOMMENT for local WDb
