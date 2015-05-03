@@ -965,15 +965,9 @@ class WrappedDatabase(object):
 
         with open(pklfile, 'rb') as handle:
             hrxns = pickle.load(handle)
-        #print hrxns.keys()[:10]
-        #print hrxns['020ASP-082LYS-1'].data
-
         # no error checking for speed
-        #for rxn, orxn in hrxns.iteritems():
-        #    self.hrxn[rxn].data.update(orxn.data)
         for rxn, data in hrxns.iteritems():
             self.hrxn[rxn].data.update(data)
-
 
     def load_qcdata_hdf5_trusted(self, project, path=None):
         """Loads qcdb.ReactionDatums from HDF5 file at path/dbse_project.h5 .
@@ -1021,7 +1015,7 @@ class WrappedDatabase(object):
         if path is None:
             path = os.path.dirname(__file__) + '/../data'
         picklefile = psiutil.findfile_ignorecase(dbname,
-            pre=os.path.abspath(path)+os.sep, post='.pickle')
+            pre=os.path.abspath(path)+os.sep, post='_WDb.pickle')
         if not picklefile:
             raise ValidationError("Pickle file for loading database data from file %s does not exist" % (os.path.abspath(path) + os.sep + dbname + '.pickle'))
         #with open('/var/www/html/bfdb_devel/bfdb/scratch/ASDFlogfile.txt', 'a') as handle:
