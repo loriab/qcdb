@@ -312,6 +312,7 @@ class Reagent(object):
 #        self.frchg = mol.fragment_charges
 #        # frag multiplicity
 #        self.frmult = mol.fragment_multiplicities
+        self.charge = mol.molecular_charge()
 
     def __str__(self):
         text = ''
@@ -793,7 +794,9 @@ class WrappedDatabase(object):
         *func* that filters *self.hrxn*.
 
         """
-        label = name.lower()
+        sname = name.lower().split('\n')
+        label = sname.pop(0)
+        tagl = sname[0].strip() if sname else None
         try:
             lsslist = [rxn for rxn in self.sset['default'].keys() if rxn in func(self)]
         except TypeError, e:
@@ -805,7 +808,10 @@ class WrappedDatabase(object):
         self.sset[label] = OrderedDict()
         for rxn in lsslist:
             self.sset[label][rxn] = self.hrxn[rxn]
-        print """WrappedDatabase %s: Subset %s formed: %s""" % (self.dbse, label, self.sset[label].keys())
+        self.oss[label] = Subset(name = label,
+                                 hrxn = self.sset[label].keys(),
+                                 tagl = tagl)
+        print """WrappedDatabase %s: Subset %s formed: %d""" % (self.dbse, label, len(self.sset[label].keys()))
 
     def compute_errors(self, modelchem, benchmark='default', sset='default', failoninc=True, verbose=False):
         """For full database or subset *sset*, computes raw reaction
