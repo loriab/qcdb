@@ -659,8 +659,15 @@ class WrappedDatabase(object):
             ref = database.dbse + 'REF' if arrbind == 'BIND' else arrbind.replace('BIND_', '')
             methods[ref] = Method(name=ref)
             bases[ref] = BasisSet(name=ref)
+            try:
+                getattr(database, 'BINDINFO_' + ref)
+            except AttributeError:
+                arrbindinfo = None
+            else:
+                arrbindinfo = 'BINDINFO_' + ref
             oBIND[ref] = [methods[ref], 'default', bases[ref], arrbind,
-                (getattr(database, arrbind) is database.BIND)]
+                (getattr(database, arrbind) is database.BIND),
+                arrbindinfo]
         for item in [tmp for tmp in pieces if tmp.startswith('BIND')]:
             pieces.remove(item)
 
@@ -669,14 +676,31 @@ class WrappedDatabase(object):
             dbrxn = database.dbse + '-' + str(rxn)
             for ref, info in oBIND.iteritems():
                 bindval = getattr(database, info[3])[dbrxn]
+                if info[5] is None:
+                    methodfeed = info[0]
+                    modefeed = info[1]
+                    basisfeed = info[2]
+                    citationkey = 'anon'
+                else:
+                    bindinforxn = getattr(database, info[5])[dbrxn]
+                    methodfeed = methods[bindinforxn['method'].upper()] if 'method' in bindinforxn else info[0]
+                    modefeed = bindinforxn['mode'] if 'mode' in bindinforxn else info[1]
+                    basisfeed = bases[bindinforxn['basis'].lower()] if 'basis' in bindinforxn else info[2]
+                    citationkey = bindinforxn['citation'].lower() if 'citation' in bindinforxn else 'anon'
+                citationfeed = pubs[citationkey]
+
                 if bindval is not None:
-                    oHRXN[rxn].data[ref] = ReactionDatum(dbse=database.dbse,
-                                                         rxn=rxn,
-                                                         method=info[0],
-                                                         mode=info[1],
-                                                         basis=info[2],
+                    oHRXN[rxn].data[ref] = ReactionDatum(dbse=database.dbse, rxn=rxn,
+                                                         method=methodfeed, mode=modefeed,
+                                                         basis=basisfeed, citation=citationfeed,
                                                          value=bindval)
-                                                         #value=getattr(database, info[3])[dbrxn])
+                    #oHRXN[rxn].data[ref] = ReactionDatum(dbse=database.dbse,
+                    #                                     rxn=rxn,
+                    #                                     method=info[0],
+                    #                                     mode=info[1],
+                    #                                     basis=info[2],
+                    #                                     value=bindval)
+                    #                                     #value=getattr(database, info[3])[dbrxn])
                     if info[4]:
                         oHRXN[rxn].benchmark = ref
 
@@ -1615,12 +1639,12 @@ class Database(object):
         import glob
         if path is None:
             path = os.path.dirname(__file__) + '/../data'
-   
+
         projects = []
         for pjfn in glob.glob(path + '/*_hrxn_*.pickle'):
             pj = pjfn[:-7].split('_')[-1]
             projects.append(pj)
-   
+
         complete_projects = []
         for pj in set(projects):
             if all([os.path.isfile(path + '/' + db + '_hrxn_' + pj + '.pickle') for db in self.dbdict.keys()]):
@@ -2195,8 +2219,8 @@ reinitialize
             filedict, htmlcode = mpl.threads(dbdat, color=color, title=title, labels=ixmid, mae=mae, mape=mape, xlimit=xlimit, saveas=saveas, mousetext=mousetext, mouselink=mouselink, mouseimag=mouseimag, mousetitle=mousetitle, mousediv=mousediv, relpath=relpath, graphicsformat=graphicsformat)
             return filedict, htmlcode
 
-    def plot_iowa(self, modelchem, benchmark='default', sset='default', 
-        failoninc=True, verbose=False, 
+    def plot_iowa(self, modelchem, benchmark='default', sset='default',
+        failoninc=True, verbose=False,
         title='', xtitle='', xlimit=2.0,
         saveas=None, relpath=False, graphicsformat=['pdf']):
         """Computes individual errors for single *modelchem* versus
