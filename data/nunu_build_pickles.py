@@ -19,6 +19,7 @@ dbnet['HSG'] = ['dft', 'saptone', 'pt2']
 dbnet['SSI'] = ['bfdbmm', 'merz3', 'dfit']
 dbnet['PCONF'] = ['dfit']
 dbnet['DB4'] = ['dft', 'saptone', 'pt2']
+dbnet['NBC10ext'] = []
 
 for db, lproj in dbnet.iteritems():
     print '\n<<< %s >>>' % (db)
