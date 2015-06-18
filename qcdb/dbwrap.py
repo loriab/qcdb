@@ -1580,8 +1580,9 @@ class Database(object):
                 fmcs[mc] = mc
             else:
                 if latex:
-                    fmcs[mc] = """%20s / %-20s, %s""" % \
+                    tmp = """%s/%s, %s""" % \
                         (methods[mtd].latex, bases[bas].latex, mod)
+                    fmcs[mc] = """%45s""" % (tmp)
                 else:
                     fmcs[mc] = """%20s / %-20s, %s""" % \
                         (methods[mtd].fullname, bases[bas].fullname, mod)
@@ -2328,6 +2329,222 @@ reinitialize
         print df.head(5)
         print df.tail(5)
         return df
+
+    def table_reactions(self, modelchem, benchmark='default', sset='default',
+        failoninc=True,
+        columnplan=['indx', 'tagl', 'bm', 'mc', 'e', 'pe'],
+        title="""Reaction energies (kcal/mol) for {sset} $\subset$ {dbse} with {mc}""",
+        indextitle="""Detailed results for {sset} $\subset$ {dbse} with {mc}""",
+        plotpath='analysis/mols/',
+        standalone=True, theme='rxns', filename=None):
+        """Prepare single LaTeX table to *filename* or screen if None showing
+        the per-reaction results for reactions in *sset* for single or array
+        or 'all' *modelchem*, where the last uses self.mcs(), model chemistries
+        versus *benchmark*. Use *failoninc* to toggle between command failing
+        or blank lines in table. Use *standalone* to toggle between full
+        compilable document and suitable for inclusion in another LaTeX document.
+        Use *columnplan* to customize column (from among columnreservoir, below)
+        layout. Use *title* and *indextitle* to customize table caption and
+        table-of-contents caption, respectively; variables in curly braces will
+        be substituted. Use *theme* to customize the \ref{tbl:} code.
+
+        """
+        # define eligible columns for inclusion
+        columnreservoir = {
+            'dbrxn': ['l', r"""\textbf{Reaction}""", """{0:25s}"""],
+            'indx': ['r', '', """{0:14s}"""],
+            'tagl': ['l', r"""\textbf{Reaction}""", """{0:50s}"""],
+            'bm': ['d', r"""\multicolumn{1}{c}{\textbf{Benchmark}}""", """{0:8.2f}"""],
+            'mc': ['d', r"""\multicolumn{1}{c}{\textbf{ModelChem}}""", """{0:8.2f}"""],
+            'e': ['d', r"""\multicolumn{1}{c}{\textbf{Error}}""", """{0:8.2f}"""],
+            'pe': ['d', r"""\multicolumn{1}{c}{\textbf{\% Err.}}""", """{0:8.1f}"""],
+            'imag': ['l', '', r"""\includegraphics[width=1.0cm,height=3.5mm]{%s%%ss.png}""" % (plotpath)],  # untested
+            }
+        for col in columnplan:
+            if col not in columnreservoir.keys():
+                raise ValidationError('Column {0} not recognized. Register with columnreservoir.'.format(col))
+
+        if isinstance(modelchem, basestring):
+            if modelchem.lower() == 'all':
+                mcs = sorted(self.mcs.keys())
+            else:
+                mcs = [modelchem]
+        else:
+            mcs = modelchem
+
+        # commence to generate LaTeX code
+        tablelines = []
+        indexlines = []
+
+        if standalone:
+            tablelines += textables.begin_latex_document()
+
+        # iterate to produce one LaTeX table per modelchem
+        for mc in mcs:
+            # prepare summary statistics
+            perr = self.compute_statistics(mc, benchmark=benchmark, sset=sset,
+                                           failoninc=failoninc, verbose=False,
+                                           returnindiv=False)
+            serrors = OrderedDict()
+            for db in self.dbdict.keys():
+                serrors[db] = None if perr[db] is None else format_errors(perr[db], mode=3)
+            serrors[self.dbse] = format_errors(perr[self.dbse], mode=3)
+
+            # prepare individual reactions and errors
+            terrors = OrderedDict()
+            isComplete = True
+            for (lmc, lbm, orxn) in self.get_reactions(mc, benchmark=benchmark,
+                                                     sset=sset, failoninc=failoninc):
+                tmp = {}
+                dbrxn = orxn.dbrxn
+                tmp['dbrxn'] = dbrxn.replace('_', '\\_')
+                tmp['indx'] = r"""\textit{""" + str(orxn.indx) + """}"""
+                tmp['tagl'] = dbrxn.split('-')[0] + ' ' + \
+                    (orxn.latex if orxn.latex else orxn.tagl.replace('_', '\\_'))
+                tmp['imag'] = None  # name of primary rgt
+                bmdatum = orxn.data[lbm].value if lbm else None
+                mcdatum = orxn.data[lmc].value if lmc else None
+                tmp['bm'] = bmdatum
+                tmp['mc'] = mcdatum
+                if lmc and lbm:
+                    tmp['e'] = mcdatum - bmdatum
+                    tmp['pe'] = 100 * (mcdatum - bmdatum) / abs(bmdatum)
+                    # TODO redefining errors not good practice
+                else:
+                    isComplete = False
+                    tmp['e'] = None
+                    tmp['pe'] = None
+
+                terrors[dbrxn] = {}
+                for c in columnreservoir.keys():
+                    terrors[dbrxn][c] = '' if tmp[c] is None else \
+                        columnreservoir[c][2].format(tmp[c])
+
+            fancymodelchem = self.fancy_mcs(latex=True)[mc]
+            thistitle = title.format(dbse=self.dbse, mc=fancymodelchem,
+                                 sset='All' if sset == 'default' else sset.upper())
+            lref = [r"""tbl:qcdb"""]
+            if theme:
+                lref.append(theme)
+            lref.append(self.dbse)
+            if sset != 'default':
+                lref.append(sset)
+            lref.append(mc)
+            ref = '-'.join(lref)
+
+            # table intro
+            tablelines.append(r"""\begingroup""")
+            tablelines.append(r"""\squeezetable""")
+            tablelines.append(r"""\LTcapwidth=\textwidth""")
+            tablelines.append(r"""\begin{longtable}{%s}""" % (''.join([columnreservoir[col][0] for col in columnplan])))
+            tablelines.append(r"""\caption{%s""" % (thistitle))
+            tablelines.append(r"""\label{%s}} \\ """ % (ref))
+            tablelines.append(r"""\hline\hline""")
+
+            columntitles = [columnreservoir[col][1] for col in columnplan]
+            # initial header
+            tablelines.append(' & '.join(columntitles) + r""" \\ """)
+            tablelines.append(r"""\hline""")
+            tablelines.append(r"""\endfirsthead""")
+            # to be continued header
+            tablelines.append(r"""\multicolumn{%d}{@{}l}{\textit{\ldots continued} %s} \\ """ %
+                        (len(columnplan), fancymodelchem))
+            tablelines.append(r"""\hline\hline""")
+            tablelines.append(' & '.join(columntitles) + r""" \\ """)
+            tablelines.append(r"""\hline""")
+            tablelines.append(r"""\endhead""")
+            # to be continued footer
+            tablelines.append(r"""\hline\hline""")
+            tablelines.append(r"""\multicolumn{%d}{r@{}}{\textit{continued \ldots}} \\ """ %
+                        (len(columnplan)))
+            tablelines.append(r"""\endfoot""")
+            # final footer
+            tablelines.append(r"""\hline\hline""")
+            tablelines.append(r"""\endlastfoot""")
+
+            # table body
+            for dbrxn, stuff in terrors.iteritems():
+                tablelines.append(' & '.join([stuff[col] for col in columnplan]) + r""" \\ """)
+
+            # table body summary
+            if any(col in ['e', 'pe'] for col in columnplan):
+                field_to_put_labels = [col for col in ['tagl', 'dbrxn', 'indx'] if col in columnplan]
+                if field_to_put_labels:
+
+                    for block, blkerrors in serrors.iteritems():
+                        if blkerrors:  # skip e.g., NBC block in HB of DB4
+                            tablelines.append(r"""\hline""")
+                            summlines = [[] for i in range(6)]
+                            for col in columnplan:
+                                if col == field_to_put_labels[0]:
+                                    summlines[0].append(
+                                    r"""\textbf{Summary Statistics: %s%s}%s""" % \
+                                    ('' if sset == 'default' else sset + r""" $\subset$ """,
+                                    block,
+                                    '' if isComplete else r""", \textit{partial}"""))
+                                    summlines[1].append(r"""\textit{Minimal Error}         """)
+                                    summlines[2].append(r"""\textit{Maximal Error}         """)
+                                    summlines[3].append(r"""\textit{Mean Signed Error}     """)
+                                    summlines[4].append(r"""\textit{Mean Absolute Error}   """)
+                                    summlines[5].append(r"""\textit{Root-Mean-Square Error}""")
+                                elif col in ['e', 'pe']:
+                                    summlines[0].append('')
+                                    summlines[1].append(blkerrors['min' + col])
+                                    summlines[2].append(blkerrors['max' + col])
+                                    summlines[3].append(blkerrors['m' + col])
+                                    summlines[4].append(blkerrors['ma' + col])
+                                    summlines[5].append(blkerrors['rms' + col])
+                                else:
+                                    for ln in range(len(summlines)):
+                                        summlines[ln].append('')
+                            for ln in range(len(summlines)):
+                                tablelines.append(' & '.join(summlines[ln]) + r""" \\ """)
+
+            # table conclusion
+            tablelines.append(r"""\end{longtable}""")
+            tablelines.append(r"""\endgroup""")
+            tablelines.append(r"""\clearpage""")
+            tablelines.append('\n\n')
+
+            # form table index
+            thisindextitle = indextitle.format(dbse=self.dbse, mc=fancymodelchem.strip(),
+                                           sset='All' if sset == 'default' else sset.upper())
+            indexlines.append(r"""\scriptsize \ref{%s} & \scriptsize %s \\ """ % \
+                        (ref, thisindextitle))
+
+        if standalone:
+            tablelines += textables.end_latex_document()
+
+       # form table and index return structures
+        if filename is None:
+            return tablelines, indexlines
+        else:
+            if filename.endswith('.tex'):
+                filename = filename[:-4]
+            with open(filename + '.tex', 'w') as handle:
+                 handle.write('\n'.join(tablelines))
+            with open(filename + '_index.tex', 'w') as handle:
+                 handle.write('\n'.join(indexlines) + '\n')
+            print """\n  LaTeX index written to {filename}_index.tex\n""" \
+                  """  LaTeX table written to {filename}.tex\n""" \
+                  """  >>> pdflatex {filename}\n""" \
+                  """  >>> open /Applications/Preview.app {filename}.pdf\n""".format(filename=filename)
+            filedict = {'data': os.path.abspath(filename) + '.tex',
+                        'index': os.path.abspath(filename + '_index.tex')}
+            return filedict
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     def table_generic(self, mtd, bas, columnplan, rowplan=['bas', 'mtd'],
         opt=['CP'], err=['mae'], sset=['tt'],
