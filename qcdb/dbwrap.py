@@ -2579,7 +2579,7 @@ reinitialize
             landscape=landscape, standalone=standalone, subjoin=subjoin,
             plotpath=plotpath, theme=theme, filename=filename)
 
-    def table_merge_abbr(self, mtd, bas, opt=['CP'], err=['mae'], benchmark='default', failoninc=True, plotpath='analysis/flats/flat_', theme='smmerge', standalone=True, filename=None):
+    def table_merge_abbr(self, plotpath, subjoin):
         """Specialization of table_generic into table with minimal statistics
         (three S22 and three overall) plus embedded slat diagram as suitable
         for main paper. A single table is formed in sections by *bas* with
@@ -2595,18 +2595,20 @@ reinitialize
             ['d', r'Overall', 'HB', textables.val, {'sset': 'hb', 'dbse': 'DB4'}],
             ['d', r'Overall', 'MX/DD', textables.val, {'sset': 'mxdd', 'dbse': 'DB4'}],
             ['d', r'Overall', 'TT', textables.val, {'sset': 'tt', 'dbse': 'DB4'}],
-            ['l', r"""Error Distribution\footnotemark[1]""", r"""\includegraphics[width=6.67cm,height=3.5mm]{%s%s.pdf}""" % (plotpath, 'blank'), textables.graphics, {}],
+            ['l', r"""Error Distribution\footnotemark[1]""",
+                 r"""\includegraphics[width=6.67cm,height=3.5mm]{%s%s.pdf}""" % (plotpath, 'blank'),
+                textables.graphics, {}],
             ['d', r'Time', '', textables.val, {'sset': 'tt-5min', 'dbse': 'NBC1'}]]
             # TODO Time column not right at all
 
-        self.table_generic(mtd=mtd, bas=bas, columnplan=columnplan, rowplan=rowplan,
-            opt=opt, err=err,
-            benchmark=benchmark, failoninc=failoninc,
-            landscape=False, standalone=standalone, subjoin=True,
-            plotpath=plotpath, theme=theme, filename=filename)
-        # TODO: not handled: filename, TODO switch standalone
+        footnotes = [fnreservoir['blankslat']]
+        landscape = False
+        theme = 'smmerge'
+        title=r"""Interaction energy (kcal/mol) {{err}} subset statistics with computed with {{opt}}{0}.""".format(
+            '' if subjoin else r""" and {bas}""")
+        return rowplan, columnplan, landscape, footnotes, title, theme
 
-    def table_merge_suppmat(self, mtd, bas, opt=['CP'], err=['mae'], benchmark='default', failoninc=True, plotpath='analysis/flats/flat_', theme='lgmerge'):
+    def table_merge_suppmat(self, plotpath, subjoin):
         """Specialization of table_generic into table with as many statistics
         as will fit (mostly fullcurve and a few 5min) plus embedded slat
         diagram as suitable for supplementary material. Multiple tables are
@@ -2629,17 +2631,19 @@ reinitialize
             ['d', 'HSG', 'DD', textables.val, {'sset': 'dd', 'dbse': 'HSG'}],
             ['d', 'HSG', 'TT', textables.val, {'sset': 'tt', 'dbse': 'HSG'}],
             ['d', 'Avg', 'TT ', textables.val, {'sset': 'tt', 'dbse': 'DB4'}],
-            ['l', r"""Error Distribution\footnotemark[1]""", r"""\includegraphics[width=6.67cm,height=3.5mm]{%s%s.pdf}""" % (plotpath, 'blank'), textables.graphics, {}],
+            ['l', r"""Error Distribution\footnotemark[1]""",
+                r"""\includegraphics[width=6.67cm,height=3.5mm]{%s%s.pdf}""" % (plotpath, 'blank'),
+                textables.graphics, {}],
             ['d', 'NBC10', r"""TT\footnotemark[2]""", textables.val, {'sset': 'tt-5min', 'dbse': 'NBC1'}],
             ['d', 'HBC6', r"""TT\footnotemark[2] """, textables.val, {'sset': 'tt-5min', 'dbse': 'HBC1'}],
             ['d', 'Avg', r"""TT\footnotemark[2]""", textables.val, {'sset': 'tt-5min', 'dbse': 'DB4'}]]
 
-        self.table_generic(mtd=mtd, bas=bas, columnplan=columnplan, rowplan=rowplan,
-            opt=opt, err=err,
-            benchmark=benchmark, failoninc=failoninc,
-            landscape=True, standalone=True, subjoin=False,
-            plotpath=plotpath, theme=theme, filename=None)
-        # TODO: not handled: filename, TODO switch standalone
+        footnotes = [fnreservoir['blankslat'], fnreservoir['5min']]
+        landscape = True
+        theme = 'lgmerge'
+        title=r"""Interaction energy (kcal/mol) {{err}} subset statistics with computed with {{opt}}{0}.""".format(
+            '' if subjoin else r""" and {bas}""")
+        return rowplan, columnplan, landscape, footnotes, title, theme
 
 
 class DB4(Database):
@@ -3037,3 +3041,7 @@ class ThreeDatabases(Database):
         self.mc['CCSDT-CP-atqzatz'] = ['CCSDT-CP-atqzatz', 'CCSDT-CP-atqzhatz', 'CCSDT-CP-atqzatz']
 
 # print certain statistic for all 4 db and summary and indiv sys if min or max
+
+fnreservoir = {}
+fnreservoir['blankslat'] = r"""Errors with respect to Benchmark. Guide lines are at 0, 0.3, and 1.0 kcal/mol overbound ($-$) and underbound ($+$)."""
+fnreservoir['5min'] = r"""Only equilibrium and near-equilibrium systems included. (All S22 and HSG, 50/194 NBC10, 28/118 HBC6.)"""
