@@ -1985,6 +1985,7 @@ reinitialize
     pngfile=xyzdir + rgt + '.png'))
 
     def plot_all_flats(self, modelchem=None, sset='default', xlimit=4.0,
+        failoninc=True,
         saveas=None, relpath=False, graphicsformat=['pdf']):
         """Generate pieces for inclusion into tables. Supply list of
         modelchemistries to plot from *modelchem*, otherwise defaults to
@@ -1997,8 +1998,8 @@ reinitialize
         filedict = OrderedDict()
         for mc in sorted(mcs):
             minifiledict = self.plot_flat(mc, sset=sset, xlimit=xlimit, view=False,
+                failoninc=failoninc,
                 saveas=saveas, relpath=relpath, graphicsformat=graphicsformat)
-            #filedict[mc] = minifiledict['pdf']
             filedict[mc] = minifiledict
         return filedict
 
@@ -3015,6 +3016,46 @@ class DB4(Database):
             'DLDFD-CP-adz', 'M052X-CP-adz', 'M062X-CP-adz', 'M08HX-CP-adz', 'M08SO-CP-adz', 'M11-CP-adz', 'M11L-CP-adz'])
         self.plot_modelchems(['DlDFD-unCP-atz', 'M052X-unCP-atz', 'M062X-unCP-atz', 'M08HX-unCP-atz', 'M08SO-unCP-atz', 'M11-unCP-atz', 'M11L-unCP-atz',
             'DLDFD-CP-atz', 'M052X-CP-atz', 'M062X-CP-atz', 'M08HX-CP-atz', 'M08SO-CP-atz', 'M11-CP-atz', 'M11L-CP-atz'])
+
+    def table_dhdft_suppmat_subsets(self):
+        """Generate the subset details suppmat Part II tables and their indice for DF-DFT."""
+
+        self.table_wrapper(mtd=['B97D3', 'PBED3', 'M11L', 'DLDFD', 'B3LYPD3',
+                                'PBE0D3', 'WB97XD', 'M052X', 'M062X', 'M08HX',
+                                'M08SO', 'M11', 'VV10', 'LCVV10', 'WB97XV',
+                                'PBE02', 'WB97X2', 'DSDPBEP86D2OPT', 'B2PLYPD3'],  # 'MP2']
+                           bas=['adz', 'atz'],
+                           tableplan=self.table_merge_suppmat,
+                           opt=['CP', 'unCP'], err=['mae', 'mape'],
+                           subjoin=False,
+                           plotpath='analysis/flats/mplflat_',  # proj still has 'mpl' prefix
+                           standalone=False, filename='tblssets')
+
+    def table_dhdft_suppmat_rxns(self):
+        """Generate the per-reaction suppmat Part III tables and their indices for DH-DFT."""
+
+        self.table_reactions(
+            ['B97D3-unCP-adz', 'B97D3-CP-adz', 'B97D3-unCP-atz', 'B97D3-CP-atz',
+            'PBED3-unCP-adz', 'PBED3-CP-adz', 'PBED3-unCP-atz', 'PBED3-CP-atz',
+            'M11L-unCP-adz', 'M11L-CP-adz', 'M11L-unCP-atz', 'M11L-CP-atz',
+            'DLDFD-unCP-adz', 'DLDFD-CP-adz', 'DLDFD-unCP-atz', 'DLDFD-CP-atz',
+            'B3LYPD3-unCP-adz', 'B3LYPD3-CP-adz', 'B3LYPD3-unCP-atz', 'B3LYPD3-CP-atz',
+            'PBE0D3-unCP-adz', 'PBE0D3-CP-adz', 'PBE0D3-unCP-atz', 'PBE0D3-CP-atz',
+            'WB97XD-unCP-adz', 'WB97XD-CP-adz', 'WB97XD-unCP-atz', 'WB97XD-CP-atz',
+            'M052X-unCP-adz', 'M052X-CP-adz', 'M052X-unCP-atz', 'M052X-CP-atz',
+            'M062X-unCP-adz', 'M062X-CP-adz', 'M062X-unCP-atz', 'M062X-CP-atz',
+            'M08HX-unCP-adz', 'M08HX-CP-adz', 'M08HX-unCP-atz', 'M08HX-CP-atz',
+            'M08SO-unCP-adz', 'M08SO-CP-adz', 'M08SO-unCP-atz', 'M08SO-CP-atz',
+            'M11-unCP-adz', 'M11-CP-adz', 'M11-unCP-atz', 'M11-CP-atz',
+            'VV10-unCP-adz', 'VV10-CP-adz', 'VV10-unCP-atz', 'VV10-CP-atz',
+            'LCVV10-unCP-adz', 'LCVV10-CP-adz', 'LCVV10-unCP-atz', 'LCVV10-CP-atz',
+            'WB97XV-unCP-adz', 'WB97XV-CP-adz', 'WB97XV-unCP-atz', 'WB97XV-CP-atz',
+            'PBE02-unCP-adz', 'PBE02-CP-adz', 'PBE02-unCP-atz', 'PBE02-CP-atz',
+            'WB97X2-unCP-adz', 'WB97X2-CP-adz', 'WB97X2-unCP-atz', 'WB97X2-CP-atz',
+            'DSDPBEP86D2OPT-unCP-adz', 'DSDPBEP86D2OPT-CP-adz', 'DSDPBEP86D2OPT-unCP-atz', 'DSDPBEP86D2OPT-CP-atz',
+            'B2PLYPD3-unCP-adz', 'B2PLYPD3-CP-adz', 'B2PLYPD3-unCP-atz', 'B2PLYPD3-CP-atz'],
+            # 'MP2-unCP-adz', 'MP2-CP-adz', 'MP2-unCP-atz', 'MP2-CP-atz'],
+            standalone=False, filename='tblrxn_all')
 
 
 class ThreeDatabases(Database):
