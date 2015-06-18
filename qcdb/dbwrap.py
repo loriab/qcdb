@@ -1716,21 +1716,6 @@ class Database(object):
     #        for rxn, orxn in odb.hrxn.items():
     #            yield orxn
 
-    def get_hrxn(self, sset='default'):
-        """
-
-        """
-        rhrxn = OrderedDict()
-        for db, odb in self.dbdict.items():
-            dbix = self.dbdict.keys().index(db)
-            for rxn, orxn in odb.hrxn.iteritems():
-                lss = self.sset[sset][dbix]
-                if lss is not None:
-                    if rxn in odb.sset[lss].keys():
-                        #rhrxn[rxn] = orxn
-                        rhrxn[orxn.dbrxn] = orxn  # this is a change and conflict with vergil version
-        return rhrxn
-
     def compute_statistics(self, modelchem, benchmark='default', sset='default',
         failoninc=True, verbose=False, returnindiv=False):
         """Computes summary statistics and, if *returnindiv* True,
@@ -2047,36 +2032,45 @@ reinitialize
 
     def get_reactions(self, modelchem, sset='default', benchmark='default',
         failoninc=True):
-        """Collects the reactions present in *sset* from each WrappedDatabase, 
-        checks that *modelchem* and *benchmark* ReactionDatum are present 
-        (fails if *failoninc* True), then returns in an array a tuple for 
-        each reaction containing the modelchem key needed to access 
-        *modelchem*, the modelchem key needed to access *benchmark*, and 
+        """Collects the reactions present in *sset* from each WrappedDatabase,
+        checks that *modelchem* and *benchmark* ReactionDatum are present
+        (fails if *failoninc* True), then returns in an array a tuple for
+        each reaction containing the modelchem key needed to access
+        *modelchem*, the modelchem key needed to access *benchmark*, and
         the Reaction object.
 
         """
-        # TODO merge/extend with get_hrxn above
-        # repackage
         dbdat = []
-        for db, odb in self.dbdict.items():
-            dbix = self.dbdict.keys().index(db)
-            for rxn, orxn in odb.hrxn.iteritems():
-                lss = self.sset[sset][dbix]
-                lmc = self.mcs[modelchem][dbix]
-                lbm = self.mcs[benchmark][dbix]
-                if lss is not None:
-                    if rxn in odb.sset[lss].keys():
-                        try:
-                            orxn.data[lmc]
-                            orxn.data[lbm]
-                        except KeyError, e:
-                            if failoninc:
-                                raise e
-                            else:
-                                # not sure yet if should return empties or just pass over
-                                pass
-                        else:
-                            dbdat.append((lmc, lbm, orxn))
+        rhrxn = self.get_hrxn(sset=sset)
+        for dbrxn, orxn in rhrxn.iteritems():
+            dbix = self.dbdict.keys().index(orxn.dbrxn.split('-')[0])
+            lmc = self.mcs[modelchem][dbix]
+            lbm = self.mcs[benchmark][dbix]
+            try:
+                orxn.data[lbm]
+            except KeyError, e:
+                # not sure if should treat bm differently
+                lbm = None
+            try:
+                orxn.data[lmc]
+            except KeyError, e:
+                if failoninc:
+                    raise e
+                else:
+                    lmc = None
+            dbdat.append((lmc, lbm, orxn))
+            # this is diff in that returning empties not just pass over- may break bfdb
+#            try:
+#                orxn.data[lmc]
+#                orxn.data[lbm]
+#            except KeyError, e:
+#                if failoninc:
+#                    raise e
+#                else:
+#                    # not sure yet if should return empties or just pass over
+#                    pass
+#            else:
+#                dbdat.append((lmc, lbm, orxn))
         return dbdat
 
     def plot_disthist(self, modelchem, benchmark='default', sset='default',
