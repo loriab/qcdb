@@ -2337,7 +2337,7 @@ reinitialize
         indextitle="""Detailed results for {sset} $\subset$ {dbse} with {mc}""",
         plotpath='analysis/mols/',
         standalone=True, theme='rxns', filename=None):
-        """Prepare single LaTeX table to *filename* or screen if None showing
+        """Prepare single LaTeX table to *filename* or return lines if None showing
         the per-reaction results for reactions in *sset* for single or array
         or 'all' *modelchem*, where the last uses self.mcs(), model chemistries
         versus *benchmark*. Use *failoninc* to toggle between command failing
@@ -2533,31 +2533,32 @@ reinitialize
                         'index': os.path.abspath(filename + '_index.tex')}
             return filedict
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-    def table_generic(self, mtd, bas, columnplan, rowplan=['bas', 'mtd'],
-        opt=['CP'], err=['mae'], sset=['tt'],
-        benchmark='default', failoninc=True,
-        landscape=False, standalone=True, subjoin=True,
-        plotpath='', theme='', filename=None):
+    def table_wrapper(self, mtd, bas, tableplan, benchmark='default',
+                      opt=['CP'], err=['mae'], sset=['default'], dbse=None,
+                      failoninc=True,
+                      plotpath='analysis/flats/flat_', subjoin=True,
+                      title=None, indextitle=None,
+                      standalone=True, theme=None, filename=None):
         """Prepares dictionary of errors for all combinations of *mtd*, *opt*,
         *bas* with respect to model chemistry *benchmark*, mindful of *failoninc*.
-        Once error dictionary is ready, it and all other arguments are passed
-        along to textables.table_generic.
+        The general plan for the table, as well as defaults for landscape,
+        footnotes, *title*, *indextitle, and *theme* are got from function
+        *tableplan*. Once error dictionary is ready, it and all other arguments
+        are passed along to textables.table_generic. Two arrays, one of table
+        lines and one of index lines are returned unless *filename* is given,
+        in which case they're written to file and a filedict returned.
 
         """
-        # argument dbse=['DB4']  # TODO
+        # get plan for table from *tableplan* and some default values
+        rowplan, columnplan, landscape, footnotes, \
+            suggestedtitle, suggestedtheme = tableplan(plotpath=plotpath, subjoin=subjoin)
+
+        # negotiate some defaults
+        dbse = [self.dbse] if dbse is None else dbse
+        theme = suggestedtheme if theme is None else theme
+        title = suggestedtitle if title is None else title
+        indextitle = title if indextitle is None else indextitle
+
         # gather list of model chemistries for table
         mcs = ['-'.join(prod) for prod in itertools.product(mtd, opt, bas)]
 
@@ -2573,11 +2574,62 @@ reinitialize
                 for db in self.dbdict.keys():
                     serrors[mc][ss][db] = None if perr[db] is None else format_errors(perr[db], mode=3)
 
-        textables.table_generic(dbse=[self.dbse], serrors=serrors,
-            mtd=mtd, bas=bas, columnplan=columnplan, rowplan=rowplan,
-            opt=opt, err=err, sset=sset,
-            landscape=landscape, standalone=standalone, subjoin=subjoin,
-            plotpath=plotpath, theme=theme, filename=filename)
+        # find indices that would be neglected in a single sweep over table_generic
+        keysinplan = set(sum([col[-1].keys() for col in columnplan], rowplan))
+        obvious = {'dbse': dbse, 'sset': sset, 'mtd': mtd, 'opt': opt, 'bas': bas, 'err': err}
+        for key, vari in obvious.items():
+            if len(vari) == 1 or key in keysinplan:
+                del obvious[key]
+        iteroers = [(prod) for prod in itertools.product(*obvious.values())]
+
+        # commence to generate LaTeX code
+        tablelines = []
+        indexlines = []
+
+        if standalone:
+            tablelines += textables.begin_latex_document()
+
+        for io in iteroers:
+            actvargs = dict(zip(obvious.keys(), [[k] for k in io]))
+            nudbse = actvargs['dbse'] if 'dbse' in actvargs else dbse
+            nusset = actvargs['sset'] if 'sset' in actvargs else sset
+            numtd = actvargs['mtd'] if 'mtd' in actvargs else mtd
+            nuopt = actvargs['opt'] if 'opt' in actvargs else opt
+            nubas = actvargs['bas'] if 'bas' in actvargs else bas
+            nuerr = actvargs['err'] if 'err' in actvargs else err
+
+            table, index = textables.table_generic(
+                mtd=numtd, bas=nubas, opt=nuopt, err=nuerr, sset=nusset, dbse=nudbse,
+                rowplan=rowplan, columnplan=columnplan, serrors=serrors,
+                plotpath=plotpath, subjoin=subjoin,
+                title=title, indextitle=indextitle,
+                landscape=landscape, footnotes=footnotes,
+                standalone=False, theme=theme)
+
+            tablelines += table
+            tablelines.append('\n\n')
+            indexlines += index
+
+        if standalone:
+            tablelines += textables.end_latex_document()
+
+       # form table and index return structures
+        if filename is None:
+            return tablelines, indexlines
+        else:
+            if filename.endswith('.tex'):
+                filename = filename[:-4]
+            with open(filename + '.tex', 'w') as handle:
+                 handle.write('\n'.join(tablelines))
+            with open(filename + '_index.tex', 'w') as handle:
+                 handle.write('\n'.join(indexlines))
+            print """\n  LaTeX index written to {filename}_index.tex\n""" \
+                  """  LaTeX table written to {filename}.tex\n""" \
+                  """  >>> pdflatex {filename}\n""" \
+                  """  >>> open /Applications/Preview.app {filename}.pdf\n""".format(filename=filename)
+            filedict = {'data': os.path.abspath(filename) + '.tex',
+                        'index': os.path.abspath(filename + '_index.tex')}
+            return filedict
 
     def table_merge_abbr(self, plotpath, subjoin):
         """Specialization of table_generic into table with minimal statistics
