@@ -1109,369 +1109,60 @@ class WrappedDatabase(object):
 
         print """WrappedDatabase %s: Defined subsets loaded""" % (self.dbse)
 
-    # def analyze_modelchems(self, modelchem, benchmark='default', failoninc=True, verbose=False):
-    #    """Compute and print error statistics for each model chemistry in
-    #    array *modelchem* versus *benchmark* for all available subsets and
-    #    return dictionary of same.
-
-    #    """
-    #    pre, suf, mid = string_contrast(modelchem)
-    #    errors = OrderedDict()
-    #    for ss in self.sset.keys():
-    #        errors[ss] = OrderedDict()
-    #        for mc in modelchem:
-    #            errors[ss][mc] = self.compute_statistics(mc, benchmark=benchmark, sset=ss, failoninc=failoninc, verbose=verbose)
-    #    print """\n  ==> %s %s[]%s Errors <==""" % (self.dbse, pre, suf)
-    #    print """%20s        %5s  %4s   %6s %6s    %6s""" % \
-    #        ('', 'ME', 'STDE', 'MAE', 'MA%E', 'MA%BE')
-    #    for ss in self.sset.keys():
-    #        if any([any(errors[ss][mc].values()) for mc in modelchem]):
-    #            print """   => %s <= """ % (ss)
-    #            for mc in modelchem:
-    #                print """%20s    %42s""" % (mid[modelchem.index(mc)], format_errors(errors[ss][mc]))
-    #    return errors
-
-    # def plot_modelchems(self, modelchem, benchmark='default', sset='default', failoninc=True, verbose=False, color='sapt', xlimit=4.0):
-    #    """Computes individual errors and summary statistics for each model
-    #    chemistry in array *modelchem* versus *benchmark* over subset *sset*.
-    #    Thread *color* can be 'rgb' for old coloring, a color name or 'sapt'
-    #    for spectrum coloring. Prepares thread diagram instructions and
-    #    either executes them if matplotlib available (Canopy) or prints them.
-
-    #    """
-    #    pre, suf, mid = string_contrast(modelchem)
-    #    # compute errors
-    #    errors = OrderedDict()
-    #    indiv = OrderedDict()
-    #    for mc in modelchem:
-    #        errors[mc], indiv[mc] = self.compute_statistics(mc, benchmark=benchmark,
-    #            sset=sset, failoninc=failoninc, verbose=verbose, returnindiv=True)
-    #    # repackage
-    #    dbdat = []
-    #    for rxn in self.sset[sset].keys():
-    #        data = []
-    #        for mc in modelchem:
-    #            try:
-    #                data.append(indiv[mc][rxn][0])
-    #            except KeyError, e:
-    #                if failoninc:
-    #                    raise e
-    #                else:
-    #                    data.append(None)
-    #        dbdat.append({'sys': str(rxn), 'color': self.hrxn[rxn].color, 'data': data})
-    #    title = self.dbse + ' ' + pre + '[]' + suf
-    #    mae = [errors[mc]['mae'] for mc in modelchem]
-    #    mapbe = [100 * errors[mc]['mapbe'] for mc in modelchem]
-    #    # generate matplotlib instructions and call or print
-    #    try:
-    #        import mpl
-    #        import matplotlib.pyplot as plt
-    #    except ImportError:
-    #        # if not running from Canopy, print line to execute from Canopy
-    #        print """mpl.thread(%s,\n    color='%s',\n    title='%s',\n    labels=%s,\n    mae=%s,\n    mape=%s\n    xlimit=%s)\n\n""" % \
-    #            (dbdat, color, title, mid, mae, mapbe, str(xlimit))
-    #    else:
-    #        # if running from Canopy, call mpl directly
-    #        mpl.thread(dbdat, color=color, title=title, labels=mid, mae=mae, mape=mapbe, xlimit=xlimit)
-
-    # def plot_modelchems_mouseover(self, modelchem, benchmark='default', mbenchmark=None, sset='default', msset=None, failoninc=True, verbose=False, color='sapt', xlimit=4.0, saveas=None, mousetext=None, mouselink=None, mouseimag=None, mousetitle=None, force_relpath=False):
-    #    """Computes individual errors and summary statistics for each model
-    #    chemistry in array *modelchem* versus *benchmark* over subset *sset*.
-    #    *mbenchmark* and *msset* are array options (same length as *modelchem*)
-    #    that override *benchmark* and *sset*, respectively, for non-uniform
-    #    specification. *saveas* conveys directory ('/') and/or filename
-    #    for saving the resulting plot; file extension is not accessible.
-    #    Thread *color* can be 'rgb' for old coloring, a color name or 'sapt'
-    #    for spectrum coloring. Prepares thread diagram instructions and
-    #    either executes them if matplotlib available (Canopy) or prints them.
-    #    If any of *mousetext*, *mouselink*, or *mouseimag* is specified,
-    #    htmlcode will be returned with an image map of slats to any of
-    #    text, link, or image, respectively.
-
-    #    """
-    #    # distribute benchmark
-    #    if mbenchmark is None:
-    #        # benchmark is normal modelchem name
-    #        lbenchmark = [benchmark] * len(modelchem)
-    #    else:
-    #        if isinstance(mbenchmark, basestring) or len(mbenchmark) != len(modelchem):
-    #            raise ValidationError("""mbenchmark must be array of length distributable among modelchem""" % (str(mbenchmark)))
-    #        else:
-    #        # mbenchmark is array of benchmarks for each modelchem
-    #            lbenchmark = mbenchmark
-    #    # distribute sset
-    #    if msset is None:
-    #        # sset is normal subset name like 'MX'
-    #        lsset = [sset] * len(modelchem)
-    #    else:
-    #        if isinstance(msset, basestring) or len(msset) != len(modelchem):
-    #            raise ValidationError("""msset must be array of length distributable among modelchem""" % (str(msset)))
-    #        else:
-    #        # msset is array of subsets for each modelchem
-    #            lsset = msset
-    #    # compute errors
-    #    errors = OrderedDict()
-    #    indiv = OrderedDict()
-    #    index = []
-    #    for mc, bm, ss in zip(modelchem, lbenchmark, lsset):
-    #        ix = '%s_%s_%s' % (mc, bm, ss)
-    #        index.append(ix)
-    #        errors[ix], indiv[ix] = self.compute_statistics(mc, benchmark=bm,
-    #            sset=ss, failoninc=failoninc, verbose=verbose, returnindiv=True)
-    #    # repackage
-    #    dbdat = []
-    #    for rxn in self.hrxn.keys():
-    #        data = []
-    #        for ix in index:
-    #            if rxn in self.sset[lsset[index.index(ix)]].keys():
-    #                try:
-    #                    data.append(indiv[ix][rxn][0])
-    #                except KeyError, e:
-    #                    if failoninc:
-    #                        raise e
-    #                    else:
-    #                        data.append(None)
-    #            else:
-    #                data.append(None)
-    #        dbdat.append({'db': self.dbse, 'sys': str(rxn), 'color': self.hrxn[rxn].color, 'data': data})
-    #    mae = [errors[ix]['mae'] for ix in index]
-    #    mapbe = [100 * errors[ix]['mapbe'] for ix in index]
-    #    # form unique filename
-    #    ixpre, ixsuf, ixmid = string_contrast(index)
-    #    title = self.dbse + ' ' + ixpre + '[]' + ixsuf
-    #    # generate matplotlib instructions and call or print
-    #    try:
-    #        import mpl
-    #        import matplotlib.pyplot as plt
-    #    except ImportError:
-    #        # if not running from Canopy, print line to execute from Canopy
-    #        print """mpl.thread_mouseover_th(%s,\n    color='%s',\n    title='%s',\n    labels=%s,\n    mae=%s,\n    mape=%s\n    xlimit=%s\n    saveas=%s\n    mousetext=%s\n    mouselink=%s\n    mouseimag=%s\n    mousetitle=%s,\n    force_relpath=%s)\n\n""" % \
-    #            (dbdat, color, title, ixmid, mae, mapbe, str(xlimit),
-    #            repr(saveas), repr(mousetext), repr(mouselink), repr(mouseimag), repr(mousetitle), repr(force_relpath))
-    #    else:
-    #        # if running from Canopy, call mpl directly
-    #        filedict, htmlcode = mpl.thread_mouseover(dbdat, color=color, title=title, labels=ixmid, mae=mae, mape=mapbe, xlimit=xlimit, saveas=saveas, mousetext=mousetext, mouselink=mouselink, mouseimag=mouseimag, mousetitle=mousetitle, force_relpath=force_relpath)
-    #        return filedict, htmlcode
-
-    # def plot_flat(self, modelchem, benchmark='default', sset='default', failoninc=True, verbose=False, color='sapt', xlimit=4.0, view=True):
-    #    """Computes individual errors and summary statistics for single
-    #    model chemistry *modelchem* versus *benchmark* over
-    #    subset *sset*. Thread *color* can be 'rgb'
-    #    for old coloring, a color name or 'sapt' for spectrum coloring.
-    #    Prepares flat diagram instructions and either executes them if
-    #    matplotlib available (Canopy) or prints them.
-
-    #    """
-    #    # compute errors
-    #    errors = {}
-    #    indiv = {}
-    #    mc = modelchem
-    #    errors[mc], indiv[mc] = self.compute_statistics(mc, benchmark=benchmark, sset=sset,
-    #        failoninc=failoninc, verbose=verbose, returnindiv=True)
-    #    # repackage
-    #    dbdat = []
-    #    for rxn in self.sset[sset].keys():
-    #        data = []
-    #        try:
-    #            data.append(indiv[mc][rxn][0])
-    #        except KeyError, e:
-    #            if failoninc:
-    #                raise e
-    #            else:
-    #                data.append(None)
-    #        dbdat.append({'sys': str(rxn), 'color': self.hrxn[rxn].color, 'data': data})
-    #    pre, suf, mid = string_contrast(mc)
-    #    title = self.dbse + sset + ' ' + pre + '[]' + suf
-    #    mae = errors[mc]['mae']
-    #    mapbe = 100 * errors[mc]['mapbe']
-    #    mapbe = None
-    #    # generate matplotlib instructions and call or print
-    #    try:
-    #        import mpl
-    #        import matplotlib.pyplot as plt
-    #    except ImportError:
-    #        # if not running from Canopy, print line to execute from Canopy
-    #        print """mpl.flat(%s,\n    color='%s',\n    title='%s',\n    mae=%s,\n    mape=%s,\n    xlimit=%s,\n    view=%s)\n\n""" % \
-    #            (dbdat, color, mc, mae, mapbe, xlimit, view)
-    #    else:
-    #        # if running from Canopy, call mpl directly
-    #        mpl.flat(dbdat, color=color, title=mc, mae=mae, mape=mapbe, xlimit=xlimit, view=view)
-
-    # def plot_bars(self, modelchem, benchmark='default', sset=['default', 'hb', 'mx', 'dd'], failoninc=True, verbose=False):
-    #    """Prepares 'grey bars' diagram for each model chemistry in array
-    #    *modelchem* versus *benchmark* over all four databases. A wide bar
-    #    is plotted with three smaller bars, corresponding to the 'mae'
-    #    summary statistic of the four subsets in *sset*. Prepares bars
-    #    diagram instructions and either executes them if matplotlib
-    #    available (Canopy) or prints them.
-
-    #    """
-    #    # compute errors
-    #    errors = {}
-    #    for mc in modelchem:
-    #        if mc is not None:
-    #            errors[mc] = {}
-    #            for ss in sset:
-    #                errors[mc][ss] = self.compute_statistics(mc, benchmark=benchmark, sset=ss,
-    #                    failoninc=failoninc, verbose=verbose, returnindiv=False)
-    #    # repackage
-    #    pre, suf, mid = string_contrast(modelchem)
-    #    #dbdat = [{'mc': mid[modelchem.index(mc)], 'data': [errors[mc][ss]['DB4']['mae'] for ss in sset]} for mc in modelchem]
-    #    dbdat = []
-    #    for mc in modelchem:
-    #        if mc is None:
-    #            dbdat.append(None)
-    #        else:
-    #            dbdat.append({'mc': mid[modelchem.index(mc)], 'data': [errors[mc][ss]['mae'] for ss in sset]})
-    #    title = self.dbse + ' ' + pre + '[]' + suf
-    #    # generate matplotlib instructions and call or print
-    #    try:
-    #        import mpl
-    #        import matplotlib.pyplot as plt
-    #    except ImportError:
-    #        # if not running from Canopy, print line to execute from Canopy
-    #        print """mpl.bar(%s,\n    title='%s')\n\n""" % (dbdat, title)
-    #    else:
-    #        # if running from Canopy, call mpl directly
-    #        mpl.bar(dbdat, title=title)
-
-    def table_generic(self, mtd, bas, columnplan, rowplan=['bas', 'mtd'],
-        opt=['CP'], err=['mae'], sset=['default'],
-        benchmark='default', failoninc=True,
-        landscape=False, standalone=True, subjoin=True,
-        plotpath='', theme='', filename=None):
-        """Prepares dictionary of errors for all combinations of *mtd*, *opt*,
-        *bas* with respect to model chemistry *benchmark*, mindful of *failoninc*.
-        Once error dictionary is ready, it and all other arguments are passed
-        along to textables.table_generic.
-
-        """
-        # gather list of model chemistries for table
-        mcs = ['-'.join(prod) for prod in itertools.product(mtd, opt, bas)]
-
-        if plotpath == 'autogen':
-            plotpath = os.environ['HOME'] + os.sep + 'flat_'
-            for mc in mcs:
-                self.plot_flat(mc)
-            # TODO isn't going to work if sset in rowplan
-
-        # compute errors
-        serrors = {}
-        for mc in mcs:
-            serrors[mc] = {}
-            for ss in self.sset.keys():
-                errblock = self.compute_statistics(mc, benchmark=benchmark, sset=ss,
-                    failoninc=failoninc, verbose=False, returnindiv=False)
-                serrors[mc][ss] = {}
-                serrors[mc][ss][self.dbse] = format_errors(errblock, mode=3)
-
-        textables.table_generic(dbse=[self.dbse], serrors=serrors,
-            mtd=mtd, bas=bas, columnplan=columnplan, rowplan=rowplan,
-            opt=opt, err=err, sset=sset,
-            landscape=landscape, standalone=standalone, subjoin=subjoin,
-            plotpath=plotpath, theme=theme, filename=filename)
-
-    def table_simple1(self, mtd, bas, opt=['CP'], err=['mae'], benchmark='default', failoninc=True, plotpath='analysis/flats/flat_', theme='smmerge'):
-        """Specialization of table_generic into table with minimal statistics
-        (three S22 and three overall) plus embedded slat diagram as suitable
-        for main paper. A single table is formed in sections by *bas* with
-        lines *mtd* within each section.
-
-        """
-        rowplan = ['bas', 'mtd']
-        columnplan = [
-            ['l', r"""Method \& Basis Set""", '', textables.label, {}],
-            ['d', r'S22', 'HB', textables.val, {'sset': 'hb'}],
-            ['d', r'S22', 'MX', textables.val, {'sset': 'mx'}],
-            ['d', r'S22', 'DD', textables.val, {'sset': 'dd'}],
-            ['d', r'S22', 'TT', textables.val, {'sset': 'default'}],
-        ]
-
-        self.table_generic(mtd=mtd, bas=bas, columnplan=columnplan, rowplan=rowplan,
-                           opt=opt, err=err,
-                           benchmark=benchmark, failoninc=failoninc,
-                           landscape=False, standalone=True, subjoin=True,
-                           plotpath=plotpath, theme=theme, filename=None)
-
-    def table_simple2(self, mtd, bas, opt=['CP'], err=['mae'], benchmark='default', failoninc=True,
-                      plotpath='analysis/flats/flat_', theme='smmerge'):
-        """Specialization of table_generic into table with minimal statistics
-        (three S22 and three overall) plus embedded slat diagram as suitable
-        for main paper. A single table is formed in sections by *bas* with
-        lines *mtd* within each section.
-
-        """
-        rowplan = ['bas', 'mtd']
-        columnplan = [
-            ['l', r"""Method \& Basis Set""", '', textables.label, {}],
-            ['d', r'MAE', 'HB', textables.val, {'sset': 'hb'}],
-            ['d', r'MAE', 'MX', textables.val, {'sset': 'mx'}],
-            ['d', r'MAE', 'DD', textables.val, {'sset': 'dd'}],
-            ['d', r'MAE', 'TT', textables.val, {'sset': 'default'}],
-            ['d', r'MA\%E', 'HB', textables.val, {'sset': 'hb', 'err': 'mape'}],
-            ['d', r'MA\%E', 'MX', textables.val, {'sset': 'mx', 'err': 'mape'}],
-            ['d', r'MA\%E', 'DD', textables.val, {'sset': 'dd', 'err': 'mape'}],
-            ['d', r'MA\%E', 'TT', textables.val, {'sset': 'default', 'err': 'mape'}],
-            ['d', r'maxE', 'TT ', textables.val, {'sset': 'default', 'err': 'maxe'}],
-            ['d', r'min\%E', ' TT', textables.val, {'sset': 'default', 'err': 'minpe'}],
-            ['d', r'rmsE', 'TT ', textables.val, {'sset': 'default', 'err': 'rmse'}],
-            ['d', r'devE', ' TT', textables.val, {'sset': 'default', 'err': 'stde'}],
-        ]
-
-        self.table_generic(mtd=mtd, bas=bas, columnplan=columnplan, rowplan=rowplan,
-                           opt=opt, err=err,
-                           benchmark=benchmark, failoninc=failoninc,
-                           landscape=False, standalone=True, subjoin=True,
-                           plotpath=plotpath, theme=theme, filename=None)
-
-    def table_simple3(self, mtd, bas, opt=['CP'], err=['mae'], benchmark='default', failoninc=True,
-                      plotpath='analysis/flats/flat_', theme='smmerge'):
-        """Specialization of table_generic into table with minimal statistics
-        (three S22 and three overall) plus embedded slat diagram as suitable
-        for main paper. A single table is formed in sections by *bas* with
-        lines *mtd* within each section.
-
-        """
-        rowplan = ['err', 'bas', 'mtd']
-        columnplan = [
-            ['l', r"""Method \& Basis Set""", '', textables.label, {}],
-            ['d', r'MAE', 'HB', textables.val, {'sset': 'hb'}],
-            ['d', r'MAE', 'MX', textables.val, {'sset': 'mx'}],
-            ['d', r'MAE', 'DD', textables.val, {'sset': 'dd'}],
-            ['d', r'MAE', 'TT', textables.val, {'sset': 'default'}],
-        ]
-
-        self.table_generic(mtd=mtd, bas=bas, columnplan=columnplan, rowplan=rowplan,
-                           opt=opt, err=err,
-                           benchmark=benchmark, failoninc=failoninc,
-                           landscape=False, standalone=True, subjoin=True,
-                           plotpath=plotpath, theme=theme, filename=None)
-
-    def table_simple4(self, mtd, bas, opt=['CP'], err=['mae'], benchmark='default', failoninc=True,
-                      plotpath='analysis/flats/flat_', theme='smmerge'):
-        """Specialization of table_generic into table with minimal statistics
-        (three S22 and three overall) plus embedded slat diagram as suitable
-        for main paper. A single table is formed in sections by *bas* with
-        lines *mtd* within each section.
-
-        """
-        plotpath = 'autogen'  # TODO handle better
-        rowplan = ['bas', 'mtd']
-        columnplan = [
-            ['l', r"""Method \& Basis Set""", '', textables.label, {}],
-            ['d', r'S22', 'HB', textables.val, {'sset': 'hb'}],
-            ['d', r'S22', 'MX', textables.val, {'sset': 'mx'}],
-            ['d', r'S22', 'DD', textables.val, {'sset': 'dd'}],
-            ['d', r'S22', 'TT', textables.val, {'sset': 'default'}],
-            # ['l', r"""Error Distribution\footnotemark[1]""", r"""\includegraphics[width=6.67cm,height=3.5mm]{%s%s.pdf}""" % (plotpath, 'blank'), textables.graphics, {}],
-            ['l', r"""Error Distribution\footnotemark[1]""", r"""""", textables.graphics, {}],
-        ]
-
-        self.table_generic(mtd=mtd, bas=bas, columnplan=columnplan, rowplan=rowplan,
-                           opt=opt, err=err,
-                           benchmark=benchmark, failoninc=failoninc,
-                           landscape=False, standalone=True, subjoin=True,
-                           plotpath=plotpath, theme=theme, filename=None)
+    # def table_simple1(self, mtd, bas, opt=['CP'], err=['mae'], benchmark='default', failoninc=True,
+    #                   plotpath='analysis/flats/flat_', theme='smmerge'):
+    #     rowplan = ['bas', 'mtd']
+    #     columnplan = [
+    #         ['l', r"""Method \& Basis Set""", '', textables.label, {}],
+    #         ['d', r'S22', 'HB', textables.val, {'sset': 'hb'}],
+    #         ['d', r'S22', 'MX', textables.val, {'sset': 'mx'}],
+    #         ['d', r'S22', 'DD', textables.val, {'sset': 'dd'}],
+    #         ['d', r'S22', 'TT', textables.val, {'sset': 'default'}],
+    #     ]
+    #
+    # def table_simple2(self, mtd, bas, opt=['CP'], err=['mae'], benchmark='default', failoninc=True,
+    #                   plotpath='analysis/flats/flat_', theme='smmerge'):
+    #     rowplan = ['bas', 'mtd']
+    #     columnplan = [
+    #         ['l', r"""Method \& Basis Set""", '', textables.label, {}],
+    #         ['d', r'MAE', 'HB', textables.val, {'sset': 'hb'}],
+    #         ['d', r'MAE', 'MX', textables.val, {'sset': 'mx'}],
+    #         ['d', r'MAE', 'DD', textables.val, {'sset': 'dd'}],
+    #         ['d', r'MAE', 'TT', textables.val, {'sset': 'default'}],
+    #         ['d', r'MA\%E', 'HB', textables.val, {'sset': 'hb', 'err': 'mape'}],
+    #         ['d', r'MA\%E', 'MX', textables.val, {'sset': 'mx', 'err': 'mape'}],
+    #         ['d', r'MA\%E', 'DD', textables.val, {'sset': 'dd', 'err': 'mape'}],
+    #         ['d', r'MA\%E', 'TT', textables.val, {'sset': 'default', 'err': 'mape'}],
+    #         ['d', r'maxE', 'TT ', textables.val, {'sset': 'default', 'err': 'maxe'}],
+    #         ['d', r'min\%E', ' TT', textables.val, {'sset': 'default', 'err': 'minpe'}],
+    #         ['d', r'rmsE', 'TT ', textables.val, {'sset': 'default', 'err': 'rmse'}],
+    #         ['d', r'devE', ' TT', textables.val, {'sset': 'default', 'err': 'stde'}],
+    #     ]
+    #
+    # def table_simple3(self, mtd, bas, opt=['CP'], err=['mae'], benchmark='default', failoninc=True,
+    #                   plotpath='analysis/flats/flat_', theme='smmerge'):
+    #     rowplan = ['err', 'bas', 'mtd']
+    #     columnplan = [
+    #         ['l', r"""Method \& Basis Set""", '', textables.label, {}],
+    #         ['d', r'MAE', 'HB', textables.val, {'sset': 'hb'}],
+    #         ['d', r'MAE', 'MX', textables.val, {'sset': 'mx'}],
+    #         ['d', r'MAE', 'DD', textables.val, {'sset': 'dd'}],
+    #         ['d', r'MAE', 'TT', textables.val, {'sset': 'default'}],
+    #     ]
+    #
+    # def table_simple4(self, mtd, bas, opt=['CP'], err=['mae'], benchmark='default', failoninc=True,
+    #                   plotpath='analysis/flats/flat_', theme='smmerge'):
+    #     plotpath = 'autogen'  # TODO handle better
+    #     rowplan = ['bas', 'mtd']
+    #     columnplan = [
+    #         ['l', r"""Method \& Basis Set""", '', textables.label, {}],
+    #         ['d', r'S22', 'HB', textables.val, {'sset': 'hb'}],
+    #         ['d', r'S22', 'MX', textables.val, {'sset': 'mx'}],
+    #         ['d', r'S22', 'DD', textables.val, {'sset': 'dd'}],
+    #         ['d', r'S22', 'TT', textables.val, {'sset': 'default'}],
+    #         # ['l', r"""Error Distribution\footnotemark[1]""", r"""\includegraphics[width=6.67cm,height=3.5mm]{%s%s.pdf}""" % (plotpath, 'blank'), textables.graphics, {}],
+    #         ['l', r"""Error Distribution\footnotemark[1]""", r"""""", textables.graphics, {}],
+    #     ]
 
 
 class Database(object):
@@ -2606,6 +2297,12 @@ reinitialize
 
         if standalone:
             tablelines += textables.begin_latex_document()
+
+        # if plotpath == 'autogen':  # TODO make fig files write themselves
+        #     plotpath = os.environ['HOME'] + os.sep + 'flat_'
+        #     for mc in mcs:
+        #         self.plot_flat(mc)
+        #     # TODO isn't going to work if sset in rowplan
 
         for io in iteroers:
             actvargs = dict(zip(obvious.keys(), [[k] for k in io]))
