@@ -464,7 +464,7 @@ def disthist(data, title='', xtitle='', xmin=None, xmax=None,
 
 def threads(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None,
     mousetext=None, mouselink=None, mouseimag=None, mousetitle=None, mousediv=None,
-    saveas=None, relpath=False, graphicsformat=['pdf']):
+    labeled=True, saveas=None, relpath=False, graphicsformat=['pdf']):
     """Generates a tiered slat diagram between model chemistries with
     errors (or simply values) in list *data*, which is supplied as part of the
     dictionary for each participating reaction, along with *dbse* and *rxn* keys
@@ -504,19 +504,23 @@ def threads(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None,
     plt.ylim([-1 * Nweft - 1, 0])
     plt.yticks([])
     ax.set_frame_on(False)
-    ax.set_xticks([-2.0, -1.0, 0.0, 1.0, 2.0])
+    if labeled:
+        ax.set_xticks([-2.0, -1.0, 0.0, 1.0, 2.0])
+    else:
+        ax.set_xticks([])
     for tick in ax.xaxis.get_major_ticks():
         tick.tick1line.set_markersize(0)
         tick.tick2line.set_markersize(0)
 
     # label plot and tiers
-    ax.text(-0.9 * xlimit, -0.25, title,
-        verticalalignment='bottom', horizontalalignment='left',
-        family='Times New Roman', weight='bold', fontsize=12)
-    for weft in labels:
-        ax.text(-0.9 * xlimit, -(1.2 + labels.index(weft)), weft,
+    if labeled:
+        ax.text(-0.9 * xlimit, -0.25, title,
             verticalalignment='bottom', horizontalalignment='left',
-            family='Times New Roman', weight='bold', fontsize=18)
+            family='Times New Roman', weight='bold', fontsize=12)
+        for weft in labels:
+            ax.text(-0.9 * xlimit, -(1.2 + labels.index(weft)), weft,
+                verticalalignment='bottom', horizontalalignment='left',
+                family='Times New Roman', weight='bold', fontsize=18)
 
     # plot reaction errors and threads
     for rxn in data:
@@ -543,28 +547,30 @@ def threads(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None,
 
         # labeling
         if not(mousetext or mouselink or mouseimag):
-            try:
-                toplblposn = next(item for item in xvals if item is not None)
-                botlblposn = next(item for item in reversed(xvals) if item is not None)
-            except StopIteration:
-                pass
-            else:
-                ax.text(toplblposn, -0.75 + 0.6 * random.random(), rxn['sys'],
-                    verticalalignment='bottom', horizontalalignment='center',
-                    family='Times New Roman', fontsize=8)
-                ax.text(botlblposn, -1 * Nweft - 0.75 + 0.6 * random.random(), rxn['sys'],
-                    verticalalignment='bottom', horizontalalignment='center',
-                    family='Times New Roman', fontsize=8)
+            if labeled:
+                try:
+                    toplblposn = next(item for item in xvals if item is not None)
+                    botlblposn = next(item for item in reversed(xvals) if item is not None)
+                except StopIteration:
+                    pass
+                else:
+                    ax.text(toplblposn, -0.75 + 0.6 * random.random(), rxn['sys'],
+                        verticalalignment='bottom', horizontalalignment='center',
+                        family='Times New Roman', fontsize=8)
+                    ax.text(botlblposn, -1 * Nweft - 0.75 + 0.6 * random.random(), rxn['sys'],
+                        verticalalignment='bottom', horizontalalignment='center',
+                        family='Times New Roman', fontsize=8)
 
     # plot trimmings
     if mae is not None:
         ax.plot([-x for x in mae], positions, 's', color='black')
-    if mape is not None:  # equivalent to MAE for a 10 kcal/mol IE
-        ax.plot([0.025 * x for x in mape], positions, 'o', color='black')
-    plt.axvline(0, color='#cccc00')
+    if labeled:
+        if mape is not None:  # equivalent to MAE for a 10 kcal/mol IE
+            ax.plot([0.025 * x for x in mape], positions, 'o', color='black')
+        plt.axvline(0, color='#cccc00')
 
     # save and show
-    pltuid = title + '_' + hashlib.sha1(title + repr(labels) + repr(xlimit)).hexdigest()
+    pltuid = title + '_' + ('lbld' if labeled else 'bare') + '_' + hashlib.sha1(title + repr(labels) + repr(xlimit)).hexdigest()
     pltfile = expand_saveas(saveas, pltuid, def_prefix='thread_', relpath=relpath)
     files_saved = {}
     for ext in graphicsformat:

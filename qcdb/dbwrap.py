@@ -431,7 +431,7 @@ class Reaction(object):
 
     def plot(self, benchmark='default', mcset='default',
         failoninc=True, verbose=False, color='sapt',
-        xlimit=4.0, saveas=None, mousetext=None, mouselink=None, mouseimag=None,
+        xlimit=4.0, labeled=True, saveas=None, mousetext=None, mouselink=None, mouseimag=None,
         mousetitle=None, mousediv=None, relpath=False, graphicsformat=['pdf']):
         """Computes individual errors over model chemistries in *mcset* (which
         may be default or an array or a function generating an array) versus
@@ -476,13 +476,13 @@ class Reaction(object):
             import matplotlib.pyplot as plt
         except ImportError:
             # if not running from Canopy, print line to execute from Canopy
-            print """filedict, htmlcode = mpl.threads(%s,\n    color='%s',\n    title='%s',\n    labels=%s,\n    mae=%s,\n    mape=%s\n    xlimit=%s\n    saveas=%s\n    mousetext=%s\n    mouselink=%s\n    mouseimag=%s\n    mousetitle=%s,\n    mousediv=%s,\n    relpath=%s\n    graphicsformat=%s)\n\n""" % \
+            print """filedict, htmlcode = mpl.threads(%s,\n    color='%s',\n    title='%s',\n    labels=%s,\n    mae=%s,\n    mape=%s\n    xlimit=%s\n    labeled=%s\n    saveas=%s\n    mousetext=%s\n    mouselink=%s\n    mouseimag=%s\n    mousetitle=%s,\n    mousediv=%s,\n    relpath=%s\n    graphicsformat=%s)\n\n""" % \
                 (dbdat, color, title, labels, mae, mape, str(xlimit),
-                repr(saveas), repr(mousetext), repr(mouselink), repr(mouseimag),
+                repr(labeled), repr(saveas), repr(mousetext), repr(mouselink), repr(mouseimag),
                 repr(mousetitle), repr(mousediv), repr(relpath), repr(graphicsformat))
         else:
             # if running from Canopy, call mpl directly
-            filedict, htmlcode = mpl.threads(dbdat, color=color, title=title, labels=labels, mae=mae, mape=mape, xlimit=xlimit, saveas=saveas, mousetext=mousetext, mouselink=mouselink, mouseimag=mouseimag, mousetitle=mousetitle, mousediv=mousediv, relpath=relpath, graphicsformat=graphicsformat)
+            filedict, htmlcode = mpl.threads(dbdat, color=color, title=title, labels=labels, mae=mae, mape=mape, xlimit=xlimit, labeled=labeled, saveas=saveas, mousetext=mousetext, mouselink=mouselink, mouseimag=mouseimag, mousetitle=mousetitle, mousediv=mousediv, relpath=relpath, graphicsformat=graphicsformat)
             return filedict, htmlcode
 
 
@@ -2103,7 +2103,7 @@ reinitialize
 
     def plot_modelchems(self, modelchem, benchmark='default', mbenchmark=None,
         sset='default', msset=None, failoninc=True, verbose=False, color='sapt',
-        xlimit=4.0, saveas=None, mousetext=None, mouselink=None, mouseimag=None,
+        xlimit=4.0, labeled=True, saveas=None, mousetext=None, mouselink=None, mouseimag=None,
         mousetitle=None, mousediv=None, relpath=False, graphicsformat=['pdf']):
         """Computes individual errors and summary statistics over all component
         databases for each model chemistry in array *modelchem* versus *benchmark*
@@ -2186,13 +2186,13 @@ reinitialize
             import matplotlib.pyplot as plt
         except ImportError:
             # if not running from Canopy, print line to execute from Canopy
-            print """filedict, htmlcode = mpl.threads(%s,\n    color='%s',\n    title='%s',\n    labels=%s,\n    mae=%s,\n    mape=%s\n    xlimit=%s\n    saveas=%s\n    mousetext=%s\n    mouselink=%s\n    mouseimag=%s\n    mousetitle=%s,\n    mousediv=%s,\n    relpath=%s\n    graphicsformat=%s)\n\n""" % \
+            print """filedict, htmlcode = mpl.threads(%s,\n    color='%s',\n    title='%s',\n    labels=%s,\n    mae=%s,\n    mape=%s\n    xlimit=%s\n    labeled=%s\n    saveas=%s\n    mousetext=%s\n    mouselink=%s\n    mouseimag=%s\n    mousetitle=%s,\n    mousediv=%s,\n    relpath=%s\n    graphicsformat=%s)\n\n""" % \
                 (dbdat, color, title, ixmid, mae, mape, str(xlimit),
-                repr(saveas), repr(mousetext), repr(mouselink), repr(mouseimag),
+                repr(labeled), repr(saveas), repr(mousetext), repr(mouselink), repr(mouseimag),
                 repr(mousetitle), repr(mousediv), repr(relpath), repr(graphicsformat))
         else:
             # if running from Canopy, call mpl directly
-            filedict, htmlcode = mpl.threads(dbdat, color=color, title=title, labels=ixmid, mae=mae, mape=mape, xlimit=xlimit, saveas=saveas, mousetext=mousetext, mouselink=mouselink, mouseimag=mouseimag, mousetitle=mousetitle, mousediv=mousediv, relpath=relpath, graphicsformat=graphicsformat)
+            filedict, htmlcode = mpl.threads(dbdat, color=color, title=title, labels=ixmid, mae=mae, mape=mape, xlimit=xlimit, labeled=labeled, saveas=saveas, mousetext=mousetext, mouselink=mouselink, mouseimag=mouseimag, mousetitle=mousetitle, mousediv=mousediv, relpath=relpath, graphicsformat=graphicsformat)
             return filedict, htmlcode
 
     def plot_iowa(self, modelchem, benchmark='default', sset='default', 
