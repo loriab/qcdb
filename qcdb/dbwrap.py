@@ -463,8 +463,8 @@ class Reaction(object):
                           'sys': fancify_mc_tag(mc),
                           'color': self.color,
                           'data': [indiv[mc][0]]})
-        mae = None  #[errors[ix][self.dbse]['mae'] for ix in index]
-        mape = None  #[100 * errors[ix][self.dbse]['mape'] for ix in index]
+        mae = None  # [errors[ix][self.dbse]['mae'] for ix in index]
+        mape = None  # [100 * errors[ix][self.dbse]['mape'] for ix in index]
         # form unique filename
 #        ixpre, ixsuf, ixmid = string_contrast(index)
 #        title = self.dbse + ' ' + ixpre + '[]' + ixsuf
@@ -659,8 +659,15 @@ class WrappedDatabase(object):
             ref = database.dbse + 'REF' if arrbind == 'BIND' else arrbind.replace('BIND_', '')
             methods[ref] = Method(name=ref)
             bases[ref] = BasisSet(name=ref)
+            try:
+                getattr(database, 'BINDINFO_' + ref)
+            except AttributeError:
+                arrbindinfo = None
+            else:
+                arrbindinfo = 'BINDINFO_' + ref
             oBIND[ref] = [methods[ref], 'default', bases[ref], arrbind,
-                (getattr(database, arrbind) is database.BIND)]
+                (getattr(database, arrbind) is database.BIND),
+                arrbindinfo]
         for item in [tmp for tmp in pieces if tmp.startswith('BIND')]:
             pieces.remove(item)
 
@@ -669,14 +676,31 @@ class WrappedDatabase(object):
             dbrxn = database.dbse + '-' + str(rxn)
             for ref, info in oBIND.iteritems():
                 bindval = getattr(database, info[3])[dbrxn]
+                if info[5] is None:
+                    methodfeed = info[0]
+                    modefeed = info[1]
+                    basisfeed = info[2]
+                    citationkey = 'anon'
+                else:
+                    bindinforxn = getattr(database, info[5])[dbrxn]
+                    methodfeed = methods[bindinforxn['method'].upper()] if 'method' in bindinforxn else info[0]
+                    modefeed = bindinforxn['mode'] if 'mode' in bindinforxn else info[1]
+                    basisfeed = bases[bindinforxn['basis'].lower()] if 'basis' in bindinforxn else info[2]
+                    citationkey = bindinforxn['citation'].lower() if 'citation' in bindinforxn else 'anon'
+                citationfeed = pubs[citationkey]
+
                 if bindval is not None:
-                    oHRXN[rxn].data[ref] = ReactionDatum(dbse=database.dbse,
-                                                         rxn=rxn,
-                                                         method=info[0],
-                                                         mode=info[1],
-                                                         basis=info[2],
+                    oHRXN[rxn].data[ref] = ReactionDatum(dbse=database.dbse, rxn=rxn,
+                                                         method=methodfeed, mode=modefeed,
+                                                         basis=basisfeed, citation=citationfeed,
                                                          value=bindval)
-                                                         #value=getattr(database, info[3])[dbrxn])
+                    #oHRXN[rxn].data[ref] = ReactionDatum(dbse=database.dbse,
+                    #                                     rxn=rxn,
+                    #                                     method=info[0],
+                    #                                     mode=info[1],
+                    #                                     basis=info[2],
+                    #                                     value=bindval)
+                    #                                     #value=getattr(database, info[3])[dbrxn])
                     if info[4]:
                         oHRXN[rxn].benchmark = ref
 
@@ -725,9 +749,9 @@ class WrappedDatabase(object):
                 except KeyError:
                     sstagl = None
                     print """Warning: TAGL missing for subset %s""" % (label)
-            self.oss[label] = Subset(name = label,
-                                     hrxn = self.sset[label].keys(),
-                                     tagl = sstagl)
+            self.oss[label] = Subset(name=label,
+                                     hrxn=self.sset[label].keys(),
+                                     tagl=sstagl)
 
         # Process axes
         for axis in [item for item in pieces if item.startswith('AXIS_')]:
@@ -808,9 +832,9 @@ class WrappedDatabase(object):
         self.sset[label] = OrderedDict()
         for rxn in lsslist:
             self.sset[label][rxn] = self.hrxn[rxn]
-        self.oss[label] = Subset(name = label,
-                                 hrxn = self.sset[label].keys(),
-                                 tagl = tagl)
+        self.oss[label] = Subset(name=label,
+                                 hrxn=self.sset[label].keys(),
+                                 tagl=tagl)
         print """WrappedDatabase %s: Subset %s formed: %d""" % (self.dbse, label, len(self.sset[label].keys()))
 
     def compute_errors(self, modelchem, benchmark='default', sset='default', failoninc=True, verbose=False):
@@ -1015,7 +1039,7 @@ class WrappedDatabase(object):
         if path is None:
             path = os.path.dirname(__file__) + '/../data'
         picklefile = psiutil.findfile_ignorecase(dbname,
-            pre=os.path.abspath(path)+os.sep, post='_WDb.pickle')
+            pre=os.path.abspath(path) + os.sep, post='_WDb.pickle')
         if not picklefile:
             raise ValidationError("Pickle file for loading database data from file %s does not exist" % (os.path.abspath(path) + os.sep + dbname + '.pickle'))
         #with open('/var/www/html/bfdb_devel/bfdb/scratch/ASDFlogfile.txt', 'a') as handle:
@@ -1556,8 +1580,9 @@ class Database(object):
                 fmcs[mc] = mc
             else:
                 if latex:
-                    fmcs[mc] = """%20s / %-20s, %s""" % \
+                    tmp = """%s/%s, %s""" % \
                         (methods[mtd].latex, bases[bas].latex, mod)
+                    fmcs[mc] = """%45s""" % (tmp)
                 else:
                     fmcs[mc] = """%20s / %-20s, %s""" % \
                         (methods[mtd].fullname, bases[bas].fullname, mod)
@@ -1615,12 +1640,12 @@ class Database(object):
         import glob
         if path is None:
             path = os.path.dirname(__file__) + '/../data'
-   
+
         projects = []
         for pjfn in glob.glob(path + '/*_hrxn_*.pickle'):
             pj = pjfn[:-7].split('_')[-1]
             projects.append(pj)
-   
+
         complete_projects = []
         for pj in set(projects):
             if all([os.path.isfile(path + '/' + db + '_hrxn_' + pj + '.pickle') for db in self.dbdict.keys()]):
@@ -1690,21 +1715,6 @@ class Database(object):
     #    for db, odb in self.dbdict.items():
     #        for rxn, orxn in odb.hrxn.items():
     #            yield orxn
-
-    def get_hrxn(self, sset='default'):
-        """
-
-        """
-        rhrxn = OrderedDict()
-        for db, odb in self.dbdict.items():
-            dbix = self.dbdict.keys().index(db)
-            for rxn, orxn in odb.hrxn.iteritems():
-                lss = self.sset[sset][dbix]
-                if lss is not None:
-                    if rxn in odb.sset[lss].keys():
-                        #rhrxn[rxn] = orxn
-                        rhrxn[orxn.dbrxn] = orxn  # this is a change and conflict with vergil version
-        return rhrxn
 
     def compute_statistics(self, modelchem, benchmark='default', sset='default',
         failoninc=True, verbose=False, returnindiv=False):
@@ -1971,10 +1981,11 @@ ray
 png {pngfile}
 reinitialize
 """.format(
-    xyzfile = xyzdir + rgt + '.xyz',
-    pngfile = xyzdir + rgt + '.png'))
+    xyzfile=xyzdir + rgt + '.xyz',
+    pngfile=xyzdir + rgt + '.png'))
 
     def plot_all_flats(self, modelchem=None, sset='default', xlimit=4.0,
+        failoninc=True,
         saveas=None, relpath=False, graphicsformat=['pdf']):
         """Generate pieces for inclusion into tables. Supply list of
         modelchemistries to plot from *modelchem*, otherwise defaults to
@@ -1987,8 +1998,8 @@ reinitialize
         filedict = OrderedDict()
         for mc in sorted(mcs):
             minifiledict = self.plot_flat(mc, sset=sset, xlimit=xlimit, view=False,
+                failoninc=failoninc,
                 saveas=saveas, relpath=relpath, graphicsformat=graphicsformat)
-            #filedict[mc] = minifiledict['pdf']
             filedict[mc] = minifiledict
         return filedict
 
@@ -2022,36 +2033,45 @@ reinitialize
 
     def get_reactions(self, modelchem, sset='default', benchmark='default',
         failoninc=True):
-        """Collects the reactions present in *sset* from each WrappedDatabase, 
-        checks that *modelchem* and *benchmark* ReactionDatum are present 
-        (fails if *failoninc* True), then returns in an array a tuple for 
-        each reaction containing the modelchem key needed to access 
-        *modelchem*, the modelchem key needed to access *benchmark*, and 
+        """Collects the reactions present in *sset* from each WrappedDatabase,
+        checks that *modelchem* and *benchmark* ReactionDatum are present
+        (fails if *failoninc* True), then returns in an array a tuple for
+        each reaction containing the modelchem key needed to access
+        *modelchem*, the modelchem key needed to access *benchmark*, and
         the Reaction object.
 
         """
-        # TODO merge/extend with get_hrxn above
-        # repackage
         dbdat = []
-        for db, odb in self.dbdict.items():
-            dbix = self.dbdict.keys().index(db)
-            for rxn, orxn in odb.hrxn.iteritems():
-                lss = self.sset[sset][dbix]
-                lmc = self.mcs[modelchem][dbix]
-                lbm = self.mcs[benchmark][dbix]
-                if lss is not None:
-                    if rxn in odb.sset[lss].keys():
-                        try:
-                            orxn.data[lmc]
-                            orxn.data[lbm]
-                        except KeyError, e:
-                            if failoninc:
-                                raise e
-                            else:
-                                # not sure yet if should return empties or just pass over
-                                pass
-                        else:
-                            dbdat.append((lmc, lbm, orxn))
+        rhrxn = self.get_hrxn(sset=sset)
+        for dbrxn, orxn in rhrxn.iteritems():
+            dbix = self.dbdict.keys().index(orxn.dbrxn.split('-')[0])
+            lmc = self.mcs[modelchem][dbix]
+            lbm = self.mcs[benchmark][dbix]
+            try:
+                orxn.data[lbm]
+            except KeyError, e:
+                # not sure if should treat bm differently
+                lbm = None
+            try:
+                orxn.data[lmc]
+            except KeyError, e:
+                if failoninc:
+                    raise e
+                else:
+                    lmc = None
+            dbdat.append((lmc, lbm, orxn))
+            # this is diff in that returning empties not just pass over- may break bfdb
+#            try:
+#                orxn.data[lmc]
+#                orxn.data[lbm]
+#            except KeyError, e:
+#                if failoninc:
+#                    raise e
+#                else:
+#                    # not sure yet if should return empties or just pass over
+#                    pass
+#            else:
+#                dbdat.append((lmc, lbm, orxn))
         return dbdat
 
     def plot_disthist(self, modelchem, benchmark='default', sset='default',
@@ -2195,8 +2215,8 @@ reinitialize
             filedict, htmlcode = mpl.threads(dbdat, color=color, title=title, labels=ixmid, mae=mae, mape=mape, xlimit=xlimit, labeled=labeled, saveas=saveas, mousetext=mousetext, mouselink=mouselink, mouseimag=mouseimag, mousetitle=mousetitle, mousediv=mousediv, relpath=relpath, graphicsformat=graphicsformat)
             return filedict, htmlcode
 
-    def plot_iowa(self, modelchem, benchmark='default', sset='default', 
-        failoninc=True, verbose=False, 
+    def plot_iowa(self, modelchem, benchmark='default', sset='default',
+        failoninc=True, verbose=False,
         title='', xtitle='', xlimit=2.0,
         saveas=None, relpath=False, graphicsformat=['pdf']):
         """Computes individual errors for single *modelchem* versus
@@ -2305,18 +2325,235 @@ reinitialize
         print df.tail(5)
         return df
 
-    def table_generic(self, mtd, bas, columnplan, rowplan=['bas', 'mtd'],
-        opt=['CP'], err=['mae'], sset=['tt'],
-        benchmark='default', failoninc=True,
-        landscape=False, standalone=True, subjoin=True,
-        plotpath='', theme='', filename=None):
-        """Prepares dictionary of errors for all combinations of *mtd*, *opt*,
-        *bas* with respect to model chemistry *benchmark*, mindful of *failoninc*.
-        Once error dictionary is ready, it and all other arguments are passed
-        along to textables.table_generic.
+    def table_reactions(self, modelchem, benchmark='default', sset='default',
+        failoninc=True,
+        columnplan=['indx', 'tagl', 'bm', 'mc', 'e', 'pe'],
+        title="""Reaction energies (kcal/mol) for {sset} $\subset$ {dbse} with {mc}""",
+        indextitle="""Detailed results for {sset} $\subset$ {dbse} with {mc}""",
+        plotpath='analysis/mols/',
+        standalone=True, theme='rxns', filename=None):
+        """Prepare single LaTeX table to *filename* or return lines if None showing
+        the per-reaction results for reactions in *sset* for single or array
+        or 'all' *modelchem*, where the last uses self.mcs(), model chemistries
+        versus *benchmark*. Use *failoninc* to toggle between command failing
+        or blank lines in table. Use *standalone* to toggle between full
+        compilable document and suitable for inclusion in another LaTeX document.
+        Use *columnplan* to customize column (from among columnreservoir, below)
+        layout. Use *title* and *indextitle* to customize table caption and
+        table-of-contents caption, respectively; variables in curly braces will
+        be substituted. Use *theme* to customize the \ref{tbl:} code.
 
         """
-        # argument dbse=['DB4']  # TODO
+        # define eligible columns for inclusion
+        columnreservoir = {
+            'dbrxn': ['l', r"""\textbf{Reaction}""", """{0:25s}"""],
+            'indx': ['r', '', """{0:14s}"""],
+            'tagl': ['l', r"""\textbf{Reaction}""", """{0:50s}"""],
+            'bm': ['d', r"""\multicolumn{1}{c}{\textbf{Benchmark}}""", """{0:8.2f}"""],
+            'mc': ['d', r"""\multicolumn{1}{c}{\textbf{ModelChem}}""", """{0:8.2f}"""],
+            'e': ['d', r"""\multicolumn{1}{c}{\textbf{Error}}""", """{0:8.2f}"""],
+            'pe': ['d', r"""\multicolumn{1}{c}{\textbf{\% Err.}}""", """{0:8.1f}"""],
+            'imag': ['l', '', r"""\includegraphics[width=1.0cm,height=3.5mm]{%s%%ss.png}""" % (plotpath)],  # untested
+            }
+        for col in columnplan:
+            if col not in columnreservoir.keys():
+                raise ValidationError('Column {0} not recognized. Register with columnreservoir.'.format(col))
+
+        if isinstance(modelchem, basestring):
+            if modelchem.lower() == 'all':
+                mcs = sorted(self.mcs.keys())
+            else:
+                mcs = [modelchem]
+        else:
+            mcs = modelchem
+
+        # commence to generate LaTeX code
+        tablelines = []
+        indexlines = []
+
+        if standalone:
+            tablelines += textables.begin_latex_document()
+
+        # iterate to produce one LaTeX table per modelchem
+        for mc in mcs:
+            # prepare summary statistics
+            perr = self.compute_statistics(mc, benchmark=benchmark, sset=sset,
+                                           failoninc=failoninc, verbose=False,
+                                           returnindiv=False)
+            serrors = OrderedDict()
+            for db in self.dbdict.keys():
+                serrors[db] = None if perr[db] is None else format_errors(perr[db], mode=3)
+            serrors[self.dbse] = format_errors(perr[self.dbse], mode=3)
+
+            # prepare individual reactions and errors
+            terrors = OrderedDict()
+            isComplete = True
+            for (lmc, lbm, orxn) in self.get_reactions(mc, benchmark=benchmark,
+                                                     sset=sset, failoninc=failoninc):
+                tmp = {}
+                dbrxn = orxn.dbrxn
+                tmp['dbrxn'] = dbrxn.replace('_', '\\_')
+                tmp['indx'] = r"""\textit{""" + str(orxn.indx) + """}"""
+                tmp['tagl'] = dbrxn.split('-')[0] + ' ' + \
+                    (orxn.latex if orxn.latex else orxn.tagl.replace('_', '\\_'))
+                tmp['imag'] = None  # name of primary rgt
+                bmdatum = orxn.data[lbm].value if lbm else None
+                mcdatum = orxn.data[lmc].value if lmc else None
+                tmp['bm'] = bmdatum
+                tmp['mc'] = mcdatum
+                if lmc and lbm:
+                    tmp['e'] = mcdatum - bmdatum
+                    tmp['pe'] = 100 * (mcdatum - bmdatum) / abs(bmdatum)
+                    # TODO redefining errors not good practice
+                else:
+                    isComplete = False
+                    tmp['e'] = None
+                    tmp['pe'] = None
+
+                terrors[dbrxn] = {}
+                for c in columnreservoir.keys():
+                    terrors[dbrxn][c] = '' if tmp[c] is None else \
+                        columnreservoir[c][2].format(tmp[c])
+
+            fancymodelchem = self.fancy_mcs(latex=True)[mc]
+            thistitle = title.format(dbse=self.dbse, mc=fancymodelchem,
+                                 sset='All' if sset == 'default' else sset.upper())
+            lref = [r"""tbl:qcdb"""]
+            if theme:
+                lref.append(theme)
+            lref.append(self.dbse)
+            if sset != 'default':
+                lref.append(sset)
+            lref.append(mc)
+            ref = '-'.join(lref)
+
+            # table intro
+            tablelines.append(r"""\begingroup""")
+            tablelines.append(r"""\squeezetable""")
+            tablelines.append(r"""\LTcapwidth=\textwidth""")
+            tablelines.append(r"""\begin{longtable}{%s}""" % (''.join([columnreservoir[col][0] for col in columnplan])))
+            tablelines.append(r"""\caption{%s""" % (thistitle))
+            tablelines.append(r"""\label{%s}} \\ """ % (ref))
+            tablelines.append(r"""\hline\hline""")
+
+            columntitles = [columnreservoir[col][1] for col in columnplan]
+            # initial header
+            tablelines.append(' & '.join(columntitles) + r""" \\ """)
+            tablelines.append(r"""\hline""")
+            tablelines.append(r"""\endfirsthead""")
+            # to be continued header
+            tablelines.append(r"""\multicolumn{%d}{@{}l}{\textit{\ldots continued} %s} \\ """ %
+                        (len(columnplan), fancymodelchem))
+            tablelines.append(r"""\hline\hline""")
+            tablelines.append(' & '.join(columntitles) + r""" \\ """)
+            tablelines.append(r"""\hline""")
+            tablelines.append(r"""\endhead""")
+            # to be continued footer
+            tablelines.append(r"""\hline\hline""")
+            tablelines.append(r"""\multicolumn{%d}{r@{}}{\textit{continued \ldots}} \\ """ %
+                        (len(columnplan)))
+            tablelines.append(r"""\endfoot""")
+            # final footer
+            tablelines.append(r"""\hline\hline""")
+            tablelines.append(r"""\endlastfoot""")
+
+            # table body
+            for dbrxn, stuff in terrors.iteritems():
+                tablelines.append(' & '.join([stuff[col] for col in columnplan]) + r""" \\ """)
+
+            # table body summary
+            if any(col in ['e', 'pe'] for col in columnplan):
+                field_to_put_labels = [col for col in ['tagl', 'dbrxn', 'indx'] if col in columnplan]
+                if field_to_put_labels:
+
+                    for block, blkerrors in serrors.iteritems():
+                        if blkerrors:  # skip e.g., NBC block in HB of DB4
+                            tablelines.append(r"""\hline""")
+                            summlines = [[] for i in range(6)]
+                            for col in columnplan:
+                                if col == field_to_put_labels[0]:
+                                    summlines[0].append(
+                                    r"""\textbf{Summary Statistics: %s%s}%s""" % \
+                                    ('' if sset == 'default' else sset + r""" $\subset$ """,
+                                    block,
+                                    '' if isComplete else r""", \textit{partial}"""))
+                                    summlines[1].append(r"""\textit{Minimal Error}         """)
+                                    summlines[2].append(r"""\textit{Maximal Error}         """)
+                                    summlines[3].append(r"""\textit{Mean Signed Error}     """)
+                                    summlines[4].append(r"""\textit{Mean Absolute Error}   """)
+                                    summlines[5].append(r"""\textit{Root-Mean-Square Error}""")
+                                elif col in ['e', 'pe']:
+                                    summlines[0].append('')
+                                    summlines[1].append(blkerrors['min' + col])
+                                    summlines[2].append(blkerrors['max' + col])
+                                    summlines[3].append(blkerrors['m' + col])
+                                    summlines[4].append(blkerrors['ma' + col])
+                                    summlines[5].append(blkerrors['rms' + col])
+                                else:
+                                    for ln in range(len(summlines)):
+                                        summlines[ln].append('')
+                            for ln in range(len(summlines)):
+                                tablelines.append(' & '.join(summlines[ln]) + r""" \\ """)
+
+            # table conclusion
+            tablelines.append(r"""\end{longtable}""")
+            tablelines.append(r"""\endgroup""")
+            tablelines.append(r"""\clearpage""")
+            tablelines.append('\n\n')
+
+            # form table index
+            thisindextitle = indextitle.format(dbse=self.dbse, mc=fancymodelchem.strip(),
+                                           sset='All' if sset == 'default' else sset.upper())
+            indexlines.append(r"""\scriptsize \ref{%s} & \scriptsize %s \\ """ % \
+                        (ref, thisindextitle))
+
+        if standalone:
+            tablelines += textables.end_latex_document()
+
+       # form table and index return structures
+        if filename is None:
+            return tablelines, indexlines
+        else:
+            if filename.endswith('.tex'):
+                filename = filename[:-4]
+            with open(filename + '.tex', 'w') as handle:
+                handle.write('\n'.join(tablelines))
+            with open(filename + '_index.tex', 'w') as handle:
+                handle.write('\n'.join(indexlines) + '\n')
+            print """\n  LaTeX index written to {filename}_index.tex\n""" \
+                  """  LaTeX table written to {filename}.tex\n""" \
+                  """  >>> pdflatex {filename}\n""" \
+                  """  >>> open /Applications/Preview.app {filename}.pdf\n""".format(filename=filename)
+            filedict = {'data': os.path.abspath(filename) + '.tex',
+                        'index': os.path.abspath(filename + '_index.tex')}
+            return filedict
+
+    def table_wrapper(self, mtd, bas, tableplan, benchmark='default',
+                      opt=['CP'], err=['mae'], sset=['default'], dbse=None,
+                      failoninc=True,
+                      plotpath='analysis/flats/flat_', subjoin=True,
+                      title=None, indextitle=None,
+                      standalone=True, theme=None, filename=None):
+        """Prepares dictionary of errors for all combinations of *mtd*, *opt*,
+        *bas* with respect to model chemistry *benchmark*, mindful of *failoninc*.
+        The general plan for the table, as well as defaults for landscape,
+        footnotes, *title*, *indextitle, and *theme* are got from function
+        *tableplan*. Once error dictionary is ready, it and all other arguments
+        are passed along to textables.table_generic. Two arrays, one of table
+        lines and one of index lines are returned unless *filename* is given,
+        in which case they're written to file and a filedict returned.
+
+        """
+        # get plan for table from *tableplan* and some default values
+        rowplan, columnplan, landscape, footnotes, \
+            suggestedtitle, suggestedtheme = tableplan(plotpath=plotpath, subjoin=subjoin)
+
+        # negotiate some defaults
+        dbse = [self.dbse] if dbse is None else dbse
+        theme = suggestedtheme if theme is None else theme
+        title = suggestedtitle if title is None else title
+        indextitle = title if indextitle is None else indextitle
+
         # gather list of model chemistries for table
         mcs = ['-'.join(prod) for prod in itertools.product(mtd, opt, bas)]
 
@@ -2332,13 +2569,64 @@ reinitialize
                 for db in self.dbdict.keys():
                     serrors[mc][ss][db] = None if perr[db] is None else format_errors(perr[db], mode=3)
 
-        textables.table_generic(dbse=[self.dbse], serrors=serrors,
-            mtd=mtd, bas=bas, columnplan=columnplan, rowplan=rowplan,
-            opt=opt, err=err, sset=sset,
-            landscape=landscape, standalone=standalone, subjoin=subjoin,
-            plotpath=plotpath, theme=theme, filename=filename)
+        # find indices that would be neglected in a single sweep over table_generic
+        keysinplan = set(sum([col[-1].keys() for col in columnplan], rowplan))
+        obvious = {'dbse': dbse, 'sset': sset, 'mtd': mtd, 'opt': opt, 'bas': bas, 'err': err}
+        for key, vari in obvious.items():
+            if len(vari) == 1 or key in keysinplan:
+                del obvious[key]
+        iteroers = [(prod) for prod in itertools.product(*obvious.values())]
 
-    def table_merge_abbr(self, mtd, bas, opt=['CP'], err=['mae'], benchmark='default', failoninc=True, plotpath='analysis/flats/flat_', theme='smmerge', standalone=True, filename=None):
+        # commence to generate LaTeX code
+        tablelines = []
+        indexlines = []
+
+        if standalone:
+            tablelines += textables.begin_latex_document()
+
+        for io in iteroers:
+            actvargs = dict(zip(obvious.keys(), [[k] for k in io]))
+            nudbse = actvargs['dbse'] if 'dbse' in actvargs else dbse
+            nusset = actvargs['sset'] if 'sset' in actvargs else sset
+            numtd = actvargs['mtd'] if 'mtd' in actvargs else mtd
+            nuopt = actvargs['opt'] if 'opt' in actvargs else opt
+            nubas = actvargs['bas'] if 'bas' in actvargs else bas
+            nuerr = actvargs['err'] if 'err' in actvargs else err
+
+            table, index = textables.table_generic(
+                mtd=numtd, bas=nubas, opt=nuopt, err=nuerr, sset=nusset, dbse=nudbse,
+                rowplan=rowplan, columnplan=columnplan, serrors=serrors,
+                plotpath=plotpath, subjoin=subjoin,
+                title=title, indextitle=indextitle,
+                landscape=landscape, footnotes=footnotes,
+                standalone=False, theme=theme)
+
+            tablelines += table
+            tablelines.append('\n\n')
+            indexlines += index
+
+        if standalone:
+            tablelines += textables.end_latex_document()
+
+       # form table and index return structures
+        if filename is None:
+            return tablelines, indexlines
+        else:
+            if filename.endswith('.tex'):
+                filename = filename[:-4]
+            with open(filename + '.tex', 'w') as handle:
+                handle.write('\n'.join(tablelines))
+            with open(filename + '_index.tex', 'w') as handle:
+                handle.write('\n'.join(indexlines))
+            print """\n  LaTeX index written to {filename}_index.tex\n""" \
+                  """  LaTeX table written to {filename}.tex\n""" \
+                  """  >>> pdflatex {filename}\n""" \
+                  """  >>> open /Applications/Preview.app {filename}.pdf\n""".format(filename=filename)
+            filedict = {'data': os.path.abspath(filename) + '.tex',
+                        'index': os.path.abspath(filename + '_index.tex')}
+            return filedict
+
+    def table_merge_abbr(self, plotpath, subjoin):
         """Specialization of table_generic into table with minimal statistics
         (three S22 and three overall) plus embedded slat diagram as suitable
         for main paper. A single table is formed in sections by *bas* with
@@ -2354,18 +2642,20 @@ reinitialize
             ['d', r'Overall', 'HB', textables.val, {'sset': 'hb', 'dbse': 'DB4'}],
             ['d', r'Overall', 'MX/DD', textables.val, {'sset': 'mxdd', 'dbse': 'DB4'}],
             ['d', r'Overall', 'TT', textables.val, {'sset': 'tt', 'dbse': 'DB4'}],
-            ['l', r"""Error Distribution\footnotemark[1]""", r"""\includegraphics[width=6.67cm,height=3.5mm]{%s%s.pdf}""" % (plotpath, 'blank'), textables.graphics, {}],
+            ['l', r"""Error Distribution\footnotemark[1]""",
+                 r"""\includegraphics[width=6.67cm,height=3.5mm]{%s%s.pdf}""" % (plotpath, 'blank'),
+                textables.graphics, {}],
             ['d', r'Time', '', textables.val, {'sset': 'tt-5min', 'dbse': 'NBC1'}]]
             # TODO Time column not right at all
 
-        self.table_generic(mtd=mtd, bas=bas, columnplan=columnplan, rowplan=rowplan,
-            opt=opt, err=err,
-            benchmark=benchmark, failoninc=failoninc,
-            landscape=False, standalone=standalone, subjoin=True,
-            plotpath=plotpath, theme=theme, filename=filename)
-        # TODO: not handled: filename, TODO switch standalone
+        footnotes = [fnreservoir['blankslat']]
+        landscape = False
+        theme = 'smmerge'
+        title = r"""Interaction energy (kcal/mol) {{err}} subset statistics with computed with {{opt}}{0}.""".format(
+            '' if subjoin else r""" and {bas}""")
+        return rowplan, columnplan, landscape, footnotes, title, theme
 
-    def table_merge_suppmat(self, mtd, bas, opt=['CP'], err=['mae'], benchmark='default', failoninc=True, plotpath='analysis/flats/flat_', theme='lgmerge'):
+    def table_merge_suppmat(self, plotpath, subjoin):
         """Specialization of table_generic into table with as many statistics
         as will fit (mostly fullcurve and a few 5min) plus embedded slat
         diagram as suitable for supplementary material. Multiple tables are
@@ -2388,17 +2678,19 @@ reinitialize
             ['d', 'HSG', 'DD', textables.val, {'sset': 'dd', 'dbse': 'HSG'}],
             ['d', 'HSG', 'TT', textables.val, {'sset': 'tt', 'dbse': 'HSG'}],
             ['d', 'Avg', 'TT ', textables.val, {'sset': 'tt', 'dbse': 'DB4'}],
-            ['l', r"""Error Distribution\footnotemark[1]""", r"""\includegraphics[width=6.67cm,height=3.5mm]{%s%s.pdf}""" % (plotpath, 'blank'), textables.graphics, {}],
+            ['l', r"""Error Distribution\footnotemark[1]""",
+                r"""\includegraphics[width=6.67cm,height=3.5mm]{%s%s.pdf}""" % (plotpath, 'blank'),
+                textables.graphics, {}],
             ['d', 'NBC10', r"""TT\footnotemark[2]""", textables.val, {'sset': 'tt-5min', 'dbse': 'NBC1'}],
             ['d', 'HBC6', r"""TT\footnotemark[2] """, textables.val, {'sset': 'tt-5min', 'dbse': 'HBC1'}],
             ['d', 'Avg', r"""TT\footnotemark[2]""", textables.val, {'sset': 'tt-5min', 'dbse': 'DB4'}]]
 
-        self.table_generic(mtd=mtd, bas=bas, columnplan=columnplan, rowplan=rowplan,
-            opt=opt, err=err,
-            benchmark=benchmark, failoninc=failoninc,
-            landscape=True, standalone=True, subjoin=False,
-            plotpath=plotpath, theme=theme, filename=None)
-        # TODO: not handled: filename, TODO switch standalone
+        footnotes = [fnreservoir['blankslat'], fnreservoir['5min']]
+        landscape = True
+        theme = 'lgmerge'
+        title = r"""Interaction energy (kcal/mol) {{err}} subset statistics with computed with {{opt}}{0}.""".format(
+            '' if subjoin else r""" and {bas}""")
+        return rowplan, columnplan, landscape, footnotes, title, theme
 
 
 class DB4(Database):
@@ -2644,92 +2936,126 @@ class DB4(Database):
     def plot_dhdft_bars(self):
         """Generate pieces for grey bars figure for DH-DFT paper."""
 
-        self.plot_bars(['B97D3-CP-adz','PBED3-CP-adz','M11L-CP-adz','DLDFD-CP-adz','B3LYPD3-CP-adz','PBE0D3-CP-adz',
-            'WB97XD-CP-adz','M052X-CP-adz','M062X-CP-adz','M08HX-CP-adz','M08SO-CP-adz','M11-CP-adz','VV10-CP-adz',
-            'LCVV10-CP-adz','WB97XV-CP-adz','PBE02-CP-adz','WB97X2-CP-adz','B2PLYPD3-CP-adz','DSDPBEP86D2OPT-CP-adz','MP2-CP-adz'])
-        self.plot_bars(['B97D3-unCP-adz','PBED3-unCP-adz','M11L-unCP-adz','DLDFD-unCP-adz','B3LYPD3-unCP-adz','PBE0D3-unCP-adz',
-            'WB97XD-unCP-adz','M052X-unCP-adz','M062X-unCP-adz','M08HX-unCP-adz','M08SO-unCP-adz','M11-unCP-adz','VV10-unCP-adz',
-            'LCVV10-unCP-adz','WB97XV-unCP-adz','PBE02-unCP-adz','WB97X2-unCP-adz','B2PLYPD3-unCP-adz','DSDPBEP86D2OPT-unCP-adz','MP2-unCP-adz'])
-        self.plot_bars(['B97D3-CP-atz','PBED3-CP-atz','M11L-CP-atz','DLDFD-CP-atz','B3LYPD3-CP-atz','PBE0D3-CP-atz',
-            'WB97XD-CP-atz','M052X-CP-atz','M062X-CP-atz','M08HX-CP-atz','M08SO-CP-atz','M11-CP-atz','VV10-CP-atz',
-            'LCVV10-CP-atz','WB97XV-CP-atz','PBE02-CP-atz','WB97X2-CP-atz','B2PLYPD3-CP-atz','DSDPBEP86D2OPT-CP-atz','MP2-CP-atz'])
-        self.plot_bars(['B97D3-unCP-atz','PBED3-unCP-atz','M11L-unCP-atz','DLDFD-unCP-atz','B3LYPD3-unCP-atz','PBE0D3-unCP-atz',
-            'WB97XD-unCP-atz','M052X-unCP-atz','M062X-unCP-atz','M08HX-unCP-atz','M08SO-unCP-atz','M11-unCP-atz','VV10-unCP-atz',
-            'LCVV10-unCP-atz','WB97XV-unCP-atz','PBE02-unCP-atz','WB97X2-unCP-atz','B2PLYPD3-unCP-atz','DSDPBEP86D2OPT-unCP-atz','MP2-unCP-atz'])
-
+        self.plot_bars(['B97D3-CP-adz', 'PBED3-CP-adz', 'M11L-CP-adz', 'DLDFD-CP-adz', 'B3LYPD3-CP-adz', 'PBE0D3-CP-adz',
+            'WB97XD-CP-adz', 'M052X-CP-adz', 'M062X-CP-adz', 'M08HX-CP-adz', 'M08SO-CP-adz', 'M11-CP-adz', 'VV10-CP-adz',
+            'LCVV10-CP-adz', 'WB97XV-CP-adz', 'PBE02-CP-adz', 'WB97X2-CP-adz', 'B2PLYPD3-CP-adz', 'DSDPBEP86D2OPT-CP-adz', 'MP2-CP-adz'])
+        self.plot_bars(['B97D3-unCP-adz', 'PBED3-unCP-adz', 'M11L-unCP-adz', 'DLDFD-unCP-adz', 'B3LYPD3-unCP-adz', 'PBE0D3-unCP-adz',
+            'WB97XD-unCP-adz', 'M052X-unCP-adz', 'M062X-unCP-adz', 'M08HX-unCP-adz', 'M08SO-unCP-adz', 'M11-unCP-adz', 'VV10-unCP-adz',
+            'LCVV10-unCP-adz', 'WB97XV-unCP-adz', 'PBE02-unCP-adz', 'WB97X2-unCP-adz', 'B2PLYPD3-unCP-adz', 'DSDPBEP86D2OPT-unCP-adz', 'MP2-unCP-adz'])
+        self.plot_bars(['B97D3-CP-atz', 'PBED3-CP-atz', 'M11L-CP-atz', 'DLDFD-CP-atz', 'B3LYPD3-CP-atz', 'PBE0D3-CP-atz',
+            'WB97XD-CP-atz', 'M052X-CP-atz', 'M062X-CP-atz', 'M08HX-CP-atz', 'M08SO-CP-atz', 'M11-CP-atz', 'VV10-CP-atz',
+            'LCVV10-CP-atz', 'WB97XV-CP-atz', 'PBE02-CP-atz', 'WB97X2-CP-atz', 'B2PLYPD3-CP-atz', 'DSDPBEP86D2OPT-CP-atz', 'MP2-CP-atz'])
+        self.plot_bars(['B97D3-unCP-atz', 'PBED3-unCP-atz', 'M11L-unCP-atz', 'DLDFD-unCP-atz', 'B3LYPD3-unCP-atz', 'PBE0D3-unCP-atz',
+            'WB97XD-unCP-atz', 'M052X-unCP-atz', 'M062X-unCP-atz', 'M08HX-unCP-atz', 'M08SO-unCP-atz', 'M11-unCP-atz', 'VV10-unCP-atz',
+            'LCVV10-unCP-atz', 'WB97XV-unCP-atz', 'PBE02-unCP-atz', 'WB97X2-unCP-atz', 'B2PLYPD3-unCP-atz', 'DSDPBEP86D2OPT-unCP-atz', 'MP2-unCP-atz'])
 
     def plot_dhdft_flats(self):
         """Generate pieces for grey bars figure for DH-DFT paper."""
 
-        self.plot_all_flats(['B97D3-CP-adz','PBED3-CP-adz','M11L-CP-adz','DLDFD-CP-adz','B3LYPD3-CP-adz','PBE0D3-CP-adz',
-            'WB97XD-CP-adz','M052X-CP-adz','M062X-CP-adz','M08HX-CP-adz','M08SO-CP-adz','M11-CP-adz','VV10-CP-adz',
-            'LCVV10-CP-adz','WB97XV-CP-adz','PBE02-CP-adz','WB97X2-CP-adz','B2PLYPD3-CP-adz','DSDPBEP86D2OPT-CP-adz','MP2-CP-adz'], sset='tt-5min')
-        self.plot_all_flats(['B97D3-unCP-adz','PBED3-unCP-adz','M11L-unCP-adz','DLDFD-unCP-adz','B3LYPD3-unCP-adz','PBE0D3-unCP-adz',
-            'WB97XD-unCP-adz','M052X-unCP-adz','M062X-unCP-adz','M08HX-unCP-adz','M08SO-unCP-adz','M11-unCP-adz','VV10-unCP-adz',
-            'LCVV10-unCP-adz','WB97XV-unCP-adz','PBE02-unCP-adz','WB97X2-unCP-adz','B2PLYPD3-unCP-adz','DSDPBEP86D2OPT-unCP-adz','MP2-unCP-adz'], sset='tt-5min')
-        self.plot_all_flats(['B97D3-CP-atz','PBED3-CP-atz','M11L-CP-atz','DLDFD-CP-atz','B3LYPD3-CP-atz','PBE0D3-CP-atz',
-            'WB97XD-CP-atz','M052X-CP-atz','M062X-CP-atz','M08HX-CP-atz','M08SO-CP-atz','M11-CP-atz','VV10-CP-atz',
-            'LCVV10-CP-atz','WB97XV-CP-atz','PBE02-CP-atz','WB97X2-CP-atz','B2PLYPD3-CP-atz','DSDPBEP86D2OPT-CP-atz','MP2-CP-atz'], sset='tt-5min')
-        self.plot_all_flats(['B97D3-unCP-atz','PBED3-unCP-atz','M11L-unCP-atz','DLDFD-unCP-atz','B3LYPD3-unCP-atz','PBE0D3-unCP-atz',
-            'WB97XD-unCP-atz','M052X-unCP-atz','M062X-unCP-atz','M08HX-unCP-atz','M08SO-unCP-atz','M11-unCP-atz','VV10-unCP-atz',
-            'LCVV10-unCP-atz','WB97XV-unCP-atz','PBE02-unCP-atz','WB97X2-unCP-atz','B2PLYPD3-unCP-atz','DSDPBEP86D2OPT-unCP-atz','MP2-unCP-atz'], sset='tt-5min')
-
+        self.plot_all_flats(['B97D3-CP-adz', 'PBED3-CP-adz', 'M11L-CP-adz', 'DLDFD-CP-adz', 'B3LYPD3-CP-adz', 'PBE0D3-CP-adz',
+            'WB97XD-CP-adz', 'M052X-CP-adz', 'M062X-CP-adz', 'M08HX-CP-adz', 'M08SO-CP-adz', 'M11-CP-adz', 'VV10-CP-adz',
+            'LCVV10-CP-adz', 'WB97XV-CP-adz', 'PBE02-CP-adz', 'WB97X2-CP-adz', 'B2PLYPD3-CP-adz', 'DSDPBEP86D2OPT-CP-adz', 'MP2-CP-adz'], sset='tt-5min')
+        self.plot_all_flats(['B97D3-unCP-adz', 'PBED3-unCP-adz', 'M11L-unCP-adz', 'DLDFD-unCP-adz', 'B3LYPD3-unCP-adz', 'PBE0D3-unCP-adz',
+            'WB97XD-unCP-adz', 'M052X-unCP-adz', 'M062X-unCP-adz', 'M08HX-unCP-adz', 'M08SO-unCP-adz', 'M11-unCP-adz', 'VV10-unCP-adz',
+            'LCVV10-unCP-adz', 'WB97XV-unCP-adz', 'PBE02-unCP-adz', 'WB97X2-unCP-adz', 'B2PLYPD3-unCP-adz', 'DSDPBEP86D2OPT-unCP-adz', 'MP2-unCP-adz'], sset='tt-5min')
+        self.plot_all_flats(['B97D3-CP-atz', 'PBED3-CP-atz', 'M11L-CP-atz', 'DLDFD-CP-atz', 'B3LYPD3-CP-atz', 'PBE0D3-CP-atz',
+            'WB97XD-CP-atz', 'M052X-CP-atz', 'M062X-CP-atz', 'M08HX-CP-atz', 'M08SO-CP-atz', 'M11-CP-atz', 'VV10-CP-atz',
+            'LCVV10-CP-atz', 'WB97XV-CP-atz', 'PBE02-CP-atz', 'WB97X2-CP-atz', 'B2PLYPD3-CP-atz', 'DSDPBEP86D2OPT-CP-atz', 'MP2-CP-atz'], sset='tt-5min')
+        self.plot_all_flats(['B97D3-unCP-atz', 'PBED3-unCP-atz', 'M11L-unCP-atz', 'DLDFD-unCP-atz', 'B3LYPD3-unCP-atz', 'PBE0D3-unCP-atz',
+            'WB97XD-unCP-atz', 'M052X-unCP-atz', 'M062X-unCP-atz', 'M08HX-unCP-atz', 'M08SO-unCP-atz', 'M11-unCP-atz', 'VV10-unCP-atz',
+            'LCVV10-unCP-atz', 'WB97XV-unCP-atz', 'PBE02-unCP-atz', 'WB97X2-unCP-atz', 'B2PLYPD3-unCP-atz', 'DSDPBEP86D2OPT-unCP-atz', 'MP2-unCP-atz'], sset='tt-5min')
 
     def plot_dhdft_figure(self):
 
-        self.plot_bars(['B97D3-unCP-adz','B97D3-CP-adz','B97D3-unCP-atz','B97D3-CP-atz'],sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
-        self.plot_bars(['PBED3-unCP-adz','PBED3-CP-adz','PBED3-unCP-atz','PBED3-CP-atz'],sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
-        self.plot_bars(['M11L-unCP-adz','M11L-CP-adz','M11L-unCP-atz','M11L-CP-atz'],sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
-        self.plot_bars(['DLDFD-unCP-adz','DLDFD-CP-adz','DLDFD-unCP-atz','DLDFD-CP-atz'],sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
-        self.plot_bars(['B3LYPD3-unCP-adz','B3LYPD3-CP-adz','B3LYPD3-unCP-atz','B3LYPD3-CP-atz'],sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
-        self.plot_bars(['PBE0D3-unCP-adz','PBE0D3-CP-adz','PBE0D3-unCP-atz','PBE0D3-CP-atz'],sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
-        self.plot_bars(['WB97XD-unCP-adz','WB97XD-CP-adz','WB97XD-unCP-atz','WB97XD-CP-atz'],sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
-        self.plot_bars(['M052X-unCP-adz','M052X-CP-adz','M052X-unCP-atz','M052X-CP-atz'],sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
-        self.plot_bars(['M062X-unCP-adz','M062X-CP-adz','M062X-unCP-atz','M062X-CP-atz'],sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
-        self.plot_bars(['M08HX-unCP-adz','M08HX-CP-adz','M08HX-unCP-atz','M08HX-CP-atz'],sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
-        self.plot_bars(['M08SO-unCP-adz','M08SO-CP-adz','M08SO-unCP-atz','M08SO-CP-atz'],sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
-        self.plot_bars(['M11-unCP-adz','M11-CP-adz','M11-unCP-atz','M11-CP-atz'],sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
-        self.plot_bars(['VV10-unCP-adz','VV10-CP-adz','VV10-unCP-atz','VV10-CP-atz'],sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
-        self.plot_bars(['LCVV10-unCP-adz','LCVV10-CP-adz','LCVV10-unCP-atz','LCVV10-CP-atz'],sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
-        self.plot_bars(['WB97XV-unCP-adz','WB97XV-CP-adz','WB97XV-unCP-atz','WB97XV-CP-atz'],sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
-        self.plot_bars(['PBE02-unCP-adz','PBE02-CP-adz','PBE02-unCP-atz','PBE02-CP-atz'],sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
-        self.plot_bars(['WB97X2-unCP-adz','WB97X2-CP-adz','WB97X2-unCP-atz','WB97X2-CP-atz'],sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
-        self.plot_bars(['B2PLYPD3-unCP-adz','B2PLYPD3-CP-adz','B2PLYPD3-unCP-atz','B2PLYPD3-CP-atz'],sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
-        self.plot_bars(['DSDPBEP86D2OPT-unCP-adz','DSDPBEP86D2OPT-CP-adz','DSDPBEP86D2OPT-unCP-atz','DSDPBEP86D2OPT-CP-atz'],sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
-        self.plot_bars(['MP2-unCP-adz','MP2-CP-adz','MP2-unCP-atz','MP2-CP-atz'],sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
-
+        self.plot_bars(['B97D3-unCP-adz', 'B97D3-CP-adz', 'B97D3-unCP-atz', 'B97D3-CP-atz'], sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
+        self.plot_bars(['PBED3-unCP-adz', 'PBED3-CP-adz', 'PBED3-unCP-atz', 'PBED3-CP-atz'], sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
+        self.plot_bars(['M11L-unCP-adz', 'M11L-CP-adz', 'M11L-unCP-atz', 'M11L-CP-atz'], sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
+        self.plot_bars(['DLDFD-unCP-adz', 'DLDFD-CP-adz', 'DLDFD-unCP-atz', 'DLDFD-CP-atz'], sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
+        self.plot_bars(['B3LYPD3-unCP-adz', 'B3LYPD3-CP-adz', 'B3LYPD3-unCP-atz', 'B3LYPD3-CP-atz'], sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
+        self.plot_bars(['PBE0D3-unCP-adz', 'PBE0D3-CP-adz', 'PBE0D3-unCP-atz', 'PBE0D3-CP-atz'], sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
+        self.plot_bars(['WB97XD-unCP-adz', 'WB97XD-CP-adz', 'WB97XD-unCP-atz', 'WB97XD-CP-atz'], sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
+        self.plot_bars(['M052X-unCP-adz', 'M052X-CP-adz', 'M052X-unCP-atz', 'M052X-CP-atz'], sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
+        self.plot_bars(['M062X-unCP-adz', 'M062X-CP-adz', 'M062X-unCP-atz', 'M062X-CP-atz'], sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
+        self.plot_bars(['M08HX-unCP-adz', 'M08HX-CP-adz', 'M08HX-unCP-atz', 'M08HX-CP-atz'], sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
+        self.plot_bars(['M08SO-unCP-adz', 'M08SO-CP-adz', 'M08SO-unCP-atz', 'M08SO-CP-atz'], sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
+        self.plot_bars(['M11-unCP-adz', 'M11-CP-adz', 'M11-unCP-atz', 'M11-CP-atz'], sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
+        self.plot_bars(['VV10-unCP-adz', 'VV10-CP-adz', 'VV10-unCP-atz', 'VV10-CP-atz'], sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
+        self.plot_bars(['LCVV10-unCP-adz', 'LCVV10-CP-adz', 'LCVV10-unCP-atz', 'LCVV10-CP-atz'], sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
+        self.plot_bars(['WB97XV-unCP-adz', 'WB97XV-CP-adz', 'WB97XV-unCP-atz', 'WB97XV-CP-atz'], sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
+        self.plot_bars(['PBE02-unCP-adz', 'PBE02-CP-adz', 'PBE02-unCP-atz', 'PBE02-CP-atz'], sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
+        self.plot_bars(['WB97X2-unCP-adz', 'WB97X2-CP-adz', 'WB97X2-unCP-atz', 'WB97X2-CP-atz'], sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
+        self.plot_bars(['B2PLYPD3-unCP-adz', 'B2PLYPD3-CP-adz', 'B2PLYPD3-unCP-atz', 'B2PLYPD3-CP-atz'], sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
+        self.plot_bars(['DSDPBEP86D2OPT-unCP-adz', 'DSDPBEP86D2OPT-CP-adz', 'DSDPBEP86D2OPT-unCP-atz', 'DSDPBEP86D2OPT-CP-atz'], sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
+        self.plot_bars(['MP2-unCP-adz', 'MP2-CP-adz', 'MP2-unCP-atz', 'MP2-CP-atz'], sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
 
     def plot_minn_bars(self):
 
-        self.plot_bars(['DLDFD-unCP-adz','M052X-unCP-adz','M062X-unCP-adz','M08HX-unCP-adz','M08SO-unCP-adz','M11-unCP-adz','M11L-unCP-adz',
-            'DLDFD-CP-adz','M052X-CP-adz','M062X-CP-adz','M08HX-CP-adz','M08SO-CP-adz','M11-CP-adz','M11L-CP-adz'])
-        self.plot_bars(['DLDFD-unCP-atz','M052X-unCP-atz','M062X-unCP-atz','M08HX-unCP-atz','M08SO-unCP-atz','M11-unCP-atz','M11L-unCP-atz',
-            'DLDFD-CP-atz','M052X-CP-atz','M062X-CP-atz','M08HX-CP-atz','M08SO-CP-atz','M11-CP-atz','M11L-CP-atz'])
-
+        self.plot_bars(['DLDFD-unCP-adz', 'M052X-unCP-adz', 'M062X-unCP-adz', 'M08HX-unCP-adz', 'M08SO-unCP-adz', 'M11-unCP-adz', 'M11L-unCP-adz',
+            'DLDFD-CP-adz', 'M052X-CP-adz', 'M062X-CP-adz', 'M08HX-CP-adz', 'M08SO-CP-adz', 'M11-CP-adz', 'M11L-CP-adz'])
+        self.plot_bars(['DLDFD-unCP-atz', 'M052X-unCP-atz', 'M062X-unCP-atz', 'M08HX-unCP-atz', 'M08SO-unCP-atz', 'M11-unCP-atz', 'M11L-unCP-atz',
+            'DLDFD-CP-atz', 'M052X-CP-atz', 'M062X-CP-atz', 'M08HX-CP-atz', 'M08SO-CP-atz', 'M11-CP-atz', 'M11L-CP-atz'])
 
     def plot_dhdft_modelchems(self):
 
-        self.plot_modelchems(['B97D3-CP-adz','PBED3-CP-adz','M11L-CP-adz','DLDFD-CP-adz','B3LYPD3-CP-adz','PBE0D3-CP-adz',
-            'WB97XD-CP-adz','M052X-CP-adz','M062X-CP-adz','M08HX-CP-adz','M08SO-CP-adz','M11-CP-adz','VV10-CP-adz',
-            'LCVV10-CP-adz','WB97XV-CP-adz','PBE02-CP-adz','WB97X2-CP-adz','B2PLYPD3-CP-adz','DSDPBEP86D2OPT-CP-adz','MP2-CP-adz'], sset='tt-5min')
-        self.plot_modelchems(['B97D3-unCP-adz','PBED3-unCP-adz','M11L-unCP-adz','DLDFD-unCP-adz','B3LYPD3-unCP-adz','PBE0D3-unCP-adz',
-            'WB97XD-unCP-adz','M052X-unCP-adz','M062X-unCP-adz','M08HX-unCP-adz','M08SO-unCP-adz','M11-unCP-adz','VV10-unCP-adz',
-            'LCVV10-unCP-adz','WB97XV-unCP-adz','PBE02-unCP-adz','WB97X2-unCP-adz','B2PLYPD3-unCP-adz','DSDPBEP86D2OPT-unCP-adz','MP2-unCP-adz'], sset='tt-5min')
-        self.plot_modelchems(['B97D3-CP-atz','PBED3-CP-atz','M11L-CP-atz','DLDFD-CP-atz','B3LYPD3-CP-atz','PBE0D3-CP-atz',
-            'WB97XD-CP-atz','M052X-CP-atz','M062X-CP-atz','M08HX-CP-atz','M08SO-CP-atz','M11-CP-atz','VV10-CP-atz',
-            'LCVV10-CP-atz','WB97XV-CP-atz','PBE02-CP-atz','WB97X2-CP-atz','B2PLYPD3-CP-atz','DSDPBEP86D2OPT-CP-atz','MP2-CP-atz'], sset='tt-5min')
-        self.plot_modelchems(['B97D3-unCP-atz','PBED3-unCP-atz','M11L-unCP-atz','DLDFD-unCP-atz','B3LYPD3-unCP-atz','PBE0D3-unCP-atz',
-            'WB97XD-unCP-atz','M052X-unCP-atz','M062X-unCP-atz','M08HX-unCP-atz','M08SO-unCP-atz','M11-unCP-atz','VV10-unCP-atz',
-            'LCVV10-unCP-atz','WB97XV-unCP-atz','PBE02-unCP-atz','WB97X2-unCP-atz','B2PLYPD3-unCP-atz','DSDPBEP86D2OPT-unCP-atz','MP2-unCP-atz'], sset='tt-5min')
-
+        self.plot_modelchems(['B97D3-CP-adz', 'PBED3-CP-adz', 'M11L-CP-adz', 'DLDFD-CP-adz', 'B3LYPD3-CP-adz', 'PBE0D3-CP-adz',
+            'WB97XD-CP-adz', 'M052X-CP-adz', 'M062X-CP-adz', 'M08HX-CP-adz', 'M08SO-CP-adz', 'M11-CP-adz', 'VV10-CP-adz',
+            'LCVV10-CP-adz', 'WB97XV-CP-adz', 'PBE02-CP-adz', 'WB97X2-CP-adz', 'B2PLYPD3-CP-adz', 'DSDPBEP86D2OPT-CP-adz', 'MP2-CP-adz'], sset='tt-5min')
+        self.plot_modelchems(['B97D3-unCP-adz', 'PBED3-unCP-adz', 'M11L-unCP-adz', 'DLDFD-unCP-adz', 'B3LYPD3-unCP-adz', 'PBE0D3-unCP-adz',
+            'WB97XD-unCP-adz', 'M052X-unCP-adz', 'M062X-unCP-adz', 'M08HX-unCP-adz', 'M08SO-unCP-adz', 'M11-unCP-adz', 'VV10-unCP-adz',
+            'LCVV10-unCP-adz', 'WB97XV-unCP-adz', 'PBE02-unCP-adz', 'WB97X2-unCP-adz', 'B2PLYPD3-unCP-adz', 'DSDPBEP86D2OPT-unCP-adz', 'MP2-unCP-adz'], sset='tt-5min')
+        self.plot_modelchems(['B97D3-CP-atz', 'PBED3-CP-atz', 'M11L-CP-atz', 'DLDFD-CP-atz', 'B3LYPD3-CP-atz', 'PBE0D3-CP-atz',
+            'WB97XD-CP-atz', 'M052X-CP-atz', 'M062X-CP-atz', 'M08HX-CP-atz', 'M08SO-CP-atz', 'M11-CP-atz', 'VV10-CP-atz',
+            'LCVV10-CP-atz', 'WB97XV-CP-atz', 'PBE02-CP-atz', 'WB97X2-CP-atz', 'B2PLYPD3-CP-atz', 'DSDPBEP86D2OPT-CP-atz', 'MP2-CP-atz'], sset='tt-5min')
+        self.plot_modelchems(['B97D3-unCP-atz', 'PBED3-unCP-atz', 'M11L-unCP-atz', 'DLDFD-unCP-atz', 'B3LYPD3-unCP-atz', 'PBE0D3-unCP-atz',
+            'WB97XD-unCP-atz', 'M052X-unCP-atz', 'M062X-unCP-atz', 'M08HX-unCP-atz', 'M08SO-unCP-atz', 'M11-unCP-atz', 'VV10-unCP-atz',
+            'LCVV10-unCP-atz', 'WB97XV-unCP-atz', 'PBE02-unCP-atz', 'WB97X2-unCP-atz', 'B2PLYPD3-unCP-atz', 'DSDPBEP86D2OPT-unCP-atz', 'MP2-unCP-atz'], sset='tt-5min')
 
     def plot_minn_modelchems(self):
 
-        self.plot_modelchems(['DLDFD-unCP-adz','M052X-unCP-adz','M062X-unCP-adz','M08HX-unCP-adz','M08SO-unCP-adz','M11-unCP-adz','M11L-unCP-adz',
-            'DLDFD-CP-adz','M052X-CP-adz','M062X-CP-adz','M08HX-CP-adz','M08SO-CP-adz','M11-CP-adz','M11L-CP-adz'])
-        self.plot_modelchems(['DlDFD-unCP-atz','M052X-unCP-atz','M062X-unCP-atz','M08HX-unCP-atz','M08SO-unCP-atz','M11-unCP-atz','M11L-unCP-atz',
-            'DLDFD-CP-atz','M052X-CP-atz','M062X-CP-atz','M08HX-CP-atz','M08SO-CP-atz','M11-CP-atz','M11L-CP-atz'])
+        self.plot_modelchems(['DLDFD-unCP-adz', 'M052X-unCP-adz', 'M062X-unCP-adz', 'M08HX-unCP-adz', 'M08SO-unCP-adz', 'M11-unCP-adz', 'M11L-unCP-adz',
+            'DLDFD-CP-adz', 'M052X-CP-adz', 'M062X-CP-adz', 'M08HX-CP-adz', 'M08SO-CP-adz', 'M11-CP-adz', 'M11L-CP-adz'])
+        self.plot_modelchems(['DlDFD-unCP-atz', 'M052X-unCP-atz', 'M062X-unCP-atz', 'M08HX-unCP-atz', 'M08SO-unCP-atz', 'M11-unCP-atz', 'M11L-unCP-atz',
+            'DLDFD-CP-atz', 'M052X-CP-atz', 'M062X-CP-atz', 'M08HX-CP-atz', 'M08SO-CP-atz', 'M11-CP-atz', 'M11L-CP-atz'])
 
+    def table_dhdft_suppmat_subsets(self):
+        """Generate the subset details suppmat Part II tables and their indice for DF-DFT."""
+
+        self.table_wrapper(mtd=['B97D3', 'PBED3', 'M11L', 'DLDFD', 'B3LYPD3',
+                                'PBE0D3', 'WB97XD', 'M052X', 'M062X', 'M08HX',
+                                'M08SO', 'M11', 'VV10', 'LCVV10', 'WB97XV',
+                                'PBE02', 'WB97X2', 'DSDPBEP86D2OPT', 'B2PLYPD3'],  # 'MP2']
+                           bas=['adz', 'atz'],
+                           tableplan=self.table_merge_suppmat,
+                           opt=['CP', 'unCP'], err=['mae', 'mape'],
+                           subjoin=False,
+                           plotpath='analysis/flats/mplflat_',  # proj still has 'mpl' prefix
+                           standalone=False, filename='tblssets')
+
+    def table_dhdft_suppmat_rxns(self):
+        """Generate the per-reaction suppmat Part III tables and their indices for DH-DFT."""
+
+        self.table_reactions(
+            ['B97D3-unCP-adz', 'B97D3-CP-adz', 'B97D3-unCP-atz', 'B97D3-CP-atz',
+            'PBED3-unCP-adz', 'PBED3-CP-adz', 'PBED3-unCP-atz', 'PBED3-CP-atz',
+            'M11L-unCP-adz', 'M11L-CP-adz', 'M11L-unCP-atz', 'M11L-CP-atz',
+            'DLDFD-unCP-adz', 'DLDFD-CP-adz', 'DLDFD-unCP-atz', 'DLDFD-CP-atz',
+            'B3LYPD3-unCP-adz', 'B3LYPD3-CP-adz', 'B3LYPD3-unCP-atz', 'B3LYPD3-CP-atz',
+            'PBE0D3-unCP-adz', 'PBE0D3-CP-adz', 'PBE0D3-unCP-atz', 'PBE0D3-CP-atz',
+            'WB97XD-unCP-adz', 'WB97XD-CP-adz', 'WB97XD-unCP-atz', 'WB97XD-CP-atz',
+            'M052X-unCP-adz', 'M052X-CP-adz', 'M052X-unCP-atz', 'M052X-CP-atz',
+            'M062X-unCP-adz', 'M062X-CP-adz', 'M062X-unCP-atz', 'M062X-CP-atz',
+            'M08HX-unCP-adz', 'M08HX-CP-adz', 'M08HX-unCP-atz', 'M08HX-CP-atz',
+            'M08SO-unCP-adz', 'M08SO-CP-adz', 'M08SO-unCP-atz', 'M08SO-CP-atz',
+            'M11-unCP-adz', 'M11-CP-adz', 'M11-unCP-atz', 'M11-CP-atz',
+            'VV10-unCP-adz', 'VV10-CP-adz', 'VV10-unCP-atz', 'VV10-CP-atz',
+            'LCVV10-unCP-adz', 'LCVV10-CP-adz', 'LCVV10-unCP-atz', 'LCVV10-CP-atz',
+            'WB97XV-unCP-adz', 'WB97XV-CP-adz', 'WB97XV-unCP-atz', 'WB97XV-CP-atz',
+            'PBE02-unCP-adz', 'PBE02-CP-adz', 'PBE02-unCP-atz', 'PBE02-CP-atz',
+            'WB97X2-unCP-adz', 'WB97X2-CP-adz', 'WB97X2-unCP-atz', 'WB97X2-CP-atz',
+            'DSDPBEP86D2OPT-unCP-adz', 'DSDPBEP86D2OPT-CP-adz', 'DSDPBEP86D2OPT-unCP-atz', 'DSDPBEP86D2OPT-CP-atz',
+            'B2PLYPD3-unCP-adz', 'B2PLYPD3-CP-adz', 'B2PLYPD3-unCP-atz', 'B2PLYPD3-CP-atz'],
+            # 'MP2-unCP-adz', 'MP2-CP-adz', 'MP2-unCP-atz', 'MP2-CP-atz'],
+            standalone=False, filename='tblrxn_all')
 
 
 class ThreeDatabases(Database):
@@ -2796,3 +3122,7 @@ class ThreeDatabases(Database):
         self.mc['CCSDT-CP-atqzatz'] = ['CCSDT-CP-atqzatz', 'CCSDT-CP-atqzhatz', 'CCSDT-CP-atqzatz']
 
 # print certain statistic for all 4 db and summary and indiv sys if min or max
+
+fnreservoir = {}
+fnreservoir['blankslat'] = r"""Errors with respect to Benchmark. Guide lines are at 0, 0.3, and 1.0 kcal/mol overbound ($-$) and underbound ($+$)."""
+fnreservoir['5min'] = r"""Only equilibrium and near-equilibrium systems included. (All S22 and HSG, 50/194 NBC10, 28/118 HBC6.)"""
