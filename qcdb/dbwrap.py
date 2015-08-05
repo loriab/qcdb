@@ -1007,6 +1007,15 @@ class WrappedDatabase(object):
                     self.hrxn[rxn].data[mc] = ReactionDatum.library_modelchem(dbse=dbse, rxn=rxn,
                         method=method, mode=bsse, basis=basis, value=df[dbrxn])
 
+    def integer_reactions(self):
+        """Returns boolean of whether reaction names need to be cast to integer"""
+        try:
+            self.hrxn.iterkeys().next() + 1
+        except TypeError:
+            return False
+        else:
+            return True
+
     @staticmethod
     def load_pickled(dbname, path=None):
         """
@@ -1584,6 +1593,10 @@ class Database(object):
     #            fmcs['Basis Treatment'][bases[bas].latex][mc] = fancyrepr
     #    return fmcs
 
+    def integer_reactions(self):
+        """Returns boolean of whether reaction names need to be cast to integer"""
+        return {db: odb.integer_reactions() for db, odb in self.dbdict.items()}
+
     def load_qcdata_byproject(self, project, pythonpath=None):
         """For each component database, loads qcdb.ReactionDatums from
         standard location for *project* :module dbse_project and function
@@ -1644,9 +1657,18 @@ class Database(object):
 
         """
         label = name.lower()
+        merged = []
         for db, odb in self.dbdict.iteritems():
-            odb.add_Subset(name=name, func=func[db])
-        self.sset[label] = [label] * len(self.dbdict.keys())
+            if callable(func[db]):
+                ssfunc = func[db]
+            else:
+                ssfunc = lambda x: func[db]
+            odb.add_Subset(name=name, func=ssfunc)
+            if name in odb.sset.keys():
+                merged.append(name)
+            else:
+                merged.append(None)
+        self.sset[label] = merged
         print """Database %s: Subset %s formed: %s""" % (self.dbse, label, self.sset[label])
 
     def add_Subset_union(self, name, sslist):
@@ -1875,6 +1897,67 @@ class Database(object):
             filedict = mpl.valerr(dbdat, color=color, title=title, xtitle=axis,
                 view=view,
                 saveas=saveas, relpath=relpath, graphicsformat=graphicsformat)
+            return filedict
+
+    def plot_ternary(self, sset='default', pythonpath='/Users/loriab/linux/bfdb/sapt_punt', failoninc=True):  # pythonpath=None
+        """This is a stopgap function that loads sapt component data from
+        sapt_punt in bfdb repo, then formats it to plot a ternary diagram.
+
+        """
+        dbdat = []
+        for db, odb in self.dbdict.items():
+            modname = 'sapt_' + odb.dbse
+            if pythonpath is not None:
+                sys.path.insert(1, pythonpath)
+            else:
+                sys.path.append(os.path.dirname(__file__) + '/../data')
+            try:
+                datamodule = __import__(modname)
+            except ImportError:
+                print '\nPython module for database data %s failed to load\n\n' % (modname)
+                print '\nSearch path that was tried:\n'
+                print ", ".join(map(str, sys.path))
+                raise ValidationError("Python module loading problem for database subset generator " + str(modname))
+
+            try:
+                saptdata = getattr(datamodule, 'DATA')
+            except AttributeError:
+                raise ValidationError("SAPT punt module does not contain DATA" + str(modname))
+
+            dbix = self.dbdict.keys().index(db)
+            for rxn, orxn in odb.hrxn.iteritems():
+                lss = self.sset[sset][dbix]
+                if lss is not None:
+                    if rxn in odb.sset[lss].keys():
+                        dbrxn = orxn.dbrxn
+                        try:
+                            #saptmc = saptdata['SAPT MODELCHEM']
+                            elst = saptdata['SAPT ELST ENERGY'][dbrxn]
+                            exch = saptdata['SAPT EXCH ENERGY'][dbrxn]
+                            ind = saptdata['SAPT IND ENERGY'][dbrxn]
+                            disp = saptdata['SAPT DISP ENERGY'][dbrxn]
+                            #saptdatum = rxnobj.data[saptmc]
+                        except (KeyError, AttributeError):
+                            print """Warning: DATA['SAPT * ENERGY'] missing for reaction %s""" % (dbrxn)
+                            if failoninc:
+                                break
+                        else:
+                            if not all([elst, exch, ind, disp]):
+                                print """Warning: DATA['SAPT * ENERGY'] missing for reaction %s""" % (dbrxn)
+                                if failoninc:
+                                    break
+                        dbdat.append([elst, ind, disp])
+
+        # generate matplotlib instructions and call or print
+        try:
+            import mpl
+            import matplotlib.pyplot as plt
+        except ImportError:
+            pass
+            # if not running from Canopy, print line to execute from Canopy
+        else:
+            # if running from Canopy, call mpl directly
+            filedict = mpl.ternary(dbdat)
             return filedict
 
     def plot_flat(self, modelchem, benchmark='default', sset='default',
