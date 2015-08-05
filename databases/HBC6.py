@@ -555,6 +555,10 @@ BIND_HBC6ARLX['%s-FaOOFaNN-8.0'  % (dbse)] =  -0.575
 BIND_HBC6ARLX['%s-FaOOFaNN-10.0' % (dbse)] =  -0.197
 # Set default
 BIND = BIND_HBC6A
+# Reference information
+BINDINFO_HBC6A = {}
+for rxn in HRXN:
+    BINDINFO_HBC6A['%s-%s' % (dbse, rxn)] = {'citation': 's22b', 'method': 'CCSDT', 'mode': 'CP', 'basis': 'atqzatz'}
 
 # <<< Comment Lines >>>
 TAGL = {}

@@ -648,6 +648,18 @@ BIND_NBC10A['%s-BzBz_PD36-2.8' % (dbse)] = -2.143
 BIND_NBC10A['%s-BzBz_PD36-3.0' % (dbse)] = -2.046
 # Set default
 BIND = BIND_NBC10A
+# Reference information
+BINDINFO_NBC10A = {}
+for rxn in HRXN:
+    if (rxn in BzBz_S) or (rxn in BzBz_T) or (rxn in BzBz_PD34) or \
+       (rxn in PyPy_S2) or (rxn in BzBz_PD32) or (rxn in BzBz_PD36):
+        BINDINFO_NBC10A['%s-%s' % (dbse, rxn)] = {'citation': 's22b', 'method': 'CCSDT', 'mode': 'CP', 'basis': 'atqzhatz'}
+    elif (rxn in BzH2S) or (rxn in BzMe):
+        BINDINFO_NBC10A['%s-%s' % (dbse, rxn)] = {'citation': 's22b', 'method': 'CCSDT', 'mode': 'CP', 'basis': 'atqzatz'}
+    elif rxn in MeMe:
+        BINDINFO_NBC10A['%s-%s' % (dbse, rxn)] = {'citation': 's22b', 'method': 'CCSDT', 'mode': 'CP', 'basis': 'atqz'}
+    elif rxn in PyPy_T3:
+        BINDINFO_NBC10A['%s-%s' % (dbse, rxn)] = {'citation': 's22b', 'method': 'CCSDT', 'mode': 'CP', 'basis': 'atqzadz'}
 
 # <<< Comment Lines >>>
 TAGL = {}

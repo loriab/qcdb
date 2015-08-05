@@ -1396,8 +1396,8 @@ with open('%s/%s_%s.py' % (homewrite, dbse, project), 'w') as handle:
                     print 'dropping', mc
                 pass
             else:
-                handle.write("""    dbinstance.add_ReactionDatum(dbse='%s', rxn=%s, method='%s', mode='%s', basis='%s', value=%.4f)\n""" %
-                             (dbse, repr(rxn), method, bsse, basis, value))
+                handle.write("""    dbinstance.add_ReactionDatum(citation='%s', dbse='%s', rxn=%s, method='%s', mode='%s', basis='%s', value=%.4f)\n""" %
+                             (project, dbse, repr(rxn), method, bsse, basis, value))
 
 
 # <<< write hdf5 >>>

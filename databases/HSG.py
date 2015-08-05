@@ -131,6 +131,10 @@ BIND_HSGA['%s-%s' % (dbse, 20)] =    0.378
 BIND_HSGA['%s-%s' % (dbse, 21)] =   -9.538
 # Set default
 BIND = BIND_HSGA
+# Reference information
+BINDINFO_HSGA = {}
+for rxn in HRXN:
+    BINDINFO_HSGA['%s-%s' % (dbse, rxn)] = {'citation': 's22b', 'method': 'CCSDT', 'mode': 'CP', 'basis': 'atqzhatz'}
 
 # <<< Coment Lines >>>
 TAGL = {}

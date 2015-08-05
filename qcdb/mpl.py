@@ -319,6 +319,7 @@ def valerr(data, color=None, title='', xtitle='', view=True,
     plt.close()  # give this a try
     return files_saved
 
+
 def disthist(data, title='', xtitle='', xmin=None, xmax=None,
     me=None, stde=None, saveas=None, relpath=False, graphicsformat=['pdf']):
     """Saves a plot with name *saveas* with a histogram representation
@@ -464,7 +465,7 @@ def disthist(data, title='', xtitle='', xmin=None, xmax=None,
 
 def threads(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None,
     mousetext=None, mouselink=None, mouseimag=None, mousetitle=None, mousediv=None,
-    saveas=None, relpath=False, graphicsformat=['pdf']):
+    labeled=True, saveas=None, relpath=False, graphicsformat=['pdf']):
     """Generates a tiered slat diagram between model chemistries with
     errors (or simply values) in list *data*, which is supplied as part of the
     dictionary for each participating reaction, along with *dbse* and *rxn* keys
@@ -481,6 +482,7 @@ def threads(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None,
     import random
     import hashlib
     import matplotlib.pyplot as plt
+    import numpy as np  # only needed for missing data with mouseiness
 
     # initialize tiers/wefts
     Nweft = len(labels)
@@ -504,19 +506,23 @@ def threads(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None,
     plt.ylim([-1 * Nweft - 1, 0])
     plt.yticks([])
     ax.set_frame_on(False)
-    ax.set_xticks([-2.0, -1.0, 0.0, 1.0, 2.0])
+    if labeled:
+        ax.set_xticks([-2.0, -1.0, 0.0, 1.0, 2.0])
+    else:
+        ax.set_xticks([])
     for tick in ax.xaxis.get_major_ticks():
         tick.tick1line.set_markersize(0)
         tick.tick2line.set_markersize(0)
 
     # label plot and tiers
-    ax.text(-0.9 * xlimit, -0.25, title,
-        verticalalignment='bottom', horizontalalignment='left',
-        family='Times New Roman', weight='bold', fontsize=12)
-    for weft in labels:
-        ax.text(-0.9 * xlimit, -(1.2 + labels.index(weft)), weft,
+    if labeled:
+        ax.text(-0.9 * xlimit, -0.25, title,
             verticalalignment='bottom', horizontalalignment='left',
-            family='Times New Roman', weight='bold', fontsize=18)
+            family='Times New Roman', weight='bold', fontsize=12)
+        for weft in labels:
+            ax.text(-0.9 * xlimit, -(1.2 + labels.index(weft)), weft,
+                verticalalignment='bottom', horizontalalignment='left',
+                family='Times New Roman', weight='bold', fontsize=18)
 
     # plot reaction errors and threads
     for rxn in data:
@@ -536,35 +542,39 @@ def threads(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None,
         ax.plot(thread, posnT, color=clr, linewidth=0.5, solid_capstyle='round', alpha=0.3)
 
         # converting into screen coordinates for image map
-        xyscreen = ax.transData.transform(zip(xvals, positions))
+        npxvals = [np.nan if val is None else val for val in xvals]
+        print npxvals
+        xyscreen = ax.transData.transform(zip(npxvals, positions))
         xscreen, yscreen = zip(*xyscreen)
         posnM.extend(zip([rxn['db']] * Nweft, [rxn['sys']] * Nweft,
-            xvals, xscreen, yscreen))
+            npxvals, xscreen, yscreen))
 
         # labeling
         if not(mousetext or mouselink or mouseimag):
-            try:
-                toplblposn = next(item for item in xvals if item is not None)
-                botlblposn = next(item for item in reversed(xvals) if item is not None)
-            except StopIteration:
-                pass
-            else:
-                ax.text(toplblposn, -0.75 + 0.6 * random.random(), rxn['sys'],
-                    verticalalignment='bottom', horizontalalignment='center',
-                    family='Times New Roman', fontsize=8)
-                ax.text(botlblposn, -1 * Nweft - 0.75 + 0.6 * random.random(), rxn['sys'],
-                    verticalalignment='bottom', horizontalalignment='center',
-                    family='Times New Roman', fontsize=8)
+            if labeled:
+                try:
+                    toplblposn = next(item for item in xvals if item is not None)
+                    botlblposn = next(item for item in reversed(xvals) if item is not None)
+                except StopIteration:
+                    pass
+                else:
+                    ax.text(toplblposn, -0.75 + 0.6 * random.random(), rxn['sys'],
+                        verticalalignment='bottom', horizontalalignment='center',
+                        family='Times New Roman', fontsize=8)
+                    ax.text(botlblposn, -1 * Nweft - 0.75 + 0.6 * random.random(), rxn['sys'],
+                        verticalalignment='bottom', horizontalalignment='center',
+                        family='Times New Roman', fontsize=8)
 
     # plot trimmings
     if mae is not None:
         ax.plot([-x for x in mae], positions, 's', color='black')
-    if mape is not None:  # equivalent to MAE for a 10 kcal/mol IE
-        ax.plot([0.025 * x for x in mape], positions, 'o', color='black')
-    plt.axvline(0, color='#cccc00')
+    if labeled:
+        if mape is not None:  # equivalent to MAE for a 10 kcal/mol IE
+            ax.plot([0.025 * x for x in mape], positions, 'o', color='black')
+        plt.axvline(0, color='#cccc00')
 
     # save and show
-    pltuid = title + '_' + hashlib.sha1(title + repr(labels) + repr(xlimit)).hexdigest()
+    pltuid = title + '_' + ('lbld' if labeled else 'bare') + '_' + hashlib.sha1(title + repr(labels) + repr(xlimit)).hexdigest()
     pltfile = expand_saveas(saveas, pltuid, def_prefix='thread_', relpath=relpath)
     files_saved = {}
     for ext in graphicsformat:
@@ -887,6 +897,7 @@ if __name__ == "__main__":
     merge_dats = [
     {'db':'HSG', 'sys':'1', 'data':[0.3508, 0.1234, 0.0364, 0.0731, 0.0388]},
     {'db':'HSG', 'sys':'3', 'data':[0.2036, -0.0736, -0.1650, -0.1380, -0.1806]},
+    #{'db':'S22', 'sys':'14', 'data':[np.nan, -3.2144, np.nan, np.nan, np.nan]},
     {'db':'S22', 'sys':'14', 'data':[None, -3.2144, None, None, None]},
     {'db':'S22', 'sys':'15', 'data':[-1.5090, -2.5263, -2.9452, -2.8633, -3.1059]},
     {'db':'S22', 'sys':'22', 'data':[0.3046, -0.2632, -0.5070, -0.4925, -0.6359]}]
@@ -923,5 +934,3 @@ if __name__ == "__main__":
 
     valerr([{'color': 0.14255710779686612, 'db': 'NBC1', 'sys': 'BzBz_S-3.6', 'error': [0.027999999999999803], 'mcdata': -1.231, 'bmdata': -1.259, 'axis': 3.6}, {'color': 0.08862098445220466, 'db': 'NBC1', 'sys': 'BzBz_S-3.7', 'error': [0.02300000000000013], 'mcdata': -1.535, 'bmdata': -1.558, 'axis': 3.7}, {'color': 0.246634626511043, 'db': 'NBC1', 'sys': 'BzBz_S-3.4', 'error': [0.04200000000000001], 'mcdata': 0.189, 'bmdata': 0.147, 'axis': 3.4}, {'color': 0.19526236766857613, 'db': 'NBC1', 'sys': 'BzBz_S-3.5', 'error': [0.03500000000000003], 'mcdata': -0.689, 'bmdata': -0.724, 'axis': 3.5}, {'color': 0.3443039102164425, 'db': 'NBC1', 'sys': 'BzBz_S-3.2', 'error': [0.05999999999999961], 'mcdata': 3.522, 'bmdata': 3.462, 'axis': 3.2}, {'color': 0.29638827303466814, 'db': 'NBC1', 'sys': 'BzBz_S-3.3', 'error': [0.050999999999999934], 'mcdata': 1.535, 'bmdata': 1.484, 'axis': 3.3}, {'color': 0.42859228971962615, 'db': 'NBC1', 'sys': 'BzBz_S-6.0', 'error': [0.0020000000000000018], 'mcdata': -0.099, 'bmdata': -0.101, 'axis': 6.0}, {'color': 0.30970751839224836, 'db': 'NBC1', 'sys': 'BzBz_S-5.0', 'error': [0.0040000000000000036], 'mcdata': -0.542, 'bmdata': -0.546, 'axis': 5.0}, {'color': 0.3750832778147902, 'db': 'NBC1', 'sys': 'BzBz_S-5.5', 'error': [0.0030000000000000027], 'mcdata': -0.248, 'bmdata': -0.251, 'axis': 5.5}, {'color': 0.0335358832178858, 'db': 'NBC1', 'sys': 'BzBz_S-3.8', 'error': [0.019000000000000128], 'mcdata': -1.674, 'bmdata': -1.693, 'axis': 3.8}, {'color': 0.021704594689389095, 'db': 'NBC1', 'sys': 'BzBz_S-3.9', 'error': [0.016000000000000014], 'mcdata': -1.701, 'bmdata': -1.717, 'axis': 3.9}, {'color': 0.22096255119953187, 'db': 'NBC1', 'sys': 'BzBz_S-4.5', 'error': [0.008000000000000007], 'mcdata': -1.058, 'bmdata': -1.066, 'axis': 4.5}, {'color': 0.10884135031532088, 'db': 'NBC1', 'sys': 'BzBz_S-4.1', 'error': [0.01200000000000001], 'mcdata': -1.565, 'bmdata': -1.577, 'axis': 4.1}, {'color': 0.06911476296747143, 'db': 'NBC1', 'sys': 'BzBz_S-4.0', 'error': [0.014000000000000012], 'mcdata': -1.655, 'bmdata': -1.669, 'axis': 4.0}, {'color': 0.14275218373289067, 'db': 'NBC1', 'sys': 'BzBz_S-4.2', 'error': [0.01100000000000012], 'mcdata': -1.448, 'bmdata': -1.459, 'axis': 4.2}, {'color': 0.4740372133275638, 'db': 'NBC1', 'sys': 'BzBz_S-6.5', 'error': [0.0010000000000000009], 'mcdata': -0.028, 'bmdata': -0.029, 'axis': 6.5}, {'color': 0.6672504378283713, 'db': 'NBC1', 'sys': 'BzBz_S-10.0', 'error': [0.0], 'mcdata': 0.018, 'bmdata': 0.018, 'axis': 10.0}],
         color='sapt', xtitle='Rang', title='aggh', graphicsformat=['png'])
-
-
