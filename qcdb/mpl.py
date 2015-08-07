@@ -543,11 +543,10 @@ def threads(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None,
 
         # converting into screen coordinates for image map
         npxvals = [np.nan if val is None else val for val in xvals]
-        print npxvals
         xyscreen = ax.transData.transform(zip(npxvals, positions))
         xscreen, yscreen = zip(*xyscreen)
         posnM.extend(zip([rxn['db']] * Nweft, [rxn['sys']] * Nweft,
-            npxvals, xscreen, yscreen))
+            npxvals, [rxn['show']] * Nweft, xscreen, yscreen))
 
         # labeling
         if not(mousetext or mouselink or mouseimag):
@@ -591,7 +590,7 @@ def threads(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None,
         img_height = fig.get_figheight() * dpi
 
         htmlcode = """<SCRIPT>\n"""
-        htmlcode += """function mouseshow(db, rxn, val) {\n"""
+        htmlcode += """function mouseshow(db, rxn, val, show) {\n"""
         if mousetext or mouselink:
             htmlcode += """   var cid = document.getElementById("cid");\n"""
             if mousetext:
@@ -627,7 +626,7 @@ def threads(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None,
         posnM.sort(key=lambda tup: tup[2])
         posnM.sort(key=lambda tup: tup[3])
         last = (0, 0)
-        for dbse, rxn, val, x, y in posnM:
+        for dbse, rxn, val, show, x, y in posnM:
             if val is None:
                 continue
 
@@ -635,10 +634,10 @@ def threads(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None,
             if now == last:
                 htmlcode += """<!-- map overlap! %s-%s %+.2f skipped -->\n""" % (dbse, rxn, val)
             else:
-                htmlcode += """<AREA shape="rect" coords="%d,%d,%d,%d" onmouseover="javascript:mouseshow('%s', '%s', '%+.2f');">\n""" % \
+                htmlcode += """<AREA shape="rect" coords="%d,%d,%d,%d" onmouseover="javascript:mouseshow('%s', '%s', '%+.2f', '%s');">\n""" % \
                     (x - 2, img_height - y - 20,
                     x + 2, img_height - y + 20,
-                    dbse, rxn, val)
+                    dbse, rxn, val, show)
                 last = now
 
         htmlcode += """</MAP>\n"""
