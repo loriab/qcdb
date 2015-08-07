@@ -460,7 +460,8 @@ class Reaction(object):
         dbdat = []
         for mc in indiv.keys():
             dbdat.append({'db': dbse,
-                          'sys': fancify_mc_tag(mc),
+                          'show': fancify_mc_tag(mc),
+                          'sys': mc,
                           'color': self.color,
                           'data': [indiv[mc][0]]})
         mae = None  # [errors[ix][self.dbse]['mae'] for ix in index]
