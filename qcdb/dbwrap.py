@@ -2277,6 +2277,7 @@ reinitialize
                 else:
                     dbdat.append({'db': db,
                                   'sys': str(rxn),
+                                  'show': str(rxn),
                                   'color': odb.hrxn[rxn].color,
                                   'data': data})
         mae = [errors[ix][self.dbse]['mae'] for ix in index]

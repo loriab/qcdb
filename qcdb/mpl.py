@@ -30,7 +30,7 @@ def expand_saveas(saveas, def_filename, def_path=os.path.abspath(os.curdir), def
 
     abspathfile = os.path.join(os.path.abspath(pth), fil)
     if relpath:
-        return abspathfile.split(os.path.commonprefix([abspathfile, os.getcwd()]) + os.sep)[1]
+        return os.path.relpath(abspathfile, os.getcwd())
     else:
         return abspathfile
 
@@ -351,16 +351,14 @@ def disthist(data, title='', xtitle='', xmin=None, xmax=None,
         pdfx.append(ix)
         pdfy.append(gaussianpdf(me, pow(stde, 2), ix))
 
-    fig, ax = plt.subplots(figsize=(16, 6))
+    fig, ax1 = plt.subplots(figsize=(16, 6))
     plt.axvline(0.0, color='#cccc00')
-    ax1 = fig.add_subplot(111)
     ax1.set_xlim(xmin, xmax)
     ax1.hist(data, bins=30, range=(xmin, xmax), color='#2d4065', alpha=0.7)
     ax1.set_xlabel(xtitle)
     ax1.set_ylabel('Count')
 
     ax2 = ax1.twinx()
-    ax2.set_xlim(xmin, xmax)
     ax2.fill(pdfx, pdfy, color='k', alpha=0.2)
     ax2.set_ylabel('Probability Density')
 
@@ -538,7 +536,10 @@ def threads(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None,
             thread.extend([xvals[weft], xvals[weft + 1], None])
 
         # plotting
-        ax.plot(slat, posnS, color=clr, linewidth=1.0, solid_capstyle='round')
+        if Nweft == 1:
+            ax.plot(slat, posnS, '|', color=clr, markersize=20.0, mew=1.5, solid_capstyle='round')
+        else:
+            ax.plot(slat, posnS, color=clr, linewidth=1.0, solid_capstyle='round')
         ax.plot(thread, posnT, color=clr, linewidth=0.5, solid_capstyle='round', alpha=0.3)
 
         # converting into screen coordinates for image map
@@ -627,7 +628,7 @@ def threads(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None,
         posnM.sort(key=lambda tup: tup[3])
         last = (0, 0)
         for dbse, rxn, val, show, x, y in posnM:
-            if val is None:
+            if val is None or val is np.nan:
                 continue
 
             now = (int(x), int(y))
