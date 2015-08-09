@@ -1711,6 +1711,35 @@ class Database(object):
             funcdb[db] = lambda x: rxnlist
         self.add_Subset(name, funcdb)
 
+    def add_sampled_Subset(self, sset='default', number_of_samples=1, sample_size=5, prefix='rand'):
+        """Generate and register *number_of_samples* new subsets of size
+        *sample_size* and name built from *prefix*. Reactions chosen from *sset*.
+
+        """
+        import random
+
+        intrxn = self.integer_reactions()
+        rxns = self.get_hrxn(sset=sset).keys()
+
+        def random_sample(ssname):
+            """Generate and register a single new subset of size *sample_size* and
+            name *ssname*.
+
+            """
+            sample = {db: [] for db in self.dbdict.keys()}
+            for dbrxn in random.sample(rxns, sample_size):
+                db, rxn = dbrxn.split('-', 1)
+                typed_rxn = int(rxn) if intrxn[db] else rxn
+                sample[db].append(typed_rxn)
+            self.add_Subset(ssname, sample)
+
+        for sidx in range(number_of_samples):
+            if number_of_samples == 1:
+                ssname = prefix
+            else:
+                ssname = prefix + '_' + str(sidx)
+            random_sample(ssname)
+
     def _intersect_subsets(self):
         """Examine component database subsets and collect common names as
         Database subset.
