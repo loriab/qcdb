@@ -1222,14 +1222,17 @@ elif project == 'saptone':
     cpmd = ['SA']
 
 elif project == 'merz3':
-    #mtds = ['MP2', 'SCSMP2', 'SCSNMP2', 'SCSMIMP2', 'DWMP2', 'MP2C',
-    #        'MP2CF12', 'DWCCSDTF12']
-    #bass = ['adz', 'atz', 'aqz', 'addz', 'adtz', 'atqz', 'qz', 'atqzadz']
-    #opts = ['', 'dfhf-dfmp']
-    mtds = ['SAPT0', 'SAPT0S']
-    bass = ['jadz']
-    opts = ['']  # should SAPT0 be coming through with a dfmp label?
-    cpmd = ['CP']
+    mtds = ['MP2', 'SCSMP2', 'SCSNMP2', 'SCSMIMP2', 'DWMP2', 'MP2C',
+#            'B3LYP', 'B3LYPD3', 'B97D3', 'WB97XD',
+            'SAPT0', 'SAPT0S',
+            'MP2CF12', 'DWCCSDTF12']
+    bass = ['jadz', 'adz', 'atz', 'aqz', 'addz', 'adtz', 'atqz', 'qz', 'atqzadz']
+    opts = ['', 'dfhf', 'dfhf-dfmp']
+    #mtds = ['SAPT0', 'SAPT0S']
+    #bass = ['jadz']
+    #opts = ['']  # should SAPT0 be coming through with a dfmp label?
+    #cpmd = ['unCP', 'CP', 'SA']
+    cpmd = ['CP', 'SA']
 
 elif project == 'aep':
     mtds = ['SCSMICCSD']
@@ -1245,8 +1248,9 @@ elif project == 'sflow':
 
 elif project == 'dfit':
     mtds = ['B3LYP', 'B97', 'BLYP', 'BP86', 'PBE', 'PBE0', 'WPBE', 'B2PLYP',
-            'B3LYPD3', 'B97D3', 'BLYPD3', 'BP86D3', 'PBED3', 'PBE0D3', 'B2PLYPD3']
-    bass = ['def2qzvp']
+            'B3LYPD3', 'B97D3', 'BLYPD3', 'BP86D3', 'PBED3', 'PBE0D3', 'B2PLYPD3',
+            'B3LYPD2', 'WB97XD', 'M052X', 'B97D2']
+    bass = ['def2qzvp', 'adz', 'atz']
     opts = ['', 'dfhf', 'dfhf-dfmp']  # why B2PLYP with no or dfhf label; why B3LYP w dfhf-dfmp label?
     cpmd = ['CP', 'unCP']
 

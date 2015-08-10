@@ -464,7 +464,7 @@ class Reaction(object):
 
     def plot(self, benchmark='default', mcset='default',
              failoninc=True, verbose=False, color='sapt',
-             xlimit=4.0, saveas=None, mousetext=None, mouselink=None, mouseimag=None,
+             xlimit=4.0, labeled=True, saveas=None, mousetext=None, mouselink=None, mouseimag=None,
              mousetitle=None, mousediv=None, relpath=False, graphicsformat=['pdf']):
         """Computes individual errors over model chemistries in *mcset* (which
         may be default or an array or a function generating an array) versus
@@ -493,7 +493,8 @@ class Reaction(object):
         dbdat = []
         for mc in indiv.keys():
             dbdat.append({'db': dbse,
-                          'sys': fancify_mc_tag(mc),
+                          'show': fancify_mc_tag(mc),
+                          'sys': mc,
                           'color': self.color,
                           'data': [indiv[mc][0]]})
         mae = None  # [errors[ix][self.dbse]['mae'] for ix in index]
@@ -509,14 +510,14 @@ class Reaction(object):
             import matplotlib.pyplot as plt
         except ImportError:
             # if not running from Canopy, print line to execute from Canopy
-            print """filedict, htmlcode = mpl.threads(%s,\n    color='%s',\n    title='%s',\n    labels=%s,\n    mae=%s,\n    mape=%s\n    xlimit=%s\n    saveas=%s\n    mousetext=%s\n    mouselink=%s\n    mouseimag=%s\n    mousetitle=%s,\n    mousediv=%s,\n    relpath=%s\n    graphicsformat=%s)\n\n""" % \
+            print """filedict, htmlcode = mpl.threads(%s,\n    color='%s',\n    title='%s',\n    labels=%s,\n    mae=%s,\n    mape=%s\n    xlimit=%s\n    labeled=%s\n    saveas=%s\n    mousetext=%s\n    mouselink=%s\n    mouseimag=%s\n    mousetitle=%s,\n    mousediv=%s,\n    relpath=%s\n    graphicsformat=%s)\n\n""" % \
                   (dbdat, color, title, labels, mae, mape, str(xlimit),
-                   repr(saveas), repr(mousetext), repr(mouselink), repr(mouseimag),
+                   repr(labeled), repr(saveas), repr(mousetext), repr(mouselink), repr(mouseimag),
                    repr(mousetitle), repr(mousediv), repr(relpath), repr(graphicsformat))
         else:
             # if running from Canopy, call mpl directly
             filedict, htmlcode = mpl.threads(dbdat, color=color, title=title, labels=labels, mae=mae, mape=mape,
-                                             xlimit=xlimit, saveas=saveas, mousetext=mousetext, mouselink=mouselink,
+                                             xlimit=xlimit, labeled=labeled, saveas=saveas, mousetext=mousetext, mouselink=mouselink,
                                              mouseimag=mouseimag, mousetitle=mousetitle, mousediv=mousediv,
                                              relpath=relpath, graphicsformat=graphicsformat)
             return filedict, htmlcode
@@ -1093,6 +1094,15 @@ class WrappedDatabase(object):
                                                                               method=method, mode=bsse, basis=basis,
                                                                               value=df[dbrxn])
 
+    def integer_reactions(self):
+        """Returns boolean of whether reaction names need to be cast to integer"""
+        try:
+            self.hrxn.iterkeys().next() + 1
+        except TypeError:
+            return False
+        else:
+            return True
+
     @staticmethod
     def load_pickled(dbname, path=None):
         """
@@ -1382,6 +1392,10 @@ class Database(object):
     #            fmcs['Basis Treatment'][bases[bas].latex][mc] = fancyrepr
     #    return fmcs
 
+    def integer_reactions(self):
+        """Returns boolean of whether reaction names need to be cast to integer"""
+        return {db: odb.integer_reactions() for db, odb in self.dbdict.items()}
+
     def load_qcdata_byproject(self, project, pythonpath=None):
         """For each component database, loads qcdb.ReactionDatums from
         standard location for *project* :module dbse_project and function
@@ -1443,9 +1457,18 @@ class Database(object):
 
         """
         label = name.lower()
+        merged = []
         for db, odb in self.dbdict.iteritems():
-            odb.add_Subset(name=name, func=func[db])
-        self.sset[label] = [label] * len(self.dbdict.keys())
+            if callable(func[db]):
+                ssfunc = func[db]
+            else:
+                ssfunc = lambda x: func[db]
+            odb.add_Subset(name=name, func=ssfunc)
+            if name in odb.sset.keys():
+                merged.append(name)
+            else:
+                merged.append(None)
+        self.sset[label] = merged
         print """Database %s: Subset %s formed: %s""" % (self.dbse, label, self.sset[label])
 
     def add_Subset_union(self, name, sslist):
@@ -1461,6 +1484,35 @@ class Database(object):
             rxnlist = set().union(*[set(self.dbdict[db].sset[self.sset[ss][dbix]].keys()) for ss in sslist])
             funcdb[db] = lambda x: rxnlist
         self.add_Subset(name, funcdb)
+
+    def add_sampled_Subset(self, sset='default', number_of_samples=1, sample_size=5, prefix='rand'):
+        """Generate and register *number_of_samples* new subsets of size
+        *sample_size* and name built from *prefix*. Reactions chosen from *sset*.
+
+        """
+        import random
+
+        intrxn = self.integer_reactions()
+        rxns = self.get_hrxn(sset=sset).keys()
+
+        def random_sample(ssname):
+            """Generate and register a single new subset of size *sample_size* and
+            name *ssname*.
+
+            """
+            sample = {db: [] for db in self.dbdict.keys()}
+            for dbrxn in random.sample(rxns, sample_size):
+                db, rxn = dbrxn.split('-', 1)
+                typed_rxn = int(rxn) if intrxn[db] else rxn
+                sample[db].append(typed_rxn)
+            self.add_Subset(ssname, sample)
+
+        for sidx in range(number_of_samples):
+            if number_of_samples == 1:
+                ssname = prefix
+            else:
+                ssname = prefix + '_' + str(sidx)
+            random_sample(ssname)
 
     def _intersect_subsets(self):
         """Examine component database subsets and collect common names as
@@ -1680,6 +1732,67 @@ class Database(object):
             filedict = mpl.valerr(dbdat, color=color, title=title, xtitle=axis,
                                   view=view,
                                   saveas=saveas, relpath=relpath, graphicsformat=graphicsformat)
+            return filedict
+
+    def plot_ternary(self, sset='default', pythonpath='/Users/loriab/linux/bfdb/sapt_punt', failoninc=True):  # pythonpath=None
+        """This is a stopgap function that loads sapt component data from
+        sapt_punt in bfdb repo, then formats it to plot a ternary diagram.
+
+        """
+        dbdat = []
+        for db, odb in self.dbdict.items():
+            modname = 'sapt_' + odb.dbse
+            if pythonpath is not None:
+                sys.path.insert(1, pythonpath)
+            else:
+                sys.path.append(os.path.dirname(__file__) + '/../data')
+            try:
+                datamodule = __import__(modname)
+            except ImportError:
+                print '\nPython module for database data %s failed to load\n\n' % (modname)
+                print '\nSearch path that was tried:\n'
+                print ", ".join(map(str, sys.path))
+                raise ValidationError("Python module loading problem for database subset generator " + str(modname))
+
+            try:
+                saptdata = getattr(datamodule, 'DATA')
+            except AttributeError:
+                raise ValidationError("SAPT punt module does not contain DATA" + str(modname))
+
+            dbix = self.dbdict.keys().index(db)
+            for rxn, orxn in odb.hrxn.iteritems():
+                lss = self.sset[sset][dbix]
+                if lss is not None:
+                    if rxn in odb.sset[lss].keys():
+                        dbrxn = orxn.dbrxn
+                        try:
+                            #saptmc = saptdata['SAPT MODELCHEM']
+                            elst = saptdata['SAPT ELST ENERGY'][dbrxn]
+                            exch = saptdata['SAPT EXCH ENERGY'][dbrxn]
+                            ind = saptdata['SAPT IND ENERGY'][dbrxn]
+                            disp = saptdata['SAPT DISP ENERGY'][dbrxn]
+                            #saptdatum = rxnobj.data[saptmc]
+                        except (KeyError, AttributeError):
+                            print """Warning: DATA['SAPT * ENERGY'] missing for reaction %s""" % (dbrxn)
+                            if failoninc:
+                                break
+                        else:
+                            if not all([elst, exch, ind, disp]):
+                                print """Warning: DATA['SAPT * ENERGY'] missing for reaction %s""" % (dbrxn)
+                                if failoninc:
+                                    break
+                        dbdat.append([elst, ind, disp])
+
+        # generate matplotlib instructions and call or print
+        try:
+            import mpl
+            import matplotlib.pyplot as plt
+        except ImportError:
+            pass
+            # if not running from Canopy, print line to execute from Canopy
+        else:
+            # if running from Canopy, call mpl directly
+            filedict = mpl.ternary(dbdat)
             return filedict
 
     def plot_flat(self, modelchem, benchmark='default', sset='default',
@@ -1918,7 +2031,7 @@ reinitialize
 
     def plot_modelchems(self, modelchem, benchmark='default', mbenchmark=None,
                         sset='default', msset=None, failoninc=True, verbose=False, color='sapt',
-                        xlimit=4.0, saveas=None, mousetext=None, mouselink=None, mouseimag=None,
+                        xlimit=4.0, labeled=True, saveas=None, mousetext=None, mouselink=None, mouseimag=None,
                         mousetitle=None, mousediv=None, relpath=False, graphicsformat=['pdf']):
         """Computes individual errors and summary statistics over all component
         databases for each model chemistry in array *modelchem* versus *benchmark*
@@ -1989,6 +2102,7 @@ reinitialize
                 else:
                     dbdat.append({'db': db,
                                   'sys': str(rxn),
+                                  'show': str(rxn),
                                   'color': odb.hrxn[rxn].color,
                                   'data': data})
         mae = [errors[ix][self.dbse]['mae'] for ix in index]
@@ -2002,14 +2116,14 @@ reinitialize
             import matplotlib.pyplot as plt
         except ImportError:
             # if not running from Canopy, print line to execute from Canopy
-            print """filedict, htmlcode = mpl.threads(%s,\n    color='%s',\n    title='%s',\n    labels=%s,\n    mae=%s,\n    mape=%s\n    xlimit=%s\n    saveas=%s\n    mousetext=%s\n    mouselink=%s\n    mouseimag=%s\n    mousetitle=%s,\n    mousediv=%s,\n    relpath=%s\n    graphicsformat=%s)\n\n""" % \
+            print """filedict, htmlcode = mpl.threads(%s,\n    color='%s',\n    title='%s',\n    labels=%s,\n    mae=%s,\n    mape=%s\n    xlimit=%s\n    labeled=%s\n    saveas=%s\n    mousetext=%s\n    mouselink=%s\n    mouseimag=%s\n    mousetitle=%s,\n    mousediv=%s,\n    relpath=%s\n    graphicsformat=%s)\n\n""" % \
                   (dbdat, color, title, ixmid, mae, mape, str(xlimit),
-                   repr(saveas), repr(mousetext), repr(mouselink), repr(mouseimag),
-                   repr(mousetitle), repr(mousediv), repr(relpath), repr(graphicsformat))
+                  repr(labeled), repr(saveas), repr(mousetext), repr(mouselink), repr(mouseimag),
+                  repr(mousetitle), repr(mousediv), repr(relpath), repr(graphicsformat))
         else:
             # if running from Canopy, call mpl directly
             filedict, htmlcode = mpl.threads(dbdat, color=color, title=title, labels=ixmid, mae=mae, mape=mape,
-                                             xlimit=xlimit, saveas=saveas, mousetext=mousetext, mouselink=mouselink,
+                                             xlimit=xlimit, labeled=labeled, saveas=saveas, mousetext=mousetext, mouselink=mouselink,
                                              mouseimag=mouseimag, mousetitle=mousetitle, mousediv=mousediv,
                                              relpath=relpath, graphicsformat=graphicsformat)
             return filedict, htmlcode

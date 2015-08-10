@@ -30,7 +30,7 @@ def expand_saveas(saveas, def_filename, def_path=os.path.abspath(os.curdir), def
 
     abspathfile = os.path.join(os.path.abspath(pth), fil)
     if relpath:
-        return abspathfile.split(os.path.commonprefix([abspathfile, os.getcwd()]) + os.sep)[1]
+        return os.path.relpath(abspathfile, os.getcwd())
     else:
         return abspathfile
 
@@ -351,16 +351,14 @@ def disthist(data, title='', xtitle='', xmin=None, xmax=None,
         pdfx.append(ix)
         pdfy.append(gaussianpdf(me, pow(stde, 2), ix))
 
-    fig, ax = plt.subplots(figsize=(16, 6))
+    fig, ax1 = plt.subplots(figsize=(16, 6))
     plt.axvline(0.0, color='#cccc00')
-    ax1 = fig.add_subplot(111)
     ax1.set_xlim(xmin, xmax)
     ax1.hist(data, bins=30, range=(xmin, xmax), color='#2d4065', alpha=0.7)
     ax1.set_xlabel(xtitle)
     ax1.set_ylabel('Count')
 
     ax2 = ax1.twinx()
-    ax2.set_xlim(xmin, xmax)
     ax2.fill(pdfx, pdfy, color='k', alpha=0.2)
     ax2.set_ylabel('Probability Density')
 
@@ -465,7 +463,7 @@ def disthist(data, title='', xtitle='', xmin=None, xmax=None,
 
 def threads(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None,
     mousetext=None, mouselink=None, mouseimag=None, mousetitle=None, mousediv=None,
-    saveas=None, relpath=False, graphicsformat=['pdf']):
+    labeled=True, saveas=None, relpath=False, graphicsformat=['pdf']):
     """Generates a tiered slat diagram between model chemistries with
     errors (or simply values) in list *data*, which is supplied as part of the
     dictionary for each participating reaction, along with *dbse* and *rxn* keys
@@ -506,19 +504,23 @@ def threads(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None,
     plt.ylim([-1 * Nweft - 1, 0])
     plt.yticks([])
     ax.set_frame_on(False)
-    ax.set_xticks([-2.0, -1.0, 0.0, 1.0, 2.0])
+    if labeled:
+        ax.set_xticks([-2.0, -1.0, 0.0, 1.0, 2.0])
+    else:
+        ax.set_xticks([])
     for tick in ax.xaxis.get_major_ticks():
         tick.tick1line.set_markersize(0)
         tick.tick2line.set_markersize(0)
 
     # label plot and tiers
-    ax.text(-0.9 * xlimit, -0.25, title,
-        verticalalignment='bottom', horizontalalignment='left',
-        family='Times New Roman', weight='bold', fontsize=12)
-    for weft in labels:
-        ax.text(-0.9 * xlimit, -(1.2 + labels.index(weft)), weft,
+    if labeled:
+        ax.text(-0.9 * xlimit, -0.25, title,
             verticalalignment='bottom', horizontalalignment='left',
-            family='Times New Roman', weight='bold', fontsize=18)
+            family='Times New Roman', weight='bold', fontsize=12)
+        for weft in labels:
+            ax.text(-0.9 * xlimit, -(1.2 + labels.index(weft)), weft,
+                verticalalignment='bottom', horizontalalignment='left',
+                family='Times New Roman', weight='bold', fontsize=18)
 
     # plot reaction errors and threads
     for rxn in data:
@@ -534,41 +536,45 @@ def threads(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None,
             thread.extend([xvals[weft], xvals[weft + 1], None])
 
         # plotting
-        ax.plot(slat, posnS, color=clr, linewidth=1.0, solid_capstyle='round')
+        if Nweft == 1:
+            ax.plot(slat, posnS, '|', color=clr, markersize=20.0, mew=1.5, solid_capstyle='round')
+        else:
+            ax.plot(slat, posnS, color=clr, linewidth=1.0, solid_capstyle='round')
         ax.plot(thread, posnT, color=clr, linewidth=0.5, solid_capstyle='round', alpha=0.3)
 
         # converting into screen coordinates for image map
         npxvals = [np.nan if val is None else val for val in xvals]
-        print npxvals
         xyscreen = ax.transData.transform(zip(npxvals, positions))
         xscreen, yscreen = zip(*xyscreen)
         posnM.extend(zip([rxn['db']] * Nweft, [rxn['sys']] * Nweft,
-            npxvals, xscreen, yscreen))
+            npxvals, [rxn['show']] * Nweft, xscreen, yscreen))
 
         # labeling
         if not(mousetext or mouselink or mouseimag):
-            try:
-                toplblposn = next(item for item in xvals if item is not None)
-                botlblposn = next(item for item in reversed(xvals) if item is not None)
-            except StopIteration:
-                pass
-            else:
-                ax.text(toplblposn, -0.75 + 0.6 * random.random(), rxn['sys'],
-                    verticalalignment='bottom', horizontalalignment='center',
-                    family='Times New Roman', fontsize=8)
-                ax.text(botlblposn, -1 * Nweft - 0.75 + 0.6 * random.random(), rxn['sys'],
-                    verticalalignment='bottom', horizontalalignment='center',
-                    family='Times New Roman', fontsize=8)
+            if labeled:
+                try:
+                    toplblposn = next(item for item in xvals if item is not None)
+                    botlblposn = next(item for item in reversed(xvals) if item is not None)
+                except StopIteration:
+                    pass
+                else:
+                    ax.text(toplblposn, -0.75 + 0.6 * random.random(), rxn['sys'],
+                        verticalalignment='bottom', horizontalalignment='center',
+                        family='Times New Roman', fontsize=8)
+                    ax.text(botlblposn, -1 * Nweft - 0.75 + 0.6 * random.random(), rxn['sys'],
+                        verticalalignment='bottom', horizontalalignment='center',
+                        family='Times New Roman', fontsize=8)
 
     # plot trimmings
     if mae is not None:
         ax.plot([-x for x in mae], positions, 's', color='black')
-    if mape is not None:  # equivalent to MAE for a 10 kcal/mol IE
-        ax.plot([0.025 * x for x in mape], positions, 'o', color='black')
-    plt.axvline(0, color='#cccc00')
+    if labeled:
+        if mape is not None:  # equivalent to MAE for a 10 kcal/mol IE
+            ax.plot([0.025 * x for x in mape], positions, 'o', color='black')
+        plt.axvline(0, color='#cccc00')
 
     # save and show
-    pltuid = title + '_' + hashlib.sha1(title + repr(labels) + repr(xlimit)).hexdigest()
+    pltuid = title + '_' + ('lbld' if labeled else 'bare') + '_' + hashlib.sha1(title + repr(labels) + repr(xlimit)).hexdigest()
     pltfile = expand_saveas(saveas, pltuid, def_prefix='thread_', relpath=relpath)
     files_saved = {}
     for ext in graphicsformat:
@@ -585,7 +591,7 @@ def threads(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None,
         img_height = fig.get_figheight() * dpi
 
         htmlcode = """<SCRIPT>\n"""
-        htmlcode += """function mouseshow(db, rxn, val) {\n"""
+        htmlcode += """function mouseshow(db, rxn, val, show) {\n"""
         if mousetext or mouselink:
             htmlcode += """   var cid = document.getElementById("cid");\n"""
             if mousetext:
@@ -621,23 +627,96 @@ def threads(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None,
         posnM.sort(key=lambda tup: tup[2])
         posnM.sort(key=lambda tup: tup[3])
         last = (0, 0)
-        for dbse, rxn, val, x, y in posnM:
-            if val is None:
+        for dbse, rxn, val, show, x, y in posnM:
+            if val is None or val is np.nan:
                 continue
 
             now = (int(x), int(y))
             if now == last:
                 htmlcode += """<!-- map overlap! %s-%s %+.2f skipped -->\n""" % (dbse, rxn, val)
             else:
-                htmlcode += """<AREA shape="rect" coords="%d,%d,%d,%d" onmouseover="javascript:mouseshow('%s', '%s', '%+.2f');">\n""" % \
+                htmlcode += """<AREA shape="rect" coords="%d,%d,%d,%d" onmouseover="javascript:mouseshow('%s', '%s', '%+.2f', '%s');">\n""" % \
                     (x - 2, img_height - y - 20,
                     x + 2, img_height - y + 20,
-                    dbse, rxn, val)
+                    dbse, rxn, val, show)
                 last = now
 
         htmlcode += """</MAP>\n"""
 
         return files_saved, htmlcode
+
+
+def ternary(sapt):
+    """Takes array of arrays in form [elst, indc, disp] and builds formatted
+    two-triangle ternary diagrams.
+
+    """
+    import numpy as np
+    import matplotlib.pyplot as plt
+    import matplotlib as mpl
+    from matplotlib.path import Path
+    import matplotlib.patches as patches
+
+    # initialize plot
+    fig, ax = plt.subplots(figsize=(6,3.6))
+    plt.xlim([-0.75, 1.25])
+    plt.ylim([-0.18, 1.02])
+    plt.xticks([])
+    plt.yticks([])
+
+    # form and color ternary triangles
+    codes = [Path.MOVETO, Path.LINETO, Path.LINETO, Path.CLOSEPOLY]
+    pathPos = Path([(0., 0.), (1., 0.), (0.5, 0.866), (0., 0.)], codes)
+    pathNeg = Path([(0., 0.), (-0.5, 0.866), (0.5, 0.866), (0., 0.)], codes)
+    ax.add_patch(patches.PathPatch(pathPos, facecolor='white', lw=2))
+    ax.add_patch(patches.PathPatch(pathNeg, facecolor='#fff5ee', lw=2))
+
+    # form and color HB/MX/DD dividing lines
+    ax.plot([0.667, 0.5], [0., 0.866], color='#eeb4b4', lw=1)
+    ax.plot([-0.333, 0.5], [0.577, 0.866], color='#eeb4b4', lw=1)
+    ax.plot([0.333, 0.5], [0., 0.866], color='#7ec0ee', lw=1)
+    ax.plot([-0.167, 0.5], [0.289, 0.866], color='#7ec0ee', lw=1)
+
+    # label corners
+    ax.text(1.0, -0.15, u'Elst (\u2212)',
+        verticalalignment='bottom', horizontalalignment='center',
+        family='Times New Roman', weight='bold', fontsize=18)
+    ax.text(0.5, 0.9, u'Ind (\u2212)',
+        verticalalignment='bottom', horizontalalignment='center',
+        family='Times New Roman', weight='bold', fontsize=18)
+    ax.text(0.0, -0.15, u'Disp (\u2212)',
+        verticalalignment='bottom', horizontalalignment='center',
+        family='Times New Roman', weight='bold', fontsize=18)
+    ax.text(-0.5, 0.9, u'Elst (+)',
+        verticalalignment='bottom', horizontalalignment='center',
+        family='Times New Roman', weight='bold', fontsize=18)
+
+    xvals = []
+    yvals = []
+    cvals = []
+    for sys in sapt:
+        [elst, indc, disp] = sys
+
+        # calc ternary posn and color
+        Ftop = abs(indc) / (abs(elst) + abs(indc) + abs(disp))
+        Fright = abs(elst) / (abs(elst) + abs(indc) + abs(disp))
+        xdot = 0.5 * Ftop + Fright
+        ydot = 0.866 * Ftop
+        cdot = 0.5 + (xdot - 0.5)/(1. - Ftop)
+        if elst > 0.:
+            xdot = 0.5 * (Ftop - Fright)
+            ydot = 0.866 * (Ftop + Fright)
+        #print elst, indc, disp, '', xdot, ydot, cdot
+
+        xvals.append(xdot)
+        yvals.append(ydot)
+        cvals.append(cdot)
+
+    #sc = ax.scatter(xvals, yvals, c=cvals, s=200, marker="o", \
+    sc = ax.scatter(xvals, yvals, c=cvals, s=15, marker="o", \
+        cmap=mpl.cm.jet, edgecolor='none', vmin=0, vmax=1, zorder=10)
+    plt.show()
+    #return None
 
 
 #def thread_mouseover_web(pltfile, dbid, dbname, xmin, xmax, mcdats, labels, titles):
