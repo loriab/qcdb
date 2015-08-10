@@ -19,7 +19,7 @@ import psiutil
 import textables
 
 
-def initialize_errors(e=None, pe=None, pbe=None, extrema=True):
+def initialize_errors(e=None, pe=None, pbe=None, pce=None, extrema=True):
     """
 
     """
@@ -42,6 +42,12 @@ def initialize_errors(e=None, pe=None, pbe=None, extrema=True):
     error['mapbe'] = None if pbe is None else 0.0  # BD_MA
     error['rmspbe'] = None if pbe is None else 0.0  # BD_RA
     error['stdpbe'] = None if pbe is None else 0.0
+    error['maxpce'] = None if (pce is None or not extrema) else pce  # BD_XA
+    error['minpce'] = None if (pce is None or not extrema) else pce  # BD_XI
+    error['mpce'] = None if pce is None else 0.0  # BD_MS
+    error['mapce'] = None if pce is None else 0.0  # BD_MA
+    error['rmspce'] = None if pce is None else 0.0  # BD_RA
+    error['stdpce'] = None if pce is None else 0.0
     return error
 
 
@@ -76,6 +82,13 @@ def average_errors(*args):
         avgerror['mapbe'] = sum([x['mapbe'] for x in args]) / Ndb
         avgerror['rmspbe'] = sum([x['rmspbe'] for x in args]) / Ndb  # TODO: unsure of op validity
         avgerror['stdpbe'] = math.sqrt(sum([x['stdpbe'] * x['stdpbe'] for x in args]) / Ndb)
+
+        avgerror['maxpce'] = max([x['maxpce'] for x in args], key=lambda x: abs(x))
+        avgerror['minpce'] = min([x['minpce'] for x in args], key=lambda x: abs(x))
+        avgerror['mpce'] = sum([x['mpce'] for x in args]) / Ndb
+        avgerror['mapce'] = sum([x['mapce'] for x in args]) / Ndb
+        avgerror['rmspce'] = sum([x['rmspce'] for x in args]) / Ndb  # TODO: unsure of op validity
+        avgerror['stdpce'] = math.sqrt(sum([x['stdpce'] * x['stdpce'] for x in args]) / Ndb)
     except TypeError:
         pass
     return avgerror
@@ -86,60 +99,46 @@ def format_errors(err, mode=1):
     after handling None entries.
 
     """
+    onedecimal = r"""{0:8.1f}"""
+    twodecimal = r"""{0:8.2f}"""
+    threedecimal = r"""{0:12.3f}"""
+    fourdecimal = r"""{0:12.4f}"""
+
     if mode == 1:
         me = ' ----' if err['me'] is None else '%+.2f' % (err['me'])
         stde = '----' if err['stde'] is None else '%.2f' % (err['stde'])
         mae = '  ----' if err['mae'] is None else '%6.2f' % (err['mae'])
         mape = '  ----  ' if err['mape'] is None else '%6.1f\%%' % (100 * err['mape'])
         mapbe = '  ----  ' if err['mapbe'] is None else '%6.1f\%%' % (100 * err['mapbe'])
+        mapce = '  ----  ' if err['mapce'] is None else '%6.1f\%%' % (100 * err['mapce'])
         text = """$\{%s; %s\}$ %s %s %s""" % \
-               (me, stde, mae, mape, mapbe)
+               (me, stde, mae, mape, mapce)
         return text
 
     if mode == 2:
-        maxe = '----' if err['maxe'] is None else '%8.2f' % (err['maxe'])
-        mine = '----' if err['mine'] is None else '%8.2f' % (err['mine'])
-        me = '----' if err['me'] is None else '%+8.2f' % (err['me'])
-        mae = '----' if err['mae'] is None else '%8.2f' % (err['mae'])
-        rmse = '----' if err['rmse'] is None else '%8.2f' % (err['rmse'])
-        stde = '----' if err['stde'] is None else '%8.2f' % (err['stde'])
-        maxpe = '----' if err['maxpe'] is None else '%8.1f' % (100 * err['maxpe'])
-        minpe = '----' if err['minpe'] is None else '%8.1f' % (100 * err['minpe'])
-        mpe = '----' if err['mpe'] is None else '%+8.1f' % (100 * err['mpe'])
-        mape = '----' if err['mape'] is None else '%8.1f' % (100 * err['mape'])
-        rmspe = '----' if err['rmspe'] is None else '%8.1f' % (100 * err['rmspe'])
-        stdpe = '----' if err['stdpe'] is None else '%8.1f' % (100 * err['stdpe'])
-        maxpbe = '----' if err['maxpbe'] is None else '%8.1f' % (100 * err['maxpbe'])
-        minpbe = '----' if err['minpbe'] is None else '%8.1f' % (100 * err['minpbe'])
-        mpbe = '----' if err['mpbe'] is None else '%+8.1f' % (100 * err['mpbe'])
-        mapbe = '----' if err['mapbe'] is None else '%8.1f' % (100 * err['mapbe'])
-        rmspbe = '----' if err['rmspbe'] is None else '%8.1f' % (100 * err['rmspbe'])
-        stdpbe = '----' if err['stdpbe'] is None else '%8.1f' % (100 * err['stdpbe'])
-        text = """min: %s%s%s\nmax: %s%s%s\nm:   %s%s%s\nma:  %s%s%s\nrms: %s%s%s\nstd: %s%s%s""" % \
-               (mine, minpe, minpbe, maxe, maxpe, maxpbe, me, mpe, mpbe, \
-                mae, mape, mapbe, rmse, rmspe, rmspbe, stde, stdpe, stdpbe)
+        sdict = OrderedDict()
+        for lbl in ['maxe', 'mine', 'me', 'mae', 'rmse', 'stde']:
+            sdict[lbl] = '        ----' if err[lbl] is None else fourdecimal.format(err[lbl])
+        for lbl in ['maxpe', 'minpe', 'mpe', 'mape', 'rmspe', 'stdpe',
+                    'maxpbe', 'minpbe', 'mpbe', 'mapbe', 'rmspbe', 'stdpbe',
+                    'maxpce', 'minpce', 'mpce', 'mapce', 'rmspce', 'stdpce']:
+            sdict[lbl] = '        ----' if err[lbl] is None else threedecimal.format(100 * err[lbl])
+        text = """min: {mine}{minpe}{minpbe}{minpce}\n""" \
+               """max: {maxe}{maxpe}{maxpbe}{maxpce}\n""" \
+               """m:   {me}{mpe}{mpbe}{mpce}\n""" \
+               """ma:  {mae}{mape}{mapbe}{mapce}\n""" \
+               """rms: {rmse}{rmspe}{rmspbe}{rmspce}\n""" \
+               """std: {stde}{stdpe}{stdpbe}{stdpce}\n""".format(**sdict)
         return text
 
     if mode == 3:
         sdict = OrderedDict()
-        sdict['maxe'] = '' if err['maxe'] is None else '%8.2f' % (err['maxe'])
-        sdict['mine'] = '' if err['mine'] is None else '%8.2f' % (err['mine'])
-        sdict['me'] = '' if err['me'] is None else '%+8.2f' % (err['me'])
-        sdict['mae'] = '' if err['mae'] is None else '%8.2f' % (err['mae'])
-        sdict['rmse'] = '' if err['rmse'] is None else '%8.2f' % (err['rmse'])
-        sdict['stde'] = '' if err['stde'] is None else '%8.2f' % (err['stde'])
-        sdict['maxpe'] = '' if err['maxpe'] is None else '%8.1f' % (100 * err['maxpe'])
-        sdict['minpe'] = '' if err['minpe'] is None else '%8.1f' % (100 * err['minpe'])
-        sdict['mpe'] = '' if err['mpe'] is None else '%+8.1f' % (100 * err['mpe'])
-        sdict['mape'] = '' if err['mape'] is None else '%8.1f' % (100 * err['mape'])
-        sdict['rmspe'] = '' if err['rmspe'] is None else '%8.1f' % (100 * err['rmspe'])
-        sdict['stdpe'] = '' if err['stdpe'] is None else '%8.1f' % (100 * err['stdpe'])
-        sdict['maxpbe'] = '' if err['maxpbe'] is None else '%8.1f' % (100 * err['maxpbe'])
-        sdict['minpbe'] = '' if err['minpbe'] is None else '%8.1f' % (100 * err['minpbe'])
-        sdict['mpbe'] = '' if err['mpbe'] is None else '%+8.1f' % (100 * err['mpbe'])
-        sdict['mapbe'] = '' if err['mapbe'] is None else '%8.1f' % (100 * err['mapbe'])
-        sdict['rmspbe'] = '' if err['rmspbe'] is None else '%8.1f' % (100 * err['rmspbe'])
-        sdict['stdpbe'] = '' if err['stdpbe'] is None else '%8.1f' % (100 * err['stdpbe'])
+        for lbl in ['maxe', 'mine', 'me', 'mae', 'rmse', 'stde']:
+            sdict[lbl] = '' if err[lbl] is None else twodecimal.format(err[lbl])
+        for lbl in ['maxpe', 'minpe', 'mpe', 'mape', 'rmspe', 'stdpe',
+                    'maxpbe', 'minpbe', 'mpbe', 'mapbe', 'rmspbe', 'stdpbe',
+                    'maxpce', 'minpce', 'mpce', 'mapce', 'rmspce', 'stdpce']:
+            sdict[lbl] = '' if err[lbl] is None else onedecimal.format(100 * err[lbl])
         return sdict
 
 
@@ -170,6 +169,37 @@ def string_contrast(ss):
     middle = ['' if mc is None else next(miditer) for mc in ss]
 
     return prefix, suffix, middle
+
+
+def cure_weight(refrxn, refeq, rrat, xi=0.2):
+    """
+    :param refeq: value of benchmark for equilibrium Reaction
+    :param rrat: ratio of intermonomer separation for Reaction to equilibrium Reaction
+    :param xi: parameter
+    :return: weight for CURE
+
+    """
+    sigma = xi * abs(refeq) / (rrat ** 3)
+    weight = max(abs(refrxn), sigma)
+    return weight
+
+
+def balanced_error(refrxn, refeq, rrat, m=0.03, p=10.0):
+    """
+    :param refrxn:
+    :param refeq:
+    :param rrat:
+    :param m: minimum permitted weight for a point
+    :param p: multiples of abs(refeq) above refeq to which zero-line in head is displaced
+    :return:
+
+    """
+    one = float(1)
+    q = one if rrat >= one else p
+    qm1perat = q - 1 + refrxn / refeq
+    weight = max(m, qm1perat / q)
+    mask = weight * q / abs(qm1perat)
+    return mask, weight
 
 
 def fancify_mc_tag(mc, latex=False):
@@ -873,6 +903,7 @@ class WrappedDatabase(object):
             for rxn in lsslist:
                 lsset[rxn] = self.hrxn[rxn]
 
+        cureinfo = self.get_pec_weightinfo()
         err = {}
         for rxn, oRxn in lsset.iteritems():
             lbench = oRxn.benchmark if benchmark == 'default' else benchmark
@@ -888,13 +919,24 @@ class WrappedDatabase(object):
             except KeyError, e:
                 print """Reaction %s missing benchmark""" % (str(rxn))
                 continue
+            # handle particulars of PEC error measures
+            rxncureinfo = cureinfo[rxn]
+            try:
+                mcGreaterCrvmin = self.hrxn[rxncureinfo['eq']].data[lbench].value
+            except KeyError, e:
+                print """Reaction %s missing benchmark""" % (str(eqrxn))
+
+            cure_denom = cure_weight(refrxn=mcGreater, refeq=mcGreaterCrvmin, rrat=rxncureinfo['Rrat'])
+            balanced_mask, balwt = balanced_error(refrxn=mcGreater, refeq=mcGreaterCrvmin, rrat=rxncureinfo['Rrat'])
 
             err[rxn] = [mcLesser - mcGreater,
                         (mcLesser - mcGreater) / abs(mcGreater),
-                        (mcLesser - mcGreater) / abs(mcGreater)]  # TODO define BER
+                        (mcLesser - mcGreater) / abs(cure_denom),
+                        (mcLesser - mcGreater) * balanced_mask / abs(mcGreaterCrvmin),
+                        balwt]
             if verbose:
-                print """p = %6.2f, pe = %6.1f%%, bpe = %6.1f%% reaction %s.""" % \
-                      (err[rxn][0], 100 * err[rxn][1], 100 * err[rxn][2], str(rxn))
+                print """p = %8.4f, pe = %8.3f%%, pbe = %8.3f%% pce = %8.3f%% reaction %s.""" % \
+                 (err[rxn][0], 100 * err[rxn][1], 100 * err[rxn][3], 100 * err[rxn][2], str(rxn))
         return err
 
     def compute_statistics(self, modelchem, benchmark='default', sset='default',
@@ -932,13 +974,22 @@ class WrappedDatabase(object):
             error['rmspe'] = math.sqrt(sum(map(lambda x: x ** 2, relative)) / Nrxn)
             error['stdpe'] = math.sqrt((sum(map(lambda x: x ** 2, relative)) - (sum(relative) ** 2) / Nrxn) / Nrxn)
             # balanced (relative) error
-            balanced = [val[2] for val in err.values()]
+            balanced = [val[3] for val in err.values()]
+            balwt = sum([val[4] for val in err.values()])  # get the wt fn. highly irregular TODO
             error['maxpbe'] = max(balanced, key=lambda x: abs(x))
             error['minpbe'] = min(balanced, key=lambda x: abs(x))
-            error['mpbe'] = sum(balanced) / Nrxn
-            error['mapbe'] = sum(map(abs, balanced)) / Nrxn
-            error['rmspbe'] = math.sqrt(sum(map(lambda x: x ** 2, balanced)) / Nrxn)
-            error['stdpbe'] = math.sqrt((sum(map(lambda x: x ** 2, balanced)) - (sum(balanced) ** 2) / Nrxn) / Nrxn)
+            error['mpbe'] = sum(balanced) / balwt #Nrxn
+            error['mapbe'] = sum(map(abs, balanced)) / balwt #Nrxn
+            error['rmspbe'] = math.sqrt(sum(map(lambda x: x ** 2, balanced)) / balwt) #Nrxn)
+            error['stdpbe'] = None  # get math domain errors w/wt in denom math.sqrt((sum(map(lambda x: x ** 2, balanced)) - (sum(balanced) ** 2) / balwt) / balwt) #/ Nrxn) / Nrxn)
+            # capped (relative) error
+            capped = [val[2] for val in err.values()]
+            error['maxpce'] = max(capped, key=lambda x: abs(x))
+            error['minpce'] = min(capped, key=lambda x: abs(x))
+            error['mpce'] = sum(capped) / Nrxn
+            error['mapce'] = sum(map(abs, capped)) / Nrxn
+            error['rmspce'] = math.sqrt(sum(map(lambda x: x ** 2, capped)) / Nrxn)
+            error['stdpce'] = math.sqrt((sum(map(lambda x: x ** 2, capped)) - (sum(capped) ** 2) / Nrxn) / Nrxn)
             if verbose:
                 print """%d systems in %s for %s vs. %s, subset %s.\n%s""" % \
                       (len(err), self.dbse, modelchem, benchmark, sset, format_errors(error, mode=2))
@@ -1108,6 +1159,21 @@ class WrappedDatabase(object):
                 self.add_Subset(getattr(ssmod, func).__doc__, getattr(ssmod, func))
 
         print """WrappedDatabase %s: Defined subsets loaded""" % (self.dbse)
+
+    def get_pec_weightinfo(self):
+        """
+
+        """
+        def closest(u, options):
+            return max(options, key=lambda v: len(os.path.commonprefix([u, v])))
+
+        dbdat = {}
+        oss = self.oss['default']
+        eqrxns = [rxn for rxn, rr in zip(oss.hrxn, oss.axis['Rrat']) if rr == 1.0]
+        for rxnix, rxn in enumerate(oss.hrxn):
+            dbdat[rxn] = {'eq': closest(rxn, eqrxns),
+                          'Rrat': oss.axis['Rrat'][rxnix]}
+        return dbdat
 
     # def table_simple1(self, mtd, bas, opt=['CP'], err=['mae'], benchmark='default', failoninc=True,
     #                   plotpath='analysis/flats/flat_', theme='smmerge'):
@@ -1541,6 +1607,26 @@ class Database(object):
             filedict = mpl.bars(dbdat, title=title,
                                 saveas=saveas, relpath=relpath, graphicsformat=graphicsformat)
             return filedict
+
+    # def get_pec_weightinfo(self):
+    #     """
+    #
+    #     """
+    #     def closest(u, options):
+    #         return max(options, key=lambda v: len(os.path.commonprefix([u, v])))
+    #
+    #     dbdat = {}
+    #     for db, odb in self.dbdict.iteritems():
+    #         #dbix = self.dbdict.keys().index(db)
+    #         oss = odb.oss['default']
+    #         eqrxns = [rxn for rxn, rr in zip(oss.hrxn, oss.axis['Rrat']) if rr == 1.0]
+    #         for rxnix, rxn in enumerate(oss.hrxn):
+    #             dbrxn = '-'.join([db, rxn])
+    #             rrat = oss.axis['Rrat'][rxnix]
+    #             eq = closest(rxn, eqrxns)
+    #             print rxn, rxnix, eq, rrat, dbrxn
+    #             dbdat[dbrxn] = {'eq': eq, 'Rrat': rrat}
+    #     return dbdat
 
     def plot_axis(self, axis, modelchem, benchmark='default', sset='default',
                   failoninc=True, verbose=False, color='sapt', view=True,
@@ -1997,6 +2083,7 @@ reinitialize
             dictorxn['System #'] = orxn.indx
             dictorxn['Benchmark'] = np.NaN if orxn.benchmark is None else orxn.data[
                 wbm].value  # this NaN exception is new and experimental
+            dictorxn['QcdbSys'] = orxn.dbrxn
 
             orgts = orxn.rxnm['default'].keys()
             omolD = Molecule(orgts[0].mol)  # TODO this is only going to work with Reaction ~= Reagent databases
