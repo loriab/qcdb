@@ -505,7 +505,7 @@ def threads(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None,
     plt.yticks([])
     ax.set_frame_on(False)
     if labeled:
-        ax.set_xticks([-2.0, -1.0, 0.0, 1.0, 2.0])
+        ax.set_xticks([-0.5 * xlimit, -0.25 * xlimit, 0.0, 0.25 * xlimit, 0.5 * xlimit])
     else:
         ax.set_xticks([])
     for tick in ax.xaxis.get_major_ticks():
