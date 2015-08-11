@@ -904,7 +904,7 @@ class WrappedDatabase(object):
             for rxn in lsslist:
                 lsset[rxn] = self.hrxn[rxn]
 
-        cureinfo = self.get_pec_weightinfo()
+#        cureinfo = self.get_pec_weightinfo()
         err = {}
         for rxn, oRxn in lsset.iteritems():
             lbench = oRxn.benchmark if benchmark == 'default' else benchmark
@@ -921,20 +921,24 @@ class WrappedDatabase(object):
                 print """Reaction %s missing benchmark""" % (str(rxn))
                 continue
             # handle particulars of PEC error measures
-            rxncureinfo = cureinfo[rxn]
-            try:
-                mcGreaterCrvmin = self.hrxn[rxncureinfo['eq']].data[lbench].value
-            except KeyError, e:
-                print """Reaction %s missing benchmark""" % (str(eqrxn))
+#            rxncureinfo = cureinfo[rxn]
+#            try:
+#                mcGreaterCrvmin = self.hrxn[rxncureinfo['eq']].data[lbench].value
+#            except KeyError, e:
+#                print """Reaction %s missing benchmark""" % (str(eqrxn))
 
-            cure_denom = cure_weight(refrxn=mcGreater, refeq=mcGreaterCrvmin, rrat=rxncureinfo['Rrat'])
-            balanced_mask, balwt = balanced_error(refrxn=mcGreater, refeq=mcGreaterCrvmin, rrat=rxncureinfo['Rrat'])
+#            cure_denom = cure_weight(refrxn=mcGreater, refeq=mcGreaterCrvmin, rrat=rxncureinfo['Rrat'])
+#            balanced_mask, balwt = balanced_error(refrxn=mcGreater, refeq=mcGreaterCrvmin, rrat=rxncureinfo['Rrat'])
 
             err[rxn] = [mcLesser - mcGreater,
                         (mcLesser - mcGreater) / abs(mcGreater),
-                        (mcLesser - mcGreater) / abs(cure_denom),
-                        (mcLesser - mcGreater) * balanced_mask / abs(mcGreaterCrvmin),
-                        balwt]
+                        (mcLesser - mcGreater) / abs(mcGreater),  # FAKE
+                        (mcLesser - mcGreater) / abs(mcGreater),  # FKAE
+                        1.0  # FAKE
+                        ]
+#                        (mcLesser - mcGreater) / abs(cure_denom),
+#                        (mcLesser - mcGreater) * balanced_mask / abs(mcGreaterCrvmin),
+#                        balwt]
             if verbose:
                 print """p = %8.4f, pe = %8.3f%%, pbe = %8.3f%% pce = %8.3f%% reaction %s.""" % \
                  (err[rxn][0], 100 * err[rxn][1], 100 * err[rxn][3], 100 * err[rxn][2], str(rxn))
