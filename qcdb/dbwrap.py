@@ -2660,7 +2660,8 @@ class DB4(Database):
 
         """
         self.benchmark = 'C2011BENCH'
-        self.mcs['C2011BENCH'] = ['S22A', 'NBC100', 'HBC60', 'HSG0']
+        self.mcs['C2010BENCH'] = ['S22A', 'NBC100', 'HBC60', 'HSG0']
+        self.mcs['C2011BENCH'] = ['S22B', 'NBC10A', 'HBC6A', 'HSGA']
 
         self.mcs['CCSD-CP-adz'] = ['CCSD-CP-adz', 'CCSD-CP-hadz', 'CCSD-CP-adz', 'CCSD-CP-hadz']
         self.mcs['CCSD-CP-atz'] = ['CCSD-CP-atz', 'CCSD-CP-hatz', 'CCSD-CP-atz', 'CCSD-CP-hatz']
