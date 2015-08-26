@@ -27,6 +27,10 @@ def label(kw):
     return """ %-20s""" % (mc_archive[kw['target']][kw[kw['target']]].latex)
 
 
+def empty(kw):
+    return ''
+
+
 def table_generic(dbse, serrors,
     mtd, bas, columnplan, rowplan=['bas', 'mtd'],
     opt=['CP'], err=['mae'], sset=['default'],
