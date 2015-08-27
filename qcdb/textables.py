@@ -20,11 +20,11 @@ def graphics(kw):
 
 
 def lmtdbas(kw):
-    return """%-20s""" % (methods[kw['mtd']].latex + '/' + bases[kw['bas']].latex)
+    return """%-25s""" % (methods[kw['mtd']].latex + '/' + bases[kw['bas']].latex)
 
 
 def label(kw):
-    return """ %-20s""" % (mc_archive[kw['target']][kw[kw['target']]].latex)
+    return """ %-25s""" % (mc_archive[kw['target']][kw[kw['target']]].latex)
 
 
 def empty(kw):

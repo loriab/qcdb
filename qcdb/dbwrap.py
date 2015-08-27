@@ -103,6 +103,8 @@ def format_errors(err, mode=1):
     twodecimal = r"""{0:8.2f}"""
     threedecimal = r"""{0:12.3f}"""
     fourdecimal = r"""{0:12.4f}"""
+    shortblank = r"""{0:8s}""".format('')
+    longblank = r"""{0:12s}""".format('')
 
     if mode == 1:
         me = ' ----' if err['me'] is None else '%+.2f' % (err['me'])
@@ -133,12 +135,13 @@ def format_errors(err, mode=1):
 
     if mode == 3:
         sdict = OrderedDict()
+        # shortblanks changed from empty strings Aug 2015
         for lbl in ['maxe', 'mine', 'me', 'mae', 'rmse', 'stde']:
-            sdict[lbl] = '' if err[lbl] is None else twodecimal.format(err[lbl])
+            sdict[lbl] = shortblank if err[lbl] is None else twodecimal.format(err[lbl])
         for lbl in ['maxpe', 'minpe', 'mpe', 'mape', 'rmspe', 'stdpe',
                     'maxpbe', 'minpbe', 'mpbe', 'mapbe', 'rmspbe', 'stdpbe',
                     'maxpce', 'minpce', 'mpce', 'mapce', 'rmspce', 'stdpce']:
-            sdict[lbl] = '' if err[lbl] is None else onedecimal.format(100 * err[lbl])
+            sdict[lbl] = shortblank if err[lbl] is None else onedecimal.format(100 * err[lbl])
         return sdict
 
 
@@ -2481,12 +2484,17 @@ reinitialize
         for mc in mcs:
             serrors[mc] = {}
             for ss in self.sset.keys():
-                perr = self.compute_statistics(mc, benchmark=benchmark, sset=ss,
-                                               failoninc=failoninc, verbose=False, returnindiv=False)
                 serrors[mc][ss] = {}
-                serrors[mc][ss][self.dbse] = format_errors(perr[self.dbse], mode=3)
-                for db in self.dbdict.keys():
-                    serrors[mc][ss][db] = None if perr[db] is None else format_errors(perr[db], mode=3)
+                if mc in self.mcs.keys():
+                    perr = self.compute_statistics(mc, benchmark=benchmark, sset=ss,
+                                                   failoninc=failoninc, verbose=False, returnindiv=False)
+                    serrors[mc][ss][self.dbse] = format_errors(perr[self.dbse], mode=3)
+                    for db in self.dbdict.keys():
+                        serrors[mc][ss][db] = None if perr[db] is None else format_errors(perr[db], mode=3)
+                else:
+                    serrors[mc][ss][self.dbse] = format_errors(initialize_errors(), mode=3)
+                    for db in self.dbdict.keys():
+                        serrors[mc][ss][db] = format_errors(initialize_errors(), mode=3)
 
         # find indices that would be neglected in a single sweep over table_generic
         keysinplan = set(sum([col[-1].keys() for col in columnplan], rowplan))
@@ -2550,6 +2558,22 @@ reinitialize
             filedict = {'data': os.path.abspath(filename) + '.tex',
                         'index': os.path.abspath(filename + '_index.tex')}
             return filedict
+
+    def table_scrunch(self, plotpath, subjoin):
+        rowplan = ['mtd']
+        columnplan = [
+            ['l', r'Method', '', textables.label, {}],
+            ['c', r'Description', '', textables.empty, {}],
+            ['d', r'aug-cc-pVDZ', 'unCP', textables.val, {'bas': 'adz', 'opt': 'unCP'}],
+            ['d', r'aug-cc-pVDZ', 'CP', textables.val, {'bas': 'adz', 'opt': 'CP'}],
+            ['d', r'aug-cc-pVTZ', 'unCP', textables.val, {'bas': 'atz', 'opt': 'unCP'}],
+            ['d', r'aug-cc-pVTZ', 'CP', textables.val, {'bas': 'atz', 'opt': 'CP'}]]
+
+        footnotes = []
+        landscape = False
+        theme = 'summavg'
+        title = r"""Classification and Performance of model chemistries. Interaction energy (kcal/mol) {{err}} statistics.""".format()
+        return rowplan, columnplan, landscape, footnotes, title, theme
 
     def table_merge_abbr(self, plotpath, subjoin):
         """Specialization of table_generic into table with minimal statistics
@@ -2942,12 +2966,12 @@ class DB4(Database):
 
         # Fig. bars (b)
         self.plot_bars([
-        'PBED3-unCP-adz', 'PBED3-CP-adz', 'PBED3-unCP-atz', 'PBED3-CP-atz', None,
-        'B97D3-unCP-adz', 'B97D3-CP-adz', 'B97D3-unCP-atz', 'B97D3-CP-atz', None,
-        'PBE0D3-unCP-adz', 'PBE0D3-CP-adz', 'PBE0D3-unCP-atz', 'PBE0D3-CP-atz', None,
-        'B3LYPD3-unCP-adz', 'B3LYPD3-CP-adz', 'B3LYPD3-unCP-atz', 'B3LYPD3-CP-atz', None,
-        'DLDFD-unCP-adz', 'DLDFD-CP-adz', 'DLDFD-unCP-atz', 'DLDFD-CP-atz', None,
-        'WB97XD-unCP-adz', 'WB97XD-CP-adz', 'WB97XD-unCP-atz', 'WB97XD-CP-atz'],
+            'PBED3-unCP-adz', 'PBED3-CP-adz', 'PBED3-unCP-atz', 'PBED3-CP-atz', None,
+            'B97D3-unCP-adz', 'B97D3-CP-adz', 'B97D3-unCP-atz', 'B97D3-CP-atz', None,
+            'PBE0D3-unCP-adz', 'PBE0D3-CP-adz', 'PBE0D3-unCP-atz', 'PBE0D3-CP-atz', None,
+            'B3LYPD3-unCP-adz', 'B3LYPD3-CP-adz', 'B3LYPD3-unCP-atz', 'B3LYPD3-CP-atz', None,
+            'DLDFD-unCP-adz', 'DLDFD-CP-adz', 'DLDFD-unCP-atz', 'DLDFD-CP-atz', None,
+            'WB97XD-unCP-adz', 'WB97XD-CP-adz', 'WB97XD-unCP-atz', 'WB97XD-CP-atz'],
             sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
 
         # Fig. bars (c)
@@ -3026,19 +3050,52 @@ class DB4(Database):
              'DLDFD-CP-atz', 'M052X-CP-atz', 'M062X-CP-atz', 'M08HX-CP-atz', 'M08SO-CP-atz', 'M11-CP-atz',
              'M11L-CP-atz'])
 
-    def table_dhdft_suppmat_subsets(self):
-        """Generate the subset details suppmat Part II tables and their indice for DF-DFT."""
+    def make_dhdft_Table_I(self):
+        """Generate the in-manuscript summary slat table for DHDFT.
 
+        """
         self.table_wrapper(mtd=['B97D3', 'PBED3', 'M11L', 'DLDFD', 'B3LYPD3',
-                                'PBE0D3', 'WB97XD', 'M052X', 'M062X', 'M08HX',
-                                'M08SO', 'M11', 'VV10', 'LCVV10', 'WB97XV',
-                                'PBE02', 'WB97X2', 'DSDPBEP86D2OPT', 'B2PLYPD3'],  # 'MP2']
+                           'PBE0D3', 'WB97XD', 'M052X', 'M062X', 'M08HX',
+                           'M08SO', 'M11', 'VV10', 'LCVV10', 'WB97XV',
+                           'PBE02', 'WB97X2', 'DSDPBEP86D2OPT', 'B2PLYPD3',
+                           'MP2', 'SCSNMP2', 'SCSMIMP2', 'MP2CF12', 'SCMICCSDAF12',
+                           'SAPTDFT', 'SAPT0S', 'SAPT2P', 'SAPT3M', 'SAPT2PCM'],
                            bas=['adz', 'atz'],
-                           tableplan=self.table_merge_suppmat,
-                           opt=['CP', 'unCP'], err=['mae', 'mape'],
-                           subjoin=False,
+                           tableplan=self.table_scrunch,
+                           opt=['CP', 'unCP'], err=['mae'],
+                           subjoin=None,
+                           plotpath=None,
+                           standalone=False, filename='tblssets_ex1')
+
+    def make_dhdft_Table_II(self):
+        """Generate the in-manuscript CP slat table for DHDFT.
+
+        """
+        self.table_wrapper(mtd=['B97D3', 'PBED3', 'M11L', 'DLDFD', 'B3LYPD3',
+                           'PBE0D3', 'WB97XD', 'M052X', 'M062X', 'M08HX',
+                           'M08SO', 'M11', 'VV10', 'LCVV10', 'WB97XV',
+                           'PBE02', 'WB97X2', 'DSDPBEP86D2OPT', 'B2PLYPD3', 'MP2'],
+                           bas=['adz', 'atz'],
+                           tableplan=self.table_merge_abbr,
+                           opt=['CP'], err=['mae'],
+                           subjoin=True,
                            plotpath='analysis/flats/mplflat_',  # proj still has 'mpl' prefix
-                           standalone=False, filename='tblssets')
+                           standalone=False, filename='tblssets_ex2')
+
+    def make_dhdft_Table_III(self):
+        """Generate the in-manuscript unCP slat table for DHDFT.
+
+        """
+        self.table_wrapper(mtd=['B97D3', 'PBED3', 'M11L', 'DLDFD', 'B3LYPD3',
+                           'PBE0D3', 'WB97XD', 'M052X', 'M062X', 'M08HX',
+                           'M08SO', 'M11', 'VV10', 'LCVV10', 'WB97XV',
+                           'PBE02', 'WB97X2', 'DSDPBEP86D2OPT', 'B2PLYPD3', 'MP2'],
+                           bas=['adz', 'atz'],
+                           tableplan=self.table_merge_abbr,
+                           opt=['unCP'], err=['mae'],
+                           subjoin=True,
+                           plotpath='analysis/flats/mplflat_',  # proj still has 'mpl' prefix
+                           standalone=False, filename='tblssets_ex3')
 
     def table_dhdft_suppmat_rxns(self):
         """Generate the per-reaction suppmat Part III tables and their indices for DHDFT."""
@@ -3065,6 +3122,28 @@ class DB4(Database):
              'B2PLYPD3-unCP-adz', 'B2PLYPD3-CP-adz', 'B2PLYPD3-unCP-atz', 'B2PLYPD3-CP-atz'],
             # 'MP2-unCP-adz', 'MP2-CP-adz', 'MP2-unCP-atz', 'MP2-CP-atz'],
             standalone=False, filename='tblrxn_all')
+
+        # SuppMat Part II tables and indices
+#        self.table_wrapper(mtd=mtd, bas=['adz', 'atz'],
+#                           tableplan=self.table_merge_suppmat,
+#                           opt=['CP', 'unCP'], err=['mae', 'mape'],
+#                           subjoin=False,
+#                           plotpath='analysis/flats/mplflat_',  # proj still has 'mpl' prefix
+#                           standalone=False, filename='tblssets')
+
+#    def table_dhdft_suppmat_subsets(self):
+#        """Generate the subset details suppmat Part II tables and their indices for DHDFT."""
+#
+#        self.table_wrapper(mtd=['B97D3', 'PBED3', 'M11L', 'DLDFD', 'B3LYPD3',
+#                                'PBE0D3', 'WB97XD', 'M052X', 'M062X', 'M08HX',
+#                                'M08SO', 'M11', 'VV10', 'LCVV10', 'WB97XV',
+#                                'PBE02', 'WB97X2', 'DSDPBEP86D2OPT', 'B2PLYPD3'],  # 'MP2']
+#                           bas=['adz', 'atz'],
+#                           tableplan=self.table_merge_suppmat,
+#                           opt=['CP', 'unCP'], err=['mae', 'mape'],
+#                           subjoin=False,
+#                           plotpath='analysis/flats/mplflat_',  # proj still has 'mpl' prefix
+#                           standalone=False, filename='tblssets')
 
 
 class ThreeDatabases(Database):
