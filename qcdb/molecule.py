@@ -135,7 +135,7 @@ class Molecule(LibmintsMolecule):
                         raise ValidationError('Illegal atom symbol in geometry specification: %s' % (fileAtom))
 
                     # Add it to the molecule.
-                    instance.add_atom(el2z[fileAtom], fileX, fileY, fileZ, fileAtom, el2masses[fileAtom], el2z[fileAtom])
+                    instance.add_atom(el2z[fileAtom], fileX, fileY, fileZ, fileAtom, el2mass[fileAtom], el2z[fileAtom])
 
                 elif xyzC.match(text[2 + i]):
 
@@ -149,7 +149,7 @@ class Molecule(LibmintsMolecule):
                         raise ValidationError('Illegal atom symbol in geometry specification: %d' % (fileAtom))
 
                     # Add it to the molecule.
-                    instance.add_atom(fileAtom, fileX, fileY, fileZ, z2el[fileAtom], z2masses[fileAtom], fileAtom)
+                    instance.add_atom(fileAtom, fileX, fileY, fileZ, z2el[fileAtom], z2mass[fileAtom], fileAtom)
 
                 else:
                     raise ValidationError("Molecule::init_with_xyz: Malformed atom information line %d." % (i + 3))
@@ -202,6 +202,26 @@ class Molecule(LibmintsMolecule):
                 text += '%2s %17.12f %17.12f %17.12f\n' % ((self.symbol(i) if self.Z(i) else "Gh"), \
                     x * factor, y * factor, z * factor)
         return text
+
+    def format_molecule_for_numpy(self, npobj=True):
+        """Returns a NumPy array of the non-dummy atoms of the geometry
+        in Cartesian coordinates in Angstroms with element encoded as
+        atomic number. If *npobj* is False, returns representation of
+        NumPy array.
+
+        """
+        import numpy as np
+        factor = 1.0 if self.PYunits == 'Angstrom' else psi_bohr2angstroms
+        self.update_geometry()
+
+        # TODO fn title is format_mol... but return args not compatible
+        geo = []
+        for i in range(self.natom()):
+            [x, y, z] = self.atoms[i].compute()
+            geo.append([self.Z(i), x * factor, y * factor, z * factor])
+
+        nparr = np.array(geo)
+        return nparr if npobj else np.array_repr(nparr)
 
 #    def save_string_for_psi4(self):
 #        """Returns a string of Molecule formatted for psi4.

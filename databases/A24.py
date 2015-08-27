@@ -56,10 +56,10 @@ HRXN_LG = []
 HB = [1,2,3,4,5]
 MX = [6,7,8,9,10,11,12,13,16]
 DD = [14,15,17,18,19,20,21,22,23,24]
-weak = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]
-weak_hb = [1,2,3,4,5]
-weak_mx = [6,7,8,9,10,11,12,13,16]
-weak_dd = [14,15,17,18,19,20,21,22,23,24]
+#weak = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]
+#weak_hb = [1,2,3,4,5]
+#weak_mx = [6,7,8,9,10,11,12,13,16]
+#weak_dd = [14,15,17,18,19,20,21,22,23,24]
 
 # <<< Chemical Systems Involved >>>
 RXNM = {}     # reaction matrix of reagent contributions per reaction
@@ -140,14 +140,14 @@ BIND_AVE['%s-%s' % (dbse, 23)] =   0.945
 BIND_AVE['%s-%s' % (dbse, 24)] =   1.131
 # Highest extrapolated CP CCSD(T) values (q5 or 56)
 BIND_CDS = {}
-BIND_CDS['%s-%s' % (dbse,  1)] =  -6.506
-BIND_CDS['%s-%s' % (dbse,  2)] =  -5.015
-BIND_CDS['%s-%s' % (dbse,  3)] =  -4.751
-BIND_CDS['%s-%s' % (dbse,  4)] =  -4.592
-BIND_CDS['%s-%s' % (dbse,  5)] =  -3.142
-BIND_CDS['%s-%s' % (dbse,  6)] =  -1.661
+BIND_CDS['%s-%s' % (dbse,  1)] =  -6.506  # 56
+BIND_CDS['%s-%s' % (dbse,  2)] =  -5.015  # 56
+BIND_CDS['%s-%s' % (dbse,  3)] =  -4.751  # 56
+BIND_CDS['%s-%s' % (dbse,  4)] =  -4.592  # 56
+BIND_CDS['%s-%s' % (dbse,  5)] =  -3.142  # 56
+BIND_CDS['%s-%s' % (dbse,  6)] =  -1.661  # 56
 BIND_CDS['%s-%s' % (dbse,  7)] =  -0.767
-BIND_CDS['%s-%s' % (dbse,  8)] =  -0.665
+BIND_CDS['%s-%s' % (dbse,  8)] =  -0.665  # 56
 BIND_CDS['%s-%s' % (dbse,  9)] =  -4.565
 BIND_CDS['%s-%s' % (dbse, 10)] =  -2.564
 BIND_CDS['%s-%s' % (dbse, 11)] =  -1.626
@@ -159,8 +159,8 @@ BIND_CDS['%s-%s' % (dbse, 16)] =  -1.493
 BIND_CDS['%s-%s' % (dbse, 17)] =  -0.830
 BIND_CDS['%s-%s' % (dbse, 18)] =  -0.609
 BIND_CDS['%s-%s' % (dbse, 19)] =  -0.534
-BIND_CDS['%s-%s' % (dbse, 20)] =  -0.406
-BIND_CDS['%s-%s' % (dbse, 21)] =  -0.354
+BIND_CDS['%s-%s' % (dbse, 20)] =  -0.406  # 56
+BIND_CDS['%s-%s' % (dbse, 21)] =  -0.354  # 56
 BIND_CDS['%s-%s' % (dbse, 22)] =   0.818
 BIND_CDS['%s-%s' % (dbse, 23)] =   0.930
 BIND_CDS['%s-%s' % (dbse, 24)] =   1.115
@@ -313,6 +313,14 @@ TAGL['%s-%s-monoA-CP'   % (dbse, 24)] = """Monomer A from ethyne_ethyne_D2h """
 TAGL['%s-%s-monoB-CP'   % (dbse, 24)] = """Monomer B from ethyne_ethyne_D2h """
 TAGL['%s-%s-monoA-unCP' % (dbse, 24)] = """Monomer A from ethyne_ethyne_D2h """
 TAGL['%s-%s-monoB-unCP' % (dbse, 24)] = """Monomer B from ethyne_ethyne_D2h """
+
+TAGL['dbse'] = 'interaction energies for small bimolecular complexes'
+TAGL['default'] = 'entire database'
+TAGL['small'] = 'few computationally quick systems'
+TAGL['large'] = 'most computationally expensive systems'
+TAGL['HB'] = 'hydrogen-bonded systems'
+TAGL['MX'] = 'mixed-influence systems'
+TAGL['DD'] = 'dispersion-dominated systems'
 
 # <<< Geometry Specification Strings >>>
 GEOS = {}

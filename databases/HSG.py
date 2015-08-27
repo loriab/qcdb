@@ -52,10 +52,10 @@ HRXN_LG = [14]
 HB = [4, 5, 21]
 MX = [6, 9, 10, 11]
 DD = [1, 2, 3, 7, 8, 12, 13, 14, 15, 16, 17, 18, 19, 20]
-weak = [1, 2, 3, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
-weak_hb = []
-weak_mx = [6, 9, 11]
-weak_dd = [1, 2, 3, 7, 8, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+#weak = [1, 2, 3, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+#weak_hb = []
+#weak_mx = [6, 9, 11]
+#weak_dd = [1, 2, 3, 7, 8, 12, 13, 14, 15, 16, 17, 18, 19, 20]
 
 
 # <<< Chemical Systems Involved >>>
@@ -131,6 +131,10 @@ BIND_HSGA['%s-%s' % (dbse, 20)] =    0.378
 BIND_HSGA['%s-%s' % (dbse, 21)] =   -9.538
 # Set default
 BIND = BIND_HSGA
+# Reference information
+BINDINFO_HSGA = {}
+for rxn in HRXN:
+    BINDINFO_HSGA['%s-%s' % (dbse, rxn)] = {'citation': 's22b', 'method': 'CCSDT', 'mode': 'CP', 'basis': 'atqzhatz'}
 
 # <<< Coment Lines >>>
 TAGL = {}

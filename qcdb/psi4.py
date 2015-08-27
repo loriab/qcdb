@@ -68,7 +68,7 @@ class Infile(qcformat.InputFormat2):
     def __init__(self, mem, mol, mtd, der, opt):
         qcformat.InputFormat2.__init__(self, mem, mol, mtd, der, opt)
 
-        print self.method, self.molecule.nactive_fragments()
+        #print self.method, self.molecule.nactive_fragments()
         if 'sapt' in self.method and self.molecule.nactive_fragments() != 2:
             raise FragmentCountError("""Requested molecule has %d, not 2, fragments.""" % (self.molecule.nactive_fragments()))
 
@@ -262,8 +262,14 @@ def muster_modelchem(name, dertype):
         options['CFOUR']['CFOUR_FROZEN_CORE']['value'] = True
         text += """c4-ccsdt(q)')\n\n"""
 
+    elif lowername == 'df-m05-2x':
+        options['SCF']['SCF_TYPE']['value'] = 'df'
+        options['SCF']['DFT_SPHERICAL_POINTS']['value'] = 302
+        options['SCF']['DFT_RADIAL_POINTS']['value'] = 100
+        text += """m05-2x')\n\n"""
+
     else:
-        raise ValidationError("""Requested Cfour computational methods %d is not available.""" % (lowername))
+        raise ValidationError("""Requested Psi4 computational methods %d is not available.""" % (lowername))
 
 #    # Set clobbering
 #    if 'CFOUR_DERIV_LEVEL' in options['CFOUR']:
@@ -293,6 +299,7 @@ procedures = {
         'ccsd-polarizability' : muster_modelchem,
         'dfdf-b2plyp-d3': muster_modelchem,
         'df-wpbe'       : muster_modelchem,
+        'df-m05-2x'     : muster_modelchem,
     }
 }
 

@@ -53,13 +53,28 @@ actionable_data = {
     #'SCF TOTAL ENERGY': 'usemeraw'
     'HF TOTAL ENERGY': 'usemeraw',
     'MP2 CORRELATION ENERGY': 'mp2.usemecorl',
+    'MP2 SAME-SPIN CORRELATION ENERGY': 'mp2.usemetrip',
     'MP3 CORRELATION ENERGY': 'mp3.usemecorl',
     'MP4 CORRELATION ENERGY': 'mp4.usemecorl',
     'CCSD CORRELATION ENERGY': 'ccsd.usemecorl',
+    'CCSD SAME-SPIN CORRELATION ENERGY': 'ccsd.usemetrip',
     'CCSD(T) CORRELATION ENERGY': 'ccsdt.usemecorl',
     'CCSDT CORRELATION ENERGY': 'ccsdfullt.usemecorl',
     'CCSDT(Q) CORRELATION ENERGY': 'ccsdtq.usemecorl',
     
+    'HF-CABS TOTAL ENERGY': 'f12.usemeraw',
+    'MP2-F12 CORRELATION ENERGY': 'mp2f12.usemecorl',
+    'MP2-F12 SAME-SPIN CORRELATION ENERGY': 'mp2f12.usemetrip',
+
+    'CCSD-F12A CORRELATION ENERGY': 'ccsdaf12.usemecorl',
+    'CCSD-F12A SAME-SPIN CORRELATION ENERGY': 'ccsdaf12.usemetrip',
+    'CCSD-F12B CORRELATION ENERGY': 'ccsdbf12.usemecorl',
+    'CCSD-F12B SAME-SPIN CORRELATION ENERGY': 'ccsdbf12.usemetrip',
+    '(T)-F12AB CORRECTION ENERGY': 'ccsdnstabf12.usemecrct',
+    'CCSD-F12C CORRELATION ENERGY': 'ccsdcf12.usemecorl',
+    'CCSD-F12C SAME-SPIN CORRELATION ENERGY': 'ccsdcf12.usemetrip',
+    '(T)-F12C CORRECTION ENERGY': 'ccsdnstcf12.usemecrct',
+
     'DFT FUNCTIONAL TOTAL ENERGY': 'DFT.usemeraw',
     'DISPERSION CORRECTION ENERGY': '-nobas.DFTdX.usemedash',
     'DOUBLE-HYBRID CORRECTION ENERGY': 'DHDFT.usemeraw',  # violation of conventions to get plain dhdft E!
@@ -71,6 +86,7 @@ def identify_qcprog(filename):
     """
     qcprogs = {
         'PSI4: An Open-Source Ab Initio Electronic Structure Package': 'psi4',
+        '***  PROGRAM SYSTEM MOLPRO  ***': 'molpro2',
         }
 
     with open(sample, 'r') as handle:

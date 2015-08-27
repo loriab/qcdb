@@ -184,6 +184,10 @@ _tlist = [
     Publication('dilabio', doi='10.1021/ct400149j', dsdbid='Burns:2014:49', owner='LAB',
         fullname="""Comparing Counterpoise-Corrected, Uncorrected, and Averaged Binding Energies for Benchmarking Noncovalent Interactions. L. A. Burns, M. S. Marshall, and C. D. Sherrill, J. Chem. Theory Comput. 10(1), 49-57 (2014)"""),
     Publication('pt2uncp', doi='', dsdbid='', owner='LAB', fullname=''),
+    Publication('dfit', doi='', dsdbid='', owner='DGAS', fullname=''),
+    Publication('merz3', doi='', dsdbid='', owner='LAB', fullname=''),
+    Publication('bfdbmm', doi='', dsdbid='', owner='LAB', fullname=''),
+    Publication('anon', doi='', dsdbid='', owner='', fullname=''),
 ]
 pubs = {}
 for item in _tlist:
@@ -276,6 +280,10 @@ _tlist = [
         build=[None, None, ['aqz', 'atqz', 'atz']]),
     BasisSet('aq5zatz',    fullname='[aQ5Z; D:aTZ]', latex="""[aQ5Z; $\delta$:aTZ]""",
         build=[None, None, ['a5z', 'aq5z', 'atz']]),
+    BasisSet('haq5zatz',    fullname='[haQ5Z; D:aTZ]', latex="""[haQ5Z; $\delta$:aTZ]""",
+        build=[None, None, ['ha5z', 'haq5z', 'atz']]),
+    BasisSet('aq5zaqz',    fullname='[aQ5Z; D:aQZ]', latex="""[aQ5Z; $\delta$:aQZ]""",
+        build=[None, None, ['a5z', 'aq5z', 'aqz']]),
     BasisSet('dzf12',      fullname='cc-pVDZ-F12'),
     BasisSet('tzf12',      fullname='cc-pVTZ-F12'),
     BasisSet('qzf12',      fullname='cc-pVQZ-F12'),
@@ -297,6 +305,7 @@ _tlist = [
     BasisSet('6311pg_3df_2p_', fullname='6-311+G(3df,2p)'),
     BasisSet('6311ppg_3df_2p_', fullname='6-311++G(3df,2p)'),
     BasisSet('def2qzvp', fullname='def2-QZVP'),
+    BasisSet('na',         fullname='not applicable'),
 ]
 bases = {}
 for item in _tlist:
@@ -368,7 +377,7 @@ _tlist = [
     Method('B3LYP',           fullname='B3LYP'),
     Method('B3LYPD2',         fullname='B3LYP-D2'),
     Method('B3LYPD3',         fullname='B3LYP-D3'),
-    Method('B3LYPD3',         fullname='B3LYP-D3'),
+    Method('B3LYPD3BJ',       fullname='B3LYP-D3bj'),
     Method('B3LYPXDM',        fullname='B3LYP-XDM'),
     Method('B2PLYP',          fullname='B2PLYP'),
     Method('B2PLYPD2',        fullname='B2PLYP-D2'),
@@ -403,6 +412,9 @@ _tlist = [
     Method('PBE0D3',          fullname='PBE0-D3'),
     Method('PBE0D3BJ',        fullname='PBE0-D3bj'),
     Method('PBE02',           fullname='PBE0-2'),
+    Method('WPBE',            fullname='wPBE', latex="""$\omega$PBE"""),
+    Method('WPBED3',          fullname='wPBE-D3', latex="""$\omega$PBE-D3"""),
+    Method('WPBED3BJ',        fullname='wPBE-D3bj', latex="""$\omega$PBE-D3bj"""),
     Method('CCSDTNSAF12',     fullname='CCSD(T)-F12a'),
     Method('CCSDTNSBF12',     fullname='CCSD(T)-F12b'),
     Method('CCSDTNSCF12',     fullname='CCSD(T)-F12c'),
@@ -412,6 +424,10 @@ _tlist = [
     Method('BP86D2',          fullname='BP86-D2'),
     Method('BP86D3',          fullname='BP86-D3'),
     Method('BP86D3BJ',        fullname='BP86-D3bj'),
+    Method('BLYP',            fullname='BLYP'),
+    Method('BLYPD2',          fullname='BLYP-D2'),
+    Method('BLYPD3',          fullname='BLYP-D3'),
+    Method('BLYPD3BJ',        fullname='BLYP-D3bj'),
     Method('CCSDTQ',          fullname='CCSDT(Q)'),
     Method('CCSDFULLT',       fullname='CCSDT'),
     Method('CCSDTSAF12',      fullname='CCSD(T*)-F12a'),
@@ -421,6 +437,10 @@ _tlist = [
     Method('DWCCSDTSF12',     fullname='DW-CCSD(T*)-F12'),
     Method('DELTQ',           fullname='d(TQ)', latex="""$\delta$(TQ)"""),  # TODO kill this once non-IE impl in reap-DB
     Method('DEL2T',           fullname='d(T)', latex="""$\delta$(T)"""),  # TODO kill this once non-IE impl in reap-DB
+    Method('AM1',             fullname='AM1'),
+    Method('GAFF',            fullname='GAFF'),
+    Method('PM6DH2',          fullname='PM6-DH2'),
+    Method('CHARMM',          fullname='CHARMM'),
     ]
 
 methods = {}
