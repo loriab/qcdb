@@ -38,13 +38,12 @@ Shift = ['AC-3.4__n2.0___', 'AC-3.4__n1.6___', 'AC-3.4__n1.2___', 'AC-3.4__n0.8_
          'AC-3.4__1.2___', 'AC-3.4__1.6___', 'AC-3.4__2.0___']
 Twist = ['AC-3.4_____', 'AC-3.4___30__', 'AC-3.4___60__', 'AC-3.4___90__',
          'AC-3.4___120__', 'AC-3.4___150__', 'AC-3.4___180__']
-Roll = ['AC-3.6_____', 'AC-3.6____40_', 'AC-3.6____80_', 'AC-3.6____120_',
-        'AC-3.6____160_', 'AC-3.6____200_', 'AC-3.6____n40_', 'AC-3.6____n80_',
-        'AC-3.6____n120_', 'AC-3.6____n160_', 'AC-3.6____n200_']
-Tilt = ['AC-3.6_____n200', 'AC-3.6_____n160', 'AC-3.6_____n120', 'AC-3.6_____n80',
-        'AC-3.6_____n40', 'AC-3.6_____', 'AC-3.6_____40', 'AC-3.6_____80',
-        'AC-3.6_____120', 'AC-3.6_____160', 'AC-3.6_____200']
-
+Roll = ['AC-3.6_____', 'AC-3.6____4_', 'AC-3.6____8_', 'AC-3.6____12_',
+        'AC-3.6____16_', 'AC-3.6____20_', 'AC-3.6____n4_', 'AC-3.6____n8_',
+        'AC-3.6____n12_', 'AC-3.6____n16_', 'AC-3.6____n20_']
+Tilt = ['AC-3.6_____n20', 'AC-3.6_____n16', 'AC-3.6_____n12', 'AC-3.6_____n8',
+        'AC-3.6_____n4', 'AC-3.6_____', 'AC-3.6_____4', 'AC-3.6_____8',
+        'AC-3.6_____12', 'AC-3.6_____16', 'AC-3.6_____20'] 
 temp = [Rise, Slide, Shift, Twist, Roll, Tilt]
 HRXN = sum(temp, [])
 
@@ -79,71 +78,77 @@ for rxn in HRXN:
                                       '%s-%s-monoB-unCP' % (dbse, rxn) ]
 
 # <<< Reference Values [kcal/mol] >>>
-BIND = {}
-BIND['%s-%s'            % (dbse, 'AC-3.0_____'           )] = -3.141035
-BIND['%s-%s'            % (dbse, 'AC-3.2_____'           )] = -5.741000
-BIND['%s-%s'            % (dbse, 'AC-3.4_____'           )] = -6.152638  # rise eq
-BIND['%s-%s'            % (dbse, 'AC-3.6_____'           )] = -5.620174
-BIND['%s-%s'            % (dbse, 'AC-3.8_____'           )] = -4.768064
-BIND['%s-%s'            % (dbse, 'AC-4.0_____'           )] = -3.888334
-BIND['%s-%s'            % (dbse, 'AC-4.4_____'           )] = -2.444761
-BIND['%s-%s'            % (dbse, 'AC-5.0_____'           )] = -1.169600
+BIND_ACHC0 = {}
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.0_____'           )] = -3.141
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.2_____'           )] = -5.741
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4_____'           )] = -6.153  # rise eq
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.6_____'           )] = -5.620
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.8_____'           )] = -4.768
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-4.0_____'           )] = -3.888
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-4.4_____'           )] = -2.445
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-5.0_____'           )] = -1.170
 
-BIND['%s-%s'            % (dbse, 'AC-3.4_____'           )] = -6.152638    
-BIND['%s-%s'            % (dbse, 'AC-3.4___30__'         )] = -5.609130    
-BIND['%s-%s'            % (dbse, 'AC-3.4___60__'         )] = -4.834021    
-BIND['%s-%s'            % (dbse, 'AC-3.4___90__'         )] = -6.696394    
-BIND['%s-%s'            % (dbse, 'AC-3.4___120__'        )] = -6.967050    
-BIND['%s-%s'            % (dbse, 'AC-3.4___150__'        )] = -8.009104  # twist eq
-BIND['%s-%s'            % (dbse, 'AC-3.4___180__'        )] = -6.532987
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4_____'           )] = -6.153
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4___30__'         )] = -5.609
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4___60__'         )] = -4.834
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4___90__'         )] = -6.696
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4___120__'        )] = -6.967
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4___150__'        )] = -8.009  # twist eq
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4___180__'        )] = -6.533
 
-BIND['%s-%s'            % (dbse, 'AC-3.4_n2.0____'       )] = -3.645486
-BIND['%s-%s'            % (dbse, 'AC-3.4_n1.6____'       )] = -4.417291
-BIND['%s-%s'            % (dbse, 'AC-3.4_n1.2____'       )] = -5.169659
-BIND['%s-%s'            % (dbse, 'AC-3.4_n0.8____'       )] = -5.673337
-BIND['%s-%s'            % (dbse, 'AC-3.4_n0.4____'       )] = -5.914617
-BIND['%s-%s'            % (dbse, 'AC-3.4_____'           )] = -6.152638
-BIND['%s-%s'            % (dbse, 'AC-3.4_0.4____'        )] = -6.607773
-BIND['%s-%s'            % (dbse, 'AC-3.4_0.8____'        )] = -7.135672
-BIND['%s-%s'            % (dbse, 'AC-3.4_1.2____'        )] = -7.345406  # slide eq
-BIND['%s-%s'            % (dbse, 'AC-3.4_1.6____'        )] = -7.041084
-BIND['%s-%s'            % (dbse, 'AC-3.4_2.0____'        )] = -6.427008
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4_n2.0____'       )] = -3.645
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4_n1.6____'       )] = -4.417
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4_n1.2____'       )] = -5.170
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4_n0.8____'       )] = -5.673
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4_n0.4____'       )] = -5.915
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4_____'           )] = -6.153
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4_0.4____'        )] = -6.608
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4_0.8____'        )] = -7.136
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4_1.2____'        )] = -7.345  # slide eq
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4_1.6____'        )] = -7.041
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4_2.0____'        )] = -6.427
 
-BIND['%s-%s'            % (dbse, 'AC-3.4__n2.0___'       )] = -6.178544
-BIND['%s-%s'            % (dbse, 'AC-3.4__n1.6___'       )] = -6.090295
-BIND['%s-%s'            % (dbse, 'AC-3.4__n1.2___'       )] = -6.069393
-BIND['%s-%s'            % (dbse, 'AC-3.4__n0.8___'       )] = -6.245256
-BIND['%s-%s'            % (dbse, 'AC-3.4__n0.4___'       )] = -6.396099  # shift eq
-BIND['%s-%s'            % (dbse, 'AC-3.4_____'           )] = -6.152638
-BIND['%s-%s'            % (dbse, 'AC-3.4__0.4___'        )] = -5.469943
-BIND['%s-%s'            % (dbse, 'AC-3.4__0.8___'        )] = -4.732693
-BIND['%s-%s'            % (dbse, 'AC-3.4__1.2___'        )] = -4.330571
-BIND['%s-%s'            % (dbse, 'AC-3.4__1.6___'        )] = -4.249811
-BIND['%s-%s'            % (dbse, 'AC-3.4__2.0___'        )] = -4.185940
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4__n2.0___'       )] = -6.179
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4__n1.6___'       )] = -6.090
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4__n1.2___'       )] = -6.069
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4__n0.8___'       )] = -6.245
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4__n0.4___'       )] = -6.396  # shift eq
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4_____'           )] = -6.153
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4__0.4___'        )] = -5.470
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4__0.8___'        )] = -4.733
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4__1.2___'        )] = -4.331
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4__1.6___'        )] = -4.250
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4__2.0___'        )] = -4.186
 
-BIND['%s-%s'            % (dbse, 'AC-3.6____n20_'        )] = -4.360099
-BIND['%s-%s'            % (dbse, 'AC-3.6____n16_'        )] = -5.074922
-BIND['%s-%s'            % (dbse, 'AC-3.6____n12_'        )] = -5.419723
-BIND['%s-%s'            % (dbse, 'AC-3.6____n8_'         )] = -5.564398
-BIND['%s-%s'            % (dbse, 'AC-3.6____n4_'         )] = -5.611350
-BIND['%s-%s'            % (dbse, 'AC-3.6_____'           )] = -5.620174
-BIND['%s-%s'            % (dbse, 'AC-3.6____4_'          )] = -5.620681  # roll eq
-BIND['%s-%s'            % (dbse, 'AC-3.6____8_'          )] = -5.617083
-BIND['%s-%s'            % (dbse, 'AC-3.6____12_'         )] = -5.585247
-BIND['%s-%s'            % (dbse, 'AC-3.6____16_'         )] = -5.463554
-BIND['%s-%s'            % (dbse, 'AC-3.6____20_'         )] = -5.137127
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.6____n20_'        )] = -4.360
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.6____n16_'        )] = -5.075
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.6____n12_'        )] = -5.420
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.6____n8_'         )] = -5.564
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.6____n4_'         )] = -5.611
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.6_____'           )] = -5.620
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.6____4_'          )] = -5.621  # roll eq
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.6____8_'          )] = -5.617
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.6____12_'         )] = -5.585
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.6____16_'         )] = -5.464
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.6____20_'         )] = -5.137
 
-BIND['%s-%s'            % (dbse, 'AC-3.6_____n20'        )] = -4.372794
-BIND['%s-%s'            % (dbse, 'AC-3.6_____n16'        )] = -5.028693
-BIND['%s-%s'            % (dbse, 'AC-3.6_____n12'        )] = -5.382125
-BIND['%s-%s'            % (dbse, 'AC-3.6_____n8'         )] = -5.554556
-BIND['%s-%s'            % (dbse, 'AC-3.6_____n4'         )] = -5.620369  # tilt eq
-BIND['%s-%s'            % (dbse, 'AC-3.6_____'           )] = -5.620174
-BIND['%s-%s'            % (dbse, 'AC-3.6_____4'          )] = -5.571990
-BIND['%s-%s'            % (dbse, 'AC-3.6_____8'          )] = -5.478429
-BIND['%s-%s'            % (dbse, 'AC-3.6_____12'         )] = -5.330246
-BIND['%s-%s'            % (dbse, 'AC-3.6_____16'         )] = -5.106939
-BIND['%s-%s'            % (dbse, 'AC-3.6_____20'         )] = -4.775995
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.6_____n20'        )] = -4.373
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.6_____n16'        )] = -5.029
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.6_____n12'        )] = -5.382
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.6_____n8'         )] = -5.555
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.6_____n4'         )] = -5.620  # tilt eq
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.6_____'           )] = -5.620
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.6_____4'          )] = -5.572
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.6_____8'          )] = -5.478
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.6_____12'         )] = -5.330
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.6_____16'         )] = -5.107
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.6_____20'         )] = -4.776
+# Set default
+BIND = BIND_ACHC0
+# Reference information
+BINDINFO_ACHC0 = {}
+for rxn in HRXN:
+    BINDINFO_ACHC0['%s-%s' % (dbse, rxn)] = {'citation': 'achc', 'method': 'DWCCSDTF12', 'mode': 'CP', 'basis': 'adz'}
 
 # <<< Comment Lines >>>
 TAGL = {}
@@ -321,132 +326,132 @@ TAGL['%s-%s-monoA-CP'   % (dbse, 'AC-3.4_n0.8____'       )] = """Monomer A from 
 TAGL['%s-%s-monoB-CP'   % (dbse, 'AC-3.4_n0.8____'       )] = """Monomer B from a-c nucleobase complex at -0.8 slide (A) and 0.0 shift (A) """
 TAGL['%s-%s-monoA-unCP' % (dbse, 'AC-3.4_n0.8____'       )] = """Monomer A from a-c nucleobase complex at -0.8 slide (A) and 0.0 shift (A) """
 TAGL['%s-%s-monoB-unCP' % (dbse, 'AC-3.4_n0.8____'       )] = """Monomer B from a-c nucleobase complex at -0.8 slide (A) and 0.0 shift (A) """
-TAGL['%s-%s'            % (dbse, 'AC-3.6____120_'        )] = """a-c nucleobase complex at 0.0 tilt (deg) and 12.0 roll (deg) """
-TAGL['%s-%s-dimer'      % (dbse, 'AC-3.6____120_'        )] = """Dimer from a-c nucleobase complex at 0.0 tilt (deg) and 12.0 roll (deg) """
-TAGL['%s-%s-monoA-CP'   % (dbse, 'AC-3.6____120_'        )] = """Monomer A from a-c nucleobase complex at 0.0 tilt (deg) and 12.0 roll (deg) """
-TAGL['%s-%s-monoB-CP'   % (dbse, 'AC-3.6____120_'        )] = """Monomer B from a-c nucleobase complex at 0.0 tilt (deg) and 12.0 roll (deg) """
-TAGL['%s-%s-monoA-unCP' % (dbse, 'AC-3.6____120_'        )] = """Monomer A from a-c nucleobase complex at 0.0 tilt (deg) and 12.0 roll (deg) """
-TAGL['%s-%s-monoB-unCP' % (dbse, 'AC-3.6____120_'        )] = """Monomer B from a-c nucleobase complex at 0.0 tilt (deg) and 12.0 roll (deg) """
-TAGL['%s-%s'            % (dbse, 'AC-3.6____160_'        )] = """a-c nucleobase complex at 0.0 tilt (deg) and 16.0 roll (deg) """
-TAGL['%s-%s-dimer'      % (dbse, 'AC-3.6____160_'        )] = """Dimer from a-c nucleobase complex at 0.0 tilt (deg) and 16.0 roll (deg) """
-TAGL['%s-%s-monoA-CP'   % (dbse, 'AC-3.6____160_'        )] = """Monomer A from a-c nucleobase complex at 0.0 tilt (deg) and 16.0 roll (deg) """
-TAGL['%s-%s-monoB-CP'   % (dbse, 'AC-3.6____160_'        )] = """Monomer B from a-c nucleobase complex at 0.0 tilt (deg) and 16.0 roll (deg) """
-TAGL['%s-%s-monoA-unCP' % (dbse, 'AC-3.6____160_'        )] = """Monomer A from a-c nucleobase complex at 0.0 tilt (deg) and 16.0 roll (deg) """
-TAGL['%s-%s-monoB-unCP' % (dbse, 'AC-3.6____160_'        )] = """Monomer B from a-c nucleobase complex at 0.0 tilt (deg) and 16.0 roll (deg) """
-TAGL['%s-%s'            % (dbse, 'AC-3.6____200_'        )] = """a-c nucleobase complex at 0.0 tilt (deg) and 20.0 roll (deg) """
-TAGL['%s-%s-dimer'      % (dbse, 'AC-3.6____200_'        )] = """Dimer from a-c nucleobase complex at 0.0 tilt (deg) and 20.0 roll (deg) """
-TAGL['%s-%s-monoA-CP'   % (dbse, 'AC-3.6____200_'        )] = """Monomer A from a-c nucleobase complex at 0.0 tilt (deg) and 20.0 roll (deg) """
-TAGL['%s-%s-monoB-CP'   % (dbse, 'AC-3.6____200_'        )] = """Monomer B from a-c nucleobase complex at 0.0 tilt (deg) and 20.0 roll (deg) """
-TAGL['%s-%s-monoA-unCP' % (dbse, 'AC-3.6____200_'        )] = """Monomer A from a-c nucleobase complex at 0.0 tilt (deg) and 20.0 roll (deg) """
-TAGL['%s-%s-monoB-unCP' % (dbse, 'AC-3.6____200_'        )] = """Monomer B from a-c nucleobase complex at 0.0 tilt (deg) and 20.0 roll (deg) """
-TAGL['%s-%s'            % (dbse, 'AC-3.6____40_'         )] = """a-c nucleobase complex at 0.0 tilt (deg) and 4.0 roll (deg) """
-TAGL['%s-%s-dimer'      % (dbse, 'AC-3.6____40_'         )] = """Dimer from a-c nucleobase complex at 0.0 tilt (deg) and 4.0 roll (deg) """
-TAGL['%s-%s-monoA-CP'   % (dbse, 'AC-3.6____40_'         )] = """Monomer A from a-c nucleobase complex at 0.0 tilt (deg) and 4.0 roll (deg) """
-TAGL['%s-%s-monoB-CP'   % (dbse, 'AC-3.6____40_'         )] = """Monomer B from a-c nucleobase complex at 0.0 tilt (deg) and 4.0 roll (deg) """
-TAGL['%s-%s-monoA-unCP' % (dbse, 'AC-3.6____40_'         )] = """Monomer A from a-c nucleobase complex at 0.0 tilt (deg) and 4.0 roll (deg) """
-TAGL['%s-%s-monoB-unCP' % (dbse, 'AC-3.6____40_'         )] = """Monomer B from a-c nucleobase complex at 0.0 tilt (deg) and 4.0 roll (deg) """
-TAGL['%s-%s'            % (dbse, 'AC-3.6____80_'         )] = """a-c nucleobase complex at 0.0 tilt (deg) and 8.0 roll (deg) """
-TAGL['%s-%s-dimer'      % (dbse, 'AC-3.6____80_'         )] = """Dimer from a-c nucleobase complex at 0.0 tilt (deg) and 8.0 roll (deg) """
-TAGL['%s-%s-monoA-CP'   % (dbse, 'AC-3.6____80_'         )] = """Monomer A from a-c nucleobase complex at 0.0 tilt (deg) and 8.0 roll (deg) """
-TAGL['%s-%s-monoB-CP'   % (dbse, 'AC-3.6____80_'         )] = """Monomer B from a-c nucleobase complex at 0.0 tilt (deg) and 8.0 roll (deg) """
-TAGL['%s-%s-monoA-unCP' % (dbse, 'AC-3.6____80_'         )] = """Monomer A from a-c nucleobase complex at 0.0 tilt (deg) and 8.0 roll (deg) """
-TAGL['%s-%s-monoB-unCP' % (dbse, 'AC-3.6____80_'         )] = """Monomer B from a-c nucleobase complex at 0.0 tilt (deg) and 8.0 roll (deg) """
+TAGL['%s-%s'            % (dbse, 'AC-3.6____12_'        )] = """a-c nucleobase complex at 0.0 tilt (deg) and 12.0 roll (deg) """
+TAGL['%s-%s-dimer'      % (dbse, 'AC-3.6____12_'        )] = """Dimer from a-c nucleobase complex at 0.0 tilt (deg) and 12.0 roll (deg) """
+TAGL['%s-%s-monoA-CP'   % (dbse, 'AC-3.6____12_'        )] = """Monomer A from a-c nucleobase complex at 0.0 tilt (deg) and 12.0 roll (deg) """
+TAGL['%s-%s-monoB-CP'   % (dbse, 'AC-3.6____12_'        )] = """Monomer B from a-c nucleobase complex at 0.0 tilt (deg) and 12.0 roll (deg) """
+TAGL['%s-%s-monoA-unCP' % (dbse, 'AC-3.6____12_'        )] = """Monomer A from a-c nucleobase complex at 0.0 tilt (deg) and 12.0 roll (deg) """
+TAGL['%s-%s-monoB-unCP' % (dbse, 'AC-3.6____12_'        )] = """Monomer B from a-c nucleobase complex at 0.0 tilt (deg) and 12.0 roll (deg) """
+TAGL['%s-%s'            % (dbse, 'AC-3.6____16_'        )] = """a-c nucleobase complex at 0.0 tilt (deg) and 16.0 roll (deg) """
+TAGL['%s-%s-dimer'      % (dbse, 'AC-3.6____16_'        )] = """Dimer from a-c nucleobase complex at 0.0 tilt (deg) and 16.0 roll (deg) """
+TAGL['%s-%s-monoA-CP'   % (dbse, 'AC-3.6____16_'        )] = """Monomer A from a-c nucleobase complex at 0.0 tilt (deg) and 16.0 roll (deg) """
+TAGL['%s-%s-monoB-CP'   % (dbse, 'AC-3.6____16_'        )] = """Monomer B from a-c nucleobase complex at 0.0 tilt (deg) and 16.0 roll (deg) """
+TAGL['%s-%s-monoA-unCP' % (dbse, 'AC-3.6____16_'        )] = """Monomer A from a-c nucleobase complex at 0.0 tilt (deg) and 16.0 roll (deg) """
+TAGL['%s-%s-monoB-unCP' % (dbse, 'AC-3.6____16_'        )] = """Monomer B from a-c nucleobase complex at 0.0 tilt (deg) and 16.0 roll (deg) """
+TAGL['%s-%s'            % (dbse, 'AC-3.6____20_'        )] = """a-c nucleobase complex at 0.0 tilt (deg) and 20.0 roll (deg) """
+TAGL['%s-%s-dimer'      % (dbse, 'AC-3.6____20_'        )] = """Dimer from a-c nucleobase complex at 0.0 tilt (deg) and 20.0 roll (deg) """
+TAGL['%s-%s-monoA-CP'   % (dbse, 'AC-3.6____20_'        )] = """Monomer A from a-c nucleobase complex at 0.0 tilt (deg) and 20.0 roll (deg) """
+TAGL['%s-%s-monoB-CP'   % (dbse, 'AC-3.6____20_'        )] = """Monomer B from a-c nucleobase complex at 0.0 tilt (deg) and 20.0 roll (deg) """
+TAGL['%s-%s-monoA-unCP' % (dbse, 'AC-3.6____20_'        )] = """Monomer A from a-c nucleobase complex at 0.0 tilt (deg) and 20.0 roll (deg) """
+TAGL['%s-%s-monoB-unCP' % (dbse, 'AC-3.6____20_'        )] = """Monomer B from a-c nucleobase complex at 0.0 tilt (deg) and 20.0 roll (deg) """
+TAGL['%s-%s'            % (dbse, 'AC-3.6____4_'         )] = """a-c nucleobase complex at 0.0 tilt (deg) and 4.0 roll (deg) """
+TAGL['%s-%s-dimer'      % (dbse, 'AC-3.6____4_'         )] = """Dimer from a-c nucleobase complex at 0.0 tilt (deg) and 4.0 roll (deg) """
+TAGL['%s-%s-monoA-CP'   % (dbse, 'AC-3.6____4_'         )] = """Monomer A from a-c nucleobase complex at 0.0 tilt (deg) and 4.0 roll (deg) """
+TAGL['%s-%s-monoB-CP'   % (dbse, 'AC-3.6____4_'         )] = """Monomer B from a-c nucleobase complex at 0.0 tilt (deg) and 4.0 roll (deg) """
+TAGL['%s-%s-monoA-unCP' % (dbse, 'AC-3.6____4_'         )] = """Monomer A from a-c nucleobase complex at 0.0 tilt (deg) and 4.0 roll (deg) """
+TAGL['%s-%s-monoB-unCP' % (dbse, 'AC-3.6____4_'         )] = """Monomer B from a-c nucleobase complex at 0.0 tilt (deg) and 4.0 roll (deg) """
+TAGL['%s-%s'            % (dbse, 'AC-3.6____8_'         )] = """a-c nucleobase complex at 0.0 tilt (deg) and 8.0 roll (deg) """
+TAGL['%s-%s-dimer'      % (dbse, 'AC-3.6____8_'         )] = """Dimer from a-c nucleobase complex at 0.0 tilt (deg) and 8.0 roll (deg) """
+TAGL['%s-%s-monoA-CP'   % (dbse, 'AC-3.6____8_'         )] = """Monomer A from a-c nucleobase complex at 0.0 tilt (deg) and 8.0 roll (deg) """
+TAGL['%s-%s-monoB-CP'   % (dbse, 'AC-3.6____8_'         )] = """Monomer B from a-c nucleobase complex at 0.0 tilt (deg) and 8.0 roll (deg) """
+TAGL['%s-%s-monoA-unCP' % (dbse, 'AC-3.6____8_'         )] = """Monomer A from a-c nucleobase complex at 0.0 tilt (deg) and 8.0 roll (deg) """
+TAGL['%s-%s-monoB-unCP' % (dbse, 'AC-3.6____8_'         )] = """Monomer B from a-c nucleobase complex at 0.0 tilt (deg) and 8.0 roll (deg) """
 TAGL['%s-%s'            % (dbse, 'AC-3.6_____'           )] = """a-c nucleobase complex at 3.6 rise (A) and 0.0 twist (deg) """
 TAGL['%s-%s-dimer'      % (dbse, 'AC-3.6_____'           )] = """Dimer from a-c nucleobase complex at 3.6 rise (A) and 0.0 twist (deg) """
 TAGL['%s-%s-monoA-CP'   % (dbse, 'AC-3.6_____'           )] = """Monomer A from a-c nucleobase complex at 3.6 rise (A) and 0.0 twist (deg) """
 TAGL['%s-%s-monoB-CP'   % (dbse, 'AC-3.6_____'           )] = """Monomer B from a-c nucleobase complex at 3.6 rise (A) and 0.0 twist (deg) """
 TAGL['%s-%s-monoA-unCP' % (dbse, 'AC-3.6_____'           )] = """Monomer A from a-c nucleobase complex at 3.6 rise (A) and 0.0 twist (deg) """
 TAGL['%s-%s-monoB-unCP' % (dbse, 'AC-3.6_____'           )] = """Monomer B from a-c nucleobase complex at 3.6 rise (A) and 0.0 twist (deg) """
-TAGL['%s-%s'            % (dbse, 'AC-3.6_____120'        )] = """a-c nucleobase complex at 12.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s-dimer'      % (dbse, 'AC-3.6_____120'        )] = """Dimer from a-c nucleobase complex at 12.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s-monoA-CP'   % (dbse, 'AC-3.6_____120'        )] = """Monomer A from a-c nucleobase complex at 12.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s-monoB-CP'   % (dbse, 'AC-3.6_____120'        )] = """Monomer B from a-c nucleobase complex at 12.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s-monoA-unCP' % (dbse, 'AC-3.6_____120'        )] = """Monomer A from a-c nucleobase complex at 12.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s-monoB-unCP' % (dbse, 'AC-3.6_____120'        )] = """Monomer B from a-c nucleobase complex at 12.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s'            % (dbse, 'AC-3.6_____160'        )] = """a-c nucleobase complex at 16.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s-dimer'      % (dbse, 'AC-3.6_____160'        )] = """Dimer from a-c nucleobase complex at 16.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s-monoA-CP'   % (dbse, 'AC-3.6_____160'        )] = """Monomer A from a-c nucleobase complex at 16.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s-monoB-CP'   % (dbse, 'AC-3.6_____160'        )] = """Monomer B from a-c nucleobase complex at 16.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s-monoA-unCP' % (dbse, 'AC-3.6_____160'        )] = """Monomer A from a-c nucleobase complex at 16.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s-monoB-unCP' % (dbse, 'AC-3.6_____160'        )] = """Monomer B from a-c nucleobase complex at 16.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s'            % (dbse, 'AC-3.6_____200'        )] = """a-c nucleobase complex at 20.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s-dimer'      % (dbse, 'AC-3.6_____200'        )] = """Dimer from a-c nucleobase complex at 20.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s-monoA-CP'   % (dbse, 'AC-3.6_____200'        )] = """Monomer A from a-c nucleobase complex at 20.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s-monoB-CP'   % (dbse, 'AC-3.6_____200'        )] = """Monomer B from a-c nucleobase complex at 20.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s-monoA-unCP' % (dbse, 'AC-3.6_____200'        )] = """Monomer A from a-c nucleobase complex at 20.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s-monoB-unCP' % (dbse, 'AC-3.6_____200'        )] = """Monomer B from a-c nucleobase complex at 20.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s'            % (dbse, 'AC-3.6_____40'         )] = """a-c nucleobase complex at 4.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s-dimer'      % (dbse, 'AC-3.6_____40'         )] = """Dimer from a-c nucleobase complex at 4.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s-monoA-CP'   % (dbse, 'AC-3.6_____40'         )] = """Monomer A from a-c nucleobase complex at 4.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s-monoB-CP'   % (dbse, 'AC-3.6_____40'         )] = """Monomer B from a-c nucleobase complex at 4.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s-monoA-unCP' % (dbse, 'AC-3.6_____40'         )] = """Monomer A from a-c nucleobase complex at 4.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s-monoB-unCP' % (dbse, 'AC-3.6_____40'         )] = """Monomer B from a-c nucleobase complex at 4.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s'            % (dbse, 'AC-3.6_____80'         )] = """a-c nucleobase complex at 8.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s-dimer'      % (dbse, 'AC-3.6_____80'         )] = """Dimer from a-c nucleobase complex at 8.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s-monoA-CP'   % (dbse, 'AC-3.6_____80'         )] = """Monomer A from a-c nucleobase complex at 8.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s-monoB-CP'   % (dbse, 'AC-3.6_____80'         )] = """Monomer B from a-c nucleobase complex at 8.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s-monoA-unCP' % (dbse, 'AC-3.6_____80'         )] = """Monomer A from a-c nucleobase complex at 8.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s-monoB-unCP' % (dbse, 'AC-3.6_____80'         )] = """Monomer B from a-c nucleobase complex at 8.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s'            % (dbse, 'AC-3.6_____n120'       )] = """a-c nucleobase complex at -12.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s-dimer'      % (dbse, 'AC-3.6_____n120'       )] = """Dimer from a-c nucleobase complex at -12.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s-monoA-CP'   % (dbse, 'AC-3.6_____n120'       )] = """Monomer A from a-c nucleobase complex at -12.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s-monoB-CP'   % (dbse, 'AC-3.6_____n120'       )] = """Monomer B from a-c nucleobase complex at -12.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s-monoA-unCP' % (dbse, 'AC-3.6_____n120'       )] = """Monomer A from a-c nucleobase complex at -12.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s-monoB-unCP' % (dbse, 'AC-3.6_____n120'       )] = """Monomer B from a-c nucleobase complex at -12.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s'            % (dbse, 'AC-3.6_____n160'       )] = """a-c nucleobase complex at -16.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s-dimer'      % (dbse, 'AC-3.6_____n160'       )] = """Dimer from a-c nucleobase complex at -16.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s-monoA-CP'   % (dbse, 'AC-3.6_____n160'       )] = """Monomer A from a-c nucleobase complex at -16.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s-monoB-CP'   % (dbse, 'AC-3.6_____n160'       )] = """Monomer B from a-c nucleobase complex at -16.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s-monoA-unCP' % (dbse, 'AC-3.6_____n160'       )] = """Monomer A from a-c nucleobase complex at -16.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s-monoB-unCP' % (dbse, 'AC-3.6_____n160'       )] = """Monomer B from a-c nucleobase complex at -16.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s'            % (dbse, 'AC-3.6_____n200'       )] = """a-c nucleobase complex at -20.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s-dimer'      % (dbse, 'AC-3.6_____n200'       )] = """Dimer from a-c nucleobase complex at -20.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s-monoA-CP'   % (dbse, 'AC-3.6_____n200'       )] = """Monomer A from a-c nucleobase complex at -20.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s-monoB-CP'   % (dbse, 'AC-3.6_____n200'       )] = """Monomer B from a-c nucleobase complex at -20.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s-monoA-unCP' % (dbse, 'AC-3.6_____n200'       )] = """Monomer A from a-c nucleobase complex at -20.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s-monoB-unCP' % (dbse, 'AC-3.6_____n200'       )] = """Monomer B from a-c nucleobase complex at -20.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s'            % (dbse, 'AC-3.6_____n40'        )] = """a-c nucleobase complex at -4.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s-dimer'      % (dbse, 'AC-3.6_____n40'        )] = """Dimer from a-c nucleobase complex at -4.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s-monoA-CP'   % (dbse, 'AC-3.6_____n40'        )] = """Monomer A from a-c nucleobase complex at -4.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s-monoB-CP'   % (dbse, 'AC-3.6_____n40'        )] = """Monomer B from a-c nucleobase complex at -4.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s-monoA-unCP' % (dbse, 'AC-3.6_____n40'        )] = """Monomer A from a-c nucleobase complex at -4.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s-monoB-unCP' % (dbse, 'AC-3.6_____n40'        )] = """Monomer B from a-c nucleobase complex at -4.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s'            % (dbse, 'AC-3.6_____n80'        )] = """a-c nucleobase complex at -8.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s-dimer'      % (dbse, 'AC-3.6_____n80'        )] = """Dimer from a-c nucleobase complex at -8.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s-monoA-CP'   % (dbse, 'AC-3.6_____n80'        )] = """Monomer A from a-c nucleobase complex at -8.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s-monoB-CP'   % (dbse, 'AC-3.6_____n80'        )] = """Monomer B from a-c nucleobase complex at -8.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s-monoA-unCP' % (dbse, 'AC-3.6_____n80'        )] = """Monomer A from a-c nucleobase complex at -8.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s-monoB-unCP' % (dbse, 'AC-3.6_____n80'        )] = """Monomer B from a-c nucleobase complex at -8.0 tilt (deg) and 0.0 roll (deg) """
-TAGL['%s-%s'            % (dbse, 'AC-3.6____n120_'       )] = """a-c nucleobase complex at 0.0 tilt (deg) and -12.0 roll (deg) """
-TAGL['%s-%s-dimer'      % (dbse, 'AC-3.6____n120_'       )] = """Dimer from a-c nucleobase complex at 0.0 tilt (deg) and -12.0 roll (deg) """
-TAGL['%s-%s-monoA-CP'   % (dbse, 'AC-3.6____n120_'       )] = """Monomer A from a-c nucleobase complex at 0.0 tilt (deg) and -12.0 roll (deg) """
-TAGL['%s-%s-monoB-CP'   % (dbse, 'AC-3.6____n120_'       )] = """Monomer B from a-c nucleobase complex at 0.0 tilt (deg) and -12.0 roll (deg) """
-TAGL['%s-%s-monoA-unCP' % (dbse, 'AC-3.6____n120_'       )] = """Monomer A from a-c nucleobase complex at 0.0 tilt (deg) and -12.0 roll (deg) """
-TAGL['%s-%s-monoB-unCP' % (dbse, 'AC-3.6____n120_'       )] = """Monomer B from a-c nucleobase complex at 0.0 tilt (deg) and -12.0 roll (deg) """
-TAGL['%s-%s'            % (dbse, 'AC-3.6____n160_'       )] = """a-c nucleobase complex at 0.0 tilt (deg) and -16.0 roll (deg) """
-TAGL['%s-%s-dimer'      % (dbse, 'AC-3.6____n160_'       )] = """Dimer from a-c nucleobase complex at 0.0 tilt (deg) and -16.0 roll (deg) """
-TAGL['%s-%s-monoA-CP'   % (dbse, 'AC-3.6____n160_'       )] = """Monomer A from a-c nucleobase complex at 0.0 tilt (deg) and -16.0 roll (deg) """
-TAGL['%s-%s-monoB-CP'   % (dbse, 'AC-3.6____n160_'       )] = """Monomer B from a-c nucleobase complex at 0.0 tilt (deg) and -16.0 roll (deg) """
-TAGL['%s-%s-monoA-unCP' % (dbse, 'AC-3.6____n160_'       )] = """Monomer A from a-c nucleobase complex at 0.0 tilt (deg) and -16.0 roll (deg) """
-TAGL['%s-%s-monoB-unCP' % (dbse, 'AC-3.6____n160_'       )] = """Monomer B from a-c nucleobase complex at 0.0 tilt (deg) and -16.0 roll (deg) """
-TAGL['%s-%s'            % (dbse, 'AC-3.6____n200_'       )] = """a-c nucleobase complex at 0.0 tilt (deg) and -20.0 roll (deg) """
-TAGL['%s-%s-dimer'      % (dbse, 'AC-3.6____n200_'       )] = """Dimer from a-c nucleobase complex at 0.0 tilt (deg) and -20.0 roll (deg) """
-TAGL['%s-%s-monoA-CP'   % (dbse, 'AC-3.6____n200_'       )] = """Monomer A from a-c nucleobase complex at 0.0 tilt (deg) and -20.0 roll (deg) """
-TAGL['%s-%s-monoB-CP'   % (dbse, 'AC-3.6____n200_'       )] = """Monomer B from a-c nucleobase complex at 0.0 tilt (deg) and -20.0 roll (deg) """
-TAGL['%s-%s-monoA-unCP' % (dbse, 'AC-3.6____n200_'       )] = """Monomer A from a-c nucleobase complex at 0.0 tilt (deg) and -20.0 roll (deg) """
-TAGL['%s-%s-monoB-unCP' % (dbse, 'AC-3.6____n200_'       )] = """Monomer B from a-c nucleobase complex at 0.0 tilt (deg) and -20.0 roll (deg) """
-TAGL['%s-%s'            % (dbse, 'AC-3.6____n40_'        )] = """a-c nucleobase complex at 0.0 tilt (deg) and -4.0 roll (deg) """
-TAGL['%s-%s-dimer'      % (dbse, 'AC-3.6____n40_'        )] = """Dimer from a-c nucleobase complex at 0.0 tilt (deg) and -4.0 roll (deg) """
-TAGL['%s-%s-monoA-CP'   % (dbse, 'AC-3.6____n40_'        )] = """Monomer A from a-c nucleobase complex at 0.0 tilt (deg) and -4.0 roll (deg) """
-TAGL['%s-%s-monoB-CP'   % (dbse, 'AC-3.6____n40_'        )] = """Monomer B from a-c nucleobase complex at 0.0 tilt (deg) and -4.0 roll (deg) """
-TAGL['%s-%s-monoA-unCP' % (dbse, 'AC-3.6____n40_'        )] = """Monomer A from a-c nucleobase complex at 0.0 tilt (deg) and -4.0 roll (deg) """
-TAGL['%s-%s-monoB-unCP' % (dbse, 'AC-3.6____n40_'        )] = """Monomer B from a-c nucleobase complex at 0.0 tilt (deg) and -4.0 roll (deg) """
-TAGL['%s-%s'            % (dbse, 'AC-3.6____n80_'        )] = """a-c nucleobase complex at 0.0 tilt (deg) and -8.0 roll (deg) """
-TAGL['%s-%s-dimer'      % (dbse, 'AC-3.6____n80_'        )] = """Dimer from a-c nucleobase complex at 0.0 tilt (deg) and -8.0 roll (deg) """
-TAGL['%s-%s-monoA-CP'   % (dbse, 'AC-3.6____n80_'        )] = """Monomer A from a-c nucleobase complex at 0.0 tilt (deg) and -8.0 roll (deg) """
-TAGL['%s-%s-monoB-CP'   % (dbse, 'AC-3.6____n80_'        )] = """Monomer B from a-c nucleobase complex at 0.0 tilt (deg) and -8.0 roll (deg) """
-TAGL['%s-%s-monoA-unCP' % (dbse, 'AC-3.6____n80_'        )] = """Monomer A from a-c nucleobase complex at 0.0 tilt (deg) and -8.0 roll (deg) """
-TAGL['%s-%s-monoB-unCP' % (dbse, 'AC-3.6____n80_'        )] = """Monomer B from a-c nucleobase complex at 0.0 tilt (deg) and -8.0 roll (deg) """
+TAGL['%s-%s'            % (dbse, 'AC-3.6_____12'        )] = """a-c nucleobase complex at 12.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s-dimer'      % (dbse, 'AC-3.6_____12'        )] = """Dimer from a-c nucleobase complex at 12.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s-monoA-CP'   % (dbse, 'AC-3.6_____12'        )] = """Monomer A from a-c nucleobase complex at 12.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s-monoB-CP'   % (dbse, 'AC-3.6_____12'        )] = """Monomer B from a-c nucleobase complex at 12.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s-monoA-unCP' % (dbse, 'AC-3.6_____12'        )] = """Monomer A from a-c nucleobase complex at 12.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s-monoB-unCP' % (dbse, 'AC-3.6_____12'        )] = """Monomer B from a-c nucleobase complex at 12.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s'            % (dbse, 'AC-3.6_____16'        )] = """a-c nucleobase complex at 16.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s-dimer'      % (dbse, 'AC-3.6_____16'        )] = """Dimer from a-c nucleobase complex at 16.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s-monoA-CP'   % (dbse, 'AC-3.6_____16'        )] = """Monomer A from a-c nucleobase complex at 16.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s-monoB-CP'   % (dbse, 'AC-3.6_____16'        )] = """Monomer B from a-c nucleobase complex at 16.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s-monoA-unCP' % (dbse, 'AC-3.6_____16'        )] = """Monomer A from a-c nucleobase complex at 16.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s-monoB-unCP' % (dbse, 'AC-3.6_____16'        )] = """Monomer B from a-c nucleobase complex at 16.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s'            % (dbse, 'AC-3.6_____20'        )] = """a-c nucleobase complex at 20.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s-dimer'      % (dbse, 'AC-3.6_____20'        )] = """Dimer from a-c nucleobase complex at 20.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s-monoA-CP'   % (dbse, 'AC-3.6_____20'        )] = """Monomer A from a-c nucleobase complex at 20.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s-monoB-CP'   % (dbse, 'AC-3.6_____20'        )] = """Monomer B from a-c nucleobase complex at 20.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s-monoA-unCP' % (dbse, 'AC-3.6_____20'        )] = """Monomer A from a-c nucleobase complex at 20.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s-monoB-unCP' % (dbse, 'AC-3.6_____20'        )] = """Monomer B from a-c nucleobase complex at 20.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s'            % (dbse, 'AC-3.6_____4'         )] = """a-c nucleobase complex at 4.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s-dimer'      % (dbse, 'AC-3.6_____4'         )] = """Dimer from a-c nucleobase complex at 4.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s-monoA-CP'   % (dbse, 'AC-3.6_____4'         )] = """Monomer A from a-c nucleobase complex at 4.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s-monoB-CP'   % (dbse, 'AC-3.6_____4'         )] = """Monomer B from a-c nucleobase complex at 4.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s-monoA-unCP' % (dbse, 'AC-3.6_____4'         )] = """Monomer A from a-c nucleobase complex at 4.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s-monoB-unCP' % (dbse, 'AC-3.6_____4'         )] = """Monomer B from a-c nucleobase complex at 4.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s'            % (dbse, 'AC-3.6_____8'         )] = """a-c nucleobase complex at 8.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s-dimer'      % (dbse, 'AC-3.6_____8'         )] = """Dimer from a-c nucleobase complex at 8.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s-monoA-CP'   % (dbse, 'AC-3.6_____8'         )] = """Monomer A from a-c nucleobase complex at 8.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s-monoB-CP'   % (dbse, 'AC-3.6_____8'         )] = """Monomer B from a-c nucleobase complex at 8.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s-monoA-unCP' % (dbse, 'AC-3.6_____8'         )] = """Monomer A from a-c nucleobase complex at 8.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s-monoB-unCP' % (dbse, 'AC-3.6_____8'         )] = """Monomer B from a-c nucleobase complex at 8.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s'            % (dbse, 'AC-3.6_____n12'       )] = """a-c nucleobase complex at -12.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s-dimer'      % (dbse, 'AC-3.6_____n12'       )] = """Dimer from a-c nucleobase complex at -12.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s-monoA-CP'   % (dbse, 'AC-3.6_____n12'       )] = """Monomer A from a-c nucleobase complex at -12.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s-monoB-CP'   % (dbse, 'AC-3.6_____n12'       )] = """Monomer B from a-c nucleobase complex at -12.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s-monoA-unCP' % (dbse, 'AC-3.6_____n12'       )] = """Monomer A from a-c nucleobase complex at -12.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s-monoB-unCP' % (dbse, 'AC-3.6_____n12'       )] = """Monomer B from a-c nucleobase complex at -12.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s'            % (dbse, 'AC-3.6_____n16'       )] = """a-c nucleobase complex at -16.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s-dimer'      % (dbse, 'AC-3.6_____n16'       )] = """Dimer from a-c nucleobase complex at -16.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s-monoA-CP'   % (dbse, 'AC-3.6_____n16'       )] = """Monomer A from a-c nucleobase complex at -16.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s-monoB-CP'   % (dbse, 'AC-3.6_____n16'       )] = """Monomer B from a-c nucleobase complex at -16.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s-monoA-unCP' % (dbse, 'AC-3.6_____n16'       )] = """Monomer A from a-c nucleobase complex at -16.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s-monoB-unCP' % (dbse, 'AC-3.6_____n16'       )] = """Monomer B from a-c nucleobase complex at -16.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s'            % (dbse, 'AC-3.6_____n20'       )] = """a-c nucleobase complex at -20.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s-dimer'      % (dbse, 'AC-3.6_____n20'       )] = """Dimer from a-c nucleobase complex at -20.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s-monoA-CP'   % (dbse, 'AC-3.6_____n20'       )] = """Monomer A from a-c nucleobase complex at -20.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s-monoB-CP'   % (dbse, 'AC-3.6_____n20'       )] = """Monomer B from a-c nucleobase complex at -20.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s-monoA-unCP' % (dbse, 'AC-3.6_____n20'       )] = """Monomer A from a-c nucleobase complex at -20.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s-monoB-unCP' % (dbse, 'AC-3.6_____n20'       )] = """Monomer B from a-c nucleobase complex at -20.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s'            % (dbse, 'AC-3.6_____n4'        )] = """a-c nucleobase complex at -4.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s-dimer'      % (dbse, 'AC-3.6_____n4'        )] = """Dimer from a-c nucleobase complex at -4.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s-monoA-CP'   % (dbse, 'AC-3.6_____n4'        )] = """Monomer A from a-c nucleobase complex at -4.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s-monoB-CP'   % (dbse, 'AC-3.6_____n4'        )] = """Monomer B from a-c nucleobase complex at -4.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s-monoA-unCP' % (dbse, 'AC-3.6_____n4'        )] = """Monomer A from a-c nucleobase complex at -4.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s-monoB-unCP' % (dbse, 'AC-3.6_____n4'        )] = """Monomer B from a-c nucleobase complex at -4.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s'            % (dbse, 'AC-3.6_____n8'        )] = """a-c nucleobase complex at -8.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s-dimer'      % (dbse, 'AC-3.6_____n8'        )] = """Dimer from a-c nucleobase complex at -8.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s-monoA-CP'   % (dbse, 'AC-3.6_____n8'        )] = """Monomer A from a-c nucleobase complex at -8.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s-monoB-CP'   % (dbse, 'AC-3.6_____n8'        )] = """Monomer B from a-c nucleobase complex at -8.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s-monoA-unCP' % (dbse, 'AC-3.6_____n8'        )] = """Monomer A from a-c nucleobase complex at -8.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s-monoB-unCP' % (dbse, 'AC-3.6_____n8'        )] = """Monomer B from a-c nucleobase complex at -8.0 tilt (deg) and 0.0 roll (deg) """
+TAGL['%s-%s'            % (dbse, 'AC-3.6____n12_'       )] = """a-c nucleobase complex at 0.0 tilt (deg) and -12.0 roll (deg) """
+TAGL['%s-%s-dimer'      % (dbse, 'AC-3.6____n12_'       )] = """Dimer from a-c nucleobase complex at 0.0 tilt (deg) and -12.0 roll (deg) """
+TAGL['%s-%s-monoA-CP'   % (dbse, 'AC-3.6____n12_'       )] = """Monomer A from a-c nucleobase complex at 0.0 tilt (deg) and -12.0 roll (deg) """
+TAGL['%s-%s-monoB-CP'   % (dbse, 'AC-3.6____n12_'       )] = """Monomer B from a-c nucleobase complex at 0.0 tilt (deg) and -12.0 roll (deg) """
+TAGL['%s-%s-monoA-unCP' % (dbse, 'AC-3.6____n12_'       )] = """Monomer A from a-c nucleobase complex at 0.0 tilt (deg) and -12.0 roll (deg) """
+TAGL['%s-%s-monoB-unCP' % (dbse, 'AC-3.6____n12_'       )] = """Monomer B from a-c nucleobase complex at 0.0 tilt (deg) and -12.0 roll (deg) """
+TAGL['%s-%s'            % (dbse, 'AC-3.6____n16_'       )] = """a-c nucleobase complex at 0.0 tilt (deg) and -16.0 roll (deg) """
+TAGL['%s-%s-dimer'      % (dbse, 'AC-3.6____n16_'       )] = """Dimer from a-c nucleobase complex at 0.0 tilt (deg) and -16.0 roll (deg) """
+TAGL['%s-%s-monoA-CP'   % (dbse, 'AC-3.6____n16_'       )] = """Monomer A from a-c nucleobase complex at 0.0 tilt (deg) and -16.0 roll (deg) """
+TAGL['%s-%s-monoB-CP'   % (dbse, 'AC-3.6____n16_'       )] = """Monomer B from a-c nucleobase complex at 0.0 tilt (deg) and -16.0 roll (deg) """
+TAGL['%s-%s-monoA-unCP' % (dbse, 'AC-3.6____n16_'       )] = """Monomer A from a-c nucleobase complex at 0.0 tilt (deg) and -16.0 roll (deg) """
+TAGL['%s-%s-monoB-unCP' % (dbse, 'AC-3.6____n16_'       )] = """Monomer B from a-c nucleobase complex at 0.0 tilt (deg) and -16.0 roll (deg) """
+TAGL['%s-%s'            % (dbse, 'AC-3.6____n20_'       )] = """a-c nucleobase complex at 0.0 tilt (deg) and -20.0 roll (deg) """
+TAGL['%s-%s-dimer'      % (dbse, 'AC-3.6____n20_'       )] = """Dimer from a-c nucleobase complex at 0.0 tilt (deg) and -20.0 roll (deg) """
+TAGL['%s-%s-monoA-CP'   % (dbse, 'AC-3.6____n20_'       )] = """Monomer A from a-c nucleobase complex at 0.0 tilt (deg) and -20.0 roll (deg) """
+TAGL['%s-%s-monoB-CP'   % (dbse, 'AC-3.6____n20_'       )] = """Monomer B from a-c nucleobase complex at 0.0 tilt (deg) and -20.0 roll (deg) """
+TAGL['%s-%s-monoA-unCP' % (dbse, 'AC-3.6____n20_'       )] = """Monomer A from a-c nucleobase complex at 0.0 tilt (deg) and -20.0 roll (deg) """
+TAGL['%s-%s-monoB-unCP' % (dbse, 'AC-3.6____n20_'       )] = """Monomer B from a-c nucleobase complex at 0.0 tilt (deg) and -20.0 roll (deg) """
+TAGL['%s-%s'            % (dbse, 'AC-3.6____n4_'        )] = """a-c nucleobase complex at 0.0 tilt (deg) and -4.0 roll (deg) """
+TAGL['%s-%s-dimer'      % (dbse, 'AC-3.6____n4_'        )] = """Dimer from a-c nucleobase complex at 0.0 tilt (deg) and -4.0 roll (deg) """
+TAGL['%s-%s-monoA-CP'   % (dbse, 'AC-3.6____n4_'        )] = """Monomer A from a-c nucleobase complex at 0.0 tilt (deg) and -4.0 roll (deg) """
+TAGL['%s-%s-monoB-CP'   % (dbse, 'AC-3.6____n4_'        )] = """Monomer B from a-c nucleobase complex at 0.0 tilt (deg) and -4.0 roll (deg) """
+TAGL['%s-%s-monoA-unCP' % (dbse, 'AC-3.6____n4_'        )] = """Monomer A from a-c nucleobase complex at 0.0 tilt (deg) and -4.0 roll (deg) """
+TAGL['%s-%s-monoB-unCP' % (dbse, 'AC-3.6____n4_'        )] = """Monomer B from a-c nucleobase complex at 0.0 tilt (deg) and -4.0 roll (deg) """
+TAGL['%s-%s'            % (dbse, 'AC-3.6____n8_'        )] = """a-c nucleobase complex at 0.0 tilt (deg) and -8.0 roll (deg) """
+TAGL['%s-%s-dimer'      % (dbse, 'AC-3.6____n8_'        )] = """Dimer from a-c nucleobase complex at 0.0 tilt (deg) and -8.0 roll (deg) """
+TAGL['%s-%s-monoA-CP'   % (dbse, 'AC-3.6____n8_'        )] = """Monomer A from a-c nucleobase complex at 0.0 tilt (deg) and -8.0 roll (deg) """
+TAGL['%s-%s-monoB-CP'   % (dbse, 'AC-3.6____n8_'        )] = """Monomer B from a-c nucleobase complex at 0.0 tilt (deg) and -8.0 roll (deg) """
+TAGL['%s-%s-monoA-unCP' % (dbse, 'AC-3.6____n8_'        )] = """Monomer A from a-c nucleobase complex at 0.0 tilt (deg) and -8.0 roll (deg) """
+TAGL['%s-%s-monoB-unCP' % (dbse, 'AC-3.6____n8_'        )] = """Monomer B from a-c nucleobase complex at 0.0 tilt (deg) and -8.0 roll (deg) """
 TAGL['%s-%s'            % (dbse, 'AC-3.8_____'           )] = """a-c nucleobase complex at 3.8 rise (A) and 0.0 twist (deg) """
 TAGL['%s-%s-dimer'      % (dbse, 'AC-3.8_____'           )] = """Dimer from a-c nucleobase complex at 3.8 rise (A) and 0.0 twist (deg) """
 TAGL['%s-%s-monoA-CP'   % (dbse, 'AC-3.8_____'           )] = """Monomer A from a-c nucleobase complex at 3.8 rise (A) and 0.0 twist (deg) """
@@ -1577,7 +1582,7 @@ GEOS['%s-%s-%s' % (dbse, 'AC-3.4_n0.8____', 'dimer')] = qcdb.Molecule("""
 
 """)
 
-GEOS['%s-%s-%s' % (dbse, 'AC-3.6____120_', 'dimer')] = qcdb.Molecule("""
+GEOS['%s-%s-%s' % (dbse, 'AC-3.6____12_', 'dimer')] = qcdb.Molecule("""
     units Angstrom
     no_com
     no_reorient
@@ -1615,7 +1620,7 @@ GEOS['%s-%s-%s' % (dbse, 'AC-3.6____120_', 'dimer')] = qcdb.Molecule("""
 
 """)
 
-GEOS['%s-%s-%s' % (dbse, 'AC-3.6____160_', 'dimer')] = qcdb.Molecule("""
+GEOS['%s-%s-%s' % (dbse, 'AC-3.6____16_', 'dimer')] = qcdb.Molecule("""
     units Angstrom
     no_com
     no_reorient
@@ -1653,7 +1658,7 @@ GEOS['%s-%s-%s' % (dbse, 'AC-3.6____160_', 'dimer')] = qcdb.Molecule("""
 
 """)
 
-GEOS['%s-%s-%s' % (dbse, 'AC-3.6____200_', 'dimer')] = qcdb.Molecule("""
+GEOS['%s-%s-%s' % (dbse, 'AC-3.6____20_', 'dimer')] = qcdb.Molecule("""
     units Angstrom
     no_com
     no_reorient
@@ -1691,7 +1696,7 @@ GEOS['%s-%s-%s' % (dbse, 'AC-3.6____200_', 'dimer')] = qcdb.Molecule("""
 
 """)
 
-GEOS['%s-%s-%s' % (dbse, 'AC-3.6____40_', 'dimer')] = qcdb.Molecule("""
+GEOS['%s-%s-%s' % (dbse, 'AC-3.6____4_', 'dimer')] = qcdb.Molecule("""
     units Angstrom
     no_com
     no_reorient
@@ -1729,7 +1734,7 @@ GEOS['%s-%s-%s' % (dbse, 'AC-3.6____40_', 'dimer')] = qcdb.Molecule("""
 
 """)
 
-GEOS['%s-%s-%s' % (dbse, 'AC-3.6____80_', 'dimer')] = qcdb.Molecule("""
+GEOS['%s-%s-%s' % (dbse, 'AC-3.6____8_', 'dimer')] = qcdb.Molecule("""
     units Angstrom
     no_com
     no_reorient
@@ -1805,7 +1810,7 @@ GEOS['%s-%s-%s' % (dbse, 'AC-3.6_____', 'dimer')] = qcdb.Molecule("""
 
 """)
 
-GEOS['%s-%s-%s' % (dbse, 'AC-3.6_____120', 'dimer')] = qcdb.Molecule("""
+GEOS['%s-%s-%s' % (dbse, 'AC-3.6_____12', 'dimer')] = qcdb.Molecule("""
     units Angstrom
     no_com
     no_reorient
@@ -1843,7 +1848,7 @@ GEOS['%s-%s-%s' % (dbse, 'AC-3.6_____120', 'dimer')] = qcdb.Molecule("""
 
 """)
 
-GEOS['%s-%s-%s' % (dbse, 'AC-3.6_____160', 'dimer')] = qcdb.Molecule("""
+GEOS['%s-%s-%s' % (dbse, 'AC-3.6_____16', 'dimer')] = qcdb.Molecule("""
     units Angstrom
     no_com
     no_reorient
@@ -1881,7 +1886,7 @@ GEOS['%s-%s-%s' % (dbse, 'AC-3.6_____160', 'dimer')] = qcdb.Molecule("""
 
 """)
 
-GEOS['%s-%s-%s' % (dbse, 'AC-3.6_____200', 'dimer')] = qcdb.Molecule("""
+GEOS['%s-%s-%s' % (dbse, 'AC-3.6_____20', 'dimer')] = qcdb.Molecule("""
     units Angstrom
     no_com
     no_reorient
@@ -1919,7 +1924,7 @@ GEOS['%s-%s-%s' % (dbse, 'AC-3.6_____200', 'dimer')] = qcdb.Molecule("""
 
 """)
 
-GEOS['%s-%s-%s' % (dbse, 'AC-3.6_____40', 'dimer')] = qcdb.Molecule("""
+GEOS['%s-%s-%s' % (dbse, 'AC-3.6_____4', 'dimer')] = qcdb.Molecule("""
     units Angstrom
     no_com
     no_reorient
@@ -1957,7 +1962,7 @@ GEOS['%s-%s-%s' % (dbse, 'AC-3.6_____40', 'dimer')] = qcdb.Molecule("""
 
 """)
 
-GEOS['%s-%s-%s' % (dbse, 'AC-3.6_____80', 'dimer')] = qcdb.Molecule("""
+GEOS['%s-%s-%s' % (dbse, 'AC-3.6_____8', 'dimer')] = qcdb.Molecule("""
     units Angstrom
     no_com
     no_reorient
@@ -1995,7 +2000,7 @@ GEOS['%s-%s-%s' % (dbse, 'AC-3.6_____80', 'dimer')] = qcdb.Molecule("""
 
 """)
 
-GEOS['%s-%s-%s' % (dbse, 'AC-3.6_____n120', 'dimer')] = qcdb.Molecule("""
+GEOS['%s-%s-%s' % (dbse, 'AC-3.6_____n12', 'dimer')] = qcdb.Molecule("""
     units Angstrom
     no_com
     no_reorient
@@ -2033,7 +2038,7 @@ GEOS['%s-%s-%s' % (dbse, 'AC-3.6_____n120', 'dimer')] = qcdb.Molecule("""
 
 """)
 
-GEOS['%s-%s-%s' % (dbse, 'AC-3.6_____n160', 'dimer')] = qcdb.Molecule("""
+GEOS['%s-%s-%s' % (dbse, 'AC-3.6_____n16', 'dimer')] = qcdb.Molecule("""
     units Angstrom
     no_com
     no_reorient
@@ -2071,7 +2076,7 @@ GEOS['%s-%s-%s' % (dbse, 'AC-3.6_____n160', 'dimer')] = qcdb.Molecule("""
 
 """)
 
-GEOS['%s-%s-%s' % (dbse, 'AC-3.6_____n200', 'dimer')] = qcdb.Molecule("""
+GEOS['%s-%s-%s' % (dbse, 'AC-3.6_____n20', 'dimer')] = qcdb.Molecule("""
     units Angstrom
     no_com
     no_reorient
@@ -2109,7 +2114,7 @@ GEOS['%s-%s-%s' % (dbse, 'AC-3.6_____n200', 'dimer')] = qcdb.Molecule("""
 
 """)
 
-GEOS['%s-%s-%s' % (dbse, 'AC-3.6_____n40', 'dimer')] = qcdb.Molecule("""
+GEOS['%s-%s-%s' % (dbse, 'AC-3.6_____n4', 'dimer')] = qcdb.Molecule("""
     units Angstrom
     no_com
     no_reorient
@@ -2147,7 +2152,7 @@ GEOS['%s-%s-%s' % (dbse, 'AC-3.6_____n40', 'dimer')] = qcdb.Molecule("""
 
 """)
 
-GEOS['%s-%s-%s' % (dbse, 'AC-3.6_____n80', 'dimer')] = qcdb.Molecule("""
+GEOS['%s-%s-%s' % (dbse, 'AC-3.6_____n8', 'dimer')] = qcdb.Molecule("""
     units Angstrom
     no_com
     no_reorient
@@ -2185,7 +2190,7 @@ GEOS['%s-%s-%s' % (dbse, 'AC-3.6_____n80', 'dimer')] = qcdb.Molecule("""
 
 """)
 
-GEOS['%s-%s-%s' % (dbse, 'AC-3.6____n120_', 'dimer')] = qcdb.Molecule("""
+GEOS['%s-%s-%s' % (dbse, 'AC-3.6____n12_', 'dimer')] = qcdb.Molecule("""
     units Angstrom
     no_com
     no_reorient
@@ -2223,7 +2228,7 @@ GEOS['%s-%s-%s' % (dbse, 'AC-3.6____n120_', 'dimer')] = qcdb.Molecule("""
 
 """)
 
-GEOS['%s-%s-%s' % (dbse, 'AC-3.6____n160_', 'dimer')] = qcdb.Molecule("""
+GEOS['%s-%s-%s' % (dbse, 'AC-3.6____n16_', 'dimer')] = qcdb.Molecule("""
     units Angstrom
     no_com
     no_reorient
@@ -2261,7 +2266,7 @@ GEOS['%s-%s-%s' % (dbse, 'AC-3.6____n160_', 'dimer')] = qcdb.Molecule("""
 
 """)
 
-GEOS['%s-%s-%s' % (dbse, 'AC-3.6____n200_', 'dimer')] = qcdb.Molecule("""
+GEOS['%s-%s-%s' % (dbse, 'AC-3.6____n20_', 'dimer')] = qcdb.Molecule("""
     units Angstrom
     no_com
     no_reorient
@@ -2299,7 +2304,7 @@ GEOS['%s-%s-%s' % (dbse, 'AC-3.6____n200_', 'dimer')] = qcdb.Molecule("""
 
 """)
 
-GEOS['%s-%s-%s' % (dbse, 'AC-3.6____n40_', 'dimer')] = qcdb.Molecule("""
+GEOS['%s-%s-%s' % (dbse, 'AC-3.6____n4_', 'dimer')] = qcdb.Molecule("""
     units Angstrom
     no_com
     no_reorient
@@ -2337,7 +2342,7 @@ GEOS['%s-%s-%s' % (dbse, 'AC-3.6____n40_', 'dimer')] = qcdb.Molecule("""
 
 """)
 
-GEOS['%s-%s-%s' % (dbse, 'AC-3.6____n80_', 'dimer')] = qcdb.Molecule("""
+GEOS['%s-%s-%s' % (dbse, 'AC-3.6____n8_', 'dimer')] = qcdb.Molecule("""
     units Angstrom
     no_com
     no_reorient
