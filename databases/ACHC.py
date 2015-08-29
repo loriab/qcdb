@@ -1,7 +1,7 @@
 """
-| Database of <description of members and reference energy type>.
-| Geometries from <Reference>.
-| Reference interaction energies from <Reference>.
+| Database of Adenine-Cytosine curves along all possible axes.
+| Geometries from Parker et al. JCTC xxx xxx (2015).
+| Reference interaction energies from Parker et al. JCTC xxx xxx (2015).
 
 
 - **cp**  ``'off'`` <erase this comment and after unless on is a valid option> || ``'on'``
@@ -46,13 +46,10 @@ Tilt = ['AC-3.6_____n20', 'AC-3.6_____n16', 'AC-3.6_____n12', 'AC-3.6_____n8',
         'AC-3.6_____12', 'AC-3.6_____16', 'AC-3.6_____20'] 
 temp = [Rise, Slide, Shift, Twist, Roll, Tilt]
 HRXN = sum(temp, [])
-
-#HRXN = ['AC-3.0_____', 'AC-3.2_____', 'AC-3.4_12____', 'AC-3.4_16____', 'AC-3.4_20____', 'AC-3.4_4____', 'AC-3.4_8____', 'AC-3.4__12___', 'AC-3.4__16___', 'AC-3.4__20___', 'AC-3.4__4___', 'AC-3.4__8___', 'AC-3.4___120__', 'AC-3.4___150__', 'AC-3.4___180__', 'AC-3.4___30__', 'AC-3.4___60__', 'AC-3.4___90__', 'AC-3.4_____', 'AC-3.4__n12___', 'AC-3.4__n16___', 'AC-3.4__n20___', 'AC-3.4__n4___', 'AC-3.4__n8___', 'AC-3.4_n12____', 'AC-3.4_n16____', 'AC-3.4_n20____', 'AC-3.4_n4____', 'AC-3.4_n8____', 'AC-3.6____120_', 'AC-3.6____160_', 'AC-3.6____200_', 'AC-3.6____40_', 'AC-3.6____80_', 'AC-3.6_____', 'AC-3.6_____120', 'AC-3.6_____160', 'AC-3.6_____200', 'AC-3.6_____40', 'AC-3.6_____80', 'AC-3.6_____n120', 'AC-3.6_____n160', 'AC-3.6_____n200', 'AC-3.6_____n40', 'AC-3.6_____n80', 'AC-3.6____n120_', 'AC-3.6____n160_', 'AC-3.6____n200_', 'AC-3.6____n40_', 'AC-3.6____n80_', 'AC-3.8_____', 'AC-4.0_____', 'AC-4.4_____', 'AC-5.0_____', ]
 #HRXN_SM = []
 #HRXN_LG = []
 HRXN_EQ = ['AC-3.4_____', 'AC-3.4_1.2____', 'AC-3.4__n0.4___',
            'AC-3.4___150__','AC-3.6____4_', 'AC-3.6_____n4'] 
-
 
 # <<< Chemical Systems Involved >>>
 RXNM = {}     # reaction matrix of reagent contributions per reaction
