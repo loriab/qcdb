@@ -46,6 +46,7 @@ parser.add_argument('-d', '--dbmodule', help='force choice of database module')
 parser.add_argument('-p', '--prefix', help='force prefix for usemefiles, defaults to dir name')
 parser.add_argument('-q', '--qcprog', help='force choice of QC program parser')
 parser.add_argument('-s', '--style', help='stype of usemefile (3col or Wt)')
+parser.add_argument('-a', '--actv', help='force ACTV mode (cp, uncp, sapt), defaults to sample')
 args = parser.parse_args()
 
 actionable_data = {
@@ -107,14 +108,19 @@ db_name = db_name if args.dbmodule is None else args.dbmodule
 qcprog = identify_qcprog(sample) if args.qcprog is None else args.qcprog
 dirprefix = os.path.split(os.getcwd())[-1] if args.prefix is None else args.prefix
 usemeold = False if args.prefix is 'new' else True
-if len(glob.glob('*-CP.out')) > 0:
-    mode = 'ACTV_CP'
-elif len(glob.glob('*-unCP.out')) > 0:
-    mode = 'ACTV'
-elif len(glob.glob('*reagent.out')) > 0:
+if args.actv is None:
+    if len(glob.glob('*-CP.out')) > 0:
+        mode = 'ACTV_CP'
+    elif len(glob.glob('*-unCP.out')) > 0:
+        mode = 'ACTV'
+    elif len(glob.glob('*reagent.out')) > 0:
+        mode = 'ACTV'
+    else:
+        mode = 'ACTV_SA'
+elif args.actv.upper() == 'UNCP':
     mode = 'ACTV'
 else:
-    mode = 'ACTV_SA'
+    mode = 'ACTV_' + args.actv.upper()
 
 # Load module for QC program
 try:
