@@ -278,7 +278,7 @@ class Molecule(LibmintsMolecule):
 
         text = ""
         text += '$molecule\n'
-        text += '%d %d %s\n' % (self.molecular_charge(), self.multiplicity(), self.tagline)
+        text += '%d %d\n' % (self.molecular_charge(), self.multiplicity())
 
         for i in range(self.natom()):
             [x, y, z] = self.atoms[i].compute()
@@ -287,8 +287,19 @@ class Molecule(LibmintsMolecule):
             else:
                 text += '%-3s ' % (('' if self.Z(i) else '@') + self.symbol(i))
             text += '%17.12f %17.12f %17.12f\n' % (x * factor, y * factor, z * factor)
-        text += '$end\n'
-        return text
+        text += '$end\n\n'
+
+        # prepare molecule keywords to be set as c-side keywords
+        options = defaultdict(lambda: defaultdict(dict))
+        #options['QCHEM'['QCHEM_CHARGE']['value'] = self.molecular_charge()
+        #options['QCHEM'['QCHEM_MULTIPLICITY']['value'] = self.multiplicity()
+        options['QCHEM']['QCHEM_INPUT_BOHR']['value'] = False
+        #options['QCHEM']['QCHEM_COORDINATES']['value'] = 'CARTESIAN'
+        #SYM_IGNORE equiv to no_reorient, no_com, symmetry c1
+
+        options['QCHEM']['QCHEM_INPUT_BOHR']['clobber'] = True
+
+        return text, options
 
     def format_molecule_for_psi4_xyz(self):
         """not much examined
