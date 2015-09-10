@@ -44,8 +44,9 @@ Roll = ['AC-3.6_____', 'AC-3.6____4_', 'AC-3.6____8_', 'AC-3.6____12_',
 Tilt = ['AC-3.6_____n20', 'AC-3.6_____n16', 'AC-3.6_____n12', 'AC-3.6_____n8',
         'AC-3.6_____n4', 'AC-3.6_____', 'AC-3.6_____4', 'AC-3.6_____8',
         'AC-3.6_____12', 'AC-3.6_____16', 'AC-3.6_____20'] 
-temp = [Rise, Slide, Shift, Twist, Roll, Tilt]
-HRXN = sum(temp, [])
+HRXN = []
+temp = sum([Rise, Slide, Shift, Twist, Roll, Tilt], [])
+[HRXN.append(i) for i in temp if not HRXN.count(i)]
 #HRXN_SM = []
 #HRXN_LG = []
 HRXN_EQ = ['AC-3.4_____', 'AC-3.4_1.2____', 'AC-3.4__n0.4___',
