@@ -41,6 +41,78 @@ def harvest_output(outtext):
 
     NUMBER = "((?:[-+]?\\d*\\.\\d+(?:[DdEe][-+]?\\d+)?)|(?:[-+]?\\d+\\.\\d*(?:[DdEe][-+]?\\d+)?))"
 
+#    # Process NRE
+#    mobj = re.search(r'^\s+' + r'(?:Nuclear Repulsion Energy =)' + r'\s+' + NUMBER + r'\s+hartrees\s*$',
+#        outtext, re.MULTILINE)
+#    if mobj:
+#        print('matched nre')
+#        psivar['NUCLEAR REPULSION ENERGY'] = mobj.group(1)
+
+    # Process HF  UNTESTED
+    mobj = re.search(
+        r'^\s+' + r'(?:Nuclear Repulsion Energy =)' + r'\s+' + NUMBER + r'\s+hartrees\s*' +
+        r'(?:.*?)' +
+        r'(?:Hartree-Fock SCF calculation)' +
+        r'(?:.*?)' +
+        r'^\s+\d+\s+' + NUMBER + r'\s+' + NUMBER + r'\s+' + 'Convergence criterion met' + r'\s*$',
+        outtext, re.MULTILINE | re.DOTALL)
+    if mobj:
+        print('matched hf')
+        psivar['NUCLEAR REPULSION ENERGY'] = mobj.group(1)
+        psivar['HF TOTAL ENERGY'] = mobj.group(2)
+
+    # Process DFT-D2  UNTESTED
+    mobj = re.search(
+        r'^\s+' + r'(?:Nuclear Repulsion Energy =)' + r'\s+' + NUMBER + r'\s+hartrees\s*' +
+        r'(?:.*?)' +
+        r'(?:HF-DFT SCF calculation)' +
+        r'(?:.*?)' +
+        r'^\s+' + r'(?:Empirical dispersion =)' + r'\s+' + NUMBER + r'\s+hartree\s*' +
+        r'(?:.*?)' +
+        r'^\s+\d+\s+' + NUMBER + r'\s+' + NUMBER + r'\s+' + 'Convergence criterion met' + r'\s*$',
+        outtext, re.MULTILINE | re.DOTALL)
+    if mobj:
+        print('matched dft-d2')
+        psivar['NUCLEAR REPULSION ENERGY'] = mobj.group(1)
+        psivar['DISPERSION CORRECTION ENERGY'] = mobj.group(2)
+        psivar['DFT TOTAL ENERGY'] = mobj.group(3)
+        psivar['DFT FUNCTIONAL TOTAL ENERGY'] = mobj.group(3) - mboj.group(2)
+
+    # Process DFT-D3  UNTESTED
+    mobj = re.search(
+        r'(?:grimme3)' + r'\s*' +
+        r'(?:.*?)' +
+        r'^\s+' + r'(?:Nuclear Repulsion Energy =)' + r'\s+' + NUMBER + r'\s+hartrees\s*' +
+        r'(?:.*?)' +
+        r'(?:HF-DFT SCF calculation)' +
+        r'(?:.*?)' +
+        r'^\s+\d+\s+' + NUMBER + r'\s+' + NUMBER + r'\s+' + 'Convergence criterion met' + r'\s*$',
+        outtext, re.MULTILINE | re.DOTALL)
+    if mobj:
+        print('matched dft-d3')
+        psivar['NUCLEAR REPULSION ENERGY'] = mobj.group(1)
+        psivar['DISPERSION CORRECTION ENERGY'] = None
+        psivar['DFT TOTAL ENERGY'] = mobj.group(2)
+        psivar['DFT FUNCTIONAL TOTAL ENERGY'] = None
+
+# /^((?!PART).)*$/
+
+    # Process DFT no-D or internal-D
+    mobj = re.search(
+        r'((?!grimme3).)*' + r'\s*' +
+        r'(?:.*?)' +
+        r'^\s+' + r'(?:Nuclear Repulsion Energy =)' + r'\s+' + NUMBER + r'\s+hartrees\s*' +
+        r'(?:.*?)' +
+        r'(?:HF-DFT SCF calculation)' +
+        r'(?:.*?)' +
+        r'^\s+\d+\s+' + NUMBER + r'\s+' + NUMBER + r'\s+' + 'Convergence criterion met' + r'\s*$',
+        outtext, re.MULTILINE | re.DOTALL | re.IGNORECASE)
+    if mobj:
+        print('matched dft')
+        psivar['NUCLEAR REPULSION ENERGY'] = mobj.group(2)
+        psivar['DFT TOTAL ENERGY'] = mobj.group(3)
+        psivar['DFT FUNCTIONAL TOTAL ENERGY'] = mobj.group(3)
+
 #    # Process PsiVariables
 #    mobj = re.search(r'^(?:  Variable Map:)\s*' +
 #        r'^\s*(?:-+)\s*' +
@@ -53,12 +125,12 @@ def harvest_output(outtext):
 #            submobj = re.search(r'^\s+' + r'"(.+?)"' + r'\s+=>\s+' + NUMBER + r'\s*$', pv)
 #            if submobj:
 #                psivar['%s' % (submobj.group(1))] = submobj.group(2)
-#
-#    # Process Completion
-#    mobj = re.search(r'PSI4 exiting successfully. Buy a developer a beer!',
-#        outtext, re.MULTILINE)
-#    if mobj:
-#        psivar['SUCCESS'] = True
+
+    # Process Completion
+    mobj = re.search(r'Thank you very much for using Q-Chem.  Have a nice day.',
+        outtext, re.MULTILINE)
+    if mobj:
+        psivar['SUCCESS'] = True
 
     return psivar, psivar_coord, psivar_grad
 
