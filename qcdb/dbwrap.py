@@ -1602,8 +1602,22 @@ class Database(object):
         for db, odb in self.dbdict.items():
             text += """%44s""" % ('=> ' + odb.dbse + ' <=')
         text += '\n'
-        text += """%20s         %5s   %4s   %6s %6s    %6s\n""" % \
-                ('', 'ME', 'STDE', 'MAE', 'MA%E', 'MA%BE')
+
+        collabel = """      {:5}   {:4}   {:6} {:6}    {:6}""".format(
+                'ME', 'STDE', 'MAE', 'MA%E', 'MA%BE')
+
+        text += """{:20}    """.format('') + collabel
+        for db in self.dbdict.keys():
+            text += collabel
+        text += '\n'
+
+        text += """{:20}    {}""".format('', '_' * 44)
+        ul = False
+        for db in self.dbdict.keys():
+            text += """{}""".format('_' * 44 if ul else ' ' * 44)
+            ul = not ul
+        text += '\n'
+
         for ss in self.sset.keys():
             text += """   => %s <=\n""" % (ss)
             for mc in modelchem:
