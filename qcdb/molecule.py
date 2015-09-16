@@ -97,9 +97,9 @@ class Molecule(LibmintsMolecule):
         xyz1 = re.compile(r"^\s*(\d+)\s*(bohr|au)?\s*$", re.IGNORECASE)
         xyz2 = re.compile(r'^\s*(-?\d+)\s+(\d+)\s+(.*)\s*$')
         NUMBER = "((?:[-+]?\\d*\\.\\d+(?:[DdEe][-+]?\\d+)?)|(?:[-+]?\\d+\\.\\d*(?:[DdEe][-+]?\\d+)?))"
-        xyzN = re.compile(r'(?:\s*)([A-Z](?:[a-z])?)(?:\s+)' + 
+        xyzN = re.compile(r'(?:\s*)([A-Z](?:[a-z])?)(?:\s+)' +
             NUMBER + '(?:\s+)' + NUMBER + '(?:\s+)' + NUMBER + '(?:\s*)', re.IGNORECASE)
-        xyzC = re.compile(r'(?:\s*)(\d+\.?\d*)(?:\s+)' + 
+        xyzC = re.compile(r'(?:\s*)(\d+\.?\d*)(?:\s+)' +
             NUMBER + '(?:\s+)' + NUMBER + '(?:\s+)' + NUMBER + '(?:\s*)', re.IGNORECASE)
 
         # Try to match the first line
@@ -155,6 +155,114 @@ class Molecule(LibmintsMolecule):
                     raise ValidationError("Molecule::init_with_xyz: Malformed atom information line %d." % (i + 3))
             except IndexError:
                 raise ValidationError("Molecule::init_with_xyz: Expected atom in file at line %d.\n%s" % (i + 3, text[i + 2]))
+
+        # We need to make 1 fragment with all atoms
+        instance.fragments.append([0, fileNatom - 1])
+        instance.fragment_types.append('Real')
+        instance.fragment_charges.append(instance.molecular_charge())
+        instance.fragment_multiplicities.append(instance.multiplicity())
+        # Set the units properly
+        instance.PYunits = fileUnits
+        if fileUnits == 'Bohr':
+            instance.input_units_to_au = 1.0
+        elif fileUnits == 'Angstrom':
+            instance.input_units_to_au = 1.0 / psi_bohr2angstroms
+
+        instance.update_geometry()
+        return instance
+
+    @classmethod
+    def init_with_mol2(cls, xyzfilename, no_com=False, no_reorient=False, contentsNotFilename=False):
+        """Pull information from a MOl2 file. No fragment info detected.
+        Bohr/Angstrom pulled from first line if available.  Charge,
+        multiplicity, tagline pulled from second line if available.  Body
+        accepts atom symbol or atom charge in first column. Arguments
+        *no_com* and *no_reorient* can be used to turn off shift and
+        rotation. If *xyzfilename* is a string of the contents of an XYZ
+        file, rather than the name of a file, set *contentsNotFilename*
+        to ``True``.
+
+        NOTE: chg/mult NYI
+
+        >>> H2O = qcdb.Molecule.init_with_mol2('h2o.mol2')
+
+        """
+        instance = cls()
+        instance.lock_frame = False
+        instance.PYmove_to_com = not no_com
+        instance.PYfix_orientation = no_reorient
+
+        if contentsNotFilename:
+            text = xyzfilename.splitlines()
+        else:
+            try:
+                infile = open(xyzfilename, 'r')
+            except IOError:
+                raise ValidationError("""Molecule::init_with_mol2: given filename '%s' does not exist.""" % (xyzfilename))
+            if os.stat(xyzfilename).st_size == 0:
+                raise ValidationError("""Molecule::init_with_mol2: given filename '%s' is blank.""" % (xyzfilename))
+            text = infile.readlines()
+
+        # fixed-width regex ((?=[ ]*-?\d+)[ -\d]{5})
+        v2000 = re.compile(r'^((?=[ ]*\d+)[ \d]{3})((?=[ ]*\d+)[ \d]{3})(.*)V2000\s*$')
+        vend = re.compile(r'^\s*M\s+END\s*$')
+        NUMBER = "((?:[-+]?\\d*\\.\\d+(?:[DdEe][-+]?\\d+)?)|(?:[-+]?\\d+\\.\\d*(?:[DdEe][-+]?\\d+)?))"
+        xyzM = re.compile(r'^(?:\s*)' + NUMBER + '(?:\s+)' + NUMBER + '(?:\s+)' + NUMBER +
+                          '(?:\s+)([A-Z](?:[a-z])?)(?:\s+)(.*)', re.IGNORECASE)
+
+        ## now charge and multiplicity
+        #   $chargem = 0  ; $multm = 1 ;
+        #while (<MOL>) {
+        #if (/CHARGE/) { $chargem = <MOL> ; chop($chargem) ;}
+        #if (/MULTIPLICITY/) { $multm = <MOL> ; chop($multm) }
+        #        } # end while charge and multiplicity
+
+        if not text:
+            raise ValidationError("Molecule::init_with_mol2: file blank")
+        # Try to match header/footer
+        if vend.match(text[-1]):
+            pass
+        else:
+            raise ValidationError("Molecule::init_with_mol2: Malformed file termination\n%s" % (text[-1]))
+        sysname = '_'.join(text[0].strip().split())
+        comment = text[2].strip()
+        if comment:
+            instance.tagline = sysname + ' ' + comment
+        else:
+            instance.tagline = sysname
+        #instance.tagline = text[0].strip() + ' ' + text[2].strip()
+        fileUnits = 'Angstrom'  # defined for MOL
+        #instance.set_molecular_charge(int(xyz2.match(text[1]).group(1)))
+        #instance.set_multiplicity(int(xyz2.match(text[1]).group(2)))
+        if v2000.match(text[3]):
+            fileNatom = int(v2000.match(text[3]).group(1))
+            fileNbond = int(v2000.match(text[3]).group(2))
+        else:
+            raise ValidationError("Molecule::init_with_mol2: Malformed fourth line\n%s" % (text[3]))
+        if fileNatom < 1:
+            raise ValidationError("Molecule::init_with_mol2: Malformed Natom\n%s" % (str(fileNatom)))
+
+        # Next line begins the useful information.
+        for i in range(fileNatom):
+            try:
+                if xyzM.match(text[4 + i]):
+
+                    fileX = float(xyzM.match(text[4 + i]).group(1))
+                    fileY = float(xyzM.match(text[4 + i]).group(2))
+                    fileZ = float(xyzM.match(text[4 + i]).group(3))
+                    fileAtom = xyzM.match(text[4 + i]).group(4).upper()
+
+                    # Check that the atom symbol is valid
+                    if not fileAtom in el2z:
+                        raise ValidationError('Illegal atom symbol in geometry specification: %s' % (fileAtom))
+
+                    # Add it to the molecule.
+                    instance.add_atom(el2z[fileAtom], fileX, fileY, fileZ, fileAtom, el2mass[fileAtom], el2z[fileAtom])
+
+                else:
+                    raise ValidationError("Molecule::init_with_mol2: Malformed atom information line %d." % (i + 5))
+            except IndexError:
+                raise ValidationError("Molecule::init_with_mol2: Expected atom in file at line %d.\n%s" % (i + 5, text[i + 4]))
 
         # We need to make 1 fragment with all atoms
         instance.fragments.append([0, fileNatom - 1])
@@ -268,9 +376,9 @@ class Molecule(LibmintsMolecule):
         return text
 
     def format_molecule_for_qchem(self, mixedbas=True):
-        """Returns geometry section of input file formatted for Q-Chem. 
-        For ghost atoms, prints **Gh** as elemental symbol, with expectation 
-        that element identity will be established in mixed basis section. 
+        """Returns geometry section of input file formatted for Q-Chem.
+        For ghost atoms, prints **Gh** as elemental symbol, with expectation
+        that element identity will be established in mixed basis section.
         For ghost atoms when *mixedbas* is False, prints @ plus element symbol.
 
         """
@@ -463,10 +571,10 @@ class Molecule(LibmintsMolecule):
                     atom = self.symbol(at)
                     if n_frags > 1:
                         text += '    {:2s}({:d}) {:> 17.12f} {:> 17.12f} {:> 17.12f}\n'.format(\
-                                atom, fr + 1, x*factor, y*factor, z*factor)
+                                atom, fr + 1, x * factor, y * factor, z * factor)
                     else:
                         text += '    {:2s} {:> 17.12f} {:> 17.12f} {:> 17.12f}\n'.format(\
-                                atom, x*factor, y*factor, z*factor)
+                                atom, x * factor, y * factor, z * factor)
         text += '*'
 
         return text, options
