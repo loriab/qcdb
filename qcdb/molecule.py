@@ -375,18 +375,20 @@ class Molecule(LibmintsMolecule):
         text += '}\n'
         return text
 
-    def format_molecule_for_qchem(self, mixedbas=True):
+    def format_molecule_for_qchem_old(self, mixedbas=True):
         """Returns geometry section of input file formatted for Q-Chem.
         For ghost atoms, prints **Gh** as elemental symbol, with expectation
         that element identity will be established in mixed basis section.
         For ghost atoms when *mixedbas* is False, prints @ plus element symbol.
 
+        prints whole dimer for unCP mono when called dir (as opposed to passing thru str
+        no frag markers
         """
         factor = 1.0 if self.PYunits == 'Angstrom' else psi_bohr2angstroms
 
         text = ""
         text += '$molecule\n'
-        text += '%d %d %s\n' % (self.molecular_charge(), self.multiplicity(), self.tagline)
+        text += '%d %d\n' % (self.molecular_charge(), self.multiplicity())
 
         for i in range(self.natom()):
             [x, y, z] = self.atoms[i].compute()
@@ -395,8 +397,19 @@ class Molecule(LibmintsMolecule):
             else:
                 text += '%-3s ' % (('' if self.Z(i) else '@') + self.symbol(i))
             text += '%17.12f %17.12f %17.12f\n' % (x * factor, y * factor, z * factor)
-        text += '$end\n'
-        return text
+        text += '$end\n\n'
+
+        # prepare molecule keywords to be set as c-side keywords
+        options = defaultdict(lambda: defaultdict(dict))
+        #options['QCHEM'['QCHEM_CHARGE']['value'] = self.molecular_charge()
+        #options['QCHEM'['QCHEM_MULTIPLICITY']['value'] = self.multiplicity()
+        options['QCHEM']['QCHEM_INPUT_BOHR']['value'] = False
+        #options['QCHEM']['QCHEM_COORDINATES']['value'] = 'CARTESIAN'
+        #SYM_IGNORE equiv to no_reorient, no_com, symmetry c1
+
+        options['QCHEM']['QCHEM_INPUT_BOHR']['clobber'] = True
+
+        return text, options
 
     def format_molecule_for_psi4_xyz(self):
         """not much examined
@@ -406,8 +419,8 @@ class Molecule(LibmintsMolecule):
         if self.nallatom():
 
             factor = 1.0 if self.PYunits == 'Angstrom' else psi_bohr2angstroms
-            text += "units Angstrom\n"
             # append units and any other non-default molecule keywords
+            text += "units Angstrom\n"
             #text += "    units %-s\n" % ("Angstrom" if self.units() == 'Angstrom' else "Bohr")
             if not self.PYmove_to_com:
                 text += "no_com\n"
@@ -576,6 +589,76 @@ class Molecule(LibmintsMolecule):
                         text += '    {:2s} {:> 17.12f} {:> 17.12f} {:> 17.12f}\n'.format(\
                                 atom, x * factor, y * factor, z * factor)
         text += '*'
+
+        return text, options
+
+    def format_molecule_for_qchem(self, mixedbas=True):
+        """Returns geometry section of input file formatted for Q-Chem. 
+        For ghost atoms, prints **Gh** as elemental symbol, with expectation 
+        that element identity will be established in mixed basis section. 
+        For ghost atoms when *mixedbas* is False, prints @ plus element symbol.
+
+        candidate modeled after psi4_xyz so that absent fragments observed force xyz
+
+        """
+        text = ""
+        if self.nallatom():
+            factor = 1.0 if self.PYunits == 'Angstrom' else psi_bohr2angstroms
+            Pfr = 0
+            # any general starting notation here <<<
+            text += '$molecule\n'
+            text += '%d %d\n' % (self.molecular_charge(), self.multiplicity())
+                                               # >>>
+            for fr in range(self.nfragments()):
+                if self.fragment_types[fr] == 'Absent' and not self.has_zmatrix():
+                    continue
+                # any fragment marker here <<<
+                if self.nactive_fragments() > 1:
+                    # this only distiguishes Real frags so Real/Ghost don't get 
+                    #   fragmentation. may need to change
+                    text += """--\n"""
+                                         # >>>
+                # any fragment chgmult here <<<
+                if self.nactive_fragments() > 1:
+                    text += """{}{} {}\n""".format(
+                        '!' if self.fragment_types[fr] in ['Ghost', 'Absent'] else '',
+                        self.fragment_charges[fr], self.fragment_multiplicities[fr])
+                                          # >>>
+                Pfr += 1
+                for at in range(self.fragments[fr][0], self.fragments[fr][1] + 1):
+                    if self.fragment_types[fr] == 'Absent' or self.fsymbol(at) == "X":
+                        pass
+                    else:
+                        if self.fZ(at):
+                            # label for real live atom <<<
+                            text += """{:>3s} """.format(self.symbol(at))
+                                                     # >>>
+                        else:
+                            # label for ghost atom <<<
+                            text += """{:>3s} """.format(
+                                'Gh' if mixedbas else ('@' + self.symbol(at)))                
+                                                 # >>>
+                        [x, y, z] = self.full_atoms[at].compute()
+                        # Cartesian coordinates <<<
+                        text += """{:>17.12f} {:>17.12f} {:>17.12f}\n""".format(
+                            x * factor, y * factor, z * factor)
+                                              # >>>
+            # any general finishing notation here <<<
+            text += '$end\n\n'
+                                                # >>>
+
+        # prepare molecule keywords to be set as c-side keywords
+        options = defaultdict(lambda: defaultdict(dict))
+        #options['QCHEM'['QCHEM_CHARGE']['value'] = self.molecular_charge()
+        #options['QCHEM'['QCHEM_MULTIPLICITY']['value'] = self.multiplicity()
+        options['QCHEM']['QCHEM_INPUT_BOHR']['value'] = False
+        #options['QCHEM']['QCHEM_COORDINATES']['value'] = 'CARTESIAN'
+        if (not self.PYmove_to_com) or self.PYfix_orientation:
+            options['QCHEM']['QCHEM_SYM_IGNORE']['value'] = True
+            #SYM_IGNORE equiv to no_reorient, no_com, symmetry c1
+
+        options['QCHEM']['QCHEM_INPUT_BOHR']['clobber'] = True
+        options['QCHEM']['QCHEM_SYM_IGNORE']['clobber'] = True
 
         return text, options
 
