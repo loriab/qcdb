@@ -92,9 +92,10 @@ elif project == 'sflow':
     path = r"""/Users/loriab/linux/qcdb/data/flowusemefiles/"""
 
 elif project == 'dfit':
-    dbse = 'HBC6'
+    #dbse = 'HBC6'
     #dbse = 'NBC10ext'
     #dbse = 'ACONF'
+    dbse = 'SSI'
     path = r"""/Users/loriab/linux/Refitting_DFT_D/Databases/usemefiles/"""
 
 elif project == 'nbcref':
@@ -1247,16 +1248,23 @@ elif project == 'sflow':
     cpmd = ['CP']
 
 elif project == 'dfit':
-    mtds = ['B3LYP', 'B97', 'BLYP', 'BP86', 'PBE', 'PBE0', 'WPBE', 'B2PLYP',
-            'B3LYPD3', 'B97D3', 'BLYPD3', 'BP86D3', 'PBED3', 'PBE0D3', 'B2PLYPD3',
-            'B3LYPD2', 'WB97XD', 'M052X', 'B97D2']
+    mtds = ['B3LYP', 'B3LYPD2', 'B3LYPD3', 'B3LYPD3BJ',
+            'B97', 'B97D2', 'B97D3', 'B97D3BJ',
+            'BLYP', 'BLYPD2', 'BLYPD3', 'BLYPD3BJ',
+            'BP86', 'BP86D2', 'BP86D3', 'BP86D3BJ',
+            'PBE', 'PBED2', 'PBED3', 'PBED3BJ',
+            'PBE0', 'PBE0D2', 'PBE0D3', 'PBE0D3BJ',
+            'WPBE', 'WPBED3', 'WPBED3BJ',
+            'B2PLYP', 'B2PLYPD2', 'B2PLYPD3', 'B2PLYPD3BJ',
+            'WB97XD', 'M052X', 'WB97XV']
     bass = ['def2qzvp', 'adz', 'atz']
     opts = ['', 'dfhf', 'dfhf-dfmp']  # why B2PLYP with no or dfhf label; why B3LYP w dfhf-dfmp label?
     cpmd = ['CP', 'unCP']
 
 elif project == 'nbcref':
     mtds = ['CCSDT']
-    bass = ['atqzhatz', 'atqzatz', 'atqzadz', 'atqz']
+    #bass = ['atqzhatz', 'atqzatz', 'atqzadz', 'atqz']  # for NBC10ext
+    bass = ['aq5zhatz', 'aq5zatz', 'atqz']  # for NBC10B
     opts = ['', 'dfhf-dfmp']
     cpmd = ['CP']
 
