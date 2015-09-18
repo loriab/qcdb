@@ -1611,7 +1611,7 @@ class Database(object):
             text += collabel
         text += '\n'
 
-        text += """{:20}    {}""".format('', '_' * 44)
+        text += """{:20}    {}""".format('', '=' * 44)
         ul = False
         for db in self.dbdict.keys():
             text += """{}""".format('_' * 44 if ul else ' ' * 44)
@@ -3018,7 +3018,7 @@ class DB4(Database):
         self.plot_bars([
             'SAPT0S-CP-jadz', 'SAPTDFT-CP-atz', 'SAPT2P-CP-adz', 'SAPT3M-CP-atz',
             'SAPT2PCM-CP-atz', None, 'B97D3-unCP-atz', 'B3LYPD3-CP-adz',
-            'M052X-unCP-adz', 'WB97XD-CP-atz', 'WB97XV-CP-atz', 'WB97X2-CP-atz',
+            'M052X-unCP-adz', 'WB97XD-CP-atz', 'WB97XV-CP-adz', 'WB97X2-CP-atz',
             'DSDPBEP86D2OPT-CP-atz', 'B2PLYPD3-CP-atz', None, 'MP2-CP-atz',
             'SCSMP2-CP-atz', 'SCSMIMP2-CP-qz', 'MP2C-CP-atqzadz',
             'MP2CF12-CP-adz', 'SCMICCSDAF12-CP-adz', 'CCSDT-CP-atz',
@@ -3111,9 +3111,25 @@ class DB4(Database):
                            plotpath='analysis/flats/mplflat_',  # proj still has 'mpl' prefix
                            standalone=False, filename='tblssets_ex3')
 
-    def table_dhdft_suppmat_rxns(self):
-        """Generate the per-reaction suppmat Part III tables and their indices for DHDFT."""
+    def make_dhdft_Tables_SII(self):
+        """Generate the subset details suppmat Part II tables and their indices for DHDFT.
 
+        """
+        self.table_wrapper(mtd=['B97D3', 'PBED3', 'M11L', 'DLDFD', 'B3LYPD3',
+                                'PBE0D3', 'WB97XD', 'M052X', 'M062X', 'M08HX',
+                                'M08SO', 'M11', 'VV10', 'LCVV10', 'WB97XV',
+                                'PBE02', 'WB97X2', 'DSDPBEP86D2OPT', 'B2PLYPD3'],  # 'MP2']
+                           bas=['adz', 'atz'],
+                           tableplan=self.table_merge_suppmat,
+                           opt=['CP', 'unCP'], err=['mae', 'mape'],
+                           subjoin=False,
+                           plotpath='analysis/flats/mplflat_',  # proj still has 'mpl' prefix
+                           standalone=False, filename='tblssets')
+
+    def make_dhdft_Tables_SIII(self):
+        """Generate the per-reaction suppmat Part III tables and their indices for DHDFT.
+
+        """
         self.table_reactions(
             ['B97D3-unCP-adz', 'B97D3-CP-adz', 'B97D3-unCP-atz', 'B97D3-CP-atz',
              'PBED3-unCP-adz', 'PBED3-CP-adz', 'PBED3-unCP-atz', 'PBED3-CP-atz',
@@ -3136,28 +3152,6 @@ class DB4(Database):
              'B2PLYPD3-unCP-adz', 'B2PLYPD3-CP-adz', 'B2PLYPD3-unCP-atz', 'B2PLYPD3-CP-atz'],
             # 'MP2-unCP-adz', 'MP2-CP-adz', 'MP2-unCP-atz', 'MP2-CP-atz'],
             standalone=False, filename='tblrxn_all')
-
-        # SuppMat Part II tables and indices
-#        self.table_wrapper(mtd=mtd, bas=['adz', 'atz'],
-#                           tableplan=self.table_merge_suppmat,
-#                           opt=['CP', 'unCP'], err=['mae', 'mape'],
-#                           subjoin=False,
-#                           plotpath='analysis/flats/mplflat_',  # proj still has 'mpl' prefix
-#                           standalone=False, filename='tblssets')
-
-#    def table_dhdft_suppmat_subsets(self):
-#        """Generate the subset details suppmat Part II tables and their indices for DHDFT."""
-#
-#        self.table_wrapper(mtd=['B97D3', 'PBED3', 'M11L', 'DLDFD', 'B3LYPD3',
-#                                'PBE0D3', 'WB97XD', 'M052X', 'M062X', 'M08HX',
-#                                'M08SO', 'M11', 'VV10', 'LCVV10', 'WB97XV',
-#                                'PBE02', 'WB97X2', 'DSDPBEP86D2OPT', 'B2PLYPD3'],  # 'MP2']
-#                           bas=['adz', 'atz'],
-#                           tableplan=self.table_merge_suppmat,
-#                           opt=['CP', 'unCP'], err=['mae', 'mape'],
-#                           subjoin=False,
-#                           plotpath='analysis/flats/mplflat_',  # proj still has 'mpl' prefix
-#                           standalone=False, filename='tblssets')
 
 
 class ThreeDatabases(Database):
