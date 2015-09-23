@@ -175,8 +175,10 @@ useme2psivar = {
     'Disp20(SS)': 'SAPT DISP20(SS) ENERGY',
     'Exch-Disp20(SS)': 'SAPT EXCH-DISP20(SS) ENERGY',
     'Disp21': 'SAPT DISP21 ENERGY',
+    'Disp22(SDQ)': 'SAPT DISP22(SDQ) ENERGY',  # added for modern parsing, may confuse old usemesapt parsing
+    'Disp22(T)': 'SAPT DISP22(T) ENERGY',  # ditto  # ne'er used
     'Disp22(SDQ).1': 'SAPT DISP22(SDQ) ENERGY',
-    'Disp22(T).1': 'SAPT EST.DISP22(T) ENERGY',  # ne'er used
+    'Disp22(T).1': 'SAPT DISP22(T) ENERGY',  # ne'er used  # edited to remove est
     'Est.Disp22(T)': 'SAPT EST.DISP22(T) ENERGY',
     'Disp2(CCD)': 'SAPT DISP2(CCD) ENERGY',
     'Disp22(S)(CCD)': 'SAPT DISP22(S)(CCD) ENERGY',
