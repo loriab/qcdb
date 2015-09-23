@@ -852,12 +852,14 @@ def iowa(mcdat, mclbl, title='', xtitle='', xlimit=2.0,
     # handle for frame, overall axis
     fig, axt = plt.subplots(figsize=(6, 6))
 
+    #axt.set_xticks([])  # for quick nolabel, whiteback
+    #axt.set_yticks([])  # for quick nolabel, whiteback
     axt.set_xticks(np.arange(len(aa)) + 0.3, minor=False)
     axt.set_yticks(np.arange(len(aa)) + 0.3, minor=False)
     axt.invert_yaxis()
-    axt.xaxis.tick_top()
-    axt.set_xticklabels(aa, minor=False, rotation=60, size='small')
-    axt.set_yticklabels(aa, minor=False, size='small')
+    axt.xaxis.tick_top()  # comment for quick nolabel, whiteback
+    axt.set_xticklabels(aa, minor=False, rotation=60, size='small')  # comment for quick nolabel, whiteback
+    axt.set_yticklabels(aa, minor=False, size='small')  # comment for quick nolabel, whiteback
     axt.xaxis.set_tick_params(width=0, length=0)
     axt.yaxis.set_tick_params(width=0, length=0)
     #axt.set_title('%s' % (title), fontsize=16, verticalalignment='bottom')
@@ -887,6 +889,7 @@ def iowa(mcdat, mclbl, title='', xtitle='', xlimit=2.0,
     for ext in graphicsformat:
         savefile = pltfile + '.' + ext.lower()
         plt.savefig(savefile, transparent=True, format=ext, bbox_inches='tight')
+        #plt.savefig(savefile, transparent=False, format=ext, bbox_inches='tight')  # for quick nolabel, whiteback
         files_saved[ext.lower()] = savefile
     plt.show()
     return files_saved

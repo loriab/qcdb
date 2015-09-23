@@ -88,13 +88,14 @@ def identify_qcprog(filename):
     qcprogs = {
         'PSI4: An Open-Source Ab Initio Electronic Structure Package': 'psi4',
         '***  PROGRAM SYSTEM MOLPRO  ***': 'molpro2',
+        'A Quantum Leap Into The Future Of Chemistry': 'qchem',
         }
 
     with open(sample, 'r') as handle:
         contents = handle.readlines()
     for line in contents:
         for target in qcprogs.keys():
-            if target in line:
+            if target.lower() in line.lower():
                 return qcprogs[target]
 
 
@@ -261,7 +262,7 @@ else:  # non-sapt
         except KeyError:
             continue
     
-        if isDHDFT and usemeext in ['DFT.usemeraw', 'mp2.usemecorl']:  # sad hack
+        if isDHDFT and usemeext in ['DFT.usemeraw', 'mp2.usemecorl', 'mp2.usemetrip']:  # sad hack
             continue
     
         for rxn in HRXN:

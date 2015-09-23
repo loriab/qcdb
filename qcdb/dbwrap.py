@@ -103,6 +103,8 @@ def format_errors(err, mode=1):
     twodecimal = r"""{0:8.2f}"""
     threedecimal = r"""{0:12.3f}"""
     fourdecimal = r"""{0:12.4f}"""
+    shortblank = r"""{0:8s}""".format('')
+    longblank = r"""{0:12s}""".format('')
 
     if mode == 1:
         me = ' ----' if err['me'] is None else '%+.2f' % (err['me'])
@@ -133,12 +135,13 @@ def format_errors(err, mode=1):
 
     if mode == 3:
         sdict = OrderedDict()
+        # shortblanks changed from empty strings Aug 2015
         for lbl in ['maxe', 'mine', 'me', 'mae', 'rmse', 'stde']:
-            sdict[lbl] = '' if err[lbl] is None else twodecimal.format(err[lbl])
+            sdict[lbl] = shortblank if err[lbl] is None else twodecimal.format(err[lbl])
         for lbl in ['maxpe', 'minpe', 'mpe', 'mape', 'rmspe', 'stdpe',
                     'maxpbe', 'minpbe', 'mpbe', 'mapbe', 'rmspbe', 'stdpbe',
                     'maxpce', 'minpce', 'mpce', 'mapce', 'rmspce', 'stdpce']:
-            sdict[lbl] = '' if err[lbl] is None else onedecimal.format(100 * err[lbl])
+            sdict[lbl] = shortblank if err[lbl] is None else onedecimal.format(100 * err[lbl])
         return sdict
 
 
@@ -1599,8 +1602,22 @@ class Database(object):
         for db, odb in self.dbdict.items():
             text += """%44s""" % ('=> ' + odb.dbse + ' <=')
         text += '\n'
-        text += """%20s         %5s   %4s   %6s %6s    %6s\n""" % \
-                ('', 'ME', 'STDE', 'MAE', 'MA%E', 'MA%BE')
+
+        collabel = """      {:5}   {:4}   {:6} {:6}    {:6}""".format(
+                'ME', 'STDE', 'MAE', 'MA%E', 'MA%BE')
+
+        text += """{:20}    """.format('') + collabel
+        for db in self.dbdict.keys():
+            text += collabel
+        text += '\n'
+
+        text += """{:20}    {}""".format('', '=' * 44)
+        ul = False
+        for db in self.dbdict.keys():
+            text += """{}""".format('_' * 44 if ul else ' ' * 44)
+            ul = not ul
+        text += '\n'
+
         for ss in self.sset.keys():
             text += """   => %s <=\n""" % (ss)
             for mc in modelchem:
@@ -2481,12 +2498,17 @@ reinitialize
         for mc in mcs:
             serrors[mc] = {}
             for ss in self.sset.keys():
-                perr = self.compute_statistics(mc, benchmark=benchmark, sset=ss,
-                                               failoninc=failoninc, verbose=False, returnindiv=False)
                 serrors[mc][ss] = {}
-                serrors[mc][ss][self.dbse] = format_errors(perr[self.dbse], mode=3)
-                for db in self.dbdict.keys():
-                    serrors[mc][ss][db] = None if perr[db] is None else format_errors(perr[db], mode=3)
+                if mc in self.mcs.keys():
+                    perr = self.compute_statistics(mc, benchmark=benchmark, sset=ss,
+                                                   failoninc=failoninc, verbose=False, returnindiv=False)
+                    serrors[mc][ss][self.dbse] = format_errors(perr[self.dbse], mode=3)
+                    for db in self.dbdict.keys():
+                        serrors[mc][ss][db] = None if perr[db] is None else format_errors(perr[db], mode=3)
+                else:
+                    serrors[mc][ss][self.dbse] = format_errors(initialize_errors(), mode=3)
+                    for db in self.dbdict.keys():
+                        serrors[mc][ss][db] = format_errors(initialize_errors(), mode=3)
 
         # find indices that would be neglected in a single sweep over table_generic
         keysinplan = set(sum([col[-1].keys() for col in columnplan], rowplan))
@@ -2551,6 +2573,22 @@ reinitialize
                         'index': os.path.abspath(filename + '_index.tex')}
             return filedict
 
+    def table_scrunch(self, plotpath, subjoin):
+        rowplan = ['mtd']
+        columnplan = [
+            ['l', r'Method', '', textables.label, {}],
+            ['c', r'Description', '', textables.empty, {}],
+            ['d', r'aug-cc-pVDZ', 'unCP', textables.val, {'bas': 'adz', 'opt': 'unCP'}],
+            ['d', r'aug-cc-pVDZ', 'CP', textables.val, {'bas': 'adz', 'opt': 'CP'}],
+            ['d', r'aug-cc-pVTZ', 'unCP', textables.val, {'bas': 'atz', 'opt': 'unCP'}],
+            ['d', r'aug-cc-pVTZ', 'CP', textables.val, {'bas': 'atz', 'opt': 'CP'}]]
+
+        footnotes = []
+        landscape = False
+        theme = 'summavg'
+        title = r"""Classification and Performance of model chemistries. Interaction energy (kcal/mol) {{err}} statistics.""".format()
+        return rowplan, columnplan, landscape, footnotes, title, theme
+
     def table_merge_abbr(self, plotpath, subjoin):
         """Specialization of table_generic into table with minimal statistics
         (three S22 and three overall) plus embedded slat diagram as suitable
@@ -2570,7 +2608,7 @@ reinitialize
             ['l', r"""Error Distribution\footnotemark[1]""",
              r"""\includegraphics[width=6.67cm,height=3.5mm]{%s%s.pdf}""" % (plotpath, 'blank'),
              textables.graphics, {}],
-            ['d', r'Time', '', textables.val, {'sset': 'tt-5min', 'dbse': 'NBC1'}]]
+            ['d', r'Time', '', textables.empty, {}]]
         # TODO Time column not right at all
 
         footnotes = [fnreservoir['blankslat']]
@@ -2737,6 +2775,10 @@ class DB4(Database):
         """Plot all the graphics needed for the calendar grey bars plot
         in Fig. 3 of PT2.
 
+        Note that in the modern implementation of class DB4, would need to
+        pass ``sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min']`` to get
+        published figure.
+
         """
         # Fig. bars (a)
         self.plot_bars(['MP2-CP-dz', 'MP2-CP-jadz', 'MP2-CP-hadz', 'MP2-CP-adz',
@@ -2821,6 +2863,10 @@ class DB4(Database):
         """Plot all the graphics needed for the diffuse augmented grey
         bars plot in Fig. 2 of PT2.
 
+        Note that in the modern implementation of class DB4, would need to
+        pass ``sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min']`` to get
+        published figure.
+
         """
         # Fig. bars (a)
         self.plot_bars(['MP2-CP-adz', 'MP2-CP-atz', 'MP2-CP-adtz',
@@ -2889,34 +2935,6 @@ class DB4(Database):
         self.plot_bars(['CCSDTBF12-CP-adz', 'CCSDTBF12-CP-adtzadz', 'CCSDTBF12-CP-atqzadz'])
         self.plot_bars(['DWCCSDTF12-CP-adz', 'DWCCSDTF12-CP-adtzadz', 'DWCCSDTF12-CP-atqzadz'])
 
-    def plot_dhdft_bars(self):
-        """Generate pieces for grey bars figure for DH-DFT paper."""
-
-        self.plot_bars(
-            ['B97D3-CP-adz', 'PBED3-CP-adz', 'M11L-CP-adz', 'DLDFD-CP-adz', 'B3LYPD3-CP-adz', 'PBE0D3-CP-adz',
-             'WB97XD-CP-adz', 'M052X-CP-adz', 'M062X-CP-adz', 'M08HX-CP-adz', 'M08SO-CP-adz', 'M11-CP-adz',
-             'VV10-CP-adz',
-             'LCVV10-CP-adz', 'WB97XV-CP-adz', 'PBE02-CP-adz', 'WB97X2-CP-adz', 'B2PLYPD3-CP-adz',
-             'DSDPBEP86D2OPT-CP-adz', 'MP2-CP-adz'])
-        self.plot_bars(['B97D3-unCP-adz', 'PBED3-unCP-adz', 'M11L-unCP-adz', 'DLDFD-unCP-adz', 'B3LYPD3-unCP-adz',
-                        'PBE0D3-unCP-adz',
-                        'WB97XD-unCP-adz', 'M052X-unCP-adz', 'M062X-unCP-adz', 'M08HX-unCP-adz', 'M08SO-unCP-adz',
-                        'M11-unCP-adz', 'VV10-unCP-adz',
-                        'LCVV10-unCP-adz', 'WB97XV-unCP-adz', 'PBE02-unCP-adz', 'WB97X2-unCP-adz', 'B2PLYPD3-unCP-adz',
-                        'DSDPBEP86D2OPT-unCP-adz', 'MP2-unCP-adz'])
-        self.plot_bars(
-            ['B97D3-CP-atz', 'PBED3-CP-atz', 'M11L-CP-atz', 'DLDFD-CP-atz', 'B3LYPD3-CP-atz', 'PBE0D3-CP-atz',
-             'WB97XD-CP-atz', 'M052X-CP-atz', 'M062X-CP-atz', 'M08HX-CP-atz', 'M08SO-CP-atz', 'M11-CP-atz',
-             'VV10-CP-atz',
-             'LCVV10-CP-atz', 'WB97XV-CP-atz', 'PBE02-CP-atz', 'WB97X2-CP-atz', 'B2PLYPD3-CP-atz',
-             'DSDPBEP86D2OPT-CP-atz', 'MP2-CP-atz'])
-        self.plot_bars(['B97D3-unCP-atz', 'PBED3-unCP-atz', 'M11L-unCP-atz', 'DLDFD-unCP-atz', 'B3LYPD3-unCP-atz',
-                        'PBE0D3-unCP-atz',
-                        'WB97XD-unCP-atz', 'M052X-unCP-atz', 'M062X-unCP-atz', 'M08HX-unCP-atz', 'M08SO-unCP-atz',
-                        'M11-unCP-atz', 'VV10-unCP-atz',
-                        'LCVV10-unCP-atz', 'WB97XV-unCP-atz', 'PBE02-unCP-atz', 'WB97X2-unCP-atz', 'B2PLYPD3-unCP-atz',
-                        'DSDPBEP86D2OPT-unCP-atz', 'MP2-unCP-atz'])
-
     def plot_dhdft_flats(self):
         """Generate pieces for grey bars figure for DH-DFT paper."""
 
@@ -2945,60 +2963,68 @@ class DB4(Database):
                              'LCVV10-unCP-atz', 'WB97XV-unCP-atz', 'PBE02-unCP-atz', 'WB97X2-unCP-atz',
                              'B2PLYPD3-unCP-atz', 'DSDPBEP86D2OPT-unCP-atz', 'MP2-unCP-atz'], sset='tt-5min')
 
-    def plot_dhdft_figure(self):
-        self.plot_bars(['B97D3-unCP-adz', 'B97D3-CP-adz', 'B97D3-unCP-atz', 'B97D3-CP-atz'],
-                       sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
-        self.plot_bars(['PBED3-unCP-adz', 'PBED3-CP-adz', 'PBED3-unCP-atz', 'PBED3-CP-atz'],
-                       sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
-        self.plot_bars(['M11L-unCP-adz', 'M11L-CP-adz', 'M11L-unCP-atz', 'M11L-CP-atz'],
-                       sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
-        self.plot_bars(['DLDFD-unCP-adz', 'DLDFD-CP-adz', 'DLDFD-unCP-atz', 'DLDFD-CP-atz'],
-                       sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
-        self.plot_bars(['B3LYPD3-unCP-adz', 'B3LYPD3-CP-adz', 'B3LYPD3-unCP-atz', 'B3LYPD3-CP-atz'],
-                       sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
-        self.plot_bars(['PBE0D3-unCP-adz', 'PBE0D3-CP-adz', 'PBE0D3-unCP-atz', 'PBE0D3-CP-atz'],
-                       sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
-        self.plot_bars(['WB97XD-unCP-adz', 'WB97XD-CP-adz', 'WB97XD-unCP-atz', 'WB97XD-CP-atz'],
-                       sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
-        self.plot_bars(['M052X-unCP-adz', 'M052X-CP-adz', 'M052X-unCP-atz', 'M052X-CP-atz'],
-                       sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
-        self.plot_bars(['M062X-unCP-adz', 'M062X-CP-adz', 'M062X-unCP-atz', 'M062X-CP-atz'],
-                       sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
-        self.plot_bars(['M08HX-unCP-adz', 'M08HX-CP-adz', 'M08HX-unCP-atz', 'M08HX-CP-atz'],
-                       sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
-        self.plot_bars(['M08SO-unCP-adz', 'M08SO-CP-adz', 'M08SO-unCP-atz', 'M08SO-CP-atz'],
-                       sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
-        self.plot_bars(['M11-unCP-adz', 'M11-CP-adz', 'M11-unCP-atz', 'M11-CP-atz'],
-                       sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
-        self.plot_bars(['VV10-unCP-adz', 'VV10-CP-adz', 'VV10-unCP-atz', 'VV10-CP-atz'],
-                       sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
-        self.plot_bars(['LCVV10-unCP-adz', 'LCVV10-CP-adz', 'LCVV10-unCP-atz', 'LCVV10-CP-atz'],
-                       sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
-        self.plot_bars(['WB97XV-unCP-adz', 'WB97XV-CP-adz', 'WB97XV-unCP-atz', 'WB97XV-CP-atz'],
-                       sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
-        self.plot_bars(['PBE02-unCP-adz', 'PBE02-CP-adz', 'PBE02-unCP-atz', 'PBE02-CP-atz'],
-                       sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
-        self.plot_bars(['WB97X2-unCP-adz', 'WB97X2-CP-adz', 'WB97X2-unCP-atz', 'WB97X2-CP-atz'],
-                       sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
-        self.plot_bars(['B2PLYPD3-unCP-adz', 'B2PLYPD3-CP-adz', 'B2PLYPD3-unCP-atz', 'B2PLYPD3-CP-atz'],
-                       sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
-        self.plot_bars(
-            ['DSDPBEP86D2OPT-unCP-adz', 'DSDPBEP86D2OPT-CP-adz', 'DSDPBEP86D2OPT-unCP-atz', 'DSDPBEP86D2OPT-CP-atz'],
-            sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
-        self.plot_bars(['MP2-unCP-adz', 'MP2-CP-adz', 'MP2-unCP-atz', 'MP2-CP-atz'],
-                       sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
+    def make_dhdft_Figure_1(self):
+        """Plot all the graphics needed for the grey bars plot
+        in Fig. 1 of DHDFT.
 
-    def plot_minn_bars(self):
-        self.plot_bars(
-            ['DLDFD-unCP-adz', 'M052X-unCP-adz', 'M062X-unCP-adz', 'M08HX-unCP-adz', 'M08SO-unCP-adz', 'M11-unCP-adz',
-             'M11L-unCP-adz',
-             'DLDFD-CP-adz', 'M052X-CP-adz', 'M062X-CP-adz', 'M08HX-CP-adz', 'M08SO-CP-adz', 'M11-CP-adz',
-             'M11L-CP-adz'])
-        self.plot_bars(
-            ['DLDFD-unCP-atz', 'M052X-unCP-atz', 'M062X-unCP-atz', 'M08HX-unCP-atz', 'M08SO-unCP-atz', 'M11-unCP-atz',
-             'M11L-unCP-atz',
-             'DLDFD-CP-atz', 'M052X-CP-atz', 'M062X-CP-atz', 'M08HX-CP-atz', 'M08SO-CP-atz', 'M11-CP-atz',
-             'M11L-CP-atz'])
+        """
+        # Fig. bars (a)
+        self.plot_bars([
+            'M052X-unCP-adz', 'M052X-CP-adz', 'M052X-unCP-atz', 'M052X-CP-atz', None,
+            'M062X-unCP-adz', 'M062X-CP-adz', 'M062X-unCP-atz', 'M062X-CP-atz', None,
+            'M08SO-unCP-adz', 'M08SO-CP-adz', 'M08SO-unCP-atz', 'M08SO-CP-atz', None,
+            'M08HX-unCP-adz', 'M08HX-CP-adz', 'M08HX-unCP-atz', 'M08HX-CP-atz', None,
+            'M11-unCP-adz', 'M11-CP-adz', 'M11-unCP-atz', 'M11-CP-atz', None,
+            'M11L-unCP-adz', 'M11L-CP-adz', 'M11L-unCP-atz', 'M11L-CP-atz'],
+            sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
+
+        # Fig. bars (b)
+        self.plot_bars([
+            'PBED3-unCP-adz', 'PBED3-CP-adz', 'PBED3-unCP-atz', 'PBED3-CP-atz', None,
+            'B97D3-unCP-adz', 'B97D3-CP-adz', 'B97D3-unCP-atz', 'B97D3-CP-atz', None,
+            'PBE0D3-unCP-adz', 'PBE0D3-CP-adz', 'PBE0D3-unCP-atz', 'PBE0D3-CP-atz', None,
+            'B3LYPD3-unCP-adz', 'B3LYPD3-CP-adz', 'B3LYPD3-unCP-atz', 'B3LYPD3-CP-atz', None,
+            'DLDFD-unCP-adz', 'DLDFD-CP-adz', 'DLDFD-unCP-atz', 'DLDFD-CP-atz', None,
+            'WB97XD-unCP-adz', 'WB97XD-CP-adz', 'WB97XD-unCP-atz', 'WB97XD-CP-atz'],
+            sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
+
+        # Fig. bars (c)
+        self.plot_bars([
+            'VV10-unCP-adz', 'VV10-CP-adz', 'VV10-unCP-atz', 'VV10-CP-atz', None, None,
+            'LCVV10-unCP-adz', 'LCVV10-CP-adz', 'LCVV10-unCP-atz', 'LCVV10-CP-atz', None, None,
+            'WB97XV-unCP-adz', 'WB97XV-CP-adz', 'WB97XV-unCP-atz', 'WB97XV-CP-atz'],
+            sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
+
+        # Fig. bars (d)
+        self.plot_bars([
+            'PBE02-unCP-adz', 'PBE02-CP-adz', 'PBE02-unCP-atz', 'PBE02-CP-atz', None,
+            'WB97X2-unCP-adz', 'WB97X2-CP-adz', 'WB97X2-unCP-atz', 'WB97X2-CP-atz', None,
+            'B2PLYPD3-unCP-adz', 'B2PLYPD3-CP-adz', 'B2PLYPD3-unCP-atz', 'B2PLYPD3-CP-atz', None,
+            'DSDPBEP86D2OPT-unCP-adz', 'DSDPBEP86D2OPT-CP-adz', 'DSDPBEP86D2OPT-unCP-atz', 'DSDPBEP86D2OPT-CP-atz'],
+            sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
+
+        # Fig. bars (e)
+        self.plot_bars([
+            'MP2-unCP-adz', 'MP2-CP-adz', 'MP2-unCP-atz', 'MP2-CP-atz'],
+            sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'])
+
+    def make_dhdft_Figure_2(self):
+        """Plot all the graphics needed for the SAPT/DFT/WFN
+        comparison plot in Fig. 2 of DHDFT.
+
+        Note that benchmark set as reminder, not necessity, since default.
+
+        """
+        self.plot_bars([
+            'SAPT0S-CP-jadz', 'SAPTDFT-CP-atz', 'SAPT2P-CP-adz', 'SAPT3M-CP-atz',
+            'SAPT2PCM-CP-atz', None, 'B97D3-unCP-atz', 'B3LYPD3-CP-adz',
+            'M052X-unCP-adz', 'WB97XD-CP-atz', 'WB97XV-CP-adz', 'WB97X2-CP-atz',
+            'DSDPBEP86D2OPT-CP-atz', 'B2PLYPD3-CP-atz', None, 'MP2-CP-atz',
+            'SCSMP2-CP-atz', 'SCSMIMP2-CP-qz', 'MP2C-CP-atqzadz',
+            'MP2CF12-CP-adz', 'SCMICCSDAF12-CP-adz', 'CCSDT-CP-atz',
+            'CCSDT-CP-atqzatz', 'DWCCSDTF12-CP-adz'],
+            sset=['tt-5min', 'hb-5min', 'mx-5min', 'dd-5min'],
+            benchmark='C2011BENCH')
 
     def plot_dhdft_modelchems(self):
         self.plot_modelchems(
@@ -3038,9 +3064,57 @@ class DB4(Database):
              'DLDFD-CP-atz', 'M052X-CP-atz', 'M062X-CP-atz', 'M08HX-CP-atz', 'M08SO-CP-atz', 'M11-CP-atz',
              'M11L-CP-atz'])
 
-    def table_dhdft_suppmat_subsets(self):
-        """Generate the subset details suppmat Part II tables and their indice for DF-DFT."""
+    def make_dhdft_Table_I(self):
+        """Generate the in-manuscript summary slat table for DHDFT.
 
+        """
+        self.table_wrapper(mtd=['B97D3', 'PBED3', 'M11L', 'DLDFD', 'B3LYPD3',
+                           'PBE0D3', 'WB97XD', 'M052X', 'M062X', 'M08HX',
+                           'M08SO', 'M11', 'VV10', 'LCVV10', 'WB97XV',
+                           'PBE02', 'WB97X2', 'DSDPBEP86D2OPT', 'B2PLYPD3',
+                           'MP2', 'SCSNMP2', 'SCSMIMP2', 'MP2CF12', 'SCMICCSDAF12',
+                           'SAPTDFT', 'SAPT0S', 'SAPT2P', 'SAPT3M', 'SAPT2PCM'],
+                           bas=['adz', 'atz'],
+                           tableplan=self.table_scrunch,
+                           opt=['CP', 'unCP'], err=['mae'],
+                           subjoin=None,
+                           plotpath=None,
+                           standalone=False, filename='tblssets_ex1')
+
+    def make_dhdft_Table_II(self):
+        """Generate the in-manuscript CP slat table for DHDFT.
+
+        """
+        self.table_wrapper(mtd=['B97D3', 'PBED3', 'M11L', 'DLDFD', 'B3LYPD3',
+                           'PBE0D3', 'WB97XD', 'M052X', 'M062X', 'M08HX',
+                           'M08SO', 'M11', 'VV10', 'LCVV10', 'WB97XV',
+                           'PBE02', 'WB97X2', 'DSDPBEP86D2OPT', 'B2PLYPD3', 'MP2'],
+                           bas=['adz', 'atz'],
+                           tableplan=self.table_merge_abbr,
+                           opt=['CP'], err=['mae'],
+                           subjoin=True,
+                           plotpath='analysis/flats/mplflat_',  # proj still has 'mpl' prefix
+                           standalone=False, filename='tblssets_ex2')
+
+    def make_dhdft_Table_III(self):
+        """Generate the in-manuscript unCP slat table for DHDFT.
+
+        """
+        self.table_wrapper(mtd=['B97D3', 'PBED3', 'M11L', 'DLDFD', 'B3LYPD3',
+                           'PBE0D3', 'WB97XD', 'M052X', 'M062X', 'M08HX',
+                           'M08SO', 'M11', 'VV10', 'LCVV10', 'WB97XV',
+                           'PBE02', 'WB97X2', 'DSDPBEP86D2OPT', 'B2PLYPD3', 'MP2'],
+                           bas=['adz', 'atz'],
+                           tableplan=self.table_merge_abbr,
+                           opt=['unCP'], err=['mae'],
+                           subjoin=True,
+                           plotpath='analysis/flats/mplflat_',  # proj still has 'mpl' prefix
+                           standalone=False, filename='tblssets_ex3')
+
+    def make_dhdft_Tables_SII(self):
+        """Generate the subset details suppmat Part II tables and their indices for DHDFT.
+
+        """
         self.table_wrapper(mtd=['B97D3', 'PBED3', 'M11L', 'DLDFD', 'B3LYPD3',
                                 'PBE0D3', 'WB97XD', 'M052X', 'M062X', 'M08HX',
                                 'M08SO', 'M11', 'VV10', 'LCVV10', 'WB97XV',
@@ -3052,9 +3126,10 @@ class DB4(Database):
                            plotpath='analysis/flats/mplflat_',  # proj still has 'mpl' prefix
                            standalone=False, filename='tblssets')
 
-    def table_dhdft_suppmat_rxns(self):
-        """Generate the per-reaction suppmat Part III tables and their indices for DH-DFT."""
+    def make_dhdft_Tables_SIII(self):
+        """Generate the per-reaction suppmat Part III tables and their indices for DHDFT.
 
+        """
         self.table_reactions(
             ['B97D3-unCP-adz', 'B97D3-CP-adz', 'B97D3-unCP-atz', 'B97D3-CP-atz',
              'PBED3-unCP-adz', 'PBED3-CP-adz', 'PBED3-unCP-atz', 'PBED3-CP-atz',
