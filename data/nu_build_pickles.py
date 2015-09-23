@@ -18,8 +18,10 @@ dbnet['NBC10'] = ['dft', 'saptone', 'pt2']
 dbnet['HBC6'] = ['dft', 'saptone', 'pt2']
 dbnet['HSG'] = ['dft', 'saptone', 'pt2']
 dbnet['SSI'] = ['bfdbmm', 'merz3', 'dfit']
+dbnet['BBI'] = ['merz3', 'dfit']
 dbnet['PCONF'] = ['dfit']
-dbnet['NBC10ext'] = []
+dbnet['NBC10ext'] = ['dfit']
+dbnet['ACHC'] = ['dfit']
 
 #dbse = 'SSI'  # UNCOMMENT for local WDb
 

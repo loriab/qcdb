@@ -261,7 +261,7 @@ for rxn in HRXN:
 BIND = {}
 # Original publication
 #BIND_NBC100 = {}
-# Current revision
+# Current published revision
 BIND_NBC10A = {}
 BIND_NBC10A['%s-BzBz_S-3.2'  % (dbse)] =  3.462
 BIND_NBC10A['%s-BzBz_S-3.3'  % (dbse)] =  1.484
@@ -467,8 +467,236 @@ BIND_NBC10A['%s-BzBz_PD36-2.4' % (dbse)] = -2.371
 BIND_NBC10A['%s-BzBz_PD36-2.6' % (dbse)] = -2.253
 BIND_NBC10A['%s-BzBz_PD36-2.8' % (dbse)] = -2.143
 BIND_NBC10A['%s-BzBz_PD36-3.0' % (dbse)] = -2.046
+# Current revision (pure triple-zeta)
+BIND_NBC10B = {}
+BIND_NBC10B['%s-BzBz_S-3.2'    % (dbse)] =  3.459
+BIND_NBC10B['%s-BzBz_S-3.3'    % (dbse)] =  1.484
+BIND_NBC10B['%s-BzBz_S-3.4'    % (dbse)] =  0.149
+BIND_NBC10B['%s-BzBz_S-3.5'    % (dbse)] = -0.721
+BIND_NBC10B['%s-BzBz_S-3.6'    % (dbse)] = -1.256
+BIND_NBC10B['%s-BzBz_S-3.7'    % (dbse)] = -1.556
+BIND_NBC10B['%s-BzBz_S-3.8'    % (dbse)] = -1.693
+BIND_NBC10B['%s-BzBz_S-3.9'    % (dbse)] = -1.719  # BzBz_S minimum; CCSD(T)/[aQ5Z; D:haTZ]
+BIND_NBC10B['%s-BzBz_S-4.0'    % (dbse)] = -1.672
+BIND_NBC10B['%s-BzBz_S-4.1'    % (dbse)] = -1.582
+BIND_NBC10B['%s-BzBz_S-4.2'    % (dbse)] = -1.464
+BIND_NBC10B['%s-BzBz_S-4.5'    % (dbse)] = -1.072
+BIND_NBC10B['%s-BzBz_S-5.0'    % (dbse)] = -0.550
+BIND_NBC10B['%s-BzBz_S-5.5'    % (dbse)] = -0.252
+BIND_NBC10B['%s-BzBz_S-6.0'    % (dbse)] = -0.101
+BIND_NBC10B['%s-BzBz_S-6.5'    % (dbse)] = -0.029
+BIND_NBC10B['%s-BzBz_S-10.0'   % (dbse)] =  0.018
+
+BIND_NBC10B['%s-BzBz_T-4.3'    % (dbse)] =  2.631
+BIND_NBC10B['%s-BzBz_T-4.35'   % (dbse)] =  1.533
+BIND_NBC10B['%s-BzBz_T-4.4'    % (dbse)] =  0.616
+BIND_NBC10B['%s-BzBz_T-4.5'    % (dbse)] = -0.770
+BIND_NBC10B['%s-BzBz_T-4.6'    % (dbse)] = -1.682
+BIND_NBC10B['%s-BzBz_T-4.7'    % (dbse)] = -2.246
+BIND_NBC10B['%s-BzBz_T-4.8'    % (dbse)] = -2.559
+BIND_NBC10B['%s-BzBz_T-4.9'    % (dbse)] = -2.693
+BIND_NBC10B['%s-BzBz_T-5.0'    % (dbse)] = -2.702  # BzBz_T minimum; CCSD(T)/[aQ5Z; D:haTZ]
+BIND_NBC10B['%s-BzBz_T-5.1'    % (dbse)] = -2.629
+BIND_NBC10B['%s-BzBz_T-5.2'    % (dbse)] = -2.504
+BIND_NBC10B['%s-BzBz_T-5.3'    % (dbse)] = -2.349
+BIND_NBC10B['%s-BzBz_T-5.4'    % (dbse)] = -2.180
+BIND_NBC10B['%s-BzBz_T-5.5'    % (dbse)] = -2.006
+BIND_NBC10B['%s-BzBz_T-5.6'    % (dbse)] = -1.834
+BIND_NBC10B['%s-BzBz_T-6.0'    % (dbse)] = -1.243
+BIND_NBC10B['%s-BzBz_T-6.5'    % (dbse)] = -0.753
+BIND_NBC10B['%s-BzBz_T-7.0'    % (dbse)] = -0.468
+BIND_NBC10B['%s-BzBz_T-7.5'    % (dbse)] = -0.302
+BIND_NBC10B['%s-BzBz_T-8.0'    % (dbse)] = -0.203
+
+BIND_NBC10B['%s-BzBz_PD34-0.2' % (dbse)] =  0.032
+BIND_NBC10B['%s-BzBz_PD34-0.4' % (dbse)] = -0.294
+BIND_NBC10B['%s-BzBz_PD34-0.6' % (dbse)] = -0.766
+BIND_NBC10B['%s-BzBz_PD34-0.8' % (dbse)] = -1.296
+BIND_NBC10B['%s-BzBz_PD34-1.0' % (dbse)] = -1.800
+BIND_NBC10B['%s-BzBz_PD34-1.2' % (dbse)] = -2.210
+BIND_NBC10B['%s-BzBz_PD34-1.4' % (dbse)] = -2.494
+BIND_NBC10B['%s-BzBz_PD34-1.5' % (dbse)] = -2.582
+BIND_NBC10B['%s-BzBz_PD34-1.6' % (dbse)] = -2.639
+BIND_NBC10B['%s-BzBz_PD34-1.7' % (dbse)] = -2.664
+BIND_NBC10B['%s-BzBz_PD34-1.8' % (dbse)] = -2.666  # BzBz_PD34 minimum; CCSD(T)/[aQ5Z; D:haTZ]
+BIND_NBC10B['%s-BzBz_PD34-1.9' % (dbse)] = -2.646
+BIND_NBC10B['%s-BzBz_PD34-2.0' % (dbse)] = -2.608
+BIND_NBC10B['%s-BzBz_PD34-2.2' % (dbse)] = -2.500
+BIND_NBC10B['%s-BzBz_PD34-2.4' % (dbse)] = -2.375
+BIND_NBC10B['%s-BzBz_PD34-2.6' % (dbse)] = -2.259
+BIND_NBC10B['%s-BzBz_PD34-2.8' % (dbse)] = -2.162
+BIND_NBC10B['%s-BzBz_PD34-3.0' % (dbse)] = -2.092
+
+BIND_NBC10B['%s-BzH2S-3.15'    % (dbse)] =  2.386
+BIND_NBC10B['%s-BzH2S-3.2'     % (dbse)] =  1.246
+BIND_NBC10B['%s-BzH2S-3.3'     % (dbse)] = -0.458
+BIND_NBC10B['%s-BzH2S-3.4'     % (dbse)] = -1.570
+BIND_NBC10B['%s-BzH2S-3.5'     % (dbse)] = -2.254
+BIND_NBC10B['%s-BzH2S-3.6'     % (dbse)] = -2.635
+BIND_NBC10B['%s-BzH2S-3.7'     % (dbse)] = -2.805
+BIND_NBC10B['%s-BzH2S-3.8'     % (dbse)] = -2.831  # BzH2S minimum; CCSD(T)/[aQ5Z; D:aTZ]
+BIND_NBC10B['%s-BzH2S-3.9'     % (dbse)] = -2.763
+BIND_NBC10B['%s-BzH2S-4.0'     % (dbse)] = -2.636
+BIND_NBC10B['%s-BzH2S-4.1'     % (dbse)] = -2.476
+BIND_NBC10B['%s-BzH2S-4.2'     % (dbse)] = -2.299
+BIND_NBC10B['%s-BzH2S-4.5'     % (dbse)] = -1.768
+BIND_NBC10B['%s-BzH2S-4.75'    % (dbse)] = -1.390
+BIND_NBC10B['%s-BzH2S-5.0'     % (dbse)] = -1.089
+BIND_NBC10B['%s-BzH2S-5.25'    % (dbse)] = -0.857
+BIND_NBC10B['%s-BzH2S-5.5'     % (dbse)] = -0.680
+BIND_NBC10B['%s-BzH2S-6.0'     % (dbse)] = -0.442
+BIND_NBC10B['%s-BzH2S-6.5'     % (dbse)] = -0.300
+BIND_NBC10B['%s-BzH2S-7.0'     % (dbse)] = -0.212
+BIND_NBC10B['%s-BzH2S-7.5'     % (dbse)] = -0.154
+
+BIND_NBC10B['%s-BzMe-3.15'     % (dbse)] =  1.281
+BIND_NBC10B['%s-BzMe-3.2'      % (dbse)] =  0.685
+BIND_NBC10B['%s-BzMe-3.3'      % (dbse)] = -0.213
+BIND_NBC10B['%s-BzMe-3.4'      % (dbse)] = -0.804
+BIND_NBC10B['%s-BzMe-3.5'      % (dbse)] = -1.171
+BIND_NBC10B['%s-BzMe-3.6'      % (dbse)] = -1.376
+BIND_NBC10B['%s-BzMe-3.7'      % (dbse)] = -1.468
+BIND_NBC10B['%s-BzMe-3.8'      % (dbse)] = -1.481  # BzMe minimum; CCSD(T)/[aQ5Z; D:aTZ]
+BIND_NBC10B['%s-BzMe-3.9'      % (dbse)] = -1.443
+BIND_NBC10B['%s-BzMe-4.0'      % (dbse)] = -1.373
+BIND_NBC10B['%s-BzMe-4.1'      % (dbse)] = -1.283
+BIND_NBC10B['%s-BzMe-4.2'      % (dbse)] = -1.185
+BIND_NBC10B['%s-BzMe-4.4'      % (dbse)] = -0.985
+BIND_NBC10B['%s-BzMe-4.6'      % (dbse)] = -0.801
+BIND_NBC10B['%s-BzMe-4.8'      % (dbse)] = -0.645
+BIND_NBC10B['%s-BzMe-5.0'      % (dbse)] = -0.517
+BIND_NBC10B['%s-BzMe-5.2'      % (dbse)] = -0.414
+BIND_NBC10B['%s-BzMe-5.4'      % (dbse)] = -0.332
+BIND_NBC10B['%s-BzMe-5.6'      % (dbse)] = -0.268
+BIND_NBC10B['%s-BzMe-6.0'      % (dbse)] = -0.177
+
+BIND_NBC10B['%s-MeMe-3.1'      % (dbse)] =  0.570
+BIND_NBC10B['%s-MeMe-3.15'     % (dbse)] =  0.291
+BIND_NBC10B['%s-MeMe-3.2'      % (dbse)] =  0.069
+BIND_NBC10B['%s-MeMe-3.3'      % (dbse)] = -0.239
+BIND_NBC10B['%s-MeMe-3.4'      % (dbse)] = -0.417
+BIND_NBC10B['%s-MeMe-3.5'      % (dbse)] = -0.508
+BIND_NBC10B['%s-MeMe-3.6'      % (dbse)] = -0.541  # MeMe minimum; CCSD(T)/aTQZ; unchgd NBC10A
+BIND_NBC10B['%s-MeMe-3.7'      % (dbse)] = -0.539
+BIND_NBC10B['%s-MeMe-3.8'      % (dbse)] = -0.515
+BIND_NBC10B['%s-MeMe-3.9'      % (dbse)] = -0.480
+BIND_NBC10B['%s-MeMe-4.0'      % (dbse)] = -0.439
+BIND_NBC10B['%s-MeMe-4.1'      % (dbse)] = -0.396
+BIND_NBC10B['%s-MeMe-4.2'      % (dbse)] = -0.354
+BIND_NBC10B['%s-MeMe-4.3'      % (dbse)] = -0.315
+BIND_NBC10B['%s-MeMe-4.4'      % (dbse)] = -0.279
+BIND_NBC10B['%s-MeMe-4.6'      % (dbse)] = -0.217
+BIND_NBC10B['%s-MeMe-4.8'      % (dbse)] = -0.168
+BIND_NBC10B['%s-MeMe-5.0'      % (dbse)] = -0.130
+BIND_NBC10B['%s-MeMe-5.4'      % (dbse)] = -0.080
+BIND_NBC10B['%s-MeMe-5.8'      % (dbse)] = -0.050
+
+BIND_NBC10B['%s-PyPy_S2-3.1'   % (dbse)] =  2.368
+BIND_NBC10B['%s-PyPy_S2-3.2'   % (dbse)] =  0.233
+BIND_NBC10B['%s-PyPy_S2-3.3'   % (dbse)] = -1.170
+BIND_NBC10B['%s-PyPy_S2-3.4'   % (dbse)] = -2.051
+BIND_NBC10B['%s-PyPy_S2-3.5'   % (dbse)] = -2.562
+BIND_NBC10B['%s-PyPy_S2-3.6'   % (dbse)] = -2.814
+BIND_NBC10B['%s-PyPy_S2-3.7'   % (dbse)] = -2.890  # PyPy_S2 minimum; CCSD(T)/[aQ5Z; D:haTZ]
+BIND_NBC10B['%s-PyPy_S2-3.8'   % (dbse)] = -2.849
+BIND_NBC10B['%s-PyPy_S2-3.9'   % (dbse)] = -2.734
+BIND_NBC10B['%s-PyPy_S2-4.0'   % (dbse)] = -2.575
+BIND_NBC10B['%s-PyPy_S2-4.1'   % (dbse)] = -2.394
+BIND_NBC10B['%s-PyPy_S2-4.2'   % (dbse)] = -2.204
+BIND_NBC10B['%s-PyPy_S2-4.3'   % (dbse)] = -2.016
+BIND_NBC10B['%s-PyPy_S2-4.4'   % (dbse)] = -1.835
+BIND_NBC10B['%s-PyPy_S2-4.5'   % (dbse)] = -1.664
+BIND_NBC10B['%s-PyPy_S2-4.7'   % (dbse)] = -1.361
+BIND_NBC10B['%s-PyPy_S2-5.0'   % (dbse)] = -1.004
+BIND_NBC10B['%s-PyPy_S2-5.5'   % (dbse)] = -0.620
+BIND_NBC10B['%s-PyPy_S2-6.0'   % (dbse)] = -0.403
+BIND_NBC10B['%s-PyPy_S2-6.5'   % (dbse)] = -0.277
+BIND_NBC10B['%s-PyPy_S2-7.0'   % (dbse)] = -0.200
+
+BIND_NBC10B['%s-PyPy_T3-4.1'   % (dbse)] =  9.342
+BIND_NBC10B['%s-PyPy_T3-4.27'  % (dbse)] =  2.792
+BIND_NBC10B['%s-PyPy_T3-4.3'   % (dbse)] =  2.006
+BIND_NBC10B['%s-PyPy_T3-4.36'  % (dbse)] =  0.689
+BIND_NBC10B['%s-PyPy_T3-4.44'  % (dbse)] = -0.629
+BIND_NBC10B['%s-PyPy_T3-4.5'   % (dbse)] = -1.355
+BIND_NBC10B['%s-PyPy_T3-4.6'   % (dbse)] = -2.180
+BIND_NBC10B['%s-PyPy_T3-4.7'   % (dbse)] = -2.650
+BIND_NBC10B['%s-PyPy_T3-4.8'   % (dbse)] = -2.875
+BIND_NBC10B['%s-PyPy_T3-4.9'   % (dbse)] = -2.934  # PyPy_T3 minimum; CCSD(T)/[aQ5Z; D:haTZ]
+BIND_NBC10B['%s-PyPy_T3-5.0'   % (dbse)] = -2.885
+BIND_NBC10B['%s-PyPy_T3-5.1'   % (dbse)] = -2.768
+BIND_NBC10B['%s-PyPy_T3-5.2'   % (dbse)] = -2.612
+BIND_NBC10B['%s-PyPy_T3-5.3'   % (dbse)] = -2.436
+BIND_NBC10B['%s-PyPy_T3-5.4'   % (dbse)] = -2.254
+BIND_NBC10B['%s-PyPy_T3-5.5'   % (dbse)] = -2.073
+BIND_NBC10B['%s-PyPy_T3-5.7'   % (dbse)] = -1.737
+BIND_NBC10B['%s-PyPy_T3-6.0'   % (dbse)] = -1.322
+BIND_NBC10B['%s-PyPy_T3-6.5'   % (dbse)] = -0.853
+BIND_NBC10B['%s-PyPy_T3-7.0'   % (dbse)] = -0.574
+BIND_NBC10B['%s-PyPy_T3-8.0'   % (dbse)] = -0.297
+BIND_NBC10B['%s-PyPy_T3-9.0'   % (dbse)] = -0.175
+
+BIND_NBC10B['%s-BzBz_PD32-0.2' % (dbse)] =  3.239
+BIND_NBC10B['%s-BzBz_PD32-0.4' % (dbse)] =  2.617
+BIND_NBC10B['%s-BzBz_PD32-0.6' % (dbse)] =  1.724
+BIND_NBC10B['%s-BzBz_PD32-0.8' % (dbse)] =  0.725
+BIND_NBC10B['%s-BzBz_PD32-1.0' % (dbse)] = -0.223
+BIND_NBC10B['%s-BzBz_PD32-1.2' % (dbse)] = -1.001
+BIND_NBC10B['%s-BzBz_PD32-1.4' % (dbse)] = -1.551
+BIND_NBC10B['%s-BzBz_PD32-1.5' % (dbse)] = -1.735
+BIND_NBC10B['%s-BzBz_PD32-1.6' % (dbse)] = -1.865
+BIND_NBC10B['%s-BzBz_PD32-1.7' % (dbse)] = -1.947
+BIND_NBC10B['%s-BzBz_PD32-1.8' % (dbse)] = -1.986
+BIND_NBC10B['%s-BzBz_PD32-1.9' % (dbse)] = -1.991  # BzBz_PD32 minimum; CCSD(T)/[aQ5Z; D:haTZ]
+BIND_NBC10B['%s-BzBz_PD32-2.0' % (dbse)] = -1.971
+BIND_NBC10B['%s-BzBz_PD32-2.2' % (dbse)] = -1.891
+BIND_NBC10B['%s-BzBz_PD32-2.4' % (dbse)] = -1.795
+BIND_NBC10B['%s-BzBz_PD32-2.6' % (dbse)] = -1.727
+BIND_NBC10B['%s-BzBz_PD32-2.8' % (dbse)] = -1.702
+BIND_NBC10B['%s-BzBz_PD32-3.0' % (dbse)] = -1.724
+
+BIND_NBC10B['%s-BzBz_PD36-0.2' % (dbse)] = -1.318
+BIND_NBC10B['%s-BzBz_PD36-0.4' % (dbse)] = -1.486
+BIND_NBC10B['%s-BzBz_PD36-0.6' % (dbse)] = -1.732
+BIND_NBC10B['%s-BzBz_PD36-0.8' % (dbse)] = -2.008
+BIND_NBC10B['%s-BzBz_PD36-1.0' % (dbse)] = -2.271
+BIND_NBC10B['%s-BzBz_PD36-1.2' % (dbse)] = -2.479
+BIND_NBC10B['%s-BzBz_PD36-1.4' % (dbse)] = -2.616
+BIND_NBC10B['%s-BzBz_PD36-1.5' % (dbse)] = -2.654
+BIND_NBC10B['%s-BzBz_PD36-1.6' % (dbse)] = -2.671
+BIND_NBC10B['%s-BzBz_PD36-1.7' % (dbse)] = -2.672  # BzBz_PD36 minimum; CCSD(T)/[aQ5Z; D:haTZ]
+BIND_NBC10B['%s-BzBz_PD36-1.8' % (dbse)] = -2.659
+BIND_NBC10B['%s-BzBz_PD36-1.9' % (dbse)] = -2.631
+BIND_NBC10B['%s-BzBz_PD36-2.0' % (dbse)] = -2.591
+BIND_NBC10B['%s-BzBz_PD36-2.2' % (dbse)] = -2.488
+BIND_NBC10B['%s-BzBz_PD36-2.4' % (dbse)] = -2.370
+BIND_NBC10B['%s-BzBz_PD36-2.6' % (dbse)] = -2.253
+BIND_NBC10B['%s-BzBz_PD36-2.8' % (dbse)] = -2.142
+BIND_NBC10B['%s-BzBz_PD36-3.0' % (dbse)] = -2.046
 # Set default
-BIND = BIND_NBC10A
+BIND = BIND_NBC10B
+# Reference information
+BINDINFO_NBC10A = {}
+for rxn in HRXN:
+    if (rxn in BzBz_S) or (rxn in BzBz_T) or (rxn in BzBz_PD34) or \
+       (rxn in PyPy_S2) or (rxn in BzBz_PD32) or (rxn in BzBz_PD36):
+        BINDINFO_NBC10A['%s-%s' % (dbse, rxn)] = {'citation': 's22b', 'method': 'CCSDT', 'mode': 'CP', 'basis': 'atqzhatz'}
+    elif (rxn in BzH2S) or (rxn in BzMe):
+        BINDINFO_NBC10A['%s-%s' % (dbse, rxn)] = {'citation': 's22b', 'method': 'CCSDT', 'mode': 'CP', 'basis': 'atqzatz'}
+    elif rxn in MeMe:
+        BINDINFO_NBC10A['%s-%s' % (dbse, rxn)] = {'citation': 's22b', 'method': 'CCSDT', 'mode': 'CP', 'basis': 'atqz'}
+    elif rxn in PyPy_T3:
+        BINDINFO_NBC10A['%s-%s' % (dbse, rxn)] = {'citation': 's22b', 'method': 'CCSDT', 'mode': 'CP', 'basis': 'atqzadz'}
+BINDINFO_NBC10B = {}
+for rxn in HRXN:
+    if (rxn in BzBz_S) or (rxn in BzBz_T) or (rxn in BzBz_PD34) or \
+       (rxn in PyPy_S2) or (rxn in PyPy_T3) or (rxn in BzBz_PD32) or \
+       (rxn in BzBz_PD36):
+        BINDINFO_NBC10B['%s-%s' % (dbse, rxn)] = {'citation': 'dfit', 'method': 'CCSDT', 'mode': 'CP', 'basis': 'aq5zhatz'}
+    elif (rxn in BzH2S) or (rxn in BzMe):
+        BINDINFO_NBC10B['%s-%s' % (dbse, rxn)] = {'citation': 's22b', 'method': 'CCSDT', 'mode': 'CP', 'basis': 'aq5zatz'}
+    elif rxn in MeMe:
+        BINDINFO_NBC10B['%s-%s' % (dbse, rxn)] = {'citation': 's22b', 'method': 'CCSDT', 'mode': 'CP', 'basis': 'atqz'}
 
 # <<< Comment Lines >>>
 TAGL = {}
