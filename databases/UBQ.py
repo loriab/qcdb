@@ -47,8 +47,8 @@ HRXN = ['ala28-asp32', 'ala46-lys48', 'arg42-val70', 'asn25-lys29', 'asp21-leu56
         'thr55-asp58-sidechain', 'thr7-gly10', 'thr7-ile13', 'thr7-lys11', 'thr7-thr9-v2',
         'thr7-thr9', 'tyr59-ile61', 'val17-leu56', 'val26-ile30', 'val26-leu43',
         'val26-leu56', 'val5-ile13', 'val5-leu15', 'val5-leu69']
-HRXN_SM = []
-HRXN_LG = []
+#HRXN_SM = []
+#HRXN_LG = []
 
 # <<< Chemical Systems Involved >>>
 RXNM = {}     # reaction matrix of reagent contributions per reaction
@@ -739,6 +739,14 @@ TAGL['%s-%s-monoB-CP'   % (dbse, 'val5-leu69'            )] = """Monomer B from 
 TAGL['%s-%s-monoA-unCP' % (dbse, 'val5-leu69'            )] = """Monomer A from  """
 TAGL['%s-%s-monoB-unCP' % (dbse, 'val5-leu69'            )] = """Monomer B from  """
 
+TAGL['dbse'] = 'interaction energies for bimolecular complexes from native 1UBQ protein fold'
+TAGL['HB'] = 'hydrogen-bonded systems'
+TAGL['MX'] = 'mixed-influence systems'
+TAGL['DD'] = 'dispersion-dominated systems'
+#TAGL['large'] = 'most computationally expensive systems'
+TAGL['default'] = 'entire database'
+#TAGL['small'] = 'few computationally quick systems'
+
 # <<< Geometry Specification Strings >>>
 GEOS = {}
 
@@ -1228,7 +1236,7 @@ GEOS['%s-%s-%s' % (dbse, 'glu51-arg54', 'dimer')] = qcdb.Molecule("""
     units Angstrom
     no_com
     no_reorient
-    0 1
+    -1 1
     C               29.247000000000    19.456000000000    23.705000000000
     H               29.233000000000    18.605000000000    23.022000000000
     H               30.189000000000    19.974000000000    23.884000000000
@@ -1237,7 +1245,7 @@ GEOS['%s-%s-%s' % (dbse, 'glu51-arg54', 'dimer')] = qcdb.Molecule("""
     O               27.777000000000    19.842000000000    25.367000000000
     H               28.607540000000    20.227050000000    23.250480000000
     --
-    0 1
+    1 1
     N               26.975000000000    15.521000000000    20.942000000000
     H               27.242000000000    15.890000000000    21.837000000000
     C               27.603000000000    14.423000000000    20.655000000000
@@ -2428,7 +2436,7 @@ GEOS['%s-%s-%s' % (dbse, 'lys11-glu34', 'dimer')] = qcdb.Molecule("""
     units Angstrom
     no_com
     no_reorient
-    0 1
+    1 1
     C               34.762000000000    40.799000000000    11.470000000000
     H               35.174000000000    41.532000000000    12.167000000000
     H               34.864000000000    39.816000000000    11.936000000000
@@ -2441,7 +2449,7 @@ GEOS['%s-%s-%s' % (dbse, 'lys11-glu34', 'dimer')] = qcdb.Molecule("""
     H               35.178000000000    39.085000000000     9.334000000000
     H               33.695790000000    41.005480000000    11.295180000000
     --
-    0 1
+    -1 1
     C               38.290000000000    35.814000000000    12.698000000000
     H               38.041000000000    34.959000000000    13.329000000000
     H               38.325000000000    36.685000000000    13.353000000000
@@ -2459,7 +2467,7 @@ GEOS['%s-%s-%s' % (dbse, 'lys27-asp52', 'dimer')] = qcdb.Molecule("""
     units Angstrom
     no_com
     no_reorient
-    0 1
+    1 1
     C               34.509000000000    26.077000000000    19.360000000000
     H               34.787000000000    25.022000000000    19.430000000000
     H               35.306000000000    26.680000000000    19.800000000000
@@ -2472,7 +2480,7 @@ GEOS['%s-%s-%s' % (dbse, 'lys27-asp52', 'dimer')] = qcdb.Molecule("""
     H               33.744000000000    24.923000000000    21.545000000000
     H               34.388610000000    26.343890000000    18.299680000000
     --
-    0 1
+    -1 1
     C               33.638000000000    20.716000000000    21.242000000000
     H               33.550000000000    20.270000000000    22.234000000000
     H               34.364000000000    20.133000000000    20.673000000000
@@ -3871,3 +3879,389 @@ for rxn in HRXN:
     GEOS['%s-%s-monoB-unCP' % (dbse, rxn)] = GEOS['%s-%s-dimer' % (dbse, rxn)].extract_fragments(2)
     GEOS['%s-%s-monoA-CP'   % (dbse, rxn)] = GEOS['%s-%s-dimer' % (dbse, rxn)].extract_fragments(1, 2)
     GEOS['%s-%s-monoB-CP'   % (dbse, rxn)] = GEOS['%s-%s-dimer' % (dbse, rxn)].extract_fragments(2, 1)
+
+#########################################################################
+
+# <<< Supplementary Quantum Chemical Results >>>
+DATA = {}
+
+DATA['SAPT ELST ENERGY'] = {}
+DATA['SAPT ELST ENERGY']['UBQ-ala28-asp32'] =   -11.7248
+DATA['SAPT ELST ENERGY']['UBQ-ala46-lys48'] =   -24.2119
+DATA['SAPT ELST ENERGY']['UBQ-arg42-val70'] =   -21.2677
+DATA['SAPT ELST ENERGY']['UBQ-asn25-lys29'] =   -10.2528
+DATA['SAPT ELST ENERGY']['UBQ-asp21-leu56'] =    -9.2462
+DATA['SAPT ELST ENERGY']['UBQ-gln2-glu64-small'] =   -11.9284
+DATA['SAPT ELST ENERGY']['UBQ-gln31-gly35'] =   -12.6573
+DATA['SAPT ELST ENERGY']['UBQ-gln40-arg72'] =   -15.1020
+DATA['SAPT ELST ENERGY']['UBQ-gln41-arg72'] =   -11.3788
+DATA['SAPT ELST ENERGY']['UBQ-gln62-ser65'] =   -28.0651
+DATA['SAPT ELST ENERGY']['UBQ-glu16-lys29'] =   -23.6167
+DATA['SAPT ELST ENERGY']['UBQ-glu18-asp21-C'] =   -11.3551
+DATA['SAPT ELST ENERGY']['UBQ-glu18-asp21-N'] =   -13.3323
+DATA['SAPT ELST ENERGY']['UBQ-glu24-ala28'] =    -7.6454
+DATA['SAPT ELST ENERGY']['UBQ-glu24-asp52'] =   -11.4119
+DATA['SAPT ELST ENERGY']['UBQ-glu51-arg54'] =   -49.0845
+DATA['SAPT ELST ENERGY']['UBQ-glu51-tyr59'] =    -7.1708
+DATA['SAPT ELST ENERGY']['UBQ-ile13-leu15'] =    -0.3948
+DATA['SAPT ELST ENERGY']['UBQ-ile13-lys33'] =    -1.3968
+DATA['SAPT ELST ENERGY']['UBQ-ile23-arg54'] =   -10.9911
+DATA['SAPT ELST ENERGY']['UBQ-ile23-leu50'] =    -0.7202
+DATA['SAPT ELST ENERGY']['UBQ-ile23-leu56'] =    -0.6154
+DATA['SAPT ELST ENERGY']['UBQ-ile23-lys27'] =    -9.1942
+DATA['SAPT ELST ENERGY']['UBQ-ile3-leu15-big'] =   -13.2646
+DATA['SAPT ELST ENERGY']['UBQ-ile3-leu15-part1'] =    -8.7290
+DATA['SAPT ELST ENERGY']['UBQ-ile3-leu15-part2'] =    -8.5937
+DATA['SAPT ELST ENERGY']['UBQ-ile3-leu15'] =    -0.4229
+DATA['SAPT ELST ENERGY']['UBQ-ile3-leu67'] =    -0.4147
+DATA['SAPT ELST ENERGY']['UBQ-ile3-val17'] =    -0.6497
+DATA['SAPT ELST ENERGY']['UBQ-ile30-glu34'] =   -10.6798
+DATA['SAPT ELST ENERGY']['UBQ-ile30-leu43'] =    -0.3023
+DATA['SAPT ELST ENERGY']['UBQ-ile36-gln41'] =    -8.4861
+DATA['SAPT ELST ENERGY']['UBQ-ile36-leu69'] =    -0.2999
+DATA['SAPT ELST ENERGY']['UBQ-ile36-leu71'] =    -0.8897
+DATA['SAPT ELST ENERGY']['UBQ-ile44-gly47'] =    -0.3886
+DATA['SAPT ELST ENERGY']['UBQ-ile44-his68-big'] =    -0.5677
+DATA['SAPT ELST ENERGY']['UBQ-ile44-his68-small'] =    -0.5516
+DATA['SAPT ELST ENERGY']['UBQ-ile44-his68'] =   -25.5115
+DATA['SAPT ELST ENERGY']['UBQ-ile61-leu67'] =    -0.5310
+DATA['SAPT ELST ENERGY']['UBQ-leu15-ile30'] =    -0.4560
+DATA['SAPT ELST ENERGY']['UBQ-leu15-val26'] =    -0.3602
+DATA['SAPT ELST ENERGY']['UBQ-leu43-leu50'] =   -12.1545
+DATA['SAPT ELST ENERGY']['UBQ-leu43-leu69'] =    -0.4344
+DATA['SAPT ELST ENERGY']['UBQ-leu50-ile61'] =    -0.2081
+DATA['SAPT ELST ENERGY']['UBQ-leu50-tyr59'] =    -1.2697
+DATA['SAPT ELST ENERGY']['UBQ-leu56-ile61np'] =    -0.9028
+DATA['SAPT ELST ENERGY']['UBQ-leu56-ile61p'] =    -5.1228
+DATA['SAPT ELST ENERGY']['UBQ-leu56-tyr59'] =    -4.7242
+DATA['SAPT ELST ENERGY']['UBQ-leu69-leu71'] =    -0.5102
+DATA['SAPT ELST ENERGY']['UBQ-leu71-leu73'] =    -0.3149
+DATA['SAPT ELST ENERGY']['UBQ-lys11-glu34'] =   -95.6878
+DATA['SAPT ELST ENERGY']['UBQ-lys27-asp52'] =  -105.3789
+DATA['SAPT ELST ENERGY']['UBQ-lys27-gln31'] =    -9.2986
+DATA['SAPT ELST ENERGY']['UBQ-lys27-leu43-nonh3'] =    -0.3533
+DATA['SAPT ELST ENERGY']['UBQ-lys27-leu43'] =     0.1407
+DATA['SAPT ELST ENERGY']['UBQ-lys29-lys33'] =    -9.7287
+DATA['SAPT ELST ENERGY']['UBQ-lys6-thr66'] =    -0.2149
+DATA['SAPT ELST ENERGY']['UBQ-met1-ile3'] =    -0.4614
+DATA['SAPT ELST ENERGY']['UBQ-met1-lys63'] =    -3.2075
+DATA['SAPT ELST ENERGY']['UBQ-met1-val17-bi'] =   -31.5827
+DATA['SAPT ELST ENERGY']['UBQ-met1-val17-mono'] =   -11.7346
+DATA['SAPT ELST ENERGY']['UBQ-met1-val17'] =    -0.3404
+DATA['SAPT ELST ENERGY']['UBQ-phe4-leu67'] =   -12.3241
+DATA['SAPT ELST ENERGY']['UBQ-phe4-ser65'] =   -11.5522
+DATA['SAPT ELST ENERGY']['UBQ-phe4-thr12'] =    -0.5898
+DATA['SAPT ELST ENERGY']['UBQ-phe4-thr14'] =    -1.0980
+DATA['SAPT ELST ENERGY']['UBQ-phe45-ala46'] =    -0.3407
+DATA['SAPT ELST ENERGY']['UBQ-phe45-ile61'] =    -1.3694
+DATA['SAPT ELST ENERGY']['UBQ-phe45-leu67'] =    -0.5102
+DATA['SAPT ELST ENERGY']['UBQ-phe45-lys48'] =   -16.8229
+DATA['SAPT ELST ENERGY']['UBQ-pro19-ser57'] =   -11.0448
+DATA['SAPT ELST ENERGY']['UBQ-pro37-gln40'] =    -8.6466
+DATA['SAPT ELST ENERGY']['UBQ-ser57-asn60'] =   -10.7975
+DATA['SAPT ELST ENERGY']['UBQ-thr14-lys33'] =   -13.5642
+DATA['SAPT ELST ENERGY']['UBQ-thr22-asn25'] =    -5.8638
+DATA['SAPT ELST ENERGY']['UBQ-thr22-thr55-big'] =   -28.3087
+DATA['SAPT ELST ENERGY']['UBQ-thr22-thr55-small'] =     0.0132
+DATA['SAPT ELST ENERGY']['UBQ-thr22-val26'] =    -7.7691
+DATA['SAPT ELST ENERGY']['UBQ-thr55-asp58-backbone'] =    -5.1253
+DATA['SAPT ELST ENERGY']['UBQ-thr55-asp58-sidechain-small'] =   -19.2450
+DATA['SAPT ELST ENERGY']['UBQ-thr55-asp58-sidechain'] =   -14.8812
+DATA['SAPT ELST ENERGY']['UBQ-thr7-gly10'] =    -5.0323
+DATA['SAPT ELST ENERGY']['UBQ-thr7-ile13'] =    -0.0568
+DATA['SAPT ELST ENERGY']['UBQ-thr7-lys11'] =   -10.2814
+DATA['SAPT ELST ENERGY']['UBQ-thr7-thr9-v2'] =    -0.8037
+DATA['SAPT ELST ENERGY']['UBQ-thr7-thr9'] =    -4.1104
+DATA['SAPT ELST ENERGY']['UBQ-tyr59-ile61'] =    -0.4914
+DATA['SAPT ELST ENERGY']['UBQ-val17-leu56'] =    -0.7235
+DATA['SAPT ELST ENERGY']['UBQ-val26-ile30'] =    -9.0470
+DATA['SAPT ELST ENERGY']['UBQ-val26-leu43'] =    -0.1397
+DATA['SAPT ELST ENERGY']['UBQ-val26-leu56'] =    -0.8839
+DATA['SAPT ELST ENERGY']['UBQ-val5-ile13'] =   -26.3890
+DATA['SAPT ELST ENERGY']['UBQ-val5-leu15'] =    -0.8344
+DATA['SAPT ELST ENERGY']['UBQ-val5-leu69'] =    -0.6049
+DATA['SAPT EXCH ENERGY'] = {}
+DATA['SAPT EXCH ENERGY']['UBQ-ala28-asp32'] =     9.0182
+DATA['SAPT EXCH ENERGY']['UBQ-ala46-lys48'] =     1.1511
+DATA['SAPT EXCH ENERGY']['UBQ-arg42-val70'] =    19.0227
+DATA['SAPT EXCH ENERGY']['UBQ-asn25-lys29'] =     7.1097
+DATA['SAPT EXCH ENERGY']['UBQ-asp21-leu56'] =     4.8948
+DATA['SAPT EXCH ENERGY']['UBQ-gln2-glu64-small'] =    10.4545
+DATA['SAPT EXCH ENERGY']['UBQ-gln31-gly35'] =    12.9391
+DATA['SAPT EXCH ENERGY']['UBQ-gln40-arg72'] =    16.1738
+DATA['SAPT EXCH ENERGY']['UBQ-gln41-arg72'] =     3.6047
+DATA['SAPT EXCH ENERGY']['UBQ-gln62-ser65'] =    33.3887
+DATA['SAPT EXCH ENERGY']['UBQ-glu16-lys29'] =    13.3615
+DATA['SAPT EXCH ENERGY']['UBQ-glu18-asp21-C'] =    14.6063
+DATA['SAPT EXCH ENERGY']['UBQ-glu18-asp21-N'] =     8.5660
+DATA['SAPT EXCH ENERGY']['UBQ-glu24-ala28'] =     3.8277
+DATA['SAPT EXCH ENERGY']['UBQ-glu24-asp52'] =     8.6559
+DATA['SAPT EXCH ENERGY']['UBQ-glu51-arg54'] =     0.0103
+DATA['SAPT EXCH ENERGY']['UBQ-glu51-tyr59'] =     6.9113
+DATA['SAPT EXCH ENERGY']['UBQ-ile13-leu15'] =     1.1927
+DATA['SAPT EXCH ENERGY']['UBQ-ile13-lys33'] =     5.8960
+DATA['SAPT EXCH ENERGY']['UBQ-ile23-arg54'] =     7.9228
+DATA['SAPT EXCH ENERGY']['UBQ-ile23-leu50'] =     2.4150
+DATA['SAPT EXCH ENERGY']['UBQ-ile23-leu56'] =     2.2041
+DATA['SAPT EXCH ENERGY']['UBQ-ile23-lys27'] =     5.4804
+DATA['SAPT EXCH ENERGY']['UBQ-ile3-leu15-big'] =     8.3880
+DATA['SAPT EXCH ENERGY']['UBQ-ile3-leu15-part1'] =     4.5347
+DATA['SAPT EXCH ENERGY']['UBQ-ile3-leu15-part2'] =     4.2336
+DATA['SAPT EXCH ENERGY']['UBQ-ile3-leu15'] =     1.8195
+DATA['SAPT EXCH ENERGY']['UBQ-ile3-leu67'] =     1.3970
+DATA['SAPT EXCH ENERGY']['UBQ-ile3-val17'] =     2.2465
+DATA['SAPT EXCH ENERGY']['UBQ-ile30-glu34'] =     7.4299
+DATA['SAPT EXCH ENERGY']['UBQ-ile30-leu43'] =     0.9351
+DATA['SAPT EXCH ENERGY']['UBQ-ile36-gln41'] =     5.7076
+DATA['SAPT EXCH ENERGY']['UBQ-ile36-leu69'] =     1.2421
+DATA['SAPT EXCH ENERGY']['UBQ-ile36-leu71'] =     3.1877
+DATA['SAPT EXCH ENERGY']['UBQ-ile44-gly47'] =     0.5502
+DATA['SAPT EXCH ENERGY']['UBQ-ile44-his68-big'] =     2.5237
+DATA['SAPT EXCH ENERGY']['UBQ-ile44-his68-small'] =     2.5058
+DATA['SAPT EXCH ENERGY']['UBQ-ile44-his68'] =    23.2787
+DATA['SAPT EXCH ENERGY']['UBQ-ile61-leu67'] =     1.7875
+DATA['SAPT EXCH ENERGY']['UBQ-leu15-ile30'] =     1.7255
+DATA['SAPT EXCH ENERGY']['UBQ-leu15-val26'] =     1.2921
+DATA['SAPT EXCH ENERGY']['UBQ-leu43-leu50'] =    10.1907
+DATA['SAPT EXCH ENERGY']['UBQ-leu43-leu69'] =     1.3689
+DATA['SAPT EXCH ENERGY']['UBQ-leu50-ile61'] =     0.7652
+DATA['SAPT EXCH ENERGY']['UBQ-leu50-tyr59'] =     3.6014
+DATA['SAPT EXCH ENERGY']['UBQ-leu56-ile61np'] =     3.3407
+DATA['SAPT EXCH ENERGY']['UBQ-leu56-ile61p'] =     1.2178
+DATA['SAPT EXCH ENERGY']['UBQ-leu56-tyr59'] =     3.1583
+DATA['SAPT EXCH ENERGY']['UBQ-leu69-leu71'] =     1.7974
+DATA['SAPT EXCH ENERGY']['UBQ-leu71-leu73'] =     1.1239
+DATA['SAPT EXCH ENERGY']['UBQ-lys11-glu34'] =     4.4314
+DATA['SAPT EXCH ENERGY']['UBQ-lys27-asp52'] =    10.1333
+DATA['SAPT EXCH ENERGY']['UBQ-lys27-gln31'] =     6.7191
+DATA['SAPT EXCH ENERGY']['UBQ-lys27-leu43-nonh3'] =     1.3172
+DATA['SAPT EXCH ENERGY']['UBQ-lys27-leu43'] =     1.1785
+DATA['SAPT EXCH ENERGY']['UBQ-lys29-lys33'] =     7.2810
+DATA['SAPT EXCH ENERGY']['UBQ-lys6-thr66'] =     0.8261
+DATA['SAPT EXCH ENERGY']['UBQ-met1-ile3'] =     1.4611
+DATA['SAPT EXCH ENERGY']['UBQ-met1-lys63'] =     6.3857
+DATA['SAPT EXCH ENERGY']['UBQ-met1-val17-bi'] =    25.6990
+DATA['SAPT EXCH ENERGY']['UBQ-met1-val17-mono'] =     9.0562
+DATA['SAPT EXCH ENERGY']['UBQ-met1-val17'] =     1.2724
+DATA['SAPT EXCH ENERGY']['UBQ-phe4-leu67'] =    10.2946
+DATA['SAPT EXCH ENERGY']['UBQ-phe4-ser65'] =     9.0278
+DATA['SAPT EXCH ENERGY']['UBQ-phe4-thr12'] =     2.3162
+DATA['SAPT EXCH ENERGY']['UBQ-phe4-thr14'] =     3.7487
+DATA['SAPT EXCH ENERGY']['UBQ-phe45-ala46'] =     1.1145
+DATA['SAPT EXCH ENERGY']['UBQ-phe45-ile61'] =     3.4056
+DATA['SAPT EXCH ENERGY']['UBQ-phe45-leu67'] =     2.3317
+DATA['SAPT EXCH ENERGY']['UBQ-phe45-lys48'] =    14.5638
+DATA['SAPT EXCH ENERGY']['UBQ-pro19-ser57'] =    10.2061
+DATA['SAPT EXCH ENERGY']['UBQ-pro37-gln40'] =     6.4593
+DATA['SAPT EXCH ENERGY']['UBQ-ser57-asn60'] =    10.5916
+DATA['SAPT EXCH ENERGY']['UBQ-thr14-lys33'] =     0.8302
+DATA['SAPT EXCH ENERGY']['UBQ-thr22-asn25'] =     3.0100
+DATA['SAPT EXCH ENERGY']['UBQ-thr22-thr55-big'] =    23.3514
+DATA['SAPT EXCH ENERGY']['UBQ-thr22-thr55-small'] =     3.2781
+DATA['SAPT EXCH ENERGY']['UBQ-thr22-val26'] =     3.6528
+DATA['SAPT EXCH ENERGY']['UBQ-thr55-asp58-backbone'] =     2.3760
+DATA['SAPT EXCH ENERGY']['UBQ-thr55-asp58-sidechain-small'] =     6.3731
+DATA['SAPT EXCH ENERGY']['UBQ-thr55-asp58-sidechain'] =     8.6530
+DATA['SAPT EXCH ENERGY']['UBQ-thr7-gly10'] =     1.5770
+DATA['SAPT EXCH ENERGY']['UBQ-thr7-ile13'] =     0.2074
+DATA['SAPT EXCH ENERGY']['UBQ-thr7-lys11'] =     7.3040
+DATA['SAPT EXCH ENERGY']['UBQ-thr7-thr9-v2'] =     1.0384
+DATA['SAPT EXCH ENERGY']['UBQ-thr7-thr9'] =     2.6207
+DATA['SAPT EXCH ENERGY']['UBQ-tyr59-ile61'] =     1.7098
+DATA['SAPT EXCH ENERGY']['UBQ-val17-leu56'] =     2.4373
+DATA['SAPT EXCH ENERGY']['UBQ-val26-ile30'] =     5.7454
+DATA['SAPT EXCH ENERGY']['UBQ-val26-leu43'] =     0.6367
+DATA['SAPT EXCH ENERGY']['UBQ-val26-leu56'] =     2.9796
+DATA['SAPT EXCH ENERGY']['UBQ-val5-ile13'] =    25.3482
+DATA['SAPT EXCH ENERGY']['UBQ-val5-leu15'] =     2.8750
+DATA['SAPT EXCH ENERGY']['UBQ-val5-leu69'] =     2.0609
+DATA['SAPT IND ENERGY'] = {}
+DATA['SAPT IND ENERGY']['UBQ-ala28-asp32'] =    -3.6612
+DATA['SAPT IND ENERGY']['UBQ-ala46-lys48'] =    -3.9156
+DATA['SAPT IND ENERGY']['UBQ-arg42-val70'] =    -6.9990
+DATA['SAPT IND ENERGY']['UBQ-asn25-lys29'] =    -2.9061
+DATA['SAPT IND ENERGY']['UBQ-asp21-leu56'] =    -2.3513
+DATA['SAPT IND ENERGY']['UBQ-gln2-glu64-small'] =    -3.7270
+DATA['SAPT IND ENERGY']['UBQ-gln31-gly35'] =    -3.5317
+DATA['SAPT IND ENERGY']['UBQ-gln40-arg72'] =    -5.3124
+DATA['SAPT IND ENERGY']['UBQ-gln41-arg72'] =    -2.8596
+DATA['SAPT IND ENERGY']['UBQ-gln62-ser65'] =   -11.3106
+DATA['SAPT IND ENERGY']['UBQ-glu16-lys29'] =   -10.2970
+DATA['SAPT IND ENERGY']['UBQ-glu18-asp21-C'] =    -4.5482
+DATA['SAPT IND ENERGY']['UBQ-glu18-asp21-N'] =    -7.2726
+DATA['SAPT IND ENERGY']['UBQ-glu24-ala28'] =    -1.8014
+DATA['SAPT IND ENERGY']['UBQ-glu24-asp52'] =    -2.9730
+DATA['SAPT IND ENERGY']['UBQ-glu51-arg54'] =    -0.9686
+DATA['SAPT IND ENERGY']['UBQ-glu51-tyr59'] =    -1.8882
+DATA['SAPT IND ENERGY']['UBQ-ile13-leu15'] =    -0.1009
+DATA['SAPT IND ENERGY']['UBQ-ile13-lys33'] =    -1.8558
+DATA['SAPT IND ENERGY']['UBQ-ile23-arg54'] =    -3.0772
+DATA['SAPT IND ENERGY']['UBQ-ile23-leu50'] =    -0.1968
+DATA['SAPT IND ENERGY']['UBQ-ile23-leu56'] =    -0.1614
+DATA['SAPT IND ENERGY']['UBQ-ile23-lys27'] =    -2.4411
+DATA['SAPT IND ENERGY']['UBQ-ile3-leu15-big'] =    -3.1126
+DATA['SAPT IND ENERGY']['UBQ-ile3-leu15-part1'] =    -2.0878
+DATA['SAPT IND ENERGY']['UBQ-ile3-leu15-part2'] =    -1.9874
+DATA['SAPT IND ENERGY']['UBQ-ile3-leu15'] =    -0.1763
+DATA['SAPT IND ENERGY']['UBQ-ile3-leu67'] =    -0.1290
+DATA['SAPT IND ENERGY']['UBQ-ile3-val17'] =    -0.1806
+DATA['SAPT IND ENERGY']['UBQ-ile30-glu34'] =    -3.0607
+DATA['SAPT IND ENERGY']['UBQ-ile30-leu43'] =    -0.0800
+DATA['SAPT IND ENERGY']['UBQ-ile36-gln41'] =    -2.2817
+DATA['SAPT IND ENERGY']['UBQ-ile36-leu69'] =    -0.0971
+DATA['SAPT IND ENERGY']['UBQ-ile36-leu71'] =    -0.3109
+DATA['SAPT IND ENERGY']['UBQ-ile44-gly47'] =    -0.2171
+DATA['SAPT IND ENERGY']['UBQ-ile44-his68-big'] =    -0.3595
+DATA['SAPT IND ENERGY']['UBQ-ile44-his68-small'] =    -0.3489
+DATA['SAPT IND ENERGY']['UBQ-ile44-his68'] =    -8.6337
+DATA['SAPT IND ENERGY']['UBQ-ile61-leu67'] =    -0.1601
+DATA['SAPT IND ENERGY']['UBQ-leu15-ile30'] =    -0.1583
+DATA['SAPT IND ENERGY']['UBQ-leu15-val26'] =    -0.1080
+DATA['SAPT IND ENERGY']['UBQ-leu43-leu50'] =    -3.8834
+DATA['SAPT IND ENERGY']['UBQ-leu43-leu69'] =    -0.1048
+DATA['SAPT IND ENERGY']['UBQ-leu50-ile61'] =    -0.0565
+DATA['SAPT IND ENERGY']['UBQ-leu50-tyr59'] =    -0.3818
+DATA['SAPT IND ENERGY']['UBQ-leu56-ile61np'] =    -0.2737
+DATA['SAPT IND ENERGY']['UBQ-leu56-ile61p'] =    -0.8393
+DATA['SAPT IND ENERGY']['UBQ-leu56-tyr59'] =    -1.1212
+DATA['SAPT IND ENERGY']['UBQ-leu69-leu71'] =    -0.1581
+DATA['SAPT IND ENERGY']['UBQ-leu71-leu73'] =    -0.1172
+DATA['SAPT IND ENERGY']['UBQ-lys11-glu34'] =    -7.6774
+DATA['SAPT IND ENERGY']['UBQ-lys27-asp52'] =   -12.4700
+DATA['SAPT IND ENERGY']['UBQ-lys27-gln31'] =    -2.6350
+DATA['SAPT IND ENERGY']['UBQ-lys27-leu43-nonh3'] =    -0.0974
+DATA['SAPT IND ENERGY']['UBQ-lys27-leu43'] =    -1.1590
+DATA['SAPT IND ENERGY']['UBQ-lys29-lys33'] =    -2.8604
+DATA['SAPT IND ENERGY']['UBQ-lys6-thr66'] =    -0.0662
+DATA['SAPT IND ENERGY']['UBQ-met1-ile3'] =    -0.1633
+DATA['SAPT IND ENERGY']['UBQ-met1-lys63'] =    -0.8274
+DATA['SAPT IND ENERGY']['UBQ-met1-val17-bi'] =   -11.7954
+DATA['SAPT IND ENERGY']['UBQ-met1-val17-mono'] =    -3.4538
+DATA['SAPT IND ENERGY']['UBQ-met1-val17'] =    -0.1257
+DATA['SAPT IND ENERGY']['UBQ-phe4-leu67'] =    -3.8516
+DATA['SAPT IND ENERGY']['UBQ-phe4-ser65'] =    -3.6120
+DATA['SAPT IND ENERGY']['UBQ-phe4-thr12'] =    -0.2676
+DATA['SAPT IND ENERGY']['UBQ-phe4-thr14'] =    -0.3769
+DATA['SAPT IND ENERGY']['UBQ-phe45-ala46'] =    -0.1133
+DATA['SAPT IND ENERGY']['UBQ-phe45-ile61'] =    -0.3818
+DATA['SAPT IND ENERGY']['UBQ-phe45-leu67'] =    -0.2510
+DATA['SAPT IND ENERGY']['UBQ-phe45-lys48'] =    -5.2366
+DATA['SAPT IND ENERGY']['UBQ-pro19-ser57'] =    -3.3413
+DATA['SAPT IND ENERGY']['UBQ-pro37-gln40'] =    -2.4968
+DATA['SAPT IND ENERGY']['UBQ-ser57-asn60'] =    -3.6606
+DATA['SAPT IND ENERGY']['UBQ-thr14-lys33'] =    -3.8349
+DATA['SAPT IND ENERGY']['UBQ-thr22-asn25'] =    -1.0897
+DATA['SAPT IND ENERGY']['UBQ-thr22-thr55-big'] =    -9.1113
+DATA['SAPT IND ENERGY']['UBQ-thr22-thr55-small'] =    -0.5978
+DATA['SAPT IND ENERGY']['UBQ-thr22-val26'] =    -1.7651
+DATA['SAPT IND ENERGY']['UBQ-thr55-asp58-backbone'] =    -0.9030
+DATA['SAPT IND ENERGY']['UBQ-thr55-asp58-sidechain-small'] =    -5.1921
+DATA['SAPT IND ENERGY']['UBQ-thr55-asp58-sidechain'] =    -6.2431
+DATA['SAPT IND ENERGY']['UBQ-thr7-gly10'] =    -0.9265
+DATA['SAPT IND ENERGY']['UBQ-thr7-ile13'] =    -0.0168
+DATA['SAPT IND ENERGY']['UBQ-thr7-lys11'] =    -2.9891
+DATA['SAPT IND ENERGY']['UBQ-thr7-thr9-v2'] =    -0.3505
+DATA['SAPT IND ENERGY']['UBQ-thr7-thr9'] =    -0.9363
+DATA['SAPT IND ENERGY']['UBQ-tyr59-ile61'] =    -0.1559
+DATA['SAPT IND ENERGY']['UBQ-val17-leu56'] =    -0.1770
+DATA['SAPT IND ENERGY']['UBQ-val26-ile30'] =    -2.3882
+DATA['SAPT IND ENERGY']['UBQ-val26-leu43'] =    -0.0502
+DATA['SAPT IND ENERGY']['UBQ-val26-leu56'] =    -0.2945
+DATA['SAPT IND ENERGY']['UBQ-val5-ile13'] =    -9.3600
+DATA['SAPT IND ENERGY']['UBQ-val5-leu15'] =    -0.2229
+DATA['SAPT IND ENERGY']['UBQ-val5-leu69'] =    -0.1576
+DATA['SAPT DISP ENERGY'] = {}
+DATA['SAPT DISP ENERGY']['UBQ-ala28-asp32'] =    -2.6231
+DATA['SAPT DISP ENERGY']['UBQ-ala46-lys48'] =    -1.3880
+DATA['SAPT DISP ENERGY']['UBQ-arg42-val70'] =    -5.9718
+DATA['SAPT DISP ENERGY']['UBQ-asn25-lys29'] =    -2.2387
+DATA['SAPT DISP ENERGY']['UBQ-asp21-leu56'] =    -2.2932
+DATA['SAPT DISP ENERGY']['UBQ-gln2-glu64-small'] =    -2.9918
+DATA['SAPT DISP ENERGY']['UBQ-gln31-gly35'] =    -3.6543
+DATA['SAPT DISP ENERGY']['UBQ-gln40-arg72'] =    -3.5238
+DATA['SAPT DISP ENERGY']['UBQ-gln41-arg72'] =    -1.6371
+DATA['SAPT DISP ENERGY']['UBQ-gln62-ser65'] =    -7.0350
+DATA['SAPT DISP ENERGY']['UBQ-glu16-lys29'] =    -3.3623
+DATA['SAPT DISP ENERGY']['UBQ-glu18-asp21-C'] =    -4.9466
+DATA['SAPT DISP ENERGY']['UBQ-glu18-asp21-N'] =    -3.9782
+DATA['SAPT DISP ENERGY']['UBQ-glu24-ala28'] =    -1.6326
+DATA['SAPT DISP ENERGY']['UBQ-glu24-asp52'] =    -2.7900
+DATA['SAPT DISP ENERGY']['UBQ-glu51-arg54'] =    -0.1657
+DATA['SAPT DISP ENERGY']['UBQ-glu51-tyr59'] =    -2.4052
+DATA['SAPT DISP ENERGY']['UBQ-ile13-leu15'] =    -1.3303
+DATA['SAPT DISP ENERGY']['UBQ-ile13-lys33'] =    -3.4067
+DATA['SAPT DISP ENERGY']['UBQ-ile23-arg54'] =    -2.4429
+DATA['SAPT DISP ENERGY']['UBQ-ile23-leu50'] =    -2.3971
+DATA['SAPT DISP ENERGY']['UBQ-ile23-leu56'] =    -1.3890
+DATA['SAPT DISP ENERGY']['UBQ-ile23-lys27'] =    -1.9782
+DATA['SAPT DISP ENERGY']['UBQ-ile3-leu15-big'] =    -3.9753
+DATA['SAPT DISP ENERGY']['UBQ-ile3-leu15-part1'] =    -1.8234
+DATA['SAPT DISP ENERGY']['UBQ-ile3-leu15-part2'] =    -1.7616
+DATA['SAPT DISP ENERGY']['UBQ-ile3-leu15'] =    -1.7068
+DATA['SAPT DISP ENERGY']['UBQ-ile3-leu67'] =    -1.5652
+DATA['SAPT DISP ENERGY']['UBQ-ile3-val17'] =    -2.2371
+DATA['SAPT DISP ENERGY']['UBQ-ile30-glu34'] =    -2.3423
+DATA['SAPT DISP ENERGY']['UBQ-ile30-leu43'] =    -1.0335
+DATA['SAPT DISP ENERGY']['UBQ-ile36-gln41'] =    -1.9844
+DATA['SAPT DISP ENERGY']['UBQ-ile36-leu69'] =    -1.1791
+DATA['SAPT DISP ENERGY']['UBQ-ile36-leu71'] =    -2.6527
+DATA['SAPT DISP ENERGY']['UBQ-ile44-gly47'] =    -1.1752
+DATA['SAPT DISP ENERGY']['UBQ-ile44-his68-big'] =    -1.4508
+DATA['SAPT DISP ENERGY']['UBQ-ile44-his68-small'] =    -1.1032
+DATA['SAPT DISP ENERGY']['UBQ-ile44-his68'] =    -6.2437
+DATA['SAPT DISP ENERGY']['UBQ-ile61-leu67'] =    -1.6368
+DATA['SAPT DISP ENERGY']['UBQ-leu15-ile30'] =    -1.5679
+DATA['SAPT DISP ENERGY']['UBQ-leu15-val26'] =    -0.9500
+DATA['SAPT DISP ENERGY']['UBQ-leu43-leu50'] =    -2.7452
+DATA['SAPT DISP ENERGY']['UBQ-leu43-leu69'] =    -1.4963
+DATA['SAPT DISP ENERGY']['UBQ-leu50-ile61'] =    -0.8700
+DATA['SAPT DISP ENERGY']['UBQ-leu50-tyr59'] =    -3.9275
+DATA['SAPT DISP ENERGY']['UBQ-leu56-ile61np'] =    -2.7135
+DATA['SAPT DISP ENERGY']['UBQ-leu56-ile61p'] =    -0.9829
+DATA['SAPT DISP ENERGY']['UBQ-leu56-tyr59'] =    -1.6519
+DATA['SAPT DISP ENERGY']['UBQ-leu69-leu71'] =    -1.8072
+DATA['SAPT DISP ENERGY']['UBQ-leu71-leu73'] =    -1.2259
+DATA['SAPT DISP ENERGY']['UBQ-lys11-glu34'] =    -2.2248
+DATA['SAPT DISP ENERGY']['UBQ-lys27-asp52'] =    -2.9174
+DATA['SAPT DISP ENERGY']['UBQ-lys27-gln31'] =    -2.1507
+DATA['SAPT DISP ENERGY']['UBQ-lys27-leu43-nonh3'] =    -1.7636
+DATA['SAPT DISP ENERGY']['UBQ-lys27-leu43'] =    -1.7160
+DATA['SAPT DISP ENERGY']['UBQ-lys29-lys33'] =    -2.2883
+DATA['SAPT DISP ENERGY']['UBQ-lys6-thr66'] =    -0.9303
+DATA['SAPT DISP ENERGY']['UBQ-met1-ile3'] =    -1.3473
+DATA['SAPT DISP ENERGY']['UBQ-met1-lys63'] =    -4.4536
+DATA['SAPT DISP ENERGY']['UBQ-met1-val17-bi'] =    -6.5429
+DATA['SAPT DISP ENERGY']['UBQ-met1-val17-mono'] =    -2.2646
+DATA['SAPT DISP ENERGY']['UBQ-met1-val17'] =    -1.1762
+DATA['SAPT DISP ENERGY']['UBQ-phe4-leu67'] =    -2.7411
+DATA['SAPT DISP ENERGY']['UBQ-phe4-ser65'] =    -2.5172
+DATA['SAPT DISP ENERGY']['UBQ-phe4-thr12'] =    -1.7032
+DATA['SAPT DISP ENERGY']['UBQ-phe4-thr14'] =    -2.2947
+DATA['SAPT DISP ENERGY']['UBQ-phe45-ala46'] =    -1.2309
+DATA['SAPT DISP ENERGY']['UBQ-phe45-ile61'] =    -3.6168
+DATA['SAPT DISP ENERGY']['UBQ-phe45-leu67'] =    -2.1299
+DATA['SAPT DISP ENERGY']['UBQ-phe45-lys48'] =    -5.1716
+DATA['SAPT DISP ENERGY']['UBQ-pro19-ser57'] =    -3.6994
+DATA['SAPT DISP ENERGY']['UBQ-pro37-gln40'] =    -2.2360
+DATA['SAPT DISP ENERGY']['UBQ-ser57-asn60'] =    -3.1094
+DATA['SAPT DISP ENERGY']['UBQ-thr14-lys33'] =    -1.3346
+DATA['SAPT DISP ENERGY']['UBQ-thr22-asn25'] =    -1.2953
+DATA['SAPT DISP ENERGY']['UBQ-thr22-thr55-big'] =   -10.3148
+DATA['SAPT DISP ENERGY']['UBQ-thr22-thr55-small'] =    -2.8377
+DATA['SAPT DISP ENERGY']['UBQ-thr22-val26'] =    -1.5610
+DATA['SAPT DISP ENERGY']['UBQ-thr55-asp58-backbone'] =    -1.1305
+DATA['SAPT DISP ENERGY']['UBQ-thr55-asp58-sidechain-small'] =    -2.2623
+DATA['SAPT DISP ENERGY']['UBQ-thr55-asp58-sidechain'] =    -3.4331
+DATA['SAPT DISP ENERGY']['UBQ-thr7-gly10'] =    -1.1545
+DATA['SAPT DISP ENERGY']['UBQ-thr7-ile13'] =    -0.4556
+DATA['SAPT DISP ENERGY']['UBQ-thr7-lys11'] =    -2.2898
+DATA['SAPT DISP ENERGY']['UBQ-thr7-thr9-v2'] =    -0.7523
+DATA['SAPT DISP ENERGY']['UBQ-thr7-thr9'] =    -1.1990
+DATA['SAPT DISP ENERGY']['UBQ-tyr59-ile61'] =    -1.5476
+DATA['SAPT DISP ENERGY']['UBQ-val17-leu56'] =    -1.9615
+DATA['SAPT DISP ENERGY']['UBQ-val26-ile30'] =    -1.9879
+DATA['SAPT DISP ENERGY']['UBQ-val26-leu43'] =    -0.8272
+DATA['SAPT DISP ENERGY']['UBQ-val26-leu56'] =    -1.8626
+DATA['SAPT DISP ENERGY']['UBQ-val5-ile13'] =    -6.6829
+DATA['SAPT DISP ENERGY']['UBQ-val5-leu15'] =    -1.5059
+DATA['SAPT DISP ENERGY']['UBQ-val5-leu69'] =    -1.5274
