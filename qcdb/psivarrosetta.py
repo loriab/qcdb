@@ -57,6 +57,8 @@ useme2psivar = {
     'pbe0d3bj.usemedash': 'PBE0-D3BJ DISPERSION CORRECTION ENERGY',
 
     'wpbe.usemeraw': 'WPBE FUNCTIONAL TOTAL ENERGY',
+    'wpbed3.usemedash': 'WPBE-D3 DISPERSION CORRECTION ENERGY',
+    'wpbed3bj.usemedash': 'WPBE-D3BJ DISPERSION CORRECTION ENERGY',
 
     'xyg3.usemeraw': 'XYG3 TOTAL ENERGY',  # no psivar for fctl + dh, which would be the more restrictive def
 

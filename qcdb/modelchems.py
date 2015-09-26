@@ -448,6 +448,14 @@ _tlist = [
     Method('GAFF',            fullname='GAFF'),
     Method('PM6DH2',          fullname='PM6-DH2'),
     Method('CHARMM',          fullname='CHARMM'),
+    Method('PM3',             fullname='PM3'),
+    Method('PM6',             fullname='PM6'),
+    Method('PDDG',            fullname='PDDG'),
+    Method('FF03',            fullname='FF03'),
+    Method('FF03A',           fullname='FF03A'),
+    Method('FF99SB',          fullname='FF99SB'),
+    Method('FF99SBA',         fullname='FF99SBA'),
+    Method('EFP',             fullname='EFP'),
     ]
 
 methods = {}
