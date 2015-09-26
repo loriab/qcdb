@@ -35,6 +35,8 @@ import qcdb.basislist
 from qcdb.exceptions import *
 sys.path.append(qcdbpkg_path + '/../databases')
 
+usemeold = True
+
 # load docstring info from database files (doesn't actually import database modules)
 DBdocstrings = qcdb.dictify_database_docstrings()
 
@@ -69,10 +71,10 @@ print '\n State your functional with Psi4 names (multiple allowed).\n'
 functionals = []
 user_obedient = False
 while not user_obedient:
-    temp = raw_input('    functionals [B3LYP PBE PBE0 BP86 B2PLYP B97-D] = ').strip()
+    temp = raw_input('    functionals [B3LYP PBE PBE0 BP86 B2PLYP B97-D BLYP LCWPBE] = ').strip()
     ltemp = temp.split()
     if temp == "":
-        functionals = ['B3LYP', 'PBE', 'PBE0', 'BP86', 'B2PLYP', 'B97-D']
+        functionals = ['B3LYP', 'PBE', 'PBE0', 'BP86', 'B2PLYP', 'B97-D', 'BLYP', 'LCWPBE']
         user_obedient = True
     for item in ltemp:
         functionals.append(item.upper())
@@ -161,7 +163,7 @@ for func in functionals:
         #except OSError:
         #    print 'Warning: directory %s already present.' % (ddir)
 
-        dfile = dbse + '-' + func + '-' + variant + '.usemedash'
+        dfile = dbse + '-' + func + '-nobas.' + func.lower() + variant + '.usemedash'
         usemedash = open(dfile, 'w')
 
         # print table header
@@ -198,13 +200,21 @@ for func in functionals:
             # print main results to useme
             textline = '%-23s ' % (index)
             for rgt in ACTV[index]:
-                textline += '%16.8f %4d ' % (DASHCORR[rgt], RXNM[index][rgt])
+                if usemeold:
+                    textline += '%16.8f ' % (DASHCORR[rgt])
+                    if RXNM[index][rgt] == -2:
+                        textline += '%16.8f ' % (DASHCORR[rgt])
+                else:
+                    textline += '%16.8f %4d ' % (DASHCORR[rgt], RXNM[index][rgt])
             textline += '\n'
             usemedash.write(textline)
 
         # print useme footer
         textline = '%-23s ' % ('#__elecE_in_hartree')
         for i in range(maxrgt):
-            textline += '%16s %4s ' % ('Reagent' + string.uppercase[i], 'Wt')
+            if usemeold:
+                textline += '%16s ' % ('Reagent' + string.uppercase[i])
+            else:
+                textline += '%16s %4s ' % ('Reagent' + string.uppercase[i], 'Wt')
         textline += '\n'
         usemedash.write(textline)

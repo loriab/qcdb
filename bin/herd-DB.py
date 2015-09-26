@@ -37,6 +37,7 @@ sys.path.append(qcdbpkg_path + '/../')
 import qcdb
 import qcdb.basislist
 from qcdb.exceptions import *
+from qcdb.psivarrosetta import psivar2useme
 sys.path.append(qcdbpkg_path + '/../databases')
 
 
@@ -196,62 +197,106 @@ for rxn in HRXN:
         textline += """|  %14s %3d """ % ('Completed' if complete else 'Running', rxnm_wt)
     print textline
 
-# prepare useme footer
-footer = '%-23s ' % ('#__elecE_in_hartree')
-for i in range(max([len(ACTV[rgt]) for rgt in ACTV])):
-    if usemeold:
-        footer += '%16s ' % ('Reagent' + string.uppercase[i])
-    else:
-        footer += '%16s %4s ' % ('Reagent' + string.uppercase[i], 'Wt')
-footer += '\n'
+saptkeys = sorted([pv for pv in psivar.keys() if (pv and pv.startswith('SAPT ') and pv in psivar2useme.keys())])
+issapt = True if saptkeys else False
+if issapt:  # sapt
+    # prepare useme footer
+    footer = '%-23s ' % ('___saptE_in_mhartree')  # reap-DB wants non-comment
+    for i in saptkeys:
+        footer += '%16s ' % (psivar2useme[i])
+    footer += '\n'
 
-isDHDFT = True if 'DOUBLE-HYBRID CORRECTION ENERGY' in psivar.keys() else False
-
-# print main results to useme
-print ''
-for datum in psivar.keys():
+    # print main results to useme
+    print ''
     usemecontents = ''
     tally = 0
-    try:
-        usemeext = actionable_data[datum]
-    except KeyError:
-        continue
-
-    if isDHDFT and usemeext in ['DFT.usemeraw', 'mp2.usemecorl', 'mp2.usemetrip']:  # sad hack
-        continue
-
+    usemeext = 'usemesapt'
     for rxn in HRXN:
         index = dbse + '-' + str(rxn)
         textline = ''
         complete = True
-
-        for rgt in ACTV[index]:
-            rxnm_wt = RXNM[index][ACTV[index][ACTV[index].index(rgt)]]
+        rgt = ACTV[index][0]
+    
+        for datum in saptkeys:
             try:
                 value = psivar[datum][rgt]
-                if datum == 'DOUBLE-HYBRID CORRECTION ENERGY':
-                    value += psivar['DFT FUNCTIONAL TOTAL ENERGY'][rgt]
-
-                if usemeold:
-                    textline += '%16.8f ' % (value)
-                    if rxnm_wt == -2:
-                        textline += '%16.8f ' % (value)
-                else:
-                    textline += '%16.8f %4d ' % (value, rxnm_wt)
+                textline += '%16.8f ' % (value)
             except KeyError:
-                textline += '%16s ' % ('')
+                textline += '%16s ' % ('None')
                 complete = False
-
+    
         if len(textline.strip()) > 0:
             if complete:
                 usemecontents += '%-23s %s\n' % (index, textline)
                 tally += 1
             else:
                 usemecontents += '#%-22s %s\n' % (index, textline)
-
+    
     if len(usemecontents) > 0:
         with open(dirprefix + '.' + usemeext, 'w') as handle:
-            handle.write(usemecontents)
             handle.write(footer)
+            handle.write(usemecontents)
             print '        writing %4d entries to %s' % (tally, dirprefix + '.' + usemeext)
+
+else:  # non-sapt
+    # prepare useme footer
+    footer = '%-23s ' % ('#__elecE_in_hartree')
+    for i in range(max([len(ACTV[rgt]) for rgt in ACTV])):
+        if usemeold:
+            footer += '%16s ' % ('Reagent' + string.uppercase[i])
+        else:
+            footer += '%16s %4s ' % ('Reagent' + string.uppercase[i], 'Wt')
+    footer += '\n'
+    
+    isDHDFT = True if 'DOUBLE-HYBRID CORRECTION ENERGY' in psivar.keys() else False
+    
+    # print main results to useme
+    print ''
+    for datum in psivar.keys():
+        usemecontents = ''
+        tally = 0
+        try:
+            #usemeext = actionable_data[datum]
+            usemeext = psivar2useme[datum]
+            print datum
+        except KeyError:
+            continue
+    
+        if isDHDFT and usemeext in ['DFT.usemeraw', 'mp2.usemecorl', 'mp2.usemetrip']:  # sad hack
+            continue
+    
+        for rxn in HRXN:
+            index = dbse + '-' + str(rxn)
+            textline = ''
+            complete = True
+    
+            for rgt in ACTV[index]:
+                rxnm_wt = RXNM[index][ACTV[index][ACTV[index].index(rgt)]]
+                try:
+                    value = psivar[datum][rgt]
+                    if datum == 'DOUBLE-HYBRID CORRECTION ENERGY':
+                        value += psivar['DFT FUNCTIONAL TOTAL ENERGY'][rgt]
+    
+                    if usemeold:
+                        textline += '%16.8f ' % (value)
+                        if rxnm_wt == -2:
+                            textline += '%16.8f ' % (value)
+                    else:
+                        textline += '%16.8f %4d ' % (value, rxnm_wt)
+                except KeyError:
+                    textline += '%16s ' % ('')
+                    complete = False
+    
+            if len(textline.strip()) > 0:
+                if complete:
+                    usemecontents += '%-23s %s\n' % (index, textline)
+                    tally += 1
+                else:
+                    usemecontents += '#%-22s %s\n' % (index, textline)
+    
+        if len(usemecontents) > 0:
+            with open(dirprefix + '.' + usemeext, 'w') as handle:
+                handle.write(usemecontents)
+                handle.write(footer)
+                print '        writing %4d entries to %s' % (tally, dirprefix + '.' + usemeext)
 

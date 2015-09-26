@@ -29,6 +29,7 @@ import qcformat
 #import molpro_basissets
 import options
 from pdict import PreservingDict
+from qcdb.psivarrosetta import useme2psivar
 
 
 def harvest_output(outtext):
@@ -40,6 +41,40 @@ def harvest_output(outtext):
     psivar_grad = None
 
     NUMBER = "((?:[-+]?\\d*\\.\\d+(?:[DdEe][-+]?\\d+)?)|(?:[-+]?\\d+\\.\\d*(?:[DdEe][-+]?\\d+)?))"
+
+    # Process SAPT
+    mobj = re.search(
+        r'^\s+' + r'SAPT Results' + r'\s*' + 
+        r'^\s*(?:-+)\s*' +
+        r'^\s+' + r'Electrostatics' +
+        r'(?:.*?)' +
+        r'^\s+' + r'Exchange' + 
+        r'(?:.*?)' +
+        r'^\s+' + r'Induction' + 
+        r'(?:.*?)' +
+        r'^\s+' + r'Dispersion' + 
+        r'(?:.*?)' +
+        r'^\s+' + r'Total' +
+        r'(?:.*?)' + 
+        r'^(?:\s*?)$',
+        outtext, re.MULTILINE | re.DOTALL)
+    if mobj:
+        print 'matched sapt'
+        for pv in mobj.group(0).split('\n'):
+            submobj = re.search(r'^\s+' + r'(.+?)' + r'\s+' + 
+                NUMBER + r'\s+' + r'mH' + r'\s+' +
+                NUMBER + r'\s+' + r'kcal mol\^-1' + r'\s*$', pv)
+            if submobj:
+                try:
+                    key = ''.join(submobj.group(1).split())
+                    useme = useme2psivar[key]
+                except KeyError:
+                    #print '%30s' % (''),
+                    pass
+                else:
+                    #print '%30s' % (useme),
+                    psivar['%s' % (useme)] = submobj.group(2)
+                #print '*', submobj.group(1), submobj.group(2), submobj.group(3)
 
     # Process PsiVariables
     mobj = re.search(r'^(?:  Variable Map:)\s*' +
