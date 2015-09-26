@@ -703,6 +703,7 @@ class WrappedDatabase(object):
                 getattr(database, 'BINDINFO_' + ref)
             except AttributeError:
                 arrbindinfo = None
+                print """Warning: No BINDINFO dict with BIND attribution and modelchem for %s.""" % (ref)
             else:
                 arrbindinfo = 'BINDINFO_' + ref
             oBIND[ref] = [methods[ref], 'default', bases[ref], arrbind,
@@ -1755,12 +1756,15 @@ class Database(object):
                                   saveas=saveas, relpath=relpath, graphicsformat=graphicsformat)
             return filedict
 
-    def plot_ternary(self, sset='default', pythonpath='/Users/loriab/linux/bfdb/sapt_punt', failoninc=True):  # pythonpath=None
+    def plot_ternary(self, sset='default', labeled=True,
+        pythonpath='/Users/loriab/linux/bfdb/sapt_punt', failoninc=True,  # pythonpath=None
+        saveas=None, relpath=False, graphicsformat=['pdf']):
         """This is a stopgap function that loads sapt component data from
         sapt_punt in bfdb repo, then formats it to plot a ternary diagram.
 
         """
         dbdat = []
+        title = """%s %s """ % (self.dbse, sset)
         for db, odb in self.dbdict.items():
             modname = 'sapt_' + odb.dbse
             if pythonpath is not None:
@@ -1779,6 +1783,8 @@ class Database(object):
                 saptdata = getattr(datamodule, 'DATA')
             except AttributeError:
                 raise ValidationError("SAPT punt module does not contain DATA" + str(modname))
+            saptmc = saptdata['SAPT MODELCHEM']
+            title += saptmc
 
             dbix = self.dbdict.keys().index(db)
             for rxn, orxn in odb.hrxn.iteritems():
@@ -1787,7 +1793,6 @@ class Database(object):
                     if rxn in odb.sset[lss].keys():
                         dbrxn = orxn.dbrxn
                         try:
-                            #saptmc = saptdata['SAPT MODELCHEM']
                             elst = saptdata['SAPT ELST ENERGY'][dbrxn]
                             exch = saptdata['SAPT EXCH ENERGY'][dbrxn]
                             ind = saptdata['SAPT IND ENERGY'][dbrxn]
@@ -1798,8 +1803,8 @@ class Database(object):
                             if failoninc:
                                 break
                         else:
-                            if not all([elst, exch, ind, disp]):
-                                print """Warning: DATA['SAPT * ENERGY'] missing for reaction %s""" % (dbrxn)
+                            if not all([elst, ind, disp]):  # exch sometimes physically zero
+                                print """Warning: DATA['SAPT * ENERGY'] missing piece for reaction %s: %s""" % (dbrxn, [elst, exch, ind, disp])
                                 if failoninc:
                                     break
                         dbdat.append([elst, ind, disp])
@@ -1813,7 +1818,8 @@ class Database(object):
             # if not running from Canopy, print line to execute from Canopy
         else:
             # if running from Canopy, call mpl directly
-            filedict = mpl.ternary(dbdat)
+            filedict = mpl.ternary(dbdat, title=title, labeled=labeled,
+                                   saveas=saveas, relpath=relpath, graphicsformat=graphicsformat)
             return filedict
 
     def plot_flat(self, modelchem, benchmark='default', sset='default',
