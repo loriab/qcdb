@@ -145,6 +145,9 @@ TAGL['%s-%s-reagent'    % (dbse, 'P_GX'                  )] = """Pentane gauche,
 TAGL['%s-%s-reagent'    % (dbse, 'P_TG'                  )] = """Pentane trans, gauche"""
 TAGL['%s-%s-reagent'    % (dbse, 'P_TT'                  )] = """Pentane trans, trans"""
 
+TAGL['dbse'] = 'comformation energies for alkanes'
+TAGL['default'] = 'entire database'
+
 # <<< Geometry Specification Strings >>>
 GEOS = {}
 
