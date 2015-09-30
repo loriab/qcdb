@@ -28,29 +28,56 @@ import qcdb
 dbse = 'ACHC'
 
 # <<< Database Members >>>
+AXIS_Rrat = {}
+AXIS_Rang = {}
+
 Rise = ['AC-3.0_____', 'AC-3.2_____', 'AC-3.4_____', 'AC-3.6_____',
         'AC-3.8_____', 'AC-4.0_____', 'AC-4.4_____', 'AC-5.0_____']
-Slide = ['AC-3.4_n2.0____', 'AC-3.4_n1.6____', 'AC-3.4_n1.2____', 'AC-3.4_n0.8____',
+dist = [3.0, 3.2, 3.4, 3.6, 3.8, 4.0, 4.4, 5.0]
+AXIS_Rang.update(dict(zip(Rise, dist)))
+AXIS_Rrat.update(dict(zip(Rise, [d / 3.4 for d in dist])))
+
+Shift = ['AC-3.4_n2.0____', 'AC-3.4_n1.6____', 'AC-3.4_n1.2____', 'AC-3.4_n0.8____',
          'AC-3.4_n0.4____', 'AC-3.4_____', 'AC-3.4_0.4____', 'AC-3.4_0.8____',
          'AC-3.4_1.2____', 'AC-3.4_1.6____', 'AC-3.4_2.0____']
-Shift = ['AC-3.4__n2.0___', 'AC-3.4__n1.6___', 'AC-3.4__n1.2___', 'AC-3.4__n0.8___',
+dist = [-2.0, -1.6, -1.2, -0.8, -0.4, 0.0, 0.4, 0.8, 1.2, 1.6, 2.0]
+AXIS_Rang.update(dict(zip(Shift, dist)))
+AXIS_Rrat.update(dict(zip(Shift, [d / -0.4 for d in dist])))
+
+Slide = ['AC-3.4__n2.0___', 'AC-3.4__n1.6___', 'AC-3.4__n1.2___', 'AC-3.4__n0.8___',
          'AC-3.4__n0.4___', 'AC-3.4_____', 'AC-3.4__0.4___', 'AC-3.4__0.8___',
          'AC-3.4__1.2___', 'AC-3.4__1.6___', 'AC-3.4__2.0___']
+dist = [-2.0, -1.6, -1.2, -0.8, -0.4, 0.0, 0.4, 0.8, 1.2, 1.6, 2.0]
+AXIS_Rang.update(dict(zip(Slide, dist)))
+AXIS_Rrat.update(dict(zip(Slide, [d / 1.2 for d in dist])))
+
 Twist = ['AC-3.4_____', 'AC-3.4___30__', 'AC-3.4___60__', 'AC-3.4___90__',
          'AC-3.4___120__', 'AC-3.4___150__', 'AC-3.4___180__']
-Roll = ['AC-3.6_____', 'AC-3.6____4_', 'AC-3.6____8_', 'AC-3.6____12_',
-        'AC-3.6____16_', 'AC-3.6____20_', 'AC-3.6____n4_', 'AC-3.6____n8_',
-        'AC-3.6____n12_', 'AC-3.6____n16_', 'AC-3.6____n20_']
+dist = [0., 30., 60., 90., 120., 150., 180.]
+AXIS_Rang.update(dict(zip(Twist, dist)))
+AXIS_Rrat.update(dict(zip(Twist, [d / 150. for d in dist])))
+
+Roll = ['AC-3.6____n20_', 'AC-3.6____n16_', 'AC-3.6____n12_',
+        'AC-3.6____n8_', 'AC-3.6____n4_', 'AC-3.6_____', 'AC-3.6____4_',
+        'AC-3.6____8_', 'AC-3.6____12_', 'AC-3.6____16_', 'AC-3.6____20_']
+dist = [-20., -16., -12., -8., -4., 0., 4., 8., 12., 16., 20.]
+AXIS_Rang.update(dict(zip(Roll, dist)))
+AXIS_Rrat.update(dict(zip(Roll, [d / 4. for d in dist])))
+
 Tilt = ['AC-3.6_____n20', 'AC-3.6_____n16', 'AC-3.6_____n12', 'AC-3.6_____n8',
         'AC-3.6_____n4', 'AC-3.6_____', 'AC-3.6_____4', 'AC-3.6_____8',
-        'AC-3.6_____12', 'AC-3.6_____16', 'AC-3.6_____20'] 
+        'AC-3.6_____12', 'AC-3.6_____16', 'AC-3.6_____20']
+dist = [-20., -16., -12., -8., -4., 0, 4., 8., 12., 16., 20.]
+AXIS_Rang.update(dict(zip(Tilt, dist)))
+AXIS_Rrat.update(dict(zip(Tilt, [d / -4. for d in dist])))
+
 HRXN = []
-temp = sum([Rise, Slide, Shift, Twist, Roll, Tilt], [])
+temp = sum([Rise, Twist, Shift, Slide, Roll, Tilt], [])
 [HRXN.append(i) for i in temp if not HRXN.count(i)]
 #HRXN_SM = []
 #HRXN_LG = []
 HRXN_EQ = ['AC-3.4_____', 'AC-3.4_1.2____', 'AC-3.4__n0.4___',
-           'AC-3.4___150__','AC-3.6____4_', 'AC-3.6_____n4'] 
+           'AC-3.4___150__','AC-3.6____4_', 'AC-3.6_____n4']
 
 # <<< Chemical Systems Involved >>>
 RXNM = {}     # reaction matrix of reagent contributions per reaction
@@ -94,29 +121,29 @@ BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4___120__'        )] = -6.967
 BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4___150__'        )] = -8.009  # twist eq
 BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4___180__'        )] = -6.533
 
-BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4_n2.0____'       )] = -3.645
-BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4_n1.6____'       )] = -4.417
-BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4_n1.2____'       )] = -5.170
-BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4_n0.8____'       )] = -5.673
-BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4_n0.4____'       )] = -5.915
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4_n2.0____'       )] = -6.179
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4_n1.6____'       )] = -6.090
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4_n1.2____'       )] = -6.069
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4_n0.8____'       )] = -6.245
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4_n0.4____'       )] = -6.396  # shift eq
 BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4_____'           )] = -6.153
-BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4_0.4____'        )] = -6.608
-BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4_0.8____'        )] = -7.136
-BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4_1.2____'        )] = -7.345  # slide eq
-BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4_1.6____'        )] = -7.041
-BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4_2.0____'        )] = -6.427
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4_0.4____'        )] = -5.470
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4_0.8____'        )] = -4.733
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4_1.2____'        )] = -4.331
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4_1.6____'        )] = -4.250
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4_2.0____'        )] = -4.186
 
-BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4__n2.0___'       )] = -6.179
-BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4__n1.6___'       )] = -6.090
-BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4__n1.2___'       )] = -6.069
-BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4__n0.8___'       )] = -6.245
-BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4__n0.4___'       )] = -6.396  # shift eq
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4__n2.0___'       )] = -3.645
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4__n1.6___'       )] = -4.417
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4__n1.2___'       )] = -5.170
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4__n0.8___'       )] = -5.673
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4__n0.4___'       )] = -5.915
 BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4_____'           )] = -6.153
-BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4__0.4___'        )] = -5.470
-BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4__0.8___'        )] = -4.733
-BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4__1.2___'        )] = -4.331
-BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4__1.6___'        )] = -4.250
-BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4__2.0___'        )] = -4.186
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4__0.4___'        )] = -6.608
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4__0.8___'        )] = -7.136
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4__1.2___'        )] = -7.345  # slide eq
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4__1.6___'        )] = -7.041
+BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.4__2.0___'        )] = -6.427
 
 BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.6____n20_'        )] = -4.360
 BIND_ACHC0['%s-%s'            % (dbse, 'AC-3.6____n16_'        )] = -5.075
@@ -474,6 +501,16 @@ TAGL['%s-%s-monoA-CP'   % (dbse, 'AC-5.0_____'           )] = """Monomer A from 
 TAGL['%s-%s-monoB-CP'   % (dbse, 'AC-5.0_____'           )] = """Monomer B from a-c nucleobase complex at 5.0 rise (A) and 0.0 twist (deg) """
 TAGL['%s-%s-monoA-unCP' % (dbse, 'AC-5.0_____'           )] = """Monomer A from a-c nucleobase complex at 5.0 rise (A) and 0.0 twist (deg) """
 TAGL['%s-%s-monoB-unCP' % (dbse, 'AC-5.0_____'           )] = """Monomer B from a-c nucleobase complex at 5.0 rise (A) and 0.0 twist (deg) """
+
+TAGL['dbse'] = 'interaction energy curves for adenine-cytosine stacked nucleobases through six translations and rotations'
+TAGL['rise'] = 'translation curve in +Z, up the helix'
+TAGL['twist'] = 'rotation curve ccw in +Z, up the helix'
+TAGL['shift'] = 'translation curve in +X, toward the major groove'
+TAGL['slide'] = "translation curve in +Y, toward the 5'-3' strand"
+TAGL['roll'] = "rotation curve ccw in +Y, toward the 5'-3' strand"
+TAGL['tilt'] = 'rotation curve ccw in +X, toward the major groove'
+TAGL['equilibrium'] = 'minimum-energy systems on translation and rotation curves'
+TAGL['default'] = 'entire database'
 
 # <<< Geometry Specification Strings >>>
 GEOS = {}
