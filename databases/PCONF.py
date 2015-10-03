@@ -108,6 +108,9 @@ TAGL['%s-%s-reagent'    % (dbse, '470'                   )] = """ """
 TAGL['%s-%s-reagent'    % (dbse, '691'                   )] = """ """
 TAGL['%s-%s-reagent'    % (dbse, '99'                    )] = """ """
 
+TAGL['dbse'] = 'comformation energies for tripeptides'
+TAGL['default'] = 'entire database'
+
 # <<< Geometry Specification Strings >>>
 GEOS = {}
 

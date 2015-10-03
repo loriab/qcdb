@@ -159,6 +159,9 @@ TAGL['%s-%s-reagent'    % (dbse, 'G2'                    )] = """ """
 TAGL['%s-%s-reagent'    % (dbse, 'G3'                    )] = """ """
 TAGL['%s-%s-reagent'    % (dbse, 'G4'                    )] = """ """
 
+TAGL['dbse'] = 'comformation energies for sugars'
+TAGL['default'] = 'entire database'
+
 # <<< Geometry Specification Strings >>>
 GEOS = {}
 

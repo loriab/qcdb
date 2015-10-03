@@ -23,6 +23,7 @@ parser.add_argument('-d', '--dbmodule', help='force choice of database module, d
 parser.add_argument('-p', '--project', help='select pre-configured project')
 parser.add_argument('-v', '--verbose', type=int, default=1, help='amount of printing')
 parser.add_argument('-o', '--outdir', default='.', help='directory to write output files')
+parser.add_argument('-i', '--usemedir', help='directory containing input data files, defaults to project value')
 args = parser.parse_args()
 
 project = args.project
@@ -76,6 +77,11 @@ elif project == 'saptone':
     dbse = 'S22'
     path = r"""/Users/loriab/linux/qcdb/data/pt2usemefiles/"""
 
+elif project == 'saptmisc':
+    #dbse = 'ACHC', 'BBI', 'S22by7', 'S66', 'SSI', 'UBQ'
+    dbse = 'ACHC'
+    path = r"""/Users/loriab/linux/qcdb/data/saptmiscusemefiles/"""
+
 # not tested
 #dbse = 'BBI'
 elif project == 'merz3':
@@ -113,6 +119,7 @@ else:
 # <<< learn about Database: rgts, rxns, modes, and stoichiometry
 
 dbse = dbse if args.dbmodule is None else args.dbmodule
+path = path if args.usemedir is None else args.usemedir
 dbobj = qcdb.Database(dbse, loadfrompickle=True)
 dbse = dbobj.dbse
 print '<<<', dbse, '>>>'
@@ -666,6 +673,8 @@ pv1['PBE-D3BJ TOTAL ENERGY'] = {'func': sum, 'args': ['PBE FUNCTIONAL TOTAL ENER
 pv1['PBE0-D2 TOTAL ENERGY'] = {'func': sum, 'args': ['PBE0 FUNCTIONAL TOTAL ENERGY', 'PBE0-D2 DISPERSION CORRECTION ENERGY']}
 pv1['PBE0-D3 TOTAL ENERGY'] = {'func': sum, 'args': ['PBE0 FUNCTIONAL TOTAL ENERGY', 'PBE0-D3 DISPERSION CORRECTION ENERGY']}
 pv1['PBE0-D3BJ TOTAL ENERGY'] = {'func': sum, 'args': ['PBE0 FUNCTIONAL TOTAL ENERGY', 'PBE0-D3BJ DISPERSION CORRECTION ENERGY']}
+pv1['WPBE-D3 TOTAL ENERGY'] = {'func': sum, 'args': ['WPBE FUNCTIONAL TOTAL ENERGY', 'WPBE-D3 DISPERSION CORRECTION ENERGY']}
+pv1['WPBE-D3BJ TOTAL ENERGY'] = {'func': sum, 'args': ['WPBE FUNCTIONAL TOTAL ENERGY', 'WPBE-D3BJ DISPERSION CORRECTION ENERGY']}
 pv1['M05-2X-D3 TOTAL ENERGY'] = {'func': sum, 'args': ['M05-2X FUNCTIONAL TOTAL ENERGY', 'M05-2X-D3 DISPERSION CORRECTION ENERGY']}
 pv1['M06-2X-D3 TOTAL ENERGY'] = {'func': sum, 'args': ['M06-2X FUNCTIONAL TOTAL ENERGY', 'M06-2X-D3 DISPERSION CORRECTION ENERGY']}
 pv1['WB97X-D TOTAL ENERGY'] = {'func': sum, 'args': ['WB97X FUNCTIONAL TOTAL ENERGY', 'WB97X-D DISPERSION CORRECTION ENERGY']}
@@ -1210,7 +1219,7 @@ elif project == 'pt2':
     opts = ['', 'dfhf', 'dfmp', 'dfhf-dfmp']
     cpmd = ['CP', 'SA']
 
-elif project == 'saptone':
+elif project == 'saptone' or project == 'saptmisc':
     mtds = ['SAPT0', 'SAPT0S', 'SAPTSCS', 'SAPTDFT', 'SAPT2',
             'SAPT2P', 'SAPT2PC', 'SAPT2PM', 'SAPT2PCM',
             'SAPT3', 'SAPT3C', 'SAPT3M', 'SAPT3CM',
@@ -1225,7 +1234,7 @@ elif project == 'saptone':
 elif project == 'merz3':
     mtds = ['MP2', 'SCSMP2', 'SCSNMP2', 'SCSMIMP2', 'DWMP2', 'MP2C',
 #            'B3LYP', 'B3LYPD3', 'B97D3', 'WB97XD',
-            'SAPT0', 'SAPT0S',
+#            'SAPT0', 'SAPT0S',
             'MP2CF12', 'DWCCSDTF12']
     bass = ['jadz', 'adz', 'atz', 'aqz', 'addz', 'adtz', 'atqz', 'qz', 'atqzadz']
     opts = ['', 'dfhf', 'dfhf-dfmp']
@@ -1250,6 +1259,7 @@ elif project == 'sflow':
 elif project == 'dfit':
     mtds = ['B3LYP', 'B3LYPD2', 'B3LYPD3', 'B3LYPD3BJ',
             'B97', 'B97D2', 'B97D3', 'B97D3BJ',
+#            'B970', 'B970D2', 'B970D3', 'B970D3BJ',
             'BLYP', 'BLYPD2', 'BLYPD3', 'BLYPD3BJ',
             'BP86', 'BP86D2', 'BP86D3', 'BP86D3BJ',
             'PBE', 'PBED2', 'PBED3', 'PBED3BJ',
@@ -1424,12 +1434,18 @@ try:
     df.xs('{} TOTAL ENERGY'.format(qlvl), level='psivar').xs(qbas, level='bstrt')
 except KeyError, e:
     try:
-        qlvl = 'SSAPT0'
-        qbas = 'jadz'
-        code = 'SAPT0S-SA-jadz'
+        qlvl = 'SAPT2+'
+        qbas = 'adz'
+        code = 'SAPT2P-SA-adz'
         df.xs('{} TOTAL ENERGY'.format(qlvl), level='psivar').xs(qbas, level='bstrt')
     except KeyError, e:
-        code = None
+        try:
+            qlvl = 'SSAPT0'
+            qbas = 'jadz'
+            code = 'SAPT0S-SA-jadz'
+            df.xs('{} TOTAL ENERGY'.format(qlvl), level='psivar').xs(qbas, level='bstrt')
+        except KeyError, e:
+            code = None
 
 if code:
     with open('%s/%s_%s.py' % (homewrite, 'sapt', dbse), 'w') as handle:
@@ -1440,10 +1456,11 @@ if code:
 
         for bit in ['ELST', 'EXCH', 'INDC', 'DISP']:
             dfbit = h2kc * df.xs('{} {} ENERGY'.format(qlvl, bit), level='psivar').xs(qbas, level='bstrt')
-            handle.write("""DATA['SAPT %s ENERGY'] = {}\n""" % (bit))
+            pbit = 'IND' if bit == 'INDC' else bit
+            handle.write("""DATA['SAPT %s ENERGY'] = {}\n""" % (pbit))
             for rxn in rxns:
                 handle.write("""DATA['SAPT %s ENERGY']['%s'] = %10.4f\n""" %
-                             (bit, rxn, dfbit.xs(rxn, level='rxn')['SA']['Rgt0']))
+                             (pbit, rxn, dfbit.xs(rxn, level='rxn')['SA']['Rgt0']))
 
 #    print '{}/{} for {} in {}:  RXN, TOT, ELST, EXCH, IND, DISP'.format(qlvl, qbas, len(rxns), dbse)
 #    for rxn in rxns:

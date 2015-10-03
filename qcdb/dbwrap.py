@@ -703,6 +703,7 @@ class WrappedDatabase(object):
                 getattr(database, 'BINDINFO_' + ref)
             except AttributeError:
                 arrbindinfo = None
+                print """Warning: No BINDINFO dict with BIND attribution and modelchem for %s.""" % (ref)
             else:
                 arrbindinfo = 'BINDINFO_' + ref
             oBIND[ref] = [methods[ref], 'default', bases[ref], arrbind,
@@ -1755,12 +1756,13 @@ class Database(object):
                                   saveas=saveas, relpath=relpath, graphicsformat=graphicsformat)
             return filedict
 
-    def plot_ternary(self, sset='default', pythonpath='/Users/loriab/linux/bfdb/sapt_punt', failoninc=True):  # pythonpath=None
+    def load_saptdata_frombfdb(self, sset='default',
+        pythonpath='/Users/loriab/linux/bfdb/sapt_punt', failoninc=True):  # pythonpath=None
         """This is a stopgap function that loads sapt component data from
-        sapt_punt in bfdb repo, then formats it to plot a ternary diagram.
+        sapt_punt in bfdb repo.
 
         """
-        dbdat = []
+        saptpackage = OrderedDict()
         for db, odb in self.dbdict.items():
             modname = 'sapt_' + odb.dbse
             if pythonpath is not None:
@@ -1779,6 +1781,7 @@ class Database(object):
                 saptdata = getattr(datamodule, 'DATA')
             except AttributeError:
                 raise ValidationError("SAPT punt module does not contain DATA" + str(modname))
+            saptmc = saptdata['SAPT MODELCHEM']
 
             dbix = self.dbdict.keys().index(db)
             for rxn, orxn in odb.hrxn.iteritems():
@@ -1787,22 +1790,44 @@ class Database(object):
                     if rxn in odb.sset[lss].keys():
                         dbrxn = orxn.dbrxn
                         try:
-                            #saptmc = saptdata['SAPT MODELCHEM']
                             elst = saptdata['SAPT ELST ENERGY'][dbrxn]
                             exch = saptdata['SAPT EXCH ENERGY'][dbrxn]
                             ind = saptdata['SAPT IND ENERGY'][dbrxn]
                             disp = saptdata['SAPT DISP ENERGY'][dbrxn]
-                            #saptdatum = rxnobj.data[saptmc]
                         except (KeyError, AttributeError):
                             print """Warning: DATA['SAPT * ENERGY'] missing for reaction %s""" % (dbrxn)
                             if failoninc:
                                 break
                         else:
-                            if not all([elst, exch, ind, disp]):
-                                print """Warning: DATA['SAPT * ENERGY'] missing for reaction %s""" % (dbrxn)
+                            if not all([elst, ind, disp]):  # exch sometimes physically zero
+                                print """Warning: DATA['SAPT * ENERGY'] missing piece for reaction %s: %s""" % (dbrxn, [elst, exch, ind, disp])
                                 if failoninc:
                                     break
-                        dbdat.append([elst, ind, disp])
+                        saptpackage[dbrxn] = {'mc': saptmc,
+                                              'elst': elst,
+                                              'exch': exch,
+                                              'ind': ind,
+                                              'disp': disp}
+        return saptpackage
+
+    def plot_ternary(self, sset='default', labeled=True,
+        pythonpath='/Users/loriab/linux/bfdb/sapt_punt', failoninc=True,  # pythonpath=None
+        saveas=None, relpath=False, graphicsformat=['pdf']):
+        """This is a stopgap function that loads sapt component data from
+        sapt_punt in bfdb repo, then formats it to plot a ternary diagram.
+
+        """
+        saptdata = self.load_saptdata_frombfdb(sset=sset, pythonpath=pythonpath,
+            failoninc=failoninc)
+
+        dbdat = []
+        mcs = []
+        for dat in saptdata.values():
+            dbdat.append([dat['elst'], dat['ind'], dat['disp']])
+            if dat['mc'] not in mcs:
+                mcs.append(dat['mc'])
+
+        title = ' '.join([self.dbse, sset, ' '.join(mcs)])
 
         # generate matplotlib instructions and call or print
         try:
@@ -1813,7 +1838,8 @@ class Database(object):
             # if not running from Canopy, print line to execute from Canopy
         else:
             # if running from Canopy, call mpl directly
-            filedict = mpl.ternary(dbdat)
+            filedict = mpl.ternary(dbdat, title=title, labeled=labeled,
+                                   saveas=saveas, relpath=relpath, graphicsformat=graphicsformat)
             return filedict
 
     def plot_flat(self, modelchem, benchmark='default', sset='default',
@@ -2197,6 +2223,10 @@ reinitialize
         import pandas as pd
         import numpy as np
 
+        if self.dbse not in ['ACONF', 'SCONF', 'PCONF', 'CYCONF']:
+            saptdata = self.load_saptdata_frombfdb(sset=sset, pythonpath='/Users/loriab/linux/bfdb/sapt_punt',
+                failoninc=failoninc)
+
         listodicts = []
         rhrxn = self.get_hrxn(sset=sset)
         for dbrxn, orxn in rhrxn.iteritems():
@@ -2219,6 +2249,14 @@ reinitialize
             dictorxn['Benchmark'] = np.NaN if orxn.benchmark is None else orxn.data[
                 wbm].value  # this NaN exception is new and experimental
             dictorxn['QcdbSys'] = orxn.dbrxn
+
+            if self.dbse not in ['ACONF', 'SCONF', 'PCONF', 'CYCONF']:
+                dictorxn['SAPT ELST ENERGY'] = saptdata[dbrxn]['elst']
+                dictorxn['SAPT EXCH ENERGY'] = saptdata[dbrxn]['exch']
+                dictorxn['SAPT IND ENERGY'] = saptdata[dbrxn]['ind']
+                dictorxn['SAPT DISP ENERGY'] = saptdata[dbrxn]['disp']
+                dictorxn['SAPT TOTAL ENERGY'] = dictorxn['SAPT ELST ENERGY'] + dictorxn['SAPT EXCH ENERGY'] + \
+                                                dictorxn['SAPT IND ENERGY'] + dictorxn['SAPT DISP ENERGY']
 
             orgts = orxn.rxnm['default'].keys()
             omolD = Molecule(orgts[0].mol)  # TODO this is only going to work with Reaction ~= Reagent databases
