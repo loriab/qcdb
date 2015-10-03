@@ -48,7 +48,7 @@ def harvest_output(outtext):
         r'^\s*' + r'(?:NUCLEAR REPULSION ENERGY)' + r'\s+' + NUMBER + r'\s*$',
         outtext, re.MULTILINE)
     if mobj:
-        print('matched nrc')
+        #print('matched nrc')
         psivar['NUCLEAR REPULSION ENERGY'] = mobj.group(1)
 
     # <<< Process SCF >>>
@@ -69,7 +69,7 @@ def harvest_output(outtext):
         r'^\s*' + r'MP2 correlation energy[:]?\s+' + NUMBER + r'\s*$',
         outtext, re.MULTILINE)
     if mobj:
-        print('matched mp2')
+        #print('matched mp2')
         psivar['HF TOTAL ENERGY'] = mobj.group(1)
         psivar['MP2 CORRELATION ENERGY'] = mobj.group(4)
         psivar['MP2 TOTAL ENERGY'] = Decimal(mobj.group(1)) + Decimal(mobj.group(4))
@@ -94,7 +94,7 @@ def harvest_output(outtext):
         #r'^\s+' + r'E2disp-exc\s+' + NUMBER + r'\s+\(\s*' + NUMBER + r')\s+' + NUMBER + r'\s+' + NUMBER + '\s*'
         outtext, re.MULTILINE)
     if mobj:
-        print('matched sapt-like')
+        #print('matched sapt-like')
         psivar['MP2C DISP20 ENERGY'] = Decimal(mobj.group(1)) / Decimal(1000)
 
     # <<< Process SCF-F12 >>>
@@ -104,7 +104,7 @@ def harvest_output(outtext):
         r'^\s+' + r'New reference energy\s+' + NUMBER + r'\s*$',
         outtext, re.MULTILINE)
     if mobj:
-        print('matched scff12')
+        #print('matched scff12')
         psivar['SCF TOTAL ENERGY'] = Decimal(mobj.group(2)) - Decimal(mobj.group(1))
         psivar['HF-CABS TOTAL ENERGY'] = mobj.group(2)
 
@@ -136,7 +136,7 @@ def harvest_output(outtext):
         r'^\s+' + r'DF-MP2-F12/3C\(FIX\)\s+' + NUMBER + r'\s+' + NUMBER + r'\s+' + NUMBER + r'\s+' + NUMBER + r'\s*$',
         outtext, re.MULTILINE)
     if mobj:
-        print('matched mp2f12')
+        #print('matched mp2f12')
         psivar['MP2 CORRELATION ENERGY'] = mobj.group(3)
         psivar['MP2 SAME-SPIN CORRELATION ENERGY'] = Decimal(mobj.group(2)) * \
             Decimal(2) / Decimal(3)
@@ -158,7 +158,7 @@ def harvest_output(outtext):
         r'^\s*' + r'Triples \(T\) contribution\s+' + NUMBER + '\s*$',
         outtext, re.MULTILINE)
     if mobj:
-        print('matched ccsd(t)')
+        #print('matched ccsd(t)')
         psivar['CCSD CORRELATION ENERGY'] = mobj.group(2)
         psivar['CCSD SAME-SPIN CORRELATION ENERGY'] = Decimal(mobj.group(1)) * \
             Decimal(2) / Decimal(3)
@@ -177,7 +177,7 @@ def harvest_output(outtext):
         r'^\s*' + r'Triples \(T\) contribution\s+' + NUMBER + '\s*$',
         outtext, re.MULTILINE)
     if mobj:
-        print('matched ccsd(t)-f12a')
+        #print('matched ccsd(t)-f12a')
         psivar['CCSD-F12A CORRELATION ENERGY'] = mobj.group(2)
         psivar['CCSD-F12A SAME-SPIN CORRELATION ENERGY'] = Decimal(mobj.group(1)) * \
             Decimal(2) / Decimal(3)
@@ -198,7 +198,7 @@ def harvest_output(outtext):
         r'^\s*' + r'Triples \(T\) contribution\s+' + NUMBER + '\s*$',
         outtext, re.MULTILINE)
     if mobj:
-        print('matched ccsd(t)-f12b')
+        #print('matched ccsd(t)-f12b')
         psivar['CCSD-F12B CORRELATION ENERGY'] = mobj.group(2)
         psivar['CCSD-F12B SAME-SPIN CORRELATION ENERGY'] = Decimal(mobj.group(1)) * \
             Decimal(2) / Decimal(3)
@@ -219,7 +219,7 @@ def harvest_output(outtext):
         r'^\s*' + r'Triples \(T\) contribution\s+' + NUMBER + '\s*$',
         outtext, re.MULTILINE)
     if mobj:
-        print('matched ccsd(t)-f12c')
+        #print('matched ccsd(t)-f12c')
         psivar['CCSD-F12C CORRELATION ENERGY'] = mobj.group(2)
         psivar['CCSD-F12C SAME-SPIN CORRELATION ENERGY'] = Decimal(mobj.group(1)) * \
             Decimal(2) / Decimal(3)
