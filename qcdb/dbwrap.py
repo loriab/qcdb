@@ -1756,15 +1756,13 @@ class Database(object):
                                   saveas=saveas, relpath=relpath, graphicsformat=graphicsformat)
             return filedict
 
-    def plot_ternary(self, sset='default', labeled=True,
-        pythonpath='/Users/loriab/linux/bfdb/sapt_punt', failoninc=True,  # pythonpath=None
-        saveas=None, relpath=False, graphicsformat=['pdf']):
+    def load_saptdata_frombfdb(self, sset='default',
+        pythonpath='/Users/loriab/linux/bfdb/sapt_punt', failoninc=True):  # pythonpath=None
         """This is a stopgap function that loads sapt component data from
-        sapt_punt in bfdb repo, then formats it to plot a ternary diagram.
+        sapt_punt in bfdb repo.
 
         """
-        dbdat = []
-        title = """%s %s """ % (self.dbse, sset)
+        saptpackage = OrderedDict()
         for db, odb in self.dbdict.items():
             modname = 'sapt_' + odb.dbse
             if pythonpath is not None:
@@ -1784,7 +1782,6 @@ class Database(object):
             except AttributeError:
                 raise ValidationError("SAPT punt module does not contain DATA" + str(modname))
             saptmc = saptdata['SAPT MODELCHEM']
-            title += saptmc
 
             dbix = self.dbdict.keys().index(db)
             for rxn, orxn in odb.hrxn.iteritems():
@@ -1797,7 +1794,6 @@ class Database(object):
                             exch = saptdata['SAPT EXCH ENERGY'][dbrxn]
                             ind = saptdata['SAPT IND ENERGY'][dbrxn]
                             disp = saptdata['SAPT DISP ENERGY'][dbrxn]
-                            #saptdatum = rxnobj.data[saptmc]
                         except (KeyError, AttributeError):
                             print """Warning: DATA['SAPT * ENERGY'] missing for reaction %s""" % (dbrxn)
                             if failoninc:
@@ -1807,7 +1803,31 @@ class Database(object):
                                 print """Warning: DATA['SAPT * ENERGY'] missing piece for reaction %s: %s""" % (dbrxn, [elst, exch, ind, disp])
                                 if failoninc:
                                     break
-                        dbdat.append([elst, ind, disp])
+                        saptpackage[dbrxn] = {'mc': saptmc,
+                                              'elst': elst,
+                                              'exch': exch,
+                                              'ind': ind,
+                                              'disp': disp}
+        return saptpackage
+
+    def plot_ternary(self, sset='default', labeled=True,
+        pythonpath='/Users/loriab/linux/bfdb/sapt_punt', failoninc=True,  # pythonpath=None
+        saveas=None, relpath=False, graphicsformat=['pdf']):
+        """This is a stopgap function that loads sapt component data from
+        sapt_punt in bfdb repo, then formats it to plot a ternary diagram.
+
+        """
+        saptdata = self.load_saptdata_frombfdb(sset=sset, pythonpath=pythonpath,
+            failoninc=failoninc)
+
+        dbdat = []
+        mcs = []
+        for dat in saptdata.values():
+            dbdat.append([dat['elst'], dat['ind'], dat['disp']])
+            if dat['mc'] not in mcs:
+                mcs.append(dat['mc'])
+
+        title = ' '.join([self.dbse, sset, ' '.join(mcs)])
 
         # generate matplotlib instructions and call or print
         try:
@@ -2203,6 +2223,10 @@ reinitialize
         import pandas as pd
         import numpy as np
 
+        if self.dbse not in ['ACONF', 'SCONF', 'PCONF', 'CYCONF']:
+            saptdata = self.load_saptdata_frombfdb(sset=sset, pythonpath='/Users/loriab/linux/bfdb/sapt_punt',
+                failoninc=failoninc)
+
         listodicts = []
         rhrxn = self.get_hrxn(sset=sset)
         for dbrxn, orxn in rhrxn.iteritems():
@@ -2225,6 +2249,14 @@ reinitialize
             dictorxn['Benchmark'] = np.NaN if orxn.benchmark is None else orxn.data[
                 wbm].value  # this NaN exception is new and experimental
             dictorxn['QcdbSys'] = orxn.dbrxn
+
+            if self.dbse not in ['ACONF', 'SCONF', 'PCONF', 'CYCONF']:
+                dictorxn['SAPT ELST ENERGY'] = saptdata[dbrxn]['elst']
+                dictorxn['SAPT EXCH ENERGY'] = saptdata[dbrxn]['exch']
+                dictorxn['SAPT IND ENERGY'] = saptdata[dbrxn]['ind']
+                dictorxn['SAPT DISP ENERGY'] = saptdata[dbrxn]['disp']
+                dictorxn['SAPT TOTAL ENERGY'] = dictorxn['SAPT ELST ENERGY'] + dictorxn['SAPT EXCH ENERGY'] + \
+                                                dictorxn['SAPT IND ENERGY'] + dictorxn['SAPT DISP ENERGY']
 
             orgts = orxn.rxnm['default'].keys()
             omolD = Molecule(orgts[0].mol)  # TODO this is only going to work with Reaction ~= Reagent databases
