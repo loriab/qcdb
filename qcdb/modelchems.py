@@ -189,6 +189,8 @@ _tlist = [
     Publication('dfit', doi='', dsdbid='', owner='DGAS', fullname=''),
     Publication('merz3', doi='', dsdbid='', owner='LAB', fullname=''),
     Publication('bfdbmm', doi='', dsdbid='', owner='LAB', fullname=''),
+    Publication('saptmisc', doi='', dsdbid='', owner='', fullname=''),
+    Publication('silver', doi='', dsdbid='', owner='', fullname=''),
     Publication('anon', doi='', dsdbid='', owner='', fullname=''),
 ]
 pubs = {}
@@ -369,6 +371,7 @@ _tlist = [
     Method('SCMICCSDAF12',    fullname='SCS(MI)-CCSD-F12a'),
     Method('SCMICCSDBF12',    fullname='SCS(MI)-CCSD-F12b'),
     Method('SCMICCSDCF12',    fullname='SCS(MI)-CCSD-F12c'),
+    Method('CCSDTABAVGF12',   fullname='AVG-CCSD(T**)-F12'),
     Method('CCSDTAF12',       fullname='CCSD(T**)-F12a'),
     Method('CCSDTBF12',       fullname='CCSD(T**)-F12b'),
     Method('CCSDTCF12',       fullname='CCSD(T**)-F12c'),
