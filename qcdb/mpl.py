@@ -260,6 +260,7 @@ def valerr(data, color=None, title='', xtitle='', view=True,
 
     """
     import hashlib
+    from itertools import cycle
     import matplotlib.pyplot as plt
 
     fig, ax = plt.subplots(figsize=(4, 6))
@@ -279,31 +280,44 @@ def valerr(data, color=None, title='', xtitle='', view=True,
     vmax = -1.0
     emin = 1.0
     emax = -1.0
+    linecycler = cycle(['-', '--', '-.', ':'])
     # plot reaction errors and threads
-    for rxn in data:
-        clr = segment_color(color, rxn['color'] if 'color' in rxn else None)
-        xmin = min(xmin, rxn['axis'])
-        xmax = max(xmax, rxn['axis'])
+    for trace, tracedata in data.iteritems():
+        vaxis = []
+        vmcdata = []
+        verror = []
+        for rxn in tracedata:
+            clr = segment_color(color, rxn['color'] if 'color' in rxn else None)
+            xmin = min(xmin, rxn['axis'])
+            xmax = max(xmax, rxn['axis'])
 
-        ax1.plot(rxn['axis'], rxn['mcdata'], '^', color=clr, markersize=6.0, mew=0)
-        vmin = min(0, vmin, rxn['mcdata'])
-        vmax = max(0, vmax, rxn['mcdata'])
+            ax1.plot(rxn['axis'], rxn['mcdata'], '^', color=clr, markersize=6.0, mew=0, zorder=10)
+            vmcdata.append(rxn['mcdata'])
+            vaxis.append(rxn['axis'])
+            vmin = min(0, vmin, rxn['mcdata'])
+            vmax = max(0, vmax, rxn['mcdata'])
 
-        if rxn['bmdata'] is not None:
-            ax1.plot(rxn['axis'], rxn['bmdata'], 'o', color='black', markersize=6.0)
-            vmin = min(0, vmin, rxn['bmdata'])
-            vmax = max(0, vmax, rxn['bmdata'])
+            if rxn['bmdata'] is not None:
+                ax1.plot(rxn['axis'], rxn['bmdata'], 'o', color='black', markersize=6.0, zorder=1)
+                vmin = min(0, vmin, rxn['bmdata'])
+                vmax = max(0, vmax, rxn['bmdata'])
 
-        if rxn['error'][0] is not None:
-            ax2.plot(rxn['axis'], rxn['error'][0], 's', color=clr, mew=0)
-            emin = min(0, emin, rxn['error'][0])
-            emax = max(0, emax, rxn['error'][0])
+            if rxn['error'][0] is not None:
+                ax2.plot(rxn['axis'], rxn['error'][0], 's', color=clr, mew=0, zorder=8)
+                emin = min(0, emin, rxn['error'][0])
+                emax = max(0, emax, rxn['error'][0])
+            verror.append(rxn['error'][0])
+
+        ls = next(linecycler)
+        ax1.plot(vaxis, vmcdata, ls, color='grey', label=trace, zorder=3)
+        ax2.plot(vaxis, verror, ls, color='grey', label=trace, zorder=4)
 
     xbuf = max(0.05, abs(0.02 * xmax))
     vbuf = max(0.1, abs(0.02 * vmax))
     ebuf = max(0.01, abs(0.02 * emax))
     plt.xlim([xmin - xbuf, xmax + xbuf])
     ax1.set_ylim([vmin - vbuf, vmax + vbuf])
+    plt.legend(fontsize='x-small', frameon=False)
     ax2.set_ylim([emin - ebuf, emax + ebuf])
 
     # save and show

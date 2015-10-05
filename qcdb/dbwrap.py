@@ -218,7 +218,7 @@ def fancify_mc_tag(mc, latex=False):
         if latex:
             text = r"""%20s / %-20s %s""" % (methods[mtd].latex, bases[bas].latex, mod)
         else:
-            text = r"""%20s / %-20s, %s""" % (methods[mtd].fullname, bases[bas].fullname, mod)
+            text = r"""%20s / %s, %s""" % (methods[mtd].fullname, bases[bas].fullname, mod)
     return text
 
 
@@ -1708,39 +1708,55 @@ class Database(object):
         """
 
         """
-        # compute errors
-        mc = modelchem
-        errors, indiv = self.compute_statistics(mc, benchmark=benchmark, sset=sset,
-                                                failoninc=failoninc, verbose=verbose, returnindiv=True)
-        # repackage
-        dbdat = []
-        for db, odb in self.dbdict.iteritems():
-            dbix = self.dbdict.keys().index(db)
-            oss = odb.oss[self.sset[sset][dbix]]
-            # TODO may need to make axis name distributable across wrappeddbs
-            # TODO not handling mc present bm absent
-            if indiv[db] is not None:
-                for rxn in oss.hrxn:
-                    rxnix = oss.hrxn.index(rxn)
-                    bm = self.mcs[benchmark][dbix]
-                    if bm is None or bm not in odb.hrxn[rxn].data:
-                        dbdat.append({'db': db,
-                                      'sys': str(rxn),
-                                      'color': odb.hrxn[rxn].color,
-                                      'mcdata': odb.hrxn[rxn].data[self.mcs[mc][dbix]].value,
-                                      'bmdata': None,
-                                      'error': [None],
-                                      'axis': oss.axis[axis][rxnix]})
+        dbdatdict = OrderedDict()
+        for mc in modelchem:
+            # compute errors
+            errors, indiv = self.compute_statistics(mc, benchmark=benchmark, sset=sset,
+                                                    failoninc=failoninc, verbose=verbose, returnindiv=True)
+            # repackage
+            dbdat = []
+            for db, odb in self.dbdict.iteritems():
+                dbix = self.dbdict.keys().index(db)
+                oss = odb.oss[self.sset[sset][dbix]]
+                # TODO may need to make axis name distributable across wrappeddbs
+                # TODO not handling mc present bm absent
+                if indiv[db] is not None:
+                    for rxn in oss.hrxn:
+                        rxnix = oss.hrxn.index(rxn)
+                        bm = self.mcs[benchmark][dbix]
+                        bmpresent = False if (bm is None or bm not in odb.hrxn[rxn].data) else True
+                        mcpresent = False if (self.mcs[mc][dbix] not in odb.hrxn[rxn].data) else True
+                        entry = {'db': db,
+                                 'sys': str(rxn),
+                                 'color': odb.hrxn[rxn].color,
+                                 'axis': oss.axis[axis][rxnix]}
 
-                    else:
-                        dbdat.append({'db': db,
-                                      'sys': str(rxn),
-                                      'color': odb.hrxn[rxn].color,
-                                      'mcdata': odb.hrxn[rxn].data[self.mcs[mc][dbix]].value,
-                                      'bmdata': odb.hrxn[rxn].data[self.mcs[benchmark][dbix]].value,
-                                      'error': [indiv[db][rxn][0]],
-                                      'axis': oss.axis[axis][rxnix]})
-        title = """%s vs %s axis %s for %s subset %s""" % (mc, benchmark, axis, self.dbse, sset)
+                        if bmpresent:
+                            entry['bmdata'] = odb.hrxn[rxn].data[self.mcs[benchmark][dbix]].value
+                        else:
+                            entry['bmdata'] = None
+
+                        if mcpresent:
+                            entry['mcdata'] = odb.hrxn[rxn].data[self.mcs[mc][dbix]].value
+                        else:
+                            continue
+
+                        if bmpresent and mcpresent:
+                            entry['error'] = [indiv[db][rxn][0]]
+                        else:
+                            entry['error'] = [None]
+                        dbdat.append(entry)
+            dbdatdict[fancify_mc_tag(mc).strip()] = dbdat
+
+        pre, suf, mid = string_contrast(modelchem)
+        title = """%s[%s]%s vs %s axis %s for %s subset %s""" % (pre, str(len(mid)), suf, benchmark, axis, self.dbse, sset)
+        print title
+        #for mc, dbdat in dbdatdict.iteritems():
+        #    print mc
+        #    for d in dbdat:
+        #        print '{:20s} {:8.2f}    {:8.2f} {:8.2f}'.format(d['sys'], d['axis'],
+        #            0.0 if d['bmdata'] is None else d['bmdata'],
+        #            0.0 if d['mcdata'] is None else d['mcdata'])
         # generate matplotlib instructions and call or print
         try:
             import mpl
@@ -1751,7 +1767,7 @@ class Database(object):
                   (dbdat, color, title, axis, view, repr(saveas), repr(relpath), repr(graphicsformat))
         else:
             # if running from Canopy, call mpl directly
-            filedict = mpl.valerr(dbdat, color=color, title=title, xtitle=axis,
+            filedict = mpl.valerr(dbdatdict, color=color, title=title, xtitle=axis,
                                   view=view,
                                   saveas=saveas, relpath=relpath, graphicsformat=graphicsformat)
             return filedict
