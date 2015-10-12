@@ -104,6 +104,10 @@ elif project == 'dfit':
     dbse = 'SSI'
     path = r"""/Users/loriab/linux/Refitting_DFT_D/Databases/usemefiles/"""
 
+elif project == 'bfdbdft':
+    dbse = 'SSI'
+    path = r"""/Users/loriab/linux/qcdb/data/bfdbdftusemefiles/"""
+
 elif project == 'nbcref':
     dbse = 'NBC10ext'
     path = r"""/Users/loriab/linux/Refitting_DFT_D/Databases/usemefiles/"""
@@ -1256,7 +1260,7 @@ elif project == 'sflow':
     opts = ['dfhf-dfmp-dsrgs0p1', 'dfhf-dfmp-dsrgs0p5', 'dfhf-dfmp-dsrgs1p0']
     cpmd = ['CP']
 
-elif project == 'dfit':
+elif project in ['dfit', 'bfdbdft']:
     mtds = ['B3LYP', 'B3LYPD2', 'B3LYPD3', 'B3LYPD3BJ',
             'B97', 'B97D2', 'B97D3', 'B97D3BJ',
 #            'B970', 'B970D2', 'B970D3', 'B970D3BJ',

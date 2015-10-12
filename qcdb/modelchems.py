@@ -190,6 +190,7 @@ _tlist = [
     Publication('merz3', doi='', dsdbid='', owner='LAB', fullname=''),
     Publication('bfdbmm', doi='', dsdbid='', owner='LAB', fullname=''),
     Publication('saptmisc', doi='', dsdbid='', owner='', fullname=''),
+    Publication('bfdbdft', doi='', dsdbid='', owner='', fullname=''),
     Publication('silver', doi='', dsdbid='', owner='', fullname=''),
     Publication('anon', doi='', dsdbid='', owner='', fullname=''),
 ]
@@ -458,6 +459,7 @@ _tlist = [
     Method('FF03A',           fullname='FF03A'),
     Method('FF99SB',          fullname='FF99SB'),
     Method('FF99SBA',         fullname='FF99SBA'),
+    Method('AM1FS1',          fullname='AM1FS1'),
     Method('EFP',             fullname='EFP'),
     ]
 
