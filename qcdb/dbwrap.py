@@ -1522,6 +1522,21 @@ class Database(object):
                 ssname = prefix + '_' + str(sidx)
             random_sample(ssname)
 
+    def promote_Subset(self, name=None):
+        """Examine component databases and elevate subset *name* not necessarily
+        present for all component databases to a subset for the *self*. When *name*
+        is None, promotes all subsets found for component databases.
+
+        """
+        if name is None:
+            sss = [set(odb.sset.keys()) for db, odb in self.dbdict.items()]
+            new = sorted(set.union(*sss))
+        else:
+            new = [name]
+        for ss in new:
+            if ss not in self.sset.keys():
+                self.sset[ss] = [ss if ss in odb.sset.keys() else None for db, odb in self.dbdict.items()]
+
     def _intersect_subsets(self):
         """Examine component database subsets and collect common names as
         Database subset.
@@ -2045,6 +2060,33 @@ reinitialize
             #     dbdat.append((lmc, lbm, orxn))
         return dbdat
 
+    def get_missing_reactions(self, modelchem, sset='default'):
+        """Returns a dictionary (keys self.dbse and all component
+        WrappedDatabase.dbse) of two elements, the first being the number
+        of reactions *sset* should contain and the second being a list of
+        the reaction names (dbrxn) not available for *modelchem*. Absense
+        of benchmark not considered.
+
+        """
+        counts = OrderedDict()
+        counts[self.dbse] = [0, []]
+        soledb = True if (len(self.dbdict) == 1 and self.dbdict.items()[0][0] == self.dbse) else False
+        if not soledb:
+            for db in self.dbdict.keys():
+                counts[db] = [0, []]
+        for (lmc, lbm, orxn) in self.get_reactions(modelchem, benchmark='default',
+                                                   sset=sset, failoninc=False):
+            db, rxn = orxn.dbrxn.split('-', 1)
+            mcdatum = orxn.data[lmc].value if lmc else None
+            counts[self.dbse][0] += 1
+            if not soledb:
+                counts[db][0] += 1
+            if mcdatum is None:
+                counts[self.dbse][1].append(orxn.dbrxn)
+                if not soledb:
+                    counts[db][1].append(orxn.dbrxn)
+        return counts
+
     def plot_disthist(self, modelchem, benchmark='default', sset='default',
                       failoninc=True, verbose=False, xtitle='',
                       saveas=None, relpath=False, graphicsformat=['pdf']):
@@ -2520,6 +2562,7 @@ reinitialize
 
     def table_wrapper(self, mtd, bas, tableplan, benchmark='default',
                       opt=['CP'], err=['mae'], sset=['default'], dbse=None,
+                      opttarget=None,
                       failoninc=True,
                       plotpath='analysis/flats/flat_', subjoin=True,
                       title=None, indextitle=None,
@@ -2543,9 +2586,44 @@ reinitialize
         theme = suggestedtheme if theme is None else theme
         title = suggestedtitle if title is None else title
         indextitle = title if indextitle is None else indextitle
+        opttarget = {'default': ['']} if opttarget is None else opttarget
+
+        def unify_options(orequired, opossible):
+            """Perform a merge of options tags in *orequired* and *opossible* so
+            that the result is free of duplication and has the mode at the end.
+
+            """
+            opt_combos = []
+            for oreq in orequired:
+                for opos in opossible:
+                    pieces = sorted(set(oreq.split('_') + opos.split('_')))
+                    if '' in pieces:
+                        pieces.remove('')
+                    for mode in ['CP', 'unCP', 'SA']:
+                        if mode in pieces:
+                            pieces.remove(mode)
+                            pieces.append(mode)
+                    pieces = '_'.join(pieces)
+                    opt_combos.append(pieces)
+            return opt_combos
 
         # gather list of model chemistries for table
         mcs = ['-'.join(prod) for prod in itertools.product(mtd, opt, bas)]
+        mc_translator = {}
+        for m, o, b in itertools.product(mtd, opt, bas):
+            nominal_mc = '-'.join([m, o, b])
+            for oo in unify_options([o], opttarget['default']):
+                trial_mc = '-'.join([m, oo, b])
+                try:
+                    perr = self.compute_statistics(trial_mc, benchmark=benchmark, sset='default',  # prob. too restrictive by choosing subset
+                                                   failoninc=False, verbose=False, returnindiv=False)
+                except KeyError, e:
+                    continue
+                else:
+                    mc_translator[nominal_mc] = trial_mc
+                    break
+            else:
+                mc_translator[nominal_mc] = None
 
         # compute errors
         serrors = {}
@@ -2553,16 +2631,27 @@ reinitialize
             serrors[mc] = {}
             for ss in self.sset.keys():
                 serrors[mc][ss] = {}
-                if mc in self.mcs.keys():
-                    perr = self.compute_statistics(mc, benchmark=benchmark, sset=ss,
+                if mc_translator[mc] in self.mcs.keys():
+                    mcsscounts = self.get_missing_reactions(mc_translator[mc], sset=ss)
+                    # Note: not handling when one component Wdb has one translated pattern and another another
+                    perr = self.compute_statistics(mc_translator[mc], benchmark=benchmark, sset=ss,
                                                    failoninc=failoninc, verbose=False, returnindiv=False)
                     serrors[mc][ss][self.dbse] = format_errors(perr[self.dbse], mode=3)
+                    serrors[mc][ss][self.dbse]['tgtcnt'] = mcsscounts[self.dbse][0]
+                    serrors[mc][ss][self.dbse]['misscnt'] = len(mcsscounts[self.dbse][1])
                     for db in self.dbdict.keys():
-                        serrors[mc][ss][db] = None if perr[db] is None else format_errors(perr[db], mode=3)
+                        if perr[db] is None:
+                            serrors[mc][ss][db] = None
+                        else:
+                            serrors[mc][ss][db] = format_errors(perr[db], mode=3)
+                            serrors[mc][ss][db]['tgtcnt'] = mcsscounts[db][0]
+                            serrors[mc][ss][db]['misscnt'] = len(mcsscounts[db][1])
                 else:
                     serrors[mc][ss][self.dbse] = format_errors(initialize_errors(), mode=3)
                     for db in self.dbdict.keys():
                         serrors[mc][ss][db] = format_errors(initialize_errors(), mode=3)
+        for key in serrors.keys():
+            print """{:>35}{:>35}{}""".format(key, mc_translator[key], serrors[key]['default'][self.dbse]['mae'])
 
         # find indices that would be neglected in a single sweep over table_generic
         keysinplan = set(sum([col[-1].keys() for col in columnplan], rowplan))

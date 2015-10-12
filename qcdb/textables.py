@@ -1,3 +1,4 @@
+import re
 import sys
 import itertools
 try:
@@ -11,7 +12,7 @@ mc_archive = {'mtd': methods, 'bas': bases, 'err': errors}
 
 # define helper functions for formatting table cells
 def val(kw):
-    return r"""%s""" % (kw['matelem'])
+    return r"""%s%s""" % (kw['matelem'], kw['footnote'])
 
 
 def graphics(kw):
@@ -53,7 +54,7 @@ def table_generic(dbse, serrors,
         text.append(r"""\squeezetable""")
         text.append(r"""\begin{%s}[h!tp]""" % ('sidewaystable' if landscape else 'table'))
         text.append(r"""\renewcommand{\baselinestretch}{1}""")
-        text.append(r"""\caption{%s""" % (title.format(**fancy_kw)))
+        text.append(r"""\caption{%s""" % (title.format(**fancy_kw).replace('_', '\\_')))
         text.append(r"""\label{%s}}""" % (ref))
         indices.append(r"""\scriptsize \ref{%s} & \scriptsize %s \\ """ % \
             (ref, indextitle.format(**fancy_kw)))
@@ -66,10 +67,43 @@ def table_generic(dbse, serrors,
 
     def table_footer():
         """Form table footer"""
+
+        # search-and-replace footnotes
+        fnmatch = re.compile(r"""(?P<cellpre>.*)""" + r"""(\\footnotemark)\[(\d+)\](?P<fntext>\{.*\})""" + r"""(?P<cellpost>.*)""")
+        otfcounter = len(footnotes) + 1
+        lines2replace = {}
+        otffootnotes = OrderedDict()
+        for idx, line in enumerate(text):
+            newcells = []
+            changed = False
+            for cell in line.split('&'):
+                res = fnmatch.match(cell)
+                if res:
+                    if res.group('fntext') in otffootnotes:
+                        localcounter = otffootnotes[res.group('fntext')]
+                    else:
+                        localcounter = str(otfcounter)
+                        if localcounter == '52':  # fn symbols run out at "zz"
+                            otffootnotes['{Missing some reactions}'] = localcounter
+                        else:
+                            otfcounter += 1
+                            otffootnotes[res.group('fntext')] = localcounter
+                    newcells.append(res.group('cellpre') + r"""\footnotemark[""" + localcounter + ']' + res.group('cellpost'))
+                    changed = True
+                else:
+                    newcells.append(cell)
+            if changed:
+                lines2replace[idx] = '&'.join(newcells)
+        for idx, line in lines2replace.iteritems():
+            text[idx] = line
+
+        # finish out table
         text.append(r"""\end{tabular}""")
         text.append(r"""\end{ruledtabular}""")
         for idx, fn in enumerate(footnotes):
             text.append(r"""\footnotetext[%d]{%s}""" % (idx + 1, fn))
+        for fntext, idx in otffootnotes.iteritems():
+            text.append(r"""\footnotetext[%s]%s""" % (idx, fntext))
         text.append(r"""\end{%s}""" % ('sidewaystable' if landscape else 'table'))
         text.append(r"""\endgroup""")
         text.append(r"""\clearpage""")
@@ -78,7 +112,12 @@ def table_generic(dbse, serrors,
     def matelem(dict_row, dict_col):
         """Return merge of index dictionaries *dict_row* and *dict_col* (precedence) with error string from serrors appended at key 'matelem'."""
         kw = dict(dict_row, **dict_col)
-        kw['matelem'] = serrors['-'.join([kw[bit] for bit in ['mtd', 'opt', 'bas']])][kw['sset']][kw['dbse']][kw['err']]
+        errpiece = serrors['-'.join([kw[bit] for bit in ['mtd', 'opt', 'bas']])][kw['sset']][kw['dbse']]
+        kw['matelem'] = errpiece[kw['err']]
+        if 'misscnt' in errpiece and errpiece['misscnt'] != 0 and 'tgtcnt' in errpiece:
+            kw['footnote'] = r"""\footnotemark[99]{Missing %d of %d reactions.}""" % (errpiece['misscnt'], errpiece['tgtcnt'])
+        else:
+            kw['footnote'] = ''
         return kw
 
     # avoid misunderstandings
