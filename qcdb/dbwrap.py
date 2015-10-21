@@ -19,10 +19,17 @@ import psiutil
 import textables
 
 
-def initialize_errors(e=None, pe=None, pbe=None, pce=None, extrema=True):
+def initialize_errors():
     """
 
     """
+    error = OrderedDict()
+    for e in ['e', 'pe', 'pbe', 'pce']:
+        for m in ['pex', 'nex', 'max', 'min', 'm', 'ma', 'rms', 'std']:
+            error[m + e] = None
+    return error
+
+def initialize_errors_elaborate(e=None, pe=None, pbe=None, pce=None, extrema=True):
     error = OrderedDict()
     error['maxe'] = None if (e is None or not extrema) else e  # LD_XA
     error['mine'] = None if (e is None or not extrema) else e  # LD_XI
@@ -62,6 +69,8 @@ def average_errors(*args):
     Ndb = float(len(args))
     avgerror = initialize_errors()
     try:
+        avgerror['pexe'] = max([x['pexe'] for x in args])
+        avgerror['nexe'] = min([x['nexe'] for x in args])
         avgerror['maxe'] = max([x['maxe'] for x in args], key=lambda x: abs(x))
         avgerror['mine'] = min([x['mine'] for x in args], key=lambda x: abs(x))
         avgerror['me'] = sum([x['me'] for x in args]) / Ndb
@@ -69,6 +78,8 @@ def average_errors(*args):
         avgerror['rmse'] = sum([x['rmse'] for x in args]) / Ndb  # TODO: unsure of op validity
         avgerror['stde'] = math.sqrt(sum([x['stde'] ** 2 for x in args]) / Ndb)
 
+        avgerror['pexpe'] = max([x['pexpe'] for x in args])
+        avgerror['nexpe'] = min([x['nexpe'] for x in args])
         avgerror['maxpe'] = max([x['maxpe'] for x in args], key=lambda x: abs(x))
         avgerror['minpe'] = min([x['minpe'] for x in args], key=lambda x: abs(x))
         avgerror['mpe'] = sum([x['mpe'] for x in args]) / Ndb
@@ -76,6 +87,8 @@ def average_errors(*args):
         avgerror['rmspe'] = sum([x['rmspe'] for x in args]) / Ndb  # TODO: unsure of op validity
         avgerror['stdpe'] = math.sqrt(sum([x['stdpe'] * x['stdpe'] for x in args]) / Ndb)
 
+        avgerror['pexpbe'] = max([x['pexpbe'] for x in args])
+        avgerror['nexpbe'] = min([x['nexpbe'] for x in args])
         avgerror['maxpbe'] = max([x['maxpbe'] for x in args], key=lambda x: abs(x))
         avgerror['minpbe'] = min([x['minpbe'] for x in args], key=lambda x: abs(x))
         avgerror['mpbe'] = sum([x['mpbe'] for x in args]) / Ndb
@@ -83,6 +96,8 @@ def average_errors(*args):
         avgerror['rmspbe'] = sum([x['rmspbe'] for x in args]) / Ndb  # TODO: unsure of op validity
         avgerror['stdpbe'] = math.sqrt(sum([x['stdpbe'] * x['stdpbe'] for x in args]) / Ndb)
 
+        avgerror['pexpce'] = max([x['pexpce'] for x in args])
+        avgerror['nexpce'] = min([x['nexpce'] for x in args])
         avgerror['maxpce'] = max([x['maxpce'] for x in args], key=lambda x: abs(x))
         avgerror['minpce'] = min([x['minpce'] for x in args], key=lambda x: abs(x))
         avgerror['mpce'] = sum([x['mpce'] for x in args]) / Ndb
@@ -119,13 +134,15 @@ def format_errors(err, mode=1):
 
     if mode == 2:
         sdict = OrderedDict()
-        for lbl in ['maxe', 'mine', 'me', 'mae', 'rmse', 'stde']:
+        for lbl in ['pexe', 'nexe', 'maxe', 'mine', 'me', 'mae', 'rmse', 'stde']:
             sdict[lbl] = '        ----' if err[lbl] is None else fourdecimal.format(err[lbl])
-        for lbl in ['maxpe', 'minpe', 'mpe', 'mape', 'rmspe', 'stdpe',
-                    'maxpbe', 'minpbe', 'mpbe', 'mapbe', 'rmspbe', 'stdpbe',
-                    'maxpce', 'minpce', 'mpce', 'mapce', 'rmspce', 'stdpce']:
+        for lbl in ['pexpe', 'nexpe', 'maxpe', 'minpe', 'mpe', 'mape', 'rmspe', 'stdpe',
+                    'pexpbe', 'nexpbe', 'maxpbe', 'minpbe', 'mpbe', 'mapbe', 'rmspbe', 'stdpbe',
+                    'pexpce', 'nexpce', 'maxpce', 'minpce', 'mpce', 'mapce', 'rmspce', 'stdpce']:
             sdict[lbl] = '        ----' if err[lbl] is None else threedecimal.format(100 * err[lbl])
-        text = """min: {mine}{minpe}{minpbe}{minpce}\n""" \
+        text = """nex: {nexe}{nexpe}{nexpbe}{nexpce}\n""" \
+               """pex: {pexe}{pexpe}{pexpbe}{pexpce}\n""" \
+               """min: {mine}{minpe}{minpbe}{minpce}\n""" \
                """max: {maxe}{maxpe}{maxpbe}{maxpce}\n""" \
                """m:   {me}{mpe}{mpbe}{mpce}\n""" \
                """ma:  {mae}{mape}{mapbe}{mapce}\n""" \
@@ -136,11 +153,11 @@ def format_errors(err, mode=1):
     if mode == 3:
         sdict = OrderedDict()
         # shortblanks changed from empty strings Aug 2015
-        for lbl in ['maxe', 'mine', 'me', 'mae', 'rmse', 'stde']:
+        for lbl in ['pexe', 'nexe', 'maxe', 'mine', 'me', 'mae', 'rmse', 'stde']:
             sdict[lbl] = shortblank if err[lbl] is None else twodecimal.format(err[lbl])
-        for lbl in ['maxpe', 'minpe', 'mpe', 'mape', 'rmspe', 'stdpe',
-                    'maxpbe', 'minpbe', 'mpbe', 'mapbe', 'rmspbe', 'stdpbe',
-                    'maxpce', 'minpce', 'mpce', 'mapce', 'rmspce', 'stdpce']:
+        for lbl in ['pexpe', 'nexpe', 'maxpe', 'minpe', 'mpe', 'mape', 'rmspe', 'stdpe',
+                    'pexpbe', 'nexpbe', 'maxpbe', 'minpbe', 'mpbe', 'mapbe', 'rmspbe', 'stdpbe',
+                    'pexpce', 'nexpce', 'maxpce', 'minpce', 'mpce', 'mapce', 'rmspce', 'stdpce']:
             sdict[lbl] = shortblank if err[lbl] is None else onedecimal.format(100 * err[lbl])
         return sdict
 
@@ -968,6 +985,8 @@ class WrappedDatabase(object):
             error = OrderedDict()
             # linear (absolute) error
             linear = [val[0] for val in err.values()]
+            error['pexe'] = max(linear)
+            error['nexe'] = min(linear)
             error['maxe'] = max(linear, key=lambda x: abs(x))
             error['mine'] = min(linear, key=lambda x: abs(x))
             error['me'] = sum(linear) / Nrxn
@@ -976,6 +995,8 @@ class WrappedDatabase(object):
             error['stde'] = math.sqrt((sum(map(lambda x: x ** 2, linear)) - (sum(linear) ** 2) / Nrxn) / Nrxn)
             # fractional (relative) error
             relative = [val[1] for val in err.values()]
+            error['pexpe'] = max(relative)
+            error['nexpe'] = min(relative)
             error['maxpe'] = max(relative, key=lambda x: abs(x))
             error['minpe'] = min(relative, key=lambda x: abs(x))
             error['mpe'] = sum(relative) / Nrxn
@@ -985,6 +1006,8 @@ class WrappedDatabase(object):
             # balanced (relative) error
             balanced = [val[3] for val in err.values()]
             balwt = sum([val[4] for val in err.values()])  # get the wt fn. highly irregular TODO
+            error['pexpbe'] = max(balanced)
+            error['nexpbe'] = min(balanced)
             error['maxpbe'] = max(balanced, key=lambda x: abs(x))
             error['minpbe'] = min(balanced, key=lambda x: abs(x))
             error['mpbe'] = sum(balanced) / balwt #Nrxn
@@ -993,6 +1016,8 @@ class WrappedDatabase(object):
             error['stdpbe'] = None  # get math domain errors w/wt in denom math.sqrt((sum(map(lambda x: x ** 2, balanced)) - (sum(balanced) ** 2) / balwt) / balwt) #/ Nrxn) / Nrxn)
             # capped (relative) error
             capped = [val[2] for val in err.values()]
+            error['pexpce'] = max(capped)
+            error['nexpce'] = min(capped)
             error['maxpce'] = max(capped, key=lambda x: abs(x))
             error['minpce'] = min(capped, key=lambda x: abs(x))
             error['mpce'] = sum(capped) / Nrxn
@@ -2509,18 +2534,22 @@ reinitialize
                                         ('' if sset == 'default' else sset + r""" $\subset$ """,
                                          block,
                                          '' if isComplete else r""", \textit{partial}"""))
-                                    summlines[1].append(r"""\textit{Minimal Error}         """)
-                                    summlines[2].append(r"""\textit{Maximal Error}         """)
-                                    summlines[3].append(r"""\textit{Mean Signed Error}     """)
-                                    summlines[4].append(r"""\textit{Mean Absolute Error}   """)
-                                    summlines[5].append(r"""\textit{Root-Mean-Square Error}""")
+                                    summlines[1].append(r"""\textit{Minimal Signed Error}   """)
+                                    summlines[2].append(r"""\textit{Minimal Absolute Error} """)
+                                    summlines[3].append(r"""\textit{Maximal Signed Error}   """)
+                                    summlines[4].append(r"""\textit{Maximal Absolute Error} """)
+                                    summlines[5].append(r"""\textit{Mean Signed Error}      """)
+                                    summlines[6].append(r"""\textit{Mean Absolute Error}    """)
+                                    summlines[7].append(r"""\textit{Root-Mean-Square Error} """)
                                 elif col in ['e', 'pe']:
                                     summlines[0].append('')
-                                    summlines[1].append(blkerrors['min' + col])
-                                    summlines[2].append(blkerrors['max' + col])
-                                    summlines[3].append(blkerrors['m' + col])
-                                    summlines[4].append(blkerrors['ma' + col])
-                                    summlines[5].append(blkerrors['rms' + col])
+                                    summlines[1].append(blkerrors['nex' + col])
+                                    summlines[2].append(blkerrors['min' + col])
+                                    summlines[3].append(blkerrors['pex' + col])
+                                    summlines[4].append(blkerrors['max' + col])
+                                    summlines[5].append(blkerrors['m' + col])
+                                    summlines[6].append(blkerrors['ma' + col])
+                                    summlines[7].append(blkerrors['rms' + col])
                                 else:
                                     for ln in range(len(summlines)):
                                         summlines[ln].append('')
