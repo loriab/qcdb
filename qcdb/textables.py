@@ -77,7 +77,7 @@ def table_generic(dbse, serrors,
         """Form table footer"""
 
         # search-and-replace footnotes
-        fnmatch = re.compile(r"""(?P<cellpre>.*)""" + r"""(\\footnotemark)\[(\d+)\](?P<fntext>\{.*\})""" + r"""(?P<cellpost>.*)""")
+        fnmatch = re.compile(r"""(?P<cellpre>.*)""" + r"""(\\footnotemark)\{(?P<fntext>.*)\}""" + r"""(?P<cellpost>.*)""")
         otfcounter = len(footnotes) + 1
         lines2replace = {}
         otffootnotes = OrderedDict()
@@ -90,13 +90,13 @@ def table_generic(dbse, serrors,
                     if res.group('fntext') in otffootnotes:
                         localcounter = otffootnotes[res.group('fntext')]
                     else:
-                        localcounter = str(otfcounter)
-                        if localcounter == '52':  # fn symbols run out at "zz"
-                            otffootnotes['{Missing some reactions}'] = localcounter
+                        localcounter = otfcounter
+                        if localcounter == 52:  # fn symbols run out at "zz"
+                            otffootnotes['Missing some reactions'] = localcounter
                         else:
                             otfcounter += 1
                             otffootnotes[res.group('fntext')] = localcounter
-                    newcells.append(res.group('cellpre') + r"""\footnotemark[""" + localcounter + ']' + res.group('cellpost'))
+                    newcells.append(res.group('cellpre') + r"""\footnotemark[""" + str(localcounter) + ']' + res.group('cellpost'))
                     changed = True
                 else:
                     newcells.append(cell)
@@ -110,8 +110,8 @@ def table_generic(dbse, serrors,
         text.append(r"""\end{ruledtabular}""")
         for idx, fn in enumerate(footnotes):
             text.append(r"""\footnotetext[%d]{%s}""" % (idx + 1, fn))
-        for fntext, idx in otffootnotes.iteritems():
-            text.append(r"""\footnotetext[%s]%s""" % (idx, fntext))
+        for fn, idx in otffootnotes.iteritems():
+            text.append(r"""\footnotetext[%d]{%s}""" % (idx, fn))
         text.append(r"""\end{%s}""" % ('sidewaystable' if landscape else 'table'))
         text.append(r"""\endgroup""")
         text.append(r"""\clearpage""")
@@ -125,7 +125,7 @@ def table_generic(dbse, serrors,
         if 'tgtcnt' in errpiece:
             kw['count'] = errpiece['tgtcnt']
         if 'misscnt' in errpiece and errpiece['misscnt'] != 0 and 'tgtcnt' in errpiece:
-            kw['footnote'] = r"""\footnotemark[99]{Missing %d of %d reactions.}""" % (errpiece['misscnt'], errpiece['tgtcnt'])
+            kw['footnote'] = r"""\footnotemark{Missing %d of %d reactions.}""" % (errpiece['misscnt'], errpiece['tgtcnt'])
         else:
             kw['footnote'] = ''
         return kw
