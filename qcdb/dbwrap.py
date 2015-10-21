@@ -272,23 +272,23 @@ class ReactionDatum(object):
 
         """
         # computational method
-        if method.upper() in methods:
+        try:
             tmp_method = methods[method.upper()]
-        else:
-            raise ValidationError("""Invalid ReactionDatum method %s.""" % (method))
+        except KeyError, e:
+            raise ValidationError("""Invalid ReactionDatum method %s: %s""" % (method, e))
         # computational basis set
-        if basis.lower() in bases:
+        try:
             tmp_basis = bases[basis.lower()]
-        else:
-            raise ValidationError("""Invalid ReactionDatum basis %s.""" % (basis))
+        except KeyError, e:
+            raise ValidationError("""Invalid ReactionDatum basis %s: %s""" % (basis, e))
         # publication
         if citation is None:
             tmp_pub = citation
         else:
-            if citation.lower() in pubs:
+            try:
                 tmp_pub = pubs[citation.lower()]
-            else:
-                raise ValidationError("""Invalid ReactionDatum publication %s.""" % (citation))
+            except KeyError, e:
+                raise ValidationError("""Invalid ReactionDatum publication %s: %s""" % (citation, e))
         return cls(dbse, rxn, tmp_method, mode, tmp_basis, value, units, citation=tmp_pub, doi=doi, comment=comment)
 
     def __str__(self):
@@ -852,7 +852,7 @@ class WrappedDatabase(object):
 
         """
         if (self.dbse == dbse):
-            if rxn in self.hrxn.keys():
+            if rxn in self.hrxn:
                 rxnname = rxn  # rxn is proper reaction name
             else:
                 try:
@@ -863,7 +863,7 @@ class WrappedDatabase(object):
                         """Inconsistent to add ReactionDatum for %s to database %s with reactions %s.""" %
                         (dbse + '-' + str(rxn), self.dbse, self.hrxn.keys()))
             label = '-'.join([method, mode, basis])
-            if overwrite or (label not in self.hrxn[rxnname].data.keys()):
+            if overwrite or (label not in self.hrxn[rxnname].data):
                 self.hrxn[rxnname].data[label] = ReactionDatum.library_modelchem(dbse=dbse, rxn=rxnname,
                                                                                  method=method, mode=mode, basis=basis,
                                                                                  value=value, units=units,
@@ -883,7 +883,8 @@ class WrappedDatabase(object):
         label = sname.pop(0)
         tagl = sname[0].strip() if sname else None
         try:
-            lsslist = [rxn for rxn in self.sset['default'].keys() if rxn in func(self)]
+            filtered = func(self)
+            lsslist = [rxn for rxn in self.sset['default'].keys() if rxn in filtered]
         except TypeError, e:
             raise ValidationError("""Function %s did not return list: %s.""" % (func.__name__, str(e)))
         if len(lsslist) == 0:
@@ -1161,7 +1162,7 @@ class WrappedDatabase(object):
         if *union* is False.
 
         """
-        mcs = [set(v.data) for k, v in self.hrxn.items()]
+        mcs = [set(v.data) for v in self.hrxn.itervalues()]
         if union:
             return sorted(set.union(*mcs))
         else:
@@ -1497,7 +1498,7 @@ class Database(object):
             else:
                 ssfunc = lambda x: func[db]
             odb.add_Subset(name=name, func=ssfunc)
-            if name in odb.sset.keys():
+            if name in odb.sset:
                 merged.append(name)
             else:
                 merged.append(None)
@@ -1559,8 +1560,9 @@ class Database(object):
         else:
             new = [name]
         for ss in new:
-            if ss not in self.sset.keys():
-                self.sset[ss] = [ss if ss in odb.sset.keys() else None for db, odb in self.dbdict.items()]
+            if ss not in self.sset:
+                self.sset[ss] = [ss if ss in odb.sset else None for db, odb in self.dbdict.iteritems()]
+                print """Database %s: Subset %s promoted: %s""" % (self.dbse, ss, self.sset[ss])
 
     def _intersect_subsets(self):
         """Examine component database subsets and collect common names as
@@ -1577,7 +1579,7 @@ class Database(object):
         Database modelchem.
 
         """
-        mcs = [set(odb.available_modelchems()) for db, odb in self.dbdict.items()]
+        mcs = [set(odb.available_modelchems()) for odb in self.dbdict.itervalues()]
         new = sorted(set.intersection(*mcs))
         for mc in new:
             self.mcs[mc] = [mc] * len(self.dbdict.keys())
@@ -1843,7 +1845,7 @@ class Database(object):
             for rxn, orxn in odb.hrxn.iteritems():
                 lss = self.sset[sset][dbix]
                 if lss is not None:
-                    if rxn in odb.sset[lss].keys():
+                    if rxn in odb.sset[lss]:
                         dbrxn = orxn.dbrxn
                         try:
                             elst = saptdata['SAPT ELST ENERGY'][dbrxn]
@@ -2021,11 +2023,11 @@ reinitialize
         rhrxn = OrderedDict()
         for db, odb in self.dbdict.items():
             dbix = self.dbdict.keys().index(db)
-            for rxn, orxn in odb.hrxn.iteritems():
-                lss = self.sset[sset][dbix]
-                if lss is not None:
-                    if rxn in odb.sset[lss].keys():
-                        # rhrxn[rxn] = orxn
+            lss = self.sset[sset][dbix]
+            if lss is not None:
+                for rxn in odb.hrxn:
+                    if rxn in odb.sset[lss]:
+                        orxn = odb.hrxn[rxn]
                         rhrxn[orxn.dbrxn] = orxn  # this is a change and conflict with vergil version
         return rhrxn
 
@@ -2054,7 +2056,7 @@ reinitialize
         """
         dbdat = []
         rhrxn = self.get_hrxn(sset=sset)
-        for dbrxn, orxn in rhrxn.iteritems():
+        for orxn in rhrxn.itervalues():
             dbix = self.dbdict.keys().index(orxn.dbrxn.split('-')[0])
             lmc = self.mcs[modelchem][dbix]
             lbm = self.mcs[benchmark][dbix]
@@ -2089,7 +2091,7 @@ reinitialize
         """Returns a dictionary (keys self.dbse and all component
         WrappedDatabase.dbse) of two elements, the first being the number
         of reactions *sset* should contain and the second being a list of
-        the reaction names (dbrxn) not available for *modelchem*. Absense
+        the reaction names (dbrxn) not available for *modelchem*. Absence
         of benchmark not considered.
 
         """
@@ -2212,12 +2214,12 @@ reinitialize
         # repackage
         dbdat = []
         for db, odb in self.dbdict.items():
-            dbindbdict = self.dbdict.keys().index(db)
-            for rxn in odb.hrxn.keys():
+            dbix = self.dbdict.keys().index(db)
+            for rxn in odb.hrxn:
                 data = []
                 for ix in index:
                     if indiv[ix][db] is not None:
-                        if rxn in odb.sset[self.sset[lsset[index.index(ix)]][dbindbdict]].keys():
+                        if rxn in odb.sset[self.sset[lsset[index.index(ix)]][dbix]]:
                             try:
                                 data.append(indiv[ix][db][rxn][0])
                             except KeyError, e:
@@ -2660,7 +2662,7 @@ reinitialize
             serrors[mc] = {}
             for ss in self.sset.keys():
                 serrors[mc][ss] = {}
-                if mc_translator[mc] in self.mcs.keys():
+                if mc_translator[mc] in self.mcs:
                     mcsscounts = self.get_missing_reactions(mc_translator[mc], sset=ss)
                     # Note: not handling when one component Wdb has one translated pattern and another another
                     perr = self.compute_statistics(mc_translator[mc], benchmark=benchmark, sset=ss,
