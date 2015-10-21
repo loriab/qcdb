@@ -25,7 +25,15 @@ def lmtdbas(kw):
 
 
 def label(kw):
-    return """ %-25s""" % (mc_archive[kw['target']][kw[kw['target']]].latex)
+    try:
+        return """ %-25s""" % (mc_archive[kw['target']][kw[kw['target']]].latex)
+    except KeyError:
+        # when target not inherited from QCEssential
+        return """ %-25s""" % (kw[kw['target']])
+
+
+def count(kw):
+    return r"""%s""" % (kw['count'])
 
 
 def empty(kw):
@@ -114,6 +122,8 @@ def table_generic(dbse, serrors,
         kw = dict(dict_row, **dict_col)
         errpiece = serrors['-'.join([kw[bit] for bit in ['mtd', 'opt', 'bas']])][kw['sset']][kw['dbse']]
         kw['matelem'] = errpiece[kw['err']]
+        if 'tgtcnt' in errpiece:
+            kw['count'] = errpiece['tgtcnt']
         if 'misscnt' in errpiece and errpiece['misscnt'] != 0 and 'tgtcnt' in errpiece:
             kw['footnote'] = r"""\footnotemark[99]{Missing %d of %d reactions.}""" % (errpiece['misscnt'], errpiece['tgtcnt'])
         else:
