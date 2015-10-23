@@ -43,7 +43,7 @@ def empty(kw):
 def table_generic(dbse, serrors,
     mtd, bas, columnplan, rowplan=['bas', 'mtd'],
     opt=['CP'], err=['mae'], sset=['default'],
-    landscape=False, standalone=True, subjoin=True,
+    landscape=False, standalone=True, subjoin=True, suppressblanks=False,
     footnotes=[], title='', indextitle='',
     plotpath='', theme=''):
     """
@@ -104,6 +104,14 @@ def table_generic(dbse, serrors,
                 lines2replace[idx] = '&'.join(newcells)
         for idx, line in lines2replace.iteritems():
             text[idx] = line
+
+        # search-and-suppress "blank" lines
+        if suppressblanks:
+            for idx, line in enumerate(text):
+                if line.strip().endswith('\\'):
+                    innards = ''.join(line.rstrip(""" \\""").split('&')[1:])
+                    if innards.isspace():
+                        text[idx] = '%' + text[idx]
 
         # finish out table
         text.append(r"""\end{tabular}""")

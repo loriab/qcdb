@@ -2597,6 +2597,7 @@ reinitialize
                       failoninc=True,
                       plotpath='analysis/flats/flat_', subjoin=True,
                       title=None, indextitle=None,
+                      suppressblanks=False,
                       standalone=True, theme=None, filename=None):
         """Prepares dictionary of errors for all combinations of *mtd*, *opt*,
         *bas* with respect to model chemistry *benchmark*, mindful of *failoninc*.
@@ -2719,6 +2720,7 @@ reinitialize
                 rowplan=rowplan, columnplan=columnplan, serrors=serrors,
                 plotpath=plotpath, subjoin=subjoin,
                 title=title, indextitle=indextitle,
+                suppressblanks=suppressblanks,
                 landscape=landscape, footnotes=footnotes,
                 standalone=False, theme=theme)
 
