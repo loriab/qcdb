@@ -79,7 +79,7 @@ def segment_color(argcolor, saptcolor):
     return clr
 
 
-def bars(data, title='', saveas=None, relpath=False, graphicsformat=['pdf']):
+def bars(data, title='', saveas=None, relpath=False, graphicsformat=['pdf'], view=True):
     """Generates a 'gray-bars' diagram between model chemistries with error
     statistics in list *data*, which is supplied as part of the dictionary
     for each participating bar/modelchem, along with *mc* keys in argument
@@ -128,7 +128,9 @@ def bars(data, title='', saveas=None, relpath=False, graphicsformat=['pdf']):
         savefile = pltfile + '.' + ext.lower()
         plt.savefig(savefile, transparent=True, format=ext, bbox_inches='tight')
         files_saved[ext.lower()] = savefile
-    plt.show()
+    if view:
+        plt.show()
+    plt.close()
     return files_saved
 
 
@@ -335,7 +337,8 @@ def valerr(data, color=None, title='', xtitle='', view=True,
 
 
 def disthist(data, title='', xtitle='', xmin=None, xmax=None,
-    me=None, stde=None, saveas=None, relpath=False, graphicsformat=['pdf']):
+    me=None, stde=None, view=True,
+    saveas=None, relpath=False, graphicsformat=['pdf']):
     """Saves a plot with name *saveas* with a histogram representation
     of the reaction errors in *data*. Also plots a gaussian distribution
     with mean *me* and standard deviation *stde*. Plot has x-range
@@ -386,7 +389,9 @@ def disthist(data, title='', xtitle='', xmin=None, xmax=None,
         savefile = pltfile + '.' + ext.lower()
         plt.savefig(savefile, transparent=True, format=ext, bbox_inches='tight')
         files_saved[ext.lower()] = savefile
-    plt.show()
+    if view:
+        plt.show()
+    plt.close()
     return files_saved
 
 
@@ -477,7 +482,8 @@ def disthist(data, title='', xtitle='', xmin=None, xmax=None,
 
 def threads(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None,
     mousetext=None, mouselink=None, mouseimag=None, mousetitle=None, mousediv=None,
-    labeled=True, saveas=None, relpath=False, graphicsformat=['pdf']):
+    labeled=True, view=True,
+    saveas=None, relpath=False, graphicsformat=['pdf']):
     """Generates a tiered slat diagram between model chemistries with
     errors (or simply values) in list *data*, which is supplied as part of the
     dictionary for each participating reaction, along with *dbse* and *rxn* keys
@@ -595,9 +601,11 @@ def threads(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None,
         savefile = pltfile + '.' + ext.lower()
         plt.savefig(savefile, transparent=True, format=ext, bbox_inches='tight')
         files_saved[ext.lower()] = savefile
-    plt.show()
+    if view:
+        plt.show()
 
     if not (mousetext or mouselink or mouseimag):
+        plt.close()
         return files_saved, None
     else:
         dpi = 80
@@ -657,10 +665,11 @@ def threads(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None,
 
         htmlcode += """</MAP>\n"""
 
+        plt.close()
         return files_saved, htmlcode
 
 
-def ternary(sapt, title='', labeled=True,
+def ternary(sapt, title='', labeled=True, view=True,
             saveas=None, relpath=False, graphicsformat=['pdf']):
     """Takes array of arrays *sapt* in form [elst, indc, disp] and builds formatted
     two-triangle ternary diagrams. Either fully-readable or dotsonly depending
@@ -749,7 +758,9 @@ def ternary(sapt, title='', labeled=True,
         plt.savefig(savefile, transparent=True, format=ext, bbox_inches='tight',
                     frameon=False, dpi=450, edgecolor='none', pad_inches=0.0)
         files_saved[ext.lower()] = savefile
-    plt.show()
+    if view:
+        plt.show()
+    plt.close()
     return files_saved
 
 
@@ -870,7 +881,7 @@ def composition_tile(db, aa1, aa2):
     return np.reshape(np.array(tiles), (dim, dim))
 
 
-def iowa(mcdat, mclbl, title='', xtitle='', xlimit=2.0,
+def iowa(mcdat, mclbl, title='', xtitle='', xlimit=2.0, view=True,
     saveas=None, relpath=False, graphicsformat=['pdf']):
     """Saves a plot with (extensionless) name *pltfile* with an Iowa
     representation of the modelchems errors in *mcdat* for BBI/SSI-style
@@ -928,7 +939,9 @@ def iowa(mcdat, mclbl, title='', xtitle='', xlimit=2.0,
         plt.savefig(savefile, transparent=True, format=ext, bbox_inches='tight')
         #plt.savefig(savefile, transparent=False, format=ext, bbox_inches='tight')  # for quick nolabel, whiteback
         files_saved[ext.lower()] = savefile
-    plt.show()
+    if view:
+        plt.show()
+    plt.close()
     return files_saved
 
 

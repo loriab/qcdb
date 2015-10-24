@@ -484,8 +484,9 @@ class Reaction(object):
 
     def plot(self, benchmark='default', mcset='default',
              failoninc=True, verbose=False, color='sapt',
-             xlimit=4.0, labeled=True, saveas=None, mousetext=None, mouselink=None, mouseimag=None,
-             mousetitle=None, mousediv=None, relpath=False, graphicsformat=['pdf']):
+             xlimit=4.0, labeled=True, view=True,
+             mousetext=None, mouselink=None, mouseimag=None, mousetitle=None, mousediv=None,
+             saveas=None, relpath=False, graphicsformat=['pdf']):
         """Computes individual errors over model chemistries in *mcset* (which
         may be default or an array or a function generating an array) versus
         *benchmark*. Thread *color* can be 'rgb' for old coloring, a color
@@ -537,9 +538,10 @@ class Reaction(object):
         else:
             # if running from Canopy, call mpl directly
             filedict, htmlcode = mpl.threads(dbdat, color=color, title=title, labels=labels, mae=mae, mape=mape,
-                                             xlimit=xlimit, labeled=labeled, saveas=saveas, mousetext=mousetext, mouselink=mouselink,
+                                             xlimit=xlimit, labeled=labeled, view=view,
+                                             mousetext=mousetext, mouselink=mouselink,
                                              mouseimag=mouseimag, mousetitle=mousetitle, mousediv=mousediv,
-                                             relpath=relpath, graphicsformat=graphicsformat)
+                                             saveas=saveas, relpath=relpath, graphicsformat=graphicsformat)
             return filedict, htmlcode
 
 
@@ -1673,7 +1675,7 @@ class Database(object):
         print text
 
     def plot_bars(self, modelchem, benchmark='default', sset=['default', 'hb', 'mx', 'dd'],
-                  failoninc=True, verbose=False,
+                  failoninc=True, verbose=False, view=True,
                   saveas=None, relpath=False, graphicsformat=['pdf']):
         """Prepares 'grey bars' diagram for each model chemistry in array
         *modelchem* versus *benchmark* over all component databases. A wide bar
@@ -1721,6 +1723,7 @@ class Database(object):
         else:
             # if running from Canopy, call mpl directly
             filedict = mpl.bars(dbdat, title=title,
+                                view=view,
                                 saveas=saveas, relpath=relpath, graphicsformat=graphicsformat)
             return filedict
 
@@ -1870,6 +1873,7 @@ class Database(object):
 
     def plot_ternary(self, sset='default', labeled=True,
         pythonpath='/Users/loriab/linux/bfdb/sapt_punt', failoninc=True,  # pythonpath=None
+        view=True,
         saveas=None, relpath=False, graphicsformat=['pdf']):
         """This is a stopgap function that loads sapt component data from
         sapt_punt in bfdb repo, then formats it to plot a ternary diagram.
@@ -1897,6 +1901,7 @@ class Database(object):
         else:
             # if running from Canopy, call mpl directly
             filedict = mpl.ternary(dbdat, title=title, labeled=labeled,
+                                   view=view,
                                    saveas=saveas, relpath=relpath, graphicsformat=graphicsformat)
             return filedict
 
@@ -2115,7 +2120,7 @@ reinitialize
         return counts
 
     def plot_disthist(self, modelchem, benchmark='default', sset='default',
-                      failoninc=True, verbose=False, xtitle='',
+                      failoninc=True, verbose=False, xtitle='', view=True,
                       saveas=None, relpath=False, graphicsformat=['pdf']):
         """Computes individual errors and summary statistics for single
         model chemistry *modelchem* versus *benchmark* over
@@ -2158,13 +2163,15 @@ reinitialize
         else:
             # if running from Canopy, call mpl directly
             filedict = mpl.disthist(dbdat, title=title, xtitle=xtitle, me=me, stde=stde,
+                                    view=view,
                                     saveas=saveas, relpath=relpath, graphicsformat=graphicsformat)
             return filedict
 
     def plot_modelchems(self, modelchem, benchmark='default', mbenchmark=None,
                         sset='default', msset=None, failoninc=True, verbose=False, color='sapt',
-                        xlimit=4.0, labeled=True, saveas=None, mousetext=None, mouselink=None, mouseimag=None,
-                        mousetitle=None, mousediv=None, relpath=False, graphicsformat=['pdf']):
+                        xlimit=4.0, labeled=True, view=True,
+                        mousetext=None, mouselink=None, mouseimag=None, mousetitle=None, mousediv=None,
+                        saveas=None, relpath=False, graphicsformat=['pdf']):
         """Computes individual errors and summary statistics over all component
         databases for each model chemistry in array *modelchem* versus *benchmark*
         over subset *sset*. *mbenchmark* and *msset* are array options (same
@@ -2255,9 +2262,10 @@ reinitialize
         else:
             # if running from Canopy, call mpl directly
             filedict, htmlcode = mpl.threads(dbdat, color=color, title=title, labels=ixmid, mae=mae, mape=mape,
-                                             xlimit=xlimit, labeled=labeled, saveas=saveas, mousetext=mousetext, mouselink=mouselink,
+                                             xlimit=xlimit, labeled=labeled, view=view,
+                                             mousetext=mousetext, mouselink=mouselink,
                                              mouseimag=mouseimag, mousetitle=mousetitle, mousediv=mousediv,
-                                             relpath=relpath, graphicsformat=graphicsformat)
+                                             saveas=saveas, relpath=relpath, graphicsformat=graphicsformat)
             return filedict, htmlcode
 
     def plot_liliowa(self, modelchem, benchmark='default',
@@ -2298,6 +2306,7 @@ reinitialize
     def plot_iowa(self, modelchem, benchmark='default', sset='default',
                   failoninc=True, verbose=False,
                   title='', xtitle='', xlimit=2.0,
+                  view=True,
                   saveas=None, relpath=False, graphicsformat=['pdf']):
         """Computes individual errors for single *modelchem* versus
         *benchmark* over subset *sset*. Coloring green-to-purple with
@@ -2331,6 +2340,7 @@ reinitialize
         else:
             # if running from Canopy, call mpl directly
             filedict = mpl.iowa(dbdat, dblbl, title=title, xtitle=xtitle, xlimit=xlimit,
+                                view=view,
                                 saveas=saveas, relpath=relpath, graphicsformat=graphicsformat)
             return filedict
 
