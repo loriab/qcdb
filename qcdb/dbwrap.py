@@ -2260,6 +2260,41 @@ reinitialize
                                              relpath=relpath, graphicsformat=graphicsformat)
             return filedict, htmlcode
 
+    def plot_liliowa(self, modelchem, benchmark='default',
+                     failoninc=True, xlimit=2.0, view=True,
+                     saveas=None, relpath=False, graphicsformat=['pdf']):
+        """
+
+        Note that not possible to access sset of component databases. That is, for Database SSIBBI, SSI-only nppinppi is accessible b/c not defined in BBI, but SSI-only neutral is not accessible.
+        """
+        # compute errors
+        mc = modelchem
+        errors = {}
+        for ss in self.sset.keys():
+            errors[ss] = self.compute_statistics(mc, benchmark=benchmark, sset=ss,
+                                                 failoninc=failoninc, verbose=False, returnindiv=False)
+
+        # repackage
+        dbdat = []
+        ssarray = ['pospos', 'posneg', 'pospolar', 'posnonpolar', 'posnppi',
+                   None, 'negneg', 'negpolar', 'negnonpolar', 'negnppi',
+                   None, None, 'polarpolar', 'polarnonpolar', 'polarnppi',
+                   None, None, None, 'nonpolarnonpolar', 'nonpolarnppi',
+                   None, None, None, None, 'nppinppi']
+        for ss in ssarray:
+            dbdat.append(0.0 if ss is None else errors[ss][self.dbse]['mae'])
+
+        # generate matplotlib instructions and call or print
+        try:
+            import mpl
+            import matplotlib.pyplot as plt
+        except ImportError:
+            print 'Matplotlib not avail'
+        else:
+            filedict = mpl.liliowa(dbdat, xlimit=xlimit, view=view,
+                                saveas=saveas, relpath=relpath, graphicsformat=graphicsformat)
+            return filedict
+
     def plot_iowa(self, modelchem, benchmark='default', sset='default',
                   failoninc=True, verbose=False,
                   title='', xtitle='', xlimit=2.0,

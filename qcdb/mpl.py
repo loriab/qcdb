@@ -932,6 +932,55 @@ def iowa(mcdat, mclbl, title='', xtitle='', xlimit=2.0,
     return files_saved
 
 
+def liliowa(mcdat, title='', xlimit=2.0, view=True,
+    saveas=None, relpath=False, graphicsformat=['pdf']):
+    """Saves a plot with a heatmap representation of *mcdat*.
+
+    """
+    import numpy as np
+    import hashlib
+    import matplotlib
+    import matplotlib.pyplot as plt
+
+    # handle for frame, overall axis
+    fig, axt = plt.subplots(figsize=(1, 1))
+
+    axt.set_xticks([])
+    axt.set_yticks([])
+    axt.invert_yaxis()
+    axt.xaxis.set_tick_params(width=0, length=0)
+    axt.yaxis.set_tick_params(width=0, length=0)
+    axt.set_aspect('equal')
+
+    # remove figure outline
+    axt.spines['top'].set_visible(False)
+    axt.spines['right'].set_visible(False)
+    axt.spines['bottom'].set_visible(False)
+    axt.spines['left'].set_visible(False)
+
+    tiles = mcdat
+    dim = int(np.ceil(np.sqrt(len(tiles))))
+    pad = dim * dim - len(tiles)
+    tiles += [0] * pad
+    cb = np.reshape(np.array(tiles), (dim, dim))
+
+    heatmap = axt.pcolor(cb, vmin=-xlimit, vmax=xlimit, cmap=plt.cm.PRGn)
+
+    # save and show
+    pltuid = title + '_' + hashlib.sha1(title + str(xlimit)).hexdigest()
+    pltfile = expand_saveas(saveas, pltuid, def_prefix='liliowa_', relpath=relpath)
+    files_saved = {}
+    for ext in graphicsformat:
+        savefile = pltfile + '.' + ext.lower()
+        plt.savefig(savefile, transparent=True, format=ext, bbox_inches='tight',
+                   frameon=False, pad_inches=0.0)
+        files_saved[ext.lower()] = savefile
+    if view:
+        plt.show()
+    plt.close()
+    return files_saved
+
+
 if __name__ == "__main__":
 
     merge_dats = [

@@ -20,6 +20,22 @@ def graphics(kw):
     return r"""\includegraphics[width=6.67cm,height=3.5mm]{%s%s.pdf}""" % (kw['plotpath'], mc)
 
 
+def flat(kw):
+    if kw['matelem'].strip():
+        dbssmc = '-'.join([kw[bit] for bit in ['dbse', 'sset', 'mtd', 'opt', 'bas']])
+        return r"""\includegraphics[width=6.67cm,height=3.5mm]{%sflat_%s.pdf}""" % (kw['plotpath'], dbssmc)
+    else:
+        return ''
+
+
+def liliowa(kw):
+    if kw['matelem'].strip():
+        dbssmc = '-'.join([kw[bit] for bit in ['dbse', 'sset', 'mtd', 'opt', 'bas']])
+        return r"""\includegraphics[height=3.5mm]{%sliliowa_%s.pdf}""" % (kw['plotpath'], dbssmc)
+    else:
+        return ''
+
+
 def lmtdbas(kw):
     return """%-25s""" % (methods[kw['mtd']].latex + '/' + bases[kw['bas']].latex)
 
