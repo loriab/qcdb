@@ -134,7 +134,7 @@ def bars(data, title='', saveas=None, relpath=False, graphicsformat=['pdf'], vie
     return files_saved
 
 
-def flat(data, color=None, title='', xlimit=4.0, mae=None, mape=None, view=True,
+def flat(data, color=None, title='', xlimit=4.0, xlines=[0.0, 0.3, 1.0], mae=None, mape=None, view=True,
     saveas=None, relpath=False, graphicsformat=['pdf']):
     """Generates a slat diagram between model chemistries with errors in
     single-item list *data*, which is supplied as part of the dictionary
@@ -161,11 +161,10 @@ def flat(data, color=None, title='', xlimit=4.0, mae=None, mape=None, view=True,
     ax.patch.set_visible(False)
     ax.axis('off')
 
-    plt.axvline(-1.0, color='grey', linewidth=4)
-    plt.axvline(-0.3, color='grey', linewidth=4)
-    plt.axvline(0.0, color='grey', linewidth=4)
-    plt.axvline(0.3, color='grey', linewidth=4)
-    plt.axvline(1.0, color='grey', linewidth=4)
+    for xl in xlines:
+        plt.axvline(xl, color='grey', linewidth=4)
+        if xl != 0.0:
+            plt.axvline(-1 * xl, color='grey', linewidth=4)
 
     # plot reaction errors and threads
     for rxn in data:

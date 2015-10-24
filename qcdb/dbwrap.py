@@ -191,6 +191,20 @@ def string_contrast(ss):
     return prefix, suffix, middle
 
 
+def oxcom(lst):
+    """Returns gramatical comma separated string of *lst*."""
+    lst = [str(l) for l in lst]
+
+    if not lst:
+        return ''
+    elif len(lst) == 1:
+        return lst[0]
+    elif len(lst) == 2:
+        return ' and '.join(lst)
+    else:
+        return ', and '.join([', '.join(lst[:-1]), lst[-1]])
+
+
 def cure_weight(refrxn, refeq, rrat, xi=0.2):
     """
     :param refeq: value of benchmark for equilibrium Reaction
@@ -1906,7 +1920,8 @@ class Database(object):
             return filedict
 
     def plot_flat(self, modelchem, benchmark='default', sset='default',
-                  failoninc=True, verbose=False, color='sapt', xlimit=4.0, view=True,
+                  failoninc=True, verbose=False, color='sapt', xlimit=4.0, xlines=[0.0, 0.3, 1.0],
+                  view=True,
                   saveas=None, relpath=False, graphicsformat=['pdf']):
         """Computes individual errors and summary statistics for single
         model chemistry *modelchem* versus *benchmark* over
@@ -1950,12 +1965,12 @@ class Database(object):
             import matplotlib.pyplot as plt
         except ImportError:
             # if not running from Canopy, print line to execute from Canopy
-            print """filedict = mpl.flat(%s,\n    color='%s',\n    title='%s',\n    mae=%s,\n    mape=%s,\n    xlimit=%s,\n    view=%s\n    saveas=%s\n    relpath=%s\n    graphicsformat=%s)\n\n""" % \
-                  (dbdat, color, mc, mae, mape, xlimit, view, repr(saveas), repr(relpath), repr(graphicsformat))
+            print """filedict = mpl.flat(%s,\n    color='%s',\n    title='%s',\n    mae=%s,\n    mape=%s,\n    xlimit=%s,\n    xlines=%s,\n    view=%s\n    saveas=%s\n    relpath=%s\n    graphicsformat=%s)\n\n""" % \
+                  (dbdat, color, mc, mae, mape, xlimit, repr(xlines), view, repr(saveas), repr(relpath), repr(graphicsformat))
         else:
             # if running from Canopy, call mpl directly
             filedict = mpl.flat(dbdat, color=color, title=mc, mae=mae, mape=mape,
-                                xlimit=xlimit, view=view,
+                                xlimit=xlimit, xlines=xlines, view=view,
                                 saveas=saveas, relpath=relpath, graphicsformat=graphicsformat)
             return filedict
 
