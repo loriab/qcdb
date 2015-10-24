@@ -20,14 +20,13 @@ import textables
 
 
 def initialize_errors():
-    """
-
-    """
+    """Form OrderedDict of all possible statistical measures set to None"""
     error = OrderedDict()
     for e in ['e', 'pe', 'pbe', 'pce']:
         for m in ['pex', 'nex', 'max', 'min', 'm', 'ma', 'rms', 'std']:
             error[m + e] = None
     return error
+
 
 def initialize_errors_elaborate(e=None, pe=None, pbe=None, pce=None, extrema=True):
     error = OrderedDict()
@@ -1414,7 +1413,7 @@ class Database(object):
             else:
                 if latex:
                     tmp = """%s/%s, %s""" % \
-                          (methods[mtd].latex, bases[bas].latex, mod)
+                          (methods[mtd].latex, bases[bas].latex, mod.replace('_', '\\_'))
                     fmcs[mc] = """%45s""" % (tmp)
                 else:
                     fmcs[mc] = """%20s / %-20s, %s""" % \
@@ -2759,12 +2758,6 @@ reinitialize
 
         if standalone:
             tablelines += textables.begin_latex_document()
-
-        # if plotpath == 'autogen':  # TODO make fig files write themselves
-        #     plotpath = os.environ['HOME'] + os.sep + 'flat_'
-        #     for mc in mcs:
-        #         self.plot_flat(mc)
-        #     # TODO isn't going to work if sset in rowplan
 
         for io in iteroers:
             actvargs = dict(zip(obvious.keys(), [[k] for k in io]))

@@ -41,15 +41,12 @@ def lmtdbas(kw):
 
 
 def label(kw):
-    try:
-        return """ %-25s""" % (mc_archive[kw['target']][kw[kw['target']]].latex)
-    except KeyError:
-        # when target not inherited from QCEssential
-        return """ %-25s""" % (kw[kw['target']])
+    kwt = kw['target']
+    return """ %-25s""" % (mc_archive[kwt][kw[kwt]].latex if kwt in mc_archive else kw[kwt])
 
 
 def count(kw):
-    return r"""%s""" % (kw['count'])
+    return r"""%6d""" % (kw['count'])
 
 
 def empty(kw):
