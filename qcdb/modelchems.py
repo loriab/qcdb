@@ -170,6 +170,28 @@ class Error(QCEssential):
         return text
 
 
+#class Option(QCEssential):
+#    """Specialization of :pyclass:`QCEssential` for computation variation.
+#
+#    """
+#    def __init__(self, name, fullname=None, latex=None, citations=None, doi=None,  comment=None):
+#        QCEssential.__init__(self, name, fullname, latex, citations, doi, comment)
+#        self.name = name #.lower()
+#
+#    def __str__(self):
+#        text = ''
+#        text += """  ==> %s Computation Mode <==\n\n""" % (self.name)
+#        text += """  Formal name:          %s\n""" % (self.fullname)
+#        text += """  LaTeX representation: %s\n""" % (self.latex)
+#        text += """  DOI:                  %s\n""" % (self.doi)
+#        text += """  Literature citations:\n"""
+#        for rol, cit in self.citations.iteritems():
+#            text += """    %17s: %s\n""" (rol, cit.doi)
+#        text += """  Comment:              %s\n""" % (self.comment)
+#        text += """\n"""
+#        return text
+
+
 _tlist = [
     Publication('dhdft', doi='', dsdbid='', owner='CAC',
         fullname=""),
@@ -496,3 +518,9 @@ _tlist = [
 errors = {}
 for item in _tlist:
     errors[item.name] = item
+
+#_tlist = [
+#    Option('CP',             fullname='CP'),
+#    Option('unCP',           fullname='unCP'),
+#]
+#options = {item.name: item for item in _tlist}

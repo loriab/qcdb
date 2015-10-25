@@ -83,6 +83,10 @@ BIND['%s-%s'            % (dbse, '7'                     )] =    2.37
 BIND['%s-%s'            % (dbse, '8'                     )] =    2.07
 BIND['%s-%s'            % (dbse, '9'                     )] =    2.51
 BIND['%s-%s'            % (dbse, '10'                    )] =    2.04
+## Reference information
+#BINDINFO = {}
+#for rxn in HRXN:
+#    BINDINFO['%s-%s' % (dbse, rxn)] = {'citation': 'pconf', 'method': 'CCSDT', 'mode': '', 'basis': 'tqz???'}  # CP-status unkn
 
 # <<< Comment Lines >>>
 TAGL = {}

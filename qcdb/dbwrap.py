@@ -3509,3 +3509,4 @@ class ThreeDatabases(Database):
 fnreservoir = {}
 fnreservoir['blankslat'] = r"""Errors with respect to Benchmark. Guide lines are at 0, 0.3, and 1.0 kcal/mol overbound ($-$) and underbound ($+$)."""
 fnreservoir['5min'] = r"""Only equilibrium and near-equilibrium systems included. (All S22 and HSG, 50/194 NBC10, 28/118 HBC6.)"""
+#fnreservoir['arbslat'] = r"""Guide lines are at {{xlines}} kcal/mol overbound ($-$) and underbound ($+$)."""
