@@ -157,8 +157,8 @@ def flat(data, color=None, title='', xlimit=4.0, xlines=[0.0, 0.3, 1.0], mae=Non
     plt.ylim([-1 * Nweft - 1, 0])
     plt.yticks([])
     plt.xticks([])
-    fig.patch.set_visible(False)
-    ax.patch.set_visible(False)
+#    fig.patch.set_visible(False)
+#    ax.patch.set_visible(False)
     ax.axis('off')
 
     for xl in xlines:
@@ -185,7 +185,8 @@ def flat(data, color=None, title='', xlimit=4.0, xlines=[0.0, 0.3, 1.0], mae=Non
     files_saved = {}
     for ext in graphicsformat:
         savefile = pltfile + '.' + ext.lower()
-        plt.savefig(savefile, transparent=True, format=ext)  # , bbox_inches='tight')
+        plt.savefig(savefile, transparent=True, format=ext, bbox_inches='tight',
+                   frameon=False, pad_inches=0.0)
         files_saved[ext.lower()] = savefile
     if view:
         plt.show()
@@ -928,6 +929,13 @@ def iowa(mcdat, mclbl, title='', xtitle='', xlimit=2.0, view=True,
             index += 1
 
     #plt.title(title)
+    axt.axvline(x=4.8, linewidth=5, color='k')
+    axt.axvline(x=8.75, linewidth=5, color='k')
+    axt.axvline(x=11.6, linewidth=5, color='k')
+    axt.axhline(y=4.8, linewidth=5, color='k')
+    axt.axhline(y=8.75, linewidth=5, color='k')
+    axt.axhline(y=11.6, linewidth=5, color='k')
+    axt.set_zorder(100)
 
     # save and show
     pltuid = title + '_' + hashlib.sha1(title + str(xlimit)).hexdigest()
