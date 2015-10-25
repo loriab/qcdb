@@ -1524,8 +1524,11 @@ class Database(object):
                 merged.append(name)
             else:
                 merged.append(None)
-        self.sset[label] = merged
-        print """Database %s: Subset %s formed: %s""" % (self.dbse, label, self.sset[label])
+        if any(merged):
+            self.sset[label] = merged
+            print """Database %s: Subset %s formed: %s""" % (self.dbse, label, self.sset[label])
+        else:
+            print """Database %s: Subset %s NOT formed: empty""" % (self.dbse, label)
 
     def add_Subset_union(self, name, sslist):
         """
@@ -1573,7 +1576,9 @@ class Database(object):
     def promote_Subset(self, name=None):
         """Examine component databases and elevate subset *name* not necessarily
         present for all component databases to a subset for the *self*. When *name*
-        is None, promotes all subsets found for component databases.
+        is None, promotes all subsets found for component databases. Also promotes
+        entirety of each component database as a subset with name of component
+        database dbse in lowercase.
 
         """
         if name is None:
@@ -1585,6 +1590,13 @@ class Database(object):
             if ss not in self.sset:
                 self.sset[ss] = [ss if ss in odb.sset else None for db, odb in self.dbdict.iteritems()]
                 print """Database %s: Subset %s promoted: %s""" % (self.dbse, ss, self.sset[ss])
+        if name is None and len(self.dbdict) > 1:
+            for db, odb in self.dbdict.items():
+                dbix = self.dbdict.keys().index(db)
+                ss = odb.dbse.lower()
+                if ss not in self.sset:
+                    self.sset[ss] = ['default' if ix == dbix else None for ix in range(len(self.dbdict))]
+                    print """Database %s: Subset %s promoted: %s""" % (self.dbse, ss, self.sset[ss])
 
     def _intersect_subsets(self):
         """Examine component database subsets and collect common names as

@@ -22,7 +22,7 @@
 
 """
 | Database (Hobza) of interaction energies for dissociation curves of bimolecular complexes.
-| Geometries and reference interaction energies from Grafova et al. JCTC 6 2365 (2010).
+| Geometries and reference interaction energies from Grafova et al. JCTC 6 2365 (2010) Table S15 and S16.
 | Note that the S22by5-N-1.0 members are essentially the same geometries as S22-N (there's trivial round-off error) but the reference interaction energies for S22by5 are of lower quality than those of S22.
 
 - **cp**  ``'off'`` || ``'on'``
