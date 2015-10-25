@@ -83,10 +83,10 @@ elif project == 'saptmisc':
     path = r"""/Users/loriab/linux/qcdb/data/saptmiscusemefiles/"""
 
 # not tested
-#dbse = 'BBI'
-elif project == 'merz3':
+elif project in ['pt2misc', 'ccmisc']:
     dbse = 'SSI'
-    path = r"""/Users/loriab/linux/qcdb/data/merz3usemefiles/"""
+    #path = r"""/Users/loriab/linux/qcdb/data/merz3usemefiles/"""
+    path = r"""/Users/loriab/linux/qcdb/data/bfdbwfnusemefiles/"""
 
 # not tested
 #dbse = 'S22'
@@ -155,7 +155,7 @@ for mode in modes:
 dfstoich.index.names = ['rxn']
 h2kc = qcdb.psi_hartree2kcalmol
 if verbose > 1:
-    print 'DFSTOICH\n', names[:maxrgt+1], dfstoich.head(5)
+    print 'DFSTOICH\n', names[:maxrgt + 1], dfstoich.head(5)
 
 
 # <<< read usemefiles and convert to giant DataFrame >>>
@@ -192,7 +192,7 @@ for useme in usemeglob:
         raise ValidationError('Error: useme %s needs adding to useme2psivar in psivarrosetta.py' % (e))
 
     if piece.endswith('usemedash'):
-        tmp = pd.read_csv('%s' % (useme), index_col=0, sep='\s+', comment='#', na_values='None', names=names[:maxrgt+1])
+        tmp = pd.read_csv('%s' % (useme), index_col=0, sep='\s+', comment='#', na_values='None', names=names[:maxrgt + 1])
         rawdata[basis][useme2psivar[piece]][optns]['default'] = tmp.dropna(how='all')
         rawdata[basis][useme2psivar[piece]][optns]['CP'] = tmp.dropna(how='all')
     elif piece.endswith('usemesapt') or piece.endswith('usemedftsapt') or piece.endswith('usemempsapt'):
@@ -216,7 +216,7 @@ for useme in usemeglob:
                 else:
                     rawdata[basis][useme2psivar[pv]][optns]['SA'] = tmp2
     else:
-        tmp = pd.read_csv('%s' % (useme), index_col=0, sep='\s+', comment='#', na_values='None', names=names[:maxrgt+1])
+        tmp = pd.read_csv('%s' % (useme), index_col=0, sep='\s+', comment='#', na_values='None', names=names[:maxrgt + 1])
         cpmode.replace('unCP', 'default')
         rawdata[basis][useme2psivar[piece]][optns][cpmode] = tmp.dropna(how='all')
     if verbose > 1:
@@ -706,13 +706,13 @@ pv1['MP2.5 CC CORRECTION ENERGY'] = {'func': difference, 'args': ['MP2.5 CORRELA
 pv1['CCSD CC CORRECTION ENERGY'] = {'func': difference, 'args': ['CCSD CORRELATION ENERGY', 'MP2 CORRELATION ENERGY']}
 pv1['SCS-CCSD CC CORRECTION ENERGY'] = {'func': difference, 'args': ['SCS-CCSD CORRELATION ENERGY', 'MP2 CORRELATION ENERGY']}
 pv1['SCS(MI)-CCSD CC CORRECTION ENERGY'] = {'func': difference, 'args': ['SCS(MI)-CCSD CORRELATION ENERGY', 'MP2 CORRELATION ENERGY']}
-pv1['SCS-MP2 CORRELATION ENERGY'] = {'func': spin_component_scaling, 'args': [1.2, 1.0/3.0, 'MP2 CORRELATION ENERGY', 'MP2 SAME-SPIN CORRELATION ENERGY']}
+pv1['SCS-MP2 CORRELATION ENERGY'] = {'func': spin_component_scaling, 'args': [1.2, 1.0 / 3.0, 'MP2 CORRELATION ENERGY', 'MP2 SAME-SPIN CORRELATION ENERGY']}
 pv1['SCS-MP2 TOTAL ENERGY'] = {'func': sum, 'args': ['HF TOTAL ENERGY', 'SCS-MP2 CORRELATION ENERGY']}
 pv1['SCS(N)-MP2 CORRELATION ENERGY'] = {'func': spin_component_scaling, 'args': [0.0, 1.76, 'MP2 CORRELATION ENERGY', 'MP2 SAME-SPIN CORRELATION ENERGY']}
 pv1['SCS(N)-MP2 TOTAL ENERGY'] = {'func': sum, 'args': ['HF TOTAL ENERGY', 'SCS(N)-MP2 CORRELATION ENERGY']}
 pv1['DW-MP2 CORRELATION ENERGY'] = {'func': dispersion_weighting, 'args': ['DW-MP2 OMEGA', 'MP2 CORRELATION ENERGY', 'SCS-MP2 CORRELATION ENERGY']}
 pv1['DW-MP2 TOTAL ENERGY'] = {'func': sum, 'args': ['HF TOTAL ENERGY', 'DW-MP2 CORRELATION ENERGY']}
-pv1['SCS-MP2-F12 CORRELATION ENERGY'] = {'func': spin_component_scaling, 'args': [1.2, 1.0/3.0, 'MP2-F12 CORRELATION ENERGY', 'MP2-F12 SAME-SPIN CORRELATION ENERGY']}
+pv1['SCS-MP2-F12 CORRELATION ENERGY'] = {'func': spin_component_scaling, 'args': [1.2, 1.0 / 3.0, 'MP2-F12 CORRELATION ENERGY', 'MP2-F12 SAME-SPIN CORRELATION ENERGY']}
 pv1['SCS-MP2-F12 TOTAL ENERGY'] = {'func': sum, 'args': ['HF-CABS TOTAL ENERGY', 'SCS-MP2-F12 CORRELATION ENERGY']}
 pv1['SCS(N)-MP2-F12 CORRELATION ENERGY'] = {'func': spin_component_scaling, 'args': [0.0, 1.76, 'MP2-F12 CORRELATION ENERGY', 'MP2-F12 SAME-SPIN CORRELATION ENERGY']}
 pv1['SCS(N)-MP2-F12 TOTAL ENERGY'] = {'func': sum, 'args': ['HF-CABS TOTAL ENERGY', 'SCS(N)-MP2-F12 CORRELATION ENERGY']}
@@ -1119,6 +1119,8 @@ def generic_mtd(Nstage, stub):
         #return ['%s TOTAL ENERGY' % ('HF-CABS' if 'F12' in stub else 'SCF'),
         return ['%s TOTAL ENERGY' % ('HF-CABS' if 'F12' in stub else 'HF'),
                 '%s CORRELATION ENERGY' % ('MP2-F12' if 'F12' in stub else 'MP2'),
+                #'%s TOTAL ENERGY' % ('HF'),
+                #'%s CORRELATION ENERGY' % ('MP2'),
                 '%s CC CORRECTION ENERGY' % (stub)]
 
 
@@ -1159,7 +1161,7 @@ def build(method, option, cpmode, basis):
         print 'bass:', baslist
         print 'opts:', optlist
         for pcs, bas, opt in zip(mtdlist, baslist, optlist):
-            print df.loc[bas].loc[pcs].loc[opt].loc['S22-2']  #ACONF-15'] #'NBC1-BzBz_S-5.0'] #'S22-2'] #'A24-1'] #'BBI-150LYS-158LEU-2'] #'S22-2']
+            print df.loc[bas].loc[pcs].loc[opt].loc['S22-2']  # ACONF-15'] #'NBC1-BzBz_S-5.0'] #'S22-2'] #'A24-1'] #'BBI-150LYS-158LEU-2'] #'S22-2']
     acting_cpmode = 'default' if cpmode == 'unCP' else cpmode
     return reactionate(acting_cpmode, sum([df.loc[bas].loc[pcs].loc[opt] for pcs, bas, opt in zip(mtdlist, baslist, optlist)]))
 
@@ -1266,17 +1268,22 @@ elif project == 'saptone' or project == 'saptmisc':
     opts = ['', 'dfmp']
     cpmd = ['SA']
 
-elif project == 'merz3':
-    mtds = ['MP2', 'SCSMP2', 'SCSNMP2', 'SCSMIMP2', 'DWMP2', 'MP2C',
-#            'B3LYP', 'B3LYPD3', 'B97D3', 'WB97XD',
-#            'SAPT0', 'SAPT0S',
-            'MP2CF12', 'DWCCSDTF12']
-    bass = ['jadz', 'adz', 'atz', 'aqz', 'addz', 'adtz', 'atqz', 'qz', 'atqzadz']
+elif project == 'pt2misc':
+    mtds = ['HF', 'MP2', 'SCSMP2', 'SCSNMP2', 'SCSMIMP2', 'DWMP2',
+            'HFCABS', 'MP2F12', 'SCSMP2F12', 'SCSNMP2F12', 'SCSMIMP2F12', 'DWMP2F12']
+    bass = ['adz', 'atz', 'aqz', 'adtz', 'atqz', 'qz']
     opts = ['', 'dfhf', 'dfhf-dfmp']
-    #mtds = ['SAPT0', 'SAPT0S']
-    #bass = ['jadz']
-    #opts = ['']  # should SAPT0 be coming through with a dfmp label?
-    #cpmd = ['unCP', 'CP', 'SA']
+    cpmd = ['CP']
+
+elif project == 'ccmisc':
+    mtds = ['MP2C', 'MP25', 'MP3',
+            'MP2CF12',
+            'CCSDAF12', 'SCSCCSDAF12', 'SCMICCSDAF12', 'CCSDTAF12', 'CCSDTNSAF12',
+            'CCSDBF12', 'SCSCCSDBF12', 'SCMICCSDBF12', 'CCSDTBF12',
+            'DWCCSDTF12']
+    bass = ['adz', 'atz', 'adtz',
+            'atqzadz', 'aq5zadz', 'atqzatz', 'aq5zatz']
+    opts = ['', 'dfhf', 'dfhf-dfmp']
     cpmd = ['CP', 'SA']
 
 elif project == 'aep':
