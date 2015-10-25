@@ -2661,7 +2661,10 @@ reinitialize
                       opt=['CP'], err=['mae'], sset=['default'], dbse=None,
                       opttarget=None,
                       failoninc=True,
-                      plotpath='analysis/flats/flat_', subjoin=True,
+                      xlimit=4.0, xlines=[0.0, 0.3, 1.0],
+                      ialimit=2.0,
+                      plotpath='autogen',
+                      subjoin=True,
                       title=None, indextitle=None,
                       suppressblanks=False,
                       standalone=True, theme=None, filename=None):
@@ -2676,8 +2679,29 @@ reinitialize
 
         """
         # get plan for table from *tableplan* and some default values
+        kwargs = {'plotpath': plotpath,
+                  'subjoin': subjoin,
+                  'xlines': xlines,
+                  'xlimit': xlimit,
+                  'ialimit': ialimit}
         rowplan, columnplan, landscape, footnotes, \
-        suggestedtitle, suggestedtheme = tableplan(plotpath=plotpath, subjoin=subjoin)
+        suggestedtitle, suggestedtheme = tableplan(**kwargs)
+        #suggestedtitle, suggestedtheme = tableplan(plotpath=plotpath, subjoin=subjoin)
+
+        # make figure files write themselves
+        autothread = {}
+        autoliliowa = {}
+        if plotpath == 'autogen':
+            for col in columnplan:
+                if col[3].__name__ == 'flat':
+                    if col[4] and autothread:
+                        print 'TODO: merge not handled'
+                    elif col[4] or autothread:
+                        autothread.update(col[4])
+                    else:
+                        autothread = {'dummy': True}
+                elif col[3].__name__ == 'liliowa':
+                    autoliliowa = {'dummy': True}
 
         # negotiate some defaults
         dbse = [self.dbse] if dbse is None else dbse
@@ -2730,20 +2754,33 @@ reinitialize
             for ss in self.sset.keys():
                 serrors[mc][ss] = {}
                 if mc_translator[mc] in self.mcs:
-                    mcsscounts = self.get_missing_reactions(mc_translator[mc], sset=ss)
                     # Note: not handling when one component Wdb has one translated pattern and another another
                     perr = self.compute_statistics(mc_translator[mc], benchmark=benchmark, sset=ss,
                                                    failoninc=failoninc, verbose=False, returnindiv=False)
                     serrors[mc][ss][self.dbse] = format_errors(perr[self.dbse], mode=3)
-                    serrors[mc][ss][self.dbse]['tgtcnt'] = mcsscounts[self.dbse][0]
-                    serrors[mc][ss][self.dbse]['misscnt'] = len(mcsscounts[self.dbse][1])
+                    if not failoninc:
+                        mcsscounts = self.get_missing_reactions(mc_translator[mc], sset=ss)
+                        serrors[mc][ss][self.dbse]['tgtcnt'] = mcsscounts[self.dbse][0]
+                        serrors[mc][ss][self.dbse]['misscnt'] = len(mcsscounts[self.dbse][1])
+                    if autothread:
+                        if ('sset' in autothread and ss in autothread['sset']) or ('sset' not in autothread):
+                            mcssplots = self.plot_flat(mc_translator[mc], benchmark=benchmark, sset=ss,
+                                failoninc=failoninc, color='sapt', xlimit=xlimit, xlines=xlines, view=False,
+                                saveas='flat_' + '-'.join([self.dbse, ss, mc]), relpath=True, graphicsformat=['pdf'])
+                            serrors[mc][ss][self.dbse]['plotflat'] = mcssplots['pdf']
+                    if autoliliowa and ss == 'default':
+                            mcssplots = self.plot_liliowa(mc_translator[mc], benchmark=benchmark,
+                                failoninc=failoninc, xlimit=ialimit, view=False,
+                                saveas='liliowa_' + '-'.join([self.dbse, ss, mc]), relpath=True, graphicsformat=['pdf'])
+                            serrors[mc][ss][self.dbse]['plotliliowa'] = mcssplots['pdf']
                     for db in self.dbdict.keys():
                         if perr[db] is None:
                             serrors[mc][ss][db] = None
                         else:
                             serrors[mc][ss][db] = format_errors(perr[db], mode=3)
-                            serrors[mc][ss][db]['tgtcnt'] = mcsscounts[db][0]
-                            serrors[mc][ss][db]['misscnt'] = len(mcsscounts[db][1])
+                            if not failoninc:
+                                serrors[mc][ss][db]['tgtcnt'] = mcsscounts[db][0]
+                                serrors[mc][ss][db]['misscnt'] = len(mcsscounts[db][1])
                 else:
                     serrors[mc][ss][self.dbse] = format_errors(initialize_errors(), mode=3)
                     for db in self.dbdict.keys():
@@ -2778,7 +2815,8 @@ reinitialize
             table, index = textables.table_generic(
                 mtd=numtd, bas=nubas, opt=nuopt, err=nuerr, sset=nusset, dbse=nudbse,
                 rowplan=rowplan, columnplan=columnplan, serrors=serrors,
-                plotpath=plotpath, subjoin=subjoin,
+                plotpath='' if plotpath == 'autogen' else plotpath,
+                subjoin=subjoin,
                 title=title, indextitle=indextitle,
                 suppressblanks=suppressblanks,
                 landscape=landscape, footnotes=footnotes,
