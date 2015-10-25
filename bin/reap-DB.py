@@ -116,6 +116,13 @@ elif project == 'curveref':
     dbse = 'S22by7'
     path = r"""/Users/loriab/linux/Refitting_DFT_D/Databases/usemefiles/"""
 
+elif project == 'silver':
+    dbse = 'PCONF'
+    path = r"""/Users/loriab/linux/Refitting_DFT_D/Databases/usemefiles/"""
+
+elif project == 'fcnfc':
+    pass
+
 else:
     raise ValidationError("""Project %s not defined.""" % (project))
 
@@ -384,20 +391,28 @@ def correction(args):
     return base + plus - minus
 
 
+def average(args):
+    return sum(args) / len(args)
+
+
 # <<< append to main DataFrame basic psivar equalities not explicit to useme structure >>>
 
 lvl = 'psivar'
 pv0 = collections.OrderedDict()
 pv0['MP2-F12 TOTAL ENERGY'] = {'func': sum, 'args': ['HF-CABS TOTAL ENERGY', 'MP2-F12 CORRELATION ENERGY']}
+pv0['AVG-CCSD-F12 CORRELATION ENERGY'] = {'func': average, 'args': ['CCSD-F12A CORRELATION ENERGY', 'CCSD-F12B CORRELATION ENERGY']}
+pv0['AVG-CCSD-F12 TOTAL ENERGY'] = {'func': sum, 'args': ['HF-CABS TOTAL ENERGY', 'AVG-CCSD-F12 CORRELATION ENERGY']}
 pv0['CCSD-F12A TOTAL ENERGY'] = {'func': sum, 'args': ['HF-CABS TOTAL ENERGY', 'CCSD-F12A CORRELATION ENERGY']}
 pv0['CCSD-F12B TOTAL ENERGY'] = {'func': sum, 'args': ['HF-CABS TOTAL ENERGY', 'CCSD-F12B CORRELATION ENERGY']}
 pv0['CCSD-F12C TOTAL ENERGY'] = {'func': sum, 'args': ['HF-CABS TOTAL ENERGY', 'CCSD-F12C CORRELATION ENERGY']}
 #pv0['CCSD(T**)-F12A TOTAL ENERGY'] = {'func': sum, 'args': ['HF-CABS TOTAL ENERGY', 'CCSD(T**)-F12A CORRELATION ENERGY']}
 #pv0['CCSD(T**)-F12B TOTAL ENERGY'] = {'func': sum, 'args': ['HF-CABS TOTAL ENERGY', 'CCSD(T**)-F12B CORRELATION ENERGY']}
 #pv0['CCSD(T**)-F12C TOTAL ENERGY'] = {'func': sum, 'args': ['HF-CABS TOTAL ENERGY', 'CCSD(T**)-F12C CORRELATION ENERGY']}
+###pv0['AVG-CCSD(T)-F12 CORRELATION ENERGY'] = {'func': sum, 'args': ['AVG-CCSD-F12 CORRELATION ENERGY', '(T)-F12AB CORRECTION ENERGY']}
 pv0['CCSD(T)-F12A CORRELATION ENERGY'] = {'func': sum, 'args': ['CCSD-F12A CORRELATION ENERGY', '(T)-F12AB CORRECTION ENERGY']}
 pv0['CCSD(T)-F12B CORRELATION ENERGY'] = {'func': sum, 'args': ['CCSD-F12B CORRELATION ENERGY', '(T)-F12AB CORRECTION ENERGY']}
 pv0['CCSD(T)-F12C CORRELATION ENERGY'] = {'func': sum, 'args': ['CCSD-F12C CORRELATION ENERGY', '(T)-F12C CORRECTION ENERGY']}
+###pv0['AVG-CCSD(T)-F12 TOTAL ENERGY'] = {'func': sum, 'args': ['HF-CABS TOTAL ENERGY', 'AVG-CCSD(T)-F12 CORRELATION ENERGY']}
 pv0['CCSD(T)-F12A TOTAL ENERGY'] = {'func': sum, 'args': ['HF-CABS TOTAL ENERGY', 'CCSD(T)-F12A CORRELATION ENERGY']}
 pv0['CCSD(T)-F12B TOTAL ENERGY'] = {'func': sum, 'args': ['HF-CABS TOTAL ENERGY', 'CCSD(T)-F12B CORRELATION ENERGY']}
 pv0['CCSD(T)-F12C TOTAL ENERGY'] = {'func': sum, 'args': ['HF-CABS TOTAL ENERGY', 'CCSD(T)-F12C CORRELATION ENERGY']}
@@ -728,24 +743,32 @@ pv1['(T*)-F12AB CORRECTION ENERGY'] = {'func': product, 'args': ['(T*)-F12 SCALE
 pv1['(T*)-F12C CORRECTION ENERGY'] = {'func': product, 'args': ['(T*)-F12 SCALE', '(T)-F12C CORRECTION ENERGY']}
 pv1['(T**)-F12AB CORRECTION ENERGY'] = {'func': product, 'args': ['(T**)-F12 SCALE', '(T)-F12AB CORRECTION ENERGY']}
 pv1['(T**)-F12C CORRECTION ENERGY'] = {'func': product, 'args': ['(T**)-F12 SCALE', '(T)-F12C CORRECTION ENERGY']}
+###pv1['AVG-CCSD(T)-F12 CC CORRECTION ENERGY'] = {'func': difference, 'args': ['AVG-CCSD(T)-F12 CORRELATION ENERGY', 'MP2-F12 CORRELATION ENERGY']}
 pv1['CCSD(T)-F12A CC CORRECTION ENERGY'] = {'func': difference, 'args': ['CCSD(T)-F12A CORRELATION ENERGY', 'MP2-F12 CORRELATION ENERGY']}
 pv1['CCSD(T)-F12B CC CORRECTION ENERGY'] = {'func': difference, 'args': ['CCSD(T)-F12B CORRELATION ENERGY', 'MP2-F12 CORRELATION ENERGY']}
 pv1['CCSD(T)-F12C CC CORRECTION ENERGY'] = {'func': difference, 'args': ['CCSD(T)-F12C CORRELATION ENERGY', 'MP2-F12 CORRELATION ENERGY']}
+###pv1['AVG-CCSD(T*)-F12 CORRELATION ENERGY'] = {'func': sum, 'args': ['AVG-CCSD-F12 CORRELATION ENERGY', '(T*)-F12AB CORRECTION ENERGY']}
 pv1['CCSD(T*)-F12A CORRELATION ENERGY'] = {'func': sum, 'args': ['CCSD-F12A CORRELATION ENERGY', '(T*)-F12AB CORRECTION ENERGY']}
 pv1['CCSD(T*)-F12B CORRELATION ENERGY'] = {'func': sum, 'args': ['CCSD-F12B CORRELATION ENERGY', '(T*)-F12AB CORRECTION ENERGY']}
 pv1['CCSD(T*)-F12C CORRELATION ENERGY'] = {'func': sum, 'args': ['CCSD-F12C CORRELATION ENERGY', '(T*)-F12C CORRECTION ENERGY']}
+###pv1['AVG-CCSD(T*)-F12 CC CORRECTION ENERGY'] = {'func': difference, 'args': ['AVG-CCSD(T*)-F12 CORRELATION ENERGY', 'MP2-F12 CORRELATION ENERGY']}
 pv1['CCSD(T*)-F12A CC CORRECTION ENERGY'] = {'func': difference, 'args': ['CCSD(T*)-F12A CORRELATION ENERGY', 'MP2-F12 CORRELATION ENERGY']}
 pv1['CCSD(T*)-F12B CC CORRECTION ENERGY'] = {'func': difference, 'args': ['CCSD(T*)-F12B CORRELATION ENERGY', 'MP2-F12 CORRELATION ENERGY']}
 pv1['CCSD(T*)-F12C CC CORRECTION ENERGY'] = {'func': difference, 'args': ['CCSD(T*)-F12C CORRELATION ENERGY', 'MP2-F12 CORRELATION ENERGY']}
+###pv1['AVG-CCSD(T*)-F12 TOTAL ENERGY'] = {'func': sum, 'args': ['HF-CABS TOTAL ENERGY', 'AVG-CCSD(T*)-F12 CORRELATION ENERGY']}
 pv1['CCSD(T*)-F12A TOTAL ENERGY'] = {'func': sum, 'args': ['HF-CABS TOTAL ENERGY', 'CCSD(T*)-F12A CORRELATION ENERGY']}
 pv1['CCSD(T*)-F12B TOTAL ENERGY'] = {'func': sum, 'args': ['HF-CABS TOTAL ENERGY', 'CCSD(T*)-F12B CORRELATION ENERGY']}
 pv1['CCSD(T*)-F12C TOTAL ENERGY'] = {'func': sum, 'args': ['HF-CABS TOTAL ENERGY', 'CCSD(T*)-F12C CORRELATION ENERGY']}
+###pv1['AVG-CCSD(T**)-F12 CORRELATION ENERGY'] = {'func': sum, 'args': ['AVG-CCSD-F12 CORRELATION ENERGY', '(T**)-F12AB CORRECTION ENERGY']}
 pv1['CCSD(T**)-F12A CORRELATION ENERGY'] = {'func': sum, 'args': ['CCSD-F12A CORRELATION ENERGY', '(T**)-F12AB CORRECTION ENERGY']}
 pv1['CCSD(T**)-F12B CORRELATION ENERGY'] = {'func': sum, 'args': ['CCSD-F12B CORRELATION ENERGY', '(T**)-F12AB CORRECTION ENERGY']}
 pv1['CCSD(T**)-F12C CORRELATION ENERGY'] = {'func': sum, 'args': ['CCSD-F12C CORRELATION ENERGY', '(T**)-F12C CORRECTION ENERGY']}
 pv1['CCSD(T**)-F12A CC CORRECTION ENERGY'] = {'func': difference, 'args': ['CCSD(T**)-F12A CORRELATION ENERGY', 'MP2-F12 CORRELATION ENERGY']}
 pv1['CCSD(T**)-F12B CC CORRECTION ENERGY'] = {'func': difference, 'args': ['CCSD(T**)-F12B CORRELATION ENERGY', 'MP2-F12 CORRELATION ENERGY']}
 pv1['CCSD(T**)-F12C CC CORRECTION ENERGY'] = {'func': difference, 'args': ['CCSD(T**)-F12C CORRELATION ENERGY', 'MP2-F12 CORRELATION ENERGY']}
+pv1['AVG-CCSD(T**)-F12 CORRELATION ENERGY'] = {'func': average, 'args': ['CCSD(T)-F12A CORRELATION ENERGY', 'CCSD(T**)-F12B CORRELATION ENERGY']}
+pv1['AVG-CCSD(T**)-F12 CC CORRECTION ENERGY'] = {'func': difference, 'args': ['AVG-CCSD(T**)-F12 CORRELATION ENERGY', 'MP2-F12 CORRELATION ENERGY']}
+pv1['AVG-CCSD(T**)-F12 TOTAL ENERGY'] = {'func': sum, 'args': ['HF-CABS TOTAL ENERGY', 'AVG-CCSD(T**)-F12 CORRELATION ENERGY']}
 pv1['CCSD(T**)-F12A TOTAL ENERGY'] = {'func': sum, 'args': ['HF-CABS TOTAL ENERGY', 'CCSD(T**)-F12A CORRELATION ENERGY']}  # duplicate def
 pv1['CCSD(T**)-F12B TOTAL ENERGY'] = {'func': sum, 'args': ['HF-CABS TOTAL ENERGY', 'CCSD(T**)-F12B CORRELATION ENERGY']}  # duplicate def
 pv1['CCSD(T**)-F12C TOTAL ENERGY'] = {'func': sum, 'args': ['HF-CABS TOTAL ENERGY', 'CCSD(T**)-F12C CORRELATION ENERGY']}  # duplicate def
@@ -1190,6 +1213,14 @@ elif project == 'dhdft':
     opts = ['', 'nfc']
     cpmd = ['CP', 'unCP']
 
+elif project == 'fcnfc':
+    mtds = ['B2PLYP', 'B2PLYPD3', 'B2PLYPD3BJ',
+            'B97', 'B97D3', 'B97D3BJ',
+            'B3LYP', 'B3LYPD3', 'B3LYPD3BJ']
+    bass = ['adz', 'atz', 'def2qzvp']
+    opts = ['dfhf-dfmp-fc', 'dfhf-dfmp-nfc', 'dfhf']
+    cpmd = ['CP', 'unCP']
+
 elif project == 'dhdft2':
     mtds = ['DSDPBEP86', 'DSDPBEP86D2', 'DSDPBEP86D3BJ']
     bass = ['adz', 'atz']
@@ -1287,6 +1318,12 @@ elif project == 'curveref':
     bass = ['adz', 'atz', 'aqz', 'a5z', 'adtz', 'atqz', 'aq5z']
     opts = ['']
     cpmd = ['CP']
+
+elif project == 'silver':
+    mtds = ['DWCCSDTF12', 'CCSDTAF12', 'CCSDTBF12', 'CCSDTABAVGF12', 'MP2', 'MP2F12', 'CCSDTNSAF12']
+    bass = ['adz', 'aq5zadz', 'aq5z', 'atqzadz', 'atqz', 'atz', 'atqzatz', 'aq5zatz']
+    opts = ['', 'dfhf-dfmp']
+    cpmd = ['CP', 'unCP']  # CP for IE, unCP for generic rxns
 
 for cpm in cpmd:
     for mtd in mtds:
