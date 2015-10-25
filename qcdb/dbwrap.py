@@ -955,8 +955,11 @@ class WrappedDatabase(object):
             try:
                 mcGreater = oRxn.data[lbench].value
             except KeyError, e:
-                print """Reaction %s missing benchmark""" % (str(rxn))
-                continue
+                if lbench == 'ZEROS':
+                    pass
+                else:
+                    print """Reaction %s missing benchmark""" % (str(rxn))
+                    continue
             # handle particulars of PEC error measures
 #            rxncureinfo = cureinfo[rxn]
 #            try:
@@ -967,7 +970,11 @@ class WrappedDatabase(object):
 #            cure_denom = cure_weight(refrxn=mcGreater, refeq=mcGreaterCrvmin, rrat=rxncureinfo['Rrat'])
 #            balanced_mask, balwt = balanced_error(refrxn=mcGreater, refeq=mcGreaterCrvmin, rrat=rxncureinfo['Rrat'])
 
-            err[rxn] = [mcLesser - mcGreater,
+            if lbench == 'ZEROS':
+                err[rxn] = [mcLesser,
+                            0.0, 0.0, 0.0, 1.0]  # FAKE
+            else:
+                err[rxn] = [mcLesser - mcGreater,
                         (mcLesser - mcGreater) / abs(mcGreater),
                         (mcLesser - mcGreater) / abs(mcGreater),  # FAKE
                         (mcLesser - mcGreater) / abs(mcGreater),  # FKAE
@@ -1630,7 +1637,7 @@ class Database(object):
             else:
                 errors[db], indiv[db] = odb.compute_statistics(self.mcs[modelchem][dbix],
                                                                sset=self.sset[sset][dbix],
-                                                               benchmark=self.mcs[benchmark][dbix],
+                                                               benchmark='ZEROS' if benchmark == 'ZEROS' else self.mcs[benchmark][dbix],
                                                                failoninc=failoninc, verbose=verbose, returnindiv=True)
                 actvdb.append(errors[db])
         errors[self.dbse] = average_errors(*actvdb)
