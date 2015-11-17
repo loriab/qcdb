@@ -2606,7 +2606,7 @@ reinitialize
                     for block, blkerrors in serrors.iteritems():
                         if blkerrors:  # skip e.g., NBC block in HB of DB4
                             tablelines.append(r"""\hline""")
-                            summlines = [[] for i in range(6)]
+                            summlines = [[] for i in range(8)]
                             for col in columnplan:
                                 if col == field_to_put_labels[0]:
                                     summlines[0].append(
@@ -3509,4 +3509,5 @@ class ThreeDatabases(Database):
 fnreservoir = {}
 fnreservoir['blankslat'] = r"""Errors with respect to Benchmark. Guide lines are at 0, 0.3, and 1.0 kcal/mol overbound ($-$) and underbound ($+$)."""
 fnreservoir['5min'] = r"""Only equilibrium and near-equilibrium systems included. (All S22 and HSG, 50/194 NBC10, 28/118 HBC6.)"""
-#fnreservoir['arbslat'] = r"""Guide lines are at {{xlines}} kcal/mol overbound ($-$) and underbound ($+$)."""
+fnreservoir['liliowa'] = r"""{0}MAE (dark by {1} kcal/mol) for subsets in residue classes cation, anion, polar, aliphatic, \& aromatic (L to R)."""
+fnreservoir['flat'] = r"""{0}Errors with respect to benchmark within $\pm${1} kcal/mol. Guide lines are at {2} overbound ($-$) and underbound ($+$)."""

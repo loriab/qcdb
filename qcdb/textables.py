@@ -8,6 +8,10 @@ except ImportError:
 from qcdb.modelchems import Method, BasisSet, Error, methods, bases, errors
 
 mc_archive = {'mtd': methods, 'bas': bases, 'err': errors}
+fancy_mc_archive = {}
+for tier in [methods, bases, errors]:
+    for k, v in tier.iteritems():
+        fancy_mc_archive[k] = v.latex
 
 
 # define helper functions for formatting table cells
@@ -43,6 +47,19 @@ def lmtdbas(kw):
 def label(kw):
     kwt = kw['target']
     return """ %-25s""" % (mc_archive[kwt][kw[kwt]].latex if kwt in mc_archive else kw[kwt])
+
+
+def label2(kw):
+    """This and fancy_mc_archive are experimental alternative for
+    summoning up col/row headers. Safe so long as mtd/bas/opt have
+    orthogonal keys.
+
+    """
+    try:
+        return fancy_mc_archive[kw]
+    except KeyError, e:
+        print 'Consider adding {} to modelchems.py'.format(e)
+        return kw
 
 
 def count(kw):
@@ -219,13 +236,15 @@ def table_generic(dbse, serrors,
                 table_header(kw, abbr, head1, head0, head2)
             if text[-1] != hline:
                 text.append(hline)
-            text.append(r"""\textbf{%s} \\ """ % (mc_archive[rowplan[0]][hier0].latex))
+            #text.append(r"""\textbf{%s} \\ """ % (mc_archive[rowplan[0]][hier0].latex))
+            text.append(r"""\textbf{%s} \\ """ % (label2(hier0)))
 
             for hier1 in locals()[rowplan[1]]:
                 kw[rowplan[1]] = hier1
                 kw['target'] = rowplan[1]
                 if nH > 2:
-                    text.append(r"""\enspace\textbf{%s} \\ """ % (mc_archive[rowplan[1]][hier1].latex))
+                    #text.append(r"""\enspace\textbf{%s} \\ """ % (mc_archive[rowplan[1]][hier1].latex))
+                    text.append(r"""\enspace\textbf{%s} \\ """ % (label2(hier1)))
 
                     for hier2 in locals()[rowplan[2]]:
                         kw[rowplan[2]] = hier2
