@@ -2306,7 +2306,7 @@ reinitialize
                      saveas=None, relpath=False, graphicsformat=['pdf']):
         """
 
-        Note that not possible to access sset of component databases. That is, for Database SSIBBI, SSI-only nppinppi is accessible b/c not defined in BBI, but SSI-only neutral is not accessible.
+        Note that not possible to access sset of component databases. That is, for Database SSIBBI, SSI-only arylaryl is accessible b/c not defined in BBI, but SSI-only neutral is not accessible.
         """
         # compute errors
         mc = modelchem
@@ -2317,11 +2317,11 @@ reinitialize
 
         # repackage
         dbdat = []
-        ssarray = ['pospos', 'posneg', 'pospolar', 'posnonpolar', 'posnppi',
-                   None, 'negneg', 'negpolar', 'negnonpolar', 'negnppi',
-                   None, None, 'polarpolar', 'polarnonpolar', 'polarnppi',
-                   None, None, None, 'nonpolarnonpolar', 'nonpolarnppi',
-                   None, None, None, None, 'nppinppi']
+        ssarray = ['pospos', 'posneg', 'pospolar', 'posaliph', 'posaryl',
+                   None, 'negneg', 'negpolar', 'negaliph', 'negaryl',
+                   None, None, 'polarpolar', 'polaraliph', 'polararyl',
+                   None, None, None, 'aliphaliph', 'alipharyl',
+                   None, None, None, None, 'arylaryl']
         for ss in ssarray:
             dbdat.append(0.0 if ss is None else errors[ss][self.dbse]['mae'])
 
