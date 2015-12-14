@@ -79,7 +79,7 @@ def segment_color(argcolor, saptcolor):
     return clr
 
 
-def bars(data, title='', saveas=None, relpath=False, graphicsformat=['pdf']):
+def bars(data, title='', saveas=None, relpath=False, graphicsformat=['pdf'], view=True):
     """Generates a 'gray-bars' diagram between model chemistries with error
     statistics in list *data*, which is supplied as part of the dictionary
     for each participating bar/modelchem, along with *mc* keys in argument
@@ -128,11 +128,13 @@ def bars(data, title='', saveas=None, relpath=False, graphicsformat=['pdf']):
         savefile = pltfile + '.' + ext.lower()
         plt.savefig(savefile, transparent=True, format=ext, bbox_inches='tight')
         files_saved[ext.lower()] = savefile
-    plt.show()
+    if view:
+        plt.show()
+    plt.close()
     return files_saved
 
 
-def flat(data, color=None, title='', xlimit=4.0, mae=None, mape=None, view=True,
+def flat(data, color=None, title='', xlimit=4.0, xlines=[0.0, 0.3, 1.0], mae=None, mape=None, view=True,
     saveas=None, relpath=False, graphicsformat=['pdf']):
     """Generates a slat diagram between model chemistries with errors in
     single-item list *data*, which is supplied as part of the dictionary
@@ -155,15 +157,14 @@ def flat(data, color=None, title='', xlimit=4.0, mae=None, mape=None, view=True,
     plt.ylim([-1 * Nweft - 1, 0])
     plt.yticks([])
     plt.xticks([])
-    fig.patch.set_visible(False)
-    ax.patch.set_visible(False)
+#    fig.patch.set_visible(False)
+#    ax.patch.set_visible(False)
     ax.axis('off')
 
-    plt.axvline(-1.0, color='grey', linewidth=4)
-    plt.axvline(-0.3, color='grey', linewidth=4)
-    plt.axvline(0.0, color='grey', linewidth=4)
-    plt.axvline(0.3, color='grey', linewidth=4)
-    plt.axvline(1.0, color='grey', linewidth=4)
+    for xl in xlines:
+        plt.axvline(xl, color='grey', linewidth=4)
+        if xl != 0.0:
+            plt.axvline(-1 * xl, color='grey', linewidth=4)
 
     # plot reaction errors and threads
     for rxn in data:
@@ -184,7 +185,8 @@ def flat(data, color=None, title='', xlimit=4.0, mae=None, mape=None, view=True,
     files_saved = {}
     for ext in graphicsformat:
         savefile = pltfile + '.' + ext.lower()
-        plt.savefig(savefile, transparent=True, format=ext)  # , bbox_inches='tight')
+        plt.savefig(savefile, transparent=True, format=ext, bbox_inches='tight',
+                   frameon=False, pad_inches=0.0)
         files_saved[ext.lower()] = savefile
     if view:
         plt.show()
@@ -260,6 +262,7 @@ def valerr(data, color=None, title='', xtitle='', view=True,
 
     """
     import hashlib
+    from itertools import cycle
     import matplotlib.pyplot as plt
 
     fig, ax = plt.subplots(figsize=(4, 6))
@@ -279,31 +282,44 @@ def valerr(data, color=None, title='', xtitle='', view=True,
     vmax = -1.0
     emin = 1.0
     emax = -1.0
+    linecycler = cycle(['-', '--', '-.', ':'])
     # plot reaction errors and threads
-    for rxn in data:
-        clr = segment_color(color, rxn['color'] if 'color' in rxn else None)
-        xmin = min(xmin, rxn['axis'])
-        xmax = max(xmax, rxn['axis'])
+    for trace, tracedata in data.iteritems():
+        vaxis = []
+        vmcdata = []
+        verror = []
+        for rxn in tracedata:
+            clr = segment_color(color, rxn['color'] if 'color' in rxn else None)
+            xmin = min(xmin, rxn['axis'])
+            xmax = max(xmax, rxn['axis'])
 
-        ax1.plot(rxn['axis'], rxn['mcdata'], '^', color=clr, markersize=6.0, mew=0)
-        vmin = min(0, vmin, rxn['mcdata'])
-        vmax = max(0, vmax, rxn['mcdata'])
+            ax1.plot(rxn['axis'], rxn['mcdata'], '^', color=clr, markersize=6.0, mew=0, zorder=10)
+            vmcdata.append(rxn['mcdata'])
+            vaxis.append(rxn['axis'])
+            vmin = min(0, vmin, rxn['mcdata'])
+            vmax = max(0, vmax, rxn['mcdata'])
 
-        if rxn['bmdata'] is not None:
-            ax1.plot(rxn['axis'], rxn['bmdata'], 'o', color='black', markersize=6.0)
-            vmin = min(0, vmin, rxn['bmdata'])
-            vmax = max(0, vmax, rxn['bmdata'])
+            if rxn['bmdata'] is not None:
+                ax1.plot(rxn['axis'], rxn['bmdata'], 'o', color='black', markersize=6.0, zorder=1)
+                vmin = min(0, vmin, rxn['bmdata'])
+                vmax = max(0, vmax, rxn['bmdata'])
 
-        if rxn['error'][0] is not None:
-            ax2.plot(rxn['axis'], rxn['error'][0], 's', color=clr, mew=0)
-            emin = min(0, emin, rxn['error'][0])
-            emax = max(0, emax, rxn['error'][0])
+            if rxn['error'][0] is not None:
+                ax2.plot(rxn['axis'], rxn['error'][0], 's', color=clr, mew=0, zorder=8)
+                emin = min(0, emin, rxn['error'][0])
+                emax = max(0, emax, rxn['error'][0])
+            verror.append(rxn['error'][0])
+
+        ls = next(linecycler)
+        ax1.plot(vaxis, vmcdata, ls, color='grey', label=trace, zorder=3)
+        ax2.plot(vaxis, verror, ls, color='grey', label=trace, zorder=4)
 
     xbuf = max(0.05, abs(0.02 * xmax))
     vbuf = max(0.1, abs(0.02 * vmax))
     ebuf = max(0.01, abs(0.02 * emax))
     plt.xlim([xmin - xbuf, xmax + xbuf])
     ax1.set_ylim([vmin - vbuf, vmax + vbuf])
+    plt.legend(fontsize='x-small', frameon=False)
     ax2.set_ylim([emin - ebuf, emax + ebuf])
 
     # save and show
@@ -321,7 +337,8 @@ def valerr(data, color=None, title='', xtitle='', view=True,
 
 
 def disthist(data, title='', xtitle='', xmin=None, xmax=None,
-    me=None, stde=None, saveas=None, relpath=False, graphicsformat=['pdf']):
+    me=None, stde=None, view=True,
+    saveas=None, relpath=False, graphicsformat=['pdf']):
     """Saves a plot with name *saveas* with a histogram representation
     of the reaction errors in *data*. Also plots a gaussian distribution
     with mean *me* and standard deviation *stde*. Plot has x-range
@@ -372,7 +389,9 @@ def disthist(data, title='', xtitle='', xmin=None, xmax=None,
         savefile = pltfile + '.' + ext.lower()
         plt.savefig(savefile, transparent=True, format=ext, bbox_inches='tight')
         files_saved[ext.lower()] = savefile
-    plt.show()
+    if view:
+        plt.show()
+    plt.close()
     return files_saved
 
 
@@ -463,7 +482,8 @@ def disthist(data, title='', xtitle='', xmin=None, xmax=None,
 
 def threads(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None,
     mousetext=None, mouselink=None, mouseimag=None, mousetitle=None, mousediv=None,
-    labeled=True, saveas=None, relpath=False, graphicsformat=['pdf']):
+    labeled=True, view=True,
+    saveas=None, relpath=False, graphicsformat=['pdf']):
     """Generates a tiered slat diagram between model chemistries with
     errors (or simply values) in list *data*, which is supplied as part of the
     dictionary for each participating reaction, along with *dbse* and *rxn* keys
@@ -581,9 +601,11 @@ def threads(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None,
         savefile = pltfile + '.' + ext.lower()
         plt.savefig(savefile, transparent=True, format=ext, bbox_inches='tight')
         files_saved[ext.lower()] = savefile
-    plt.show()
+    if view:
+        plt.show()
 
     if not (mousetext or mouselink or mouseimag):
+        plt.close()
         return files_saved, None
     else:
         dpi = 80
@@ -643,10 +665,11 @@ def threads(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None,
 
         htmlcode += """</MAP>\n"""
 
+        plt.close()
         return files_saved, htmlcode
 
 
-def ternary(sapt, title='', labeled=True,
+def ternary(sapt, title='', labeled=True, view=True,
             saveas=None, relpath=False, graphicsformat=['pdf']):
     """Takes array of arrays *sapt* in form [elst, indc, disp] and builds formatted
     two-triangle ternary diagrams. Either fully-readable or dotsonly depending
@@ -735,7 +758,9 @@ def ternary(sapt, title='', labeled=True,
         plt.savefig(savefile, transparent=True, format=ext, bbox_inches='tight',
                     frameon=False, dpi=450, edgecolor='none', pad_inches=0.0)
         files_saved[ext.lower()] = savefile
-    plt.show()
+    if view:
+        plt.show()
+    plt.close()
     return files_saved
 
 
@@ -856,7 +881,7 @@ def composition_tile(db, aa1, aa2):
     return np.reshape(np.array(tiles), (dim, dim))
 
 
-def iowa(mcdat, mclbl, title='', xtitle='', xlimit=2.0,
+def iowa(mcdat, mclbl, title='', xtitle='', xlimit=2.0, view=True,
     saveas=None, relpath=False, graphicsformat=['pdf']):
     """Saves a plot with (extensionless) name *pltfile* with an Iowa
     representation of the modelchems errors in *mcdat* for BBI/SSI-style
@@ -904,6 +929,13 @@ def iowa(mcdat, mclbl, title='', xtitle='', xlimit=2.0,
             index += 1
 
     #plt.title(title)
+    axt.axvline(x=4.8, linewidth=5, color='k')
+    axt.axvline(x=8.75, linewidth=5, color='k')
+    axt.axvline(x=11.6, linewidth=5, color='k')
+    axt.axhline(y=4.8, linewidth=5, color='k')
+    axt.axhline(y=8.75, linewidth=5, color='k')
+    axt.axhline(y=11.6, linewidth=5, color='k')
+    axt.set_zorder(100)
 
     # save and show
     pltuid = title + '_' + hashlib.sha1(title + str(xlimit)).hexdigest()
@@ -914,19 +946,70 @@ def iowa(mcdat, mclbl, title='', xtitle='', xlimit=2.0,
         plt.savefig(savefile, transparent=True, format=ext, bbox_inches='tight')
         #plt.savefig(savefile, transparent=False, format=ext, bbox_inches='tight')  # for quick nolabel, whiteback
         files_saved[ext.lower()] = savefile
-    plt.show()
+    if view:
+        plt.show()
+    plt.close()
+    return files_saved
+
+
+def liliowa(mcdat, title='', xlimit=2.0, view=True,
+    saveas=None, relpath=False, graphicsformat=['pdf']):
+    """Saves a plot with a heatmap representation of *mcdat*.
+
+    """
+    import numpy as np
+    import hashlib
+    import matplotlib
+    import matplotlib.pyplot as plt
+
+    # handle for frame, overall axis
+    fig, axt = plt.subplots(figsize=(1, 1))
+
+    axt.set_xticks([])
+    axt.set_yticks([])
+    axt.invert_yaxis()
+    axt.xaxis.set_tick_params(width=0, length=0)
+    axt.yaxis.set_tick_params(width=0, length=0)
+    axt.set_aspect('equal')
+
+    # remove figure outline
+    axt.spines['top'].set_visible(False)
+    axt.spines['right'].set_visible(False)
+    axt.spines['bottom'].set_visible(False)
+    axt.spines['left'].set_visible(False)
+
+    tiles = mcdat
+    dim = int(np.ceil(np.sqrt(len(tiles))))
+    pad = dim * dim - len(tiles)
+    tiles += [0] * pad
+    cb = np.reshape(np.array(tiles), (dim, dim))
+
+    heatmap = axt.pcolor(cb, vmin=-xlimit, vmax=xlimit, cmap=plt.cm.PRGn)
+
+    # save and show
+    pltuid = title + '_' + hashlib.sha1(title + str(xlimit)).hexdigest()
+    pltfile = expand_saveas(saveas, pltuid, def_prefix='liliowa_', relpath=relpath)
+    files_saved = {}
+    for ext in graphicsformat:
+        savefile = pltfile + '.' + ext.lower()
+        plt.savefig(savefile, transparent=True, format=ext, bbox_inches='tight',
+                   frameon=False, pad_inches=0.0)
+        files_saved[ext.lower()] = savefile
+    if view:
+        plt.show()
+    plt.close()
     return files_saved
 
 
 if __name__ == "__main__":
 
     merge_dats = [
-    {'db':'HSG', 'sys':'1', 'data':[0.3508, 0.1234, 0.0364, 0.0731, 0.0388]},
-    {'db':'HSG', 'sys':'3', 'data':[0.2036, -0.0736, -0.1650, -0.1380, -0.1806]},
-    #{'db':'S22', 'sys':'14', 'data':[np.nan, -3.2144, np.nan, np.nan, np.nan]},
-    {'db':'S22', 'sys':'14', 'data':[None, -3.2144, None, None, None]},
-    {'db':'S22', 'sys':'15', 'data':[-1.5090, -2.5263, -2.9452, -2.8633, -3.1059]},
-    {'db':'S22', 'sys':'22', 'data':[0.3046, -0.2632, -0.5070, -0.4925, -0.6359]}]
+    {'show':'a', 'db':'HSG', 'sys':'1', 'data':[0.3508, 0.1234, 0.0364, 0.0731, 0.0388]},
+    {'show':'b', 'db':'HSG', 'sys':'3', 'data':[0.2036, -0.0736, -0.1650, -0.1380, -0.1806]},
+    #{'show':'', 'db':'S22', 'sys':'14', 'data':[np.nan, -3.2144, np.nan, np.nan, np.nan]},
+    {'show':'c', 'db':'S22', 'sys':'14', 'data':[None, -3.2144, None, None, None]},
+    {'show':'d', 'db':'S22', 'sys':'15', 'data':[-1.5090, -2.5263, -2.9452, -2.8633, -3.1059]},
+    {'show':'e', 'db':'S22', 'sys':'22', 'data':[0.3046, -0.2632, -0.5070, -0.4925, -0.6359]}]
 
     threads(merge_dats, labels=['d', 't', 'dt', 'q', 'tq'], color='sapt',
         title='MP2-CPa[]z', mae=[0.25, 0.5, 0.5, 0.3, 1.0], mape=[20.1, 25, 15, 5.5, 3.6])
@@ -956,7 +1039,15 @@ if __name__ == "__main__":
         '011ILE-014PHE-1', '027GLU-031LEU-1', '038PHE-041ILE-1', '199LEU-202GLU-1']
     iowa(lin_dats, lin_labs, title='ttl', xlimit=0.5)
 
+    figs = [0.22, 0.41, 0.14, 0.08, 0.47,
+            0, 0.38, 0.22, 0.10, 0.20,
+            0, 0, 0.13, 0.07, 0.25,
+            0, 0, 0, 0.06, 0.22,
+            0, 0, 0, 0, 0.69]
+    liliowa(figs, saveas='SSI-default-MP2-CP-aqz', xlimit=1.0)
+
     disthist(lin_dats)
 
-    valerr([{'color': 0.14255710779686612, 'db': 'NBC1', 'sys': 'BzBz_S-3.6', 'error': [0.027999999999999803], 'mcdata': -1.231, 'bmdata': -1.259, 'axis': 3.6}, {'color': 0.08862098445220466, 'db': 'NBC1', 'sys': 'BzBz_S-3.7', 'error': [0.02300000000000013], 'mcdata': -1.535, 'bmdata': -1.558, 'axis': 3.7}, {'color': 0.246634626511043, 'db': 'NBC1', 'sys': 'BzBz_S-3.4', 'error': [0.04200000000000001], 'mcdata': 0.189, 'bmdata': 0.147, 'axis': 3.4}, {'color': 0.19526236766857613, 'db': 'NBC1', 'sys': 'BzBz_S-3.5', 'error': [0.03500000000000003], 'mcdata': -0.689, 'bmdata': -0.724, 'axis': 3.5}, {'color': 0.3443039102164425, 'db': 'NBC1', 'sys': 'BzBz_S-3.2', 'error': [0.05999999999999961], 'mcdata': 3.522, 'bmdata': 3.462, 'axis': 3.2}, {'color': 0.29638827303466814, 'db': 'NBC1', 'sys': 'BzBz_S-3.3', 'error': [0.050999999999999934], 'mcdata': 1.535, 'bmdata': 1.484, 'axis': 3.3}, {'color': 0.42859228971962615, 'db': 'NBC1', 'sys': 'BzBz_S-6.0', 'error': [0.0020000000000000018], 'mcdata': -0.099, 'bmdata': -0.101, 'axis': 6.0}, {'color': 0.30970751839224836, 'db': 'NBC1', 'sys': 'BzBz_S-5.0', 'error': [0.0040000000000000036], 'mcdata': -0.542, 'bmdata': -0.546, 'axis': 5.0}, {'color': 0.3750832778147902, 'db': 'NBC1', 'sys': 'BzBz_S-5.5', 'error': [0.0030000000000000027], 'mcdata': -0.248, 'bmdata': -0.251, 'axis': 5.5}, {'color': 0.0335358832178858, 'db': 'NBC1', 'sys': 'BzBz_S-3.8', 'error': [0.019000000000000128], 'mcdata': -1.674, 'bmdata': -1.693, 'axis': 3.8}, {'color': 0.021704594689389095, 'db': 'NBC1', 'sys': 'BzBz_S-3.9', 'error': [0.016000000000000014], 'mcdata': -1.701, 'bmdata': -1.717, 'axis': 3.9}, {'color': 0.22096255119953187, 'db': 'NBC1', 'sys': 'BzBz_S-4.5', 'error': [0.008000000000000007], 'mcdata': -1.058, 'bmdata': -1.066, 'axis': 4.5}, {'color': 0.10884135031532088, 'db': 'NBC1', 'sys': 'BzBz_S-4.1', 'error': [0.01200000000000001], 'mcdata': -1.565, 'bmdata': -1.577, 'axis': 4.1}, {'color': 0.06911476296747143, 'db': 'NBC1', 'sys': 'BzBz_S-4.0', 'error': [0.014000000000000012], 'mcdata': -1.655, 'bmdata': -1.669, 'axis': 4.0}, {'color': 0.14275218373289067, 'db': 'NBC1', 'sys': 'BzBz_S-4.2', 'error': [0.01100000000000012], 'mcdata': -1.448, 'bmdata': -1.459, 'axis': 4.2}, {'color': 0.4740372133275638, 'db': 'NBC1', 'sys': 'BzBz_S-6.5', 'error': [0.0010000000000000009], 'mcdata': -0.028, 'bmdata': -0.029, 'axis': 6.5}, {'color': 0.6672504378283713, 'db': 'NBC1', 'sys': 'BzBz_S-10.0', 'error': [0.0], 'mcdata': 0.018, 'bmdata': 0.018, 'axis': 10.0}],
+    valerrdata = [{'color': 0.14255710779686612, 'db': 'NBC1', 'sys': 'BzBz_S-3.6', 'error': [0.027999999999999803], 'mcdata': -1.231, 'bmdata': -1.259, 'axis': 3.6}, {'color': 0.08862098445220466, 'db': 'NBC1', 'sys': 'BzBz_S-3.7', 'error': [0.02300000000000013], 'mcdata': -1.535, 'bmdata': -1.558, 'axis': 3.7}, {'color': 0.246634626511043, 'db': 'NBC1', 'sys': 'BzBz_S-3.4', 'error': [0.04200000000000001], 'mcdata': 0.189, 'bmdata': 0.147, 'axis': 3.4}, {'color': 0.19526236766857613, 'db': 'NBC1', 'sys': 'BzBz_S-3.5', 'error': [0.03500000000000003], 'mcdata': -0.689, 'bmdata': -0.724, 'axis': 3.5}, {'color': 0.3443039102164425, 'db': 'NBC1', 'sys': 'BzBz_S-3.2', 'error': [0.05999999999999961], 'mcdata': 3.522, 'bmdata': 3.462, 'axis': 3.2}, {'color': 0.29638827303466814, 'db': 'NBC1', 'sys': 'BzBz_S-3.3', 'error': [0.050999999999999934], 'mcdata': 1.535, 'bmdata': 1.484, 'axis': 3.3}, {'color': 0.42859228971962615, 'db': 'NBC1', 'sys': 'BzBz_S-6.0', 'error': [0.0020000000000000018], 'mcdata': -0.099, 'bmdata': -0.101, 'axis': 6.0}, {'color': 0.30970751839224836, 'db': 'NBC1', 'sys': 'BzBz_S-5.0', 'error': [0.0040000000000000036], 'mcdata': -0.542, 'bmdata': -0.546, 'axis': 5.0}, {'color': 0.3750832778147902, 'db': 'NBC1', 'sys': 'BzBz_S-5.5', 'error': [0.0030000000000000027], 'mcdata': -0.248, 'bmdata': -0.251, 'axis': 5.5}, {'color': 0.0335358832178858, 'db': 'NBC1', 'sys': 'BzBz_S-3.8', 'error': [0.019000000000000128], 'mcdata': -1.674, 'bmdata': -1.693, 'axis': 3.8}, {'color': 0.021704594689389095, 'db': 'NBC1', 'sys': 'BzBz_S-3.9', 'error': [0.016000000000000014], 'mcdata': -1.701, 'bmdata': -1.717, 'axis': 3.9}, {'color': 0.22096255119953187, 'db': 'NBC1', 'sys': 'BzBz_S-4.5', 'error': [0.008000000000000007], 'mcdata': -1.058, 'bmdata': -1.066, 'axis': 4.5}, {'color': 0.10884135031532088, 'db': 'NBC1', 'sys': 'BzBz_S-4.1', 'error': [0.01200000000000001], 'mcdata': -1.565, 'bmdata': -1.577, 'axis': 4.1}, {'color': 0.06911476296747143, 'db': 'NBC1', 'sys': 'BzBz_S-4.0', 'error': [0.014000000000000012], 'mcdata': -1.655, 'bmdata': -1.669, 'axis': 4.0}, {'color': 0.14275218373289067, 'db': 'NBC1', 'sys': 'BzBz_S-4.2', 'error': [0.01100000000000012], 'mcdata': -1.448, 'bmdata': -1.459, 'axis': 4.2}, {'color': 0.4740372133275638, 'db': 'NBC1', 'sys': 'BzBz_S-6.5', 'error': [0.0010000000000000009], 'mcdata': -0.028, 'bmdata': -0.029, 'axis': 6.5}, {'color': 0.6672504378283713, 'db': 'NBC1', 'sys': 'BzBz_S-10.0', 'error': [0.0], 'mcdata': 0.018, 'bmdata': 0.018, 'axis': 10.0}]
+    valerr({'cat': valerrdata},
         color='sapt', xtitle='Rang', title='aggh', graphicsformat=['png'])

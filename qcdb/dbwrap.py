@@ -19,10 +19,16 @@ import psiutil
 import textables
 
 
-def initialize_errors(e=None, pe=None, pbe=None, pce=None, extrema=True):
-    """
+def initialize_errors():
+    """Form OrderedDict of all possible statistical measures set to None"""
+    error = OrderedDict()
+    for e in ['e', 'pe', 'pbe', 'pce']:
+        for m in ['pex', 'nex', 'max', 'min', 'm', 'ma', 'rms', 'std']:
+            error[m + e] = None
+    return error
 
-    """
+
+def initialize_errors_elaborate(e=None, pe=None, pbe=None, pce=None, extrema=True):
     error = OrderedDict()
     error['maxe'] = None if (e is None or not extrema) else e  # LD_XA
     error['mine'] = None if (e is None or not extrema) else e  # LD_XI
@@ -62,6 +68,8 @@ def average_errors(*args):
     Ndb = float(len(args))
     avgerror = initialize_errors()
     try:
+        avgerror['pexe'] = max([x['pexe'] for x in args])
+        avgerror['nexe'] = min([x['nexe'] for x in args])
         avgerror['maxe'] = max([x['maxe'] for x in args], key=lambda x: abs(x))
         avgerror['mine'] = min([x['mine'] for x in args], key=lambda x: abs(x))
         avgerror['me'] = sum([x['me'] for x in args]) / Ndb
@@ -69,6 +77,8 @@ def average_errors(*args):
         avgerror['rmse'] = sum([x['rmse'] for x in args]) / Ndb  # TODO: unsure of op validity
         avgerror['stde'] = math.sqrt(sum([x['stde'] ** 2 for x in args]) / Ndb)
 
+        avgerror['pexpe'] = max([x['pexpe'] for x in args])
+        avgerror['nexpe'] = min([x['nexpe'] for x in args])
         avgerror['maxpe'] = max([x['maxpe'] for x in args], key=lambda x: abs(x))
         avgerror['minpe'] = min([x['minpe'] for x in args], key=lambda x: abs(x))
         avgerror['mpe'] = sum([x['mpe'] for x in args]) / Ndb
@@ -76,6 +86,8 @@ def average_errors(*args):
         avgerror['rmspe'] = sum([x['rmspe'] for x in args]) / Ndb  # TODO: unsure of op validity
         avgerror['stdpe'] = math.sqrt(sum([x['stdpe'] * x['stdpe'] for x in args]) / Ndb)
 
+        avgerror['pexpbe'] = max([x['pexpbe'] for x in args])
+        avgerror['nexpbe'] = min([x['nexpbe'] for x in args])
         avgerror['maxpbe'] = max([x['maxpbe'] for x in args], key=lambda x: abs(x))
         avgerror['minpbe'] = min([x['minpbe'] for x in args], key=lambda x: abs(x))
         avgerror['mpbe'] = sum([x['mpbe'] for x in args]) / Ndb
@@ -83,6 +95,8 @@ def average_errors(*args):
         avgerror['rmspbe'] = sum([x['rmspbe'] for x in args]) / Ndb  # TODO: unsure of op validity
         avgerror['stdpbe'] = math.sqrt(sum([x['stdpbe'] * x['stdpbe'] for x in args]) / Ndb)
 
+        avgerror['pexpce'] = max([x['pexpce'] for x in args])
+        avgerror['nexpce'] = min([x['nexpce'] for x in args])
         avgerror['maxpce'] = max([x['maxpce'] for x in args], key=lambda x: abs(x))
         avgerror['minpce'] = min([x['minpce'] for x in args], key=lambda x: abs(x))
         avgerror['mpce'] = sum([x['mpce'] for x in args]) / Ndb
@@ -119,13 +133,15 @@ def format_errors(err, mode=1):
 
     if mode == 2:
         sdict = OrderedDict()
-        for lbl in ['maxe', 'mine', 'me', 'mae', 'rmse', 'stde']:
+        for lbl in ['pexe', 'nexe', 'maxe', 'mine', 'me', 'mae', 'rmse', 'stde']:
             sdict[lbl] = '        ----' if err[lbl] is None else fourdecimal.format(err[lbl])
-        for lbl in ['maxpe', 'minpe', 'mpe', 'mape', 'rmspe', 'stdpe',
-                    'maxpbe', 'minpbe', 'mpbe', 'mapbe', 'rmspbe', 'stdpbe',
-                    'maxpce', 'minpce', 'mpce', 'mapce', 'rmspce', 'stdpce']:
+        for lbl in ['pexpe', 'nexpe', 'maxpe', 'minpe', 'mpe', 'mape', 'rmspe', 'stdpe',
+                    'pexpbe', 'nexpbe', 'maxpbe', 'minpbe', 'mpbe', 'mapbe', 'rmspbe', 'stdpbe',
+                    'pexpce', 'nexpce', 'maxpce', 'minpce', 'mpce', 'mapce', 'rmspce', 'stdpce']:
             sdict[lbl] = '        ----' if err[lbl] is None else threedecimal.format(100 * err[lbl])
-        text = """min: {mine}{minpe}{minpbe}{minpce}\n""" \
+        text = """nex: {nexe}{nexpe}{nexpbe}{nexpce}\n""" \
+               """pex: {pexe}{pexpe}{pexpbe}{pexpce}\n""" \
+               """min: {mine}{minpe}{minpbe}{minpce}\n""" \
                """max: {maxe}{maxpe}{maxpbe}{maxpce}\n""" \
                """m:   {me}{mpe}{mpbe}{mpce}\n""" \
                """ma:  {mae}{mape}{mapbe}{mapce}\n""" \
@@ -136,11 +152,11 @@ def format_errors(err, mode=1):
     if mode == 3:
         sdict = OrderedDict()
         # shortblanks changed from empty strings Aug 2015
-        for lbl in ['maxe', 'mine', 'me', 'mae', 'rmse', 'stde']:
+        for lbl in ['pexe', 'nexe', 'maxe', 'mine', 'me', 'mae', 'rmse', 'stde']:
             sdict[lbl] = shortblank if err[lbl] is None else twodecimal.format(err[lbl])
-        for lbl in ['maxpe', 'minpe', 'mpe', 'mape', 'rmspe', 'stdpe',
-                    'maxpbe', 'minpbe', 'mpbe', 'mapbe', 'rmspbe', 'stdpbe',
-                    'maxpce', 'minpce', 'mpce', 'mapce', 'rmspce', 'stdpce']:
+        for lbl in ['pexpe', 'nexpe', 'maxpe', 'minpe', 'mpe', 'mape', 'rmspe', 'stdpe',
+                    'pexpbe', 'nexpbe', 'maxpbe', 'minpbe', 'mpbe', 'mapbe', 'rmspbe', 'stdpbe',
+                    'pexpce', 'nexpce', 'maxpce', 'minpce', 'mpce', 'mapce', 'rmspce', 'stdpce']:
             sdict[lbl] = shortblank if err[lbl] is None else onedecimal.format(100 * err[lbl])
         return sdict
 
@@ -172,6 +188,20 @@ def string_contrast(ss):
     middle = ['' if mc is None else next(miditer) for mc in ss]
 
     return prefix, suffix, middle
+
+
+def oxcom(lst):
+    """Returns gramatical comma separated string of *lst*."""
+    lst = [str(l) for l in lst]
+
+    if not lst:
+        return ''
+    elif len(lst) == 1:
+        return lst[0]
+    elif len(lst) == 2:
+        return ' and '.join(lst)
+    else:
+        return ', and '.join([', '.join(lst[:-1]), lst[-1]])
 
 
 def cure_weight(refrxn, refeq, rrat, xi=0.2):
@@ -218,7 +248,7 @@ def fancify_mc_tag(mc, latex=False):
         if latex:
             text = r"""%20s / %-20s %s""" % (methods[mtd].latex, bases[bas].latex, mod)
         else:
-            text = r"""%20s / %-20s, %s""" % (methods[mtd].fullname, bases[bas].fullname, mod)
+            text = r"""%20s / %s, %s""" % (methods[mtd].fullname, bases[bas].fullname, mod)
     return text
 
 
@@ -255,23 +285,23 @@ class ReactionDatum(object):
 
         """
         # computational method
-        if method.upper() in methods:
+        try:
             tmp_method = methods[method.upper()]
-        else:
-            raise ValidationError("""Invalid ReactionDatum method %s.""" % (method))
+        except KeyError, e:
+            raise ValidationError("""Invalid ReactionDatum method %s: %s""" % (method, e))
         # computational basis set
-        if basis.lower() in bases:
+        try:
             tmp_basis = bases[basis.lower()]
-        else:
-            raise ValidationError("""Invalid ReactionDatum basis %s.""" % (basis))
+        except KeyError, e:
+            raise ValidationError("""Invalid ReactionDatum basis %s: %s""" % (basis, e))
         # publication
         if citation is None:
             tmp_pub = citation
         else:
-            if citation.lower() in pubs:
+            try:
                 tmp_pub = pubs[citation.lower()]
-            else:
-                raise ValidationError("""Invalid ReactionDatum publication %s.""" % (citation))
+            except KeyError, e:
+                raise ValidationError("""Invalid ReactionDatum publication %s: %s""" % (citation, e))
         return cls(dbse, rxn, tmp_method, mode, tmp_basis, value, units, citation=tmp_pub, doi=doi, comment=comment)
 
     def __str__(self):
@@ -467,8 +497,9 @@ class Reaction(object):
 
     def plot(self, benchmark='default', mcset='default',
              failoninc=True, verbose=False, color='sapt',
-             xlimit=4.0, labeled=True, saveas=None, mousetext=None, mouselink=None, mouseimag=None,
-             mousetitle=None, mousediv=None, relpath=False, graphicsformat=['pdf']):
+             xlimit=4.0, labeled=True, view=True,
+             mousetext=None, mouselink=None, mouseimag=None, mousetitle=None, mousediv=None,
+             saveas=None, relpath=False, graphicsformat=['pdf']):
         """Computes individual errors over model chemistries in *mcset* (which
         may be default or an array or a function generating an array) versus
         *benchmark*. Thread *color* can be 'rgb' for old coloring, a color
@@ -520,9 +551,10 @@ class Reaction(object):
         else:
             # if running from Canopy, call mpl directly
             filedict, htmlcode = mpl.threads(dbdat, color=color, title=title, labels=labels, mae=mae, mape=mape,
-                                             xlimit=xlimit, labeled=labeled, saveas=saveas, mousetext=mousetext, mouselink=mouselink,
+                                             xlimit=xlimit, labeled=labeled, view=view,
+                                             mousetext=mousetext, mouselink=mouselink,
                                              mouseimag=mouseimag, mousetitle=mousetitle, mousediv=mousediv,
-                                             relpath=relpath, graphicsformat=graphicsformat)
+                                             saveas=saveas, relpath=relpath, graphicsformat=graphicsformat)
             return filedict, htmlcode
 
 
@@ -835,7 +867,7 @@ class WrappedDatabase(object):
 
         """
         if (self.dbse == dbse):
-            if rxn in self.hrxn.keys():
+            if rxn in self.hrxn:
                 rxnname = rxn  # rxn is proper reaction name
             else:
                 try:
@@ -846,7 +878,7 @@ class WrappedDatabase(object):
                         """Inconsistent to add ReactionDatum for %s to database %s with reactions %s.""" %
                         (dbse + '-' + str(rxn), self.dbse, self.hrxn.keys()))
             label = '-'.join([method, mode, basis])
-            if overwrite or (label not in self.hrxn[rxnname].data.keys()):
+            if overwrite or (label not in self.hrxn[rxnname].data):
                 self.hrxn[rxnname].data[label] = ReactionDatum.library_modelchem(dbse=dbse, rxn=rxnname,
                                                                                  method=method, mode=mode, basis=basis,
                                                                                  value=value, units=units,
@@ -866,7 +898,8 @@ class WrappedDatabase(object):
         label = sname.pop(0)
         tagl = sname[0].strip() if sname else None
         try:
-            lsslist = [rxn for rxn in self.sset['default'].keys() if rxn in func(self)]
+            filtered = func(self)
+            lsslist = [rxn for rxn in self.sset['default'].keys() if rxn in filtered]
         except TypeError, e:
             raise ValidationError("""Function %s did not return list: %s.""" % (func.__name__, str(e)))
         if len(lsslist) == 0:
@@ -922,8 +955,11 @@ class WrappedDatabase(object):
             try:
                 mcGreater = oRxn.data[lbench].value
             except KeyError, e:
-                print """Reaction %s missing benchmark""" % (str(rxn))
-                continue
+                if lbench == 'ZEROS':
+                    pass
+                else:
+                    print """Reaction %s missing benchmark""" % (str(rxn))
+                    continue
             # handle particulars of PEC error measures
 #            rxncureinfo = cureinfo[rxn]
 #            try:
@@ -934,7 +970,11 @@ class WrappedDatabase(object):
 #            cure_denom = cure_weight(refrxn=mcGreater, refeq=mcGreaterCrvmin, rrat=rxncureinfo['Rrat'])
 #            balanced_mask, balwt = balanced_error(refrxn=mcGreater, refeq=mcGreaterCrvmin, rrat=rxncureinfo['Rrat'])
 
-            err[rxn] = [mcLesser - mcGreater,
+            if lbench == 'ZEROS':
+                err[rxn] = [mcLesser,
+                            0.0, 0.0, 0.0, 1.0]  # FAKE
+            else:
+                err[rxn] = [mcLesser - mcGreater,
                         (mcLesser - mcGreater) / abs(mcGreater),
                         (mcLesser - mcGreater) / abs(mcGreater),  # FAKE
                         (mcLesser - mcGreater) / abs(mcGreater),  # FKAE
@@ -968,6 +1008,8 @@ class WrappedDatabase(object):
             error = OrderedDict()
             # linear (absolute) error
             linear = [val[0] for val in err.values()]
+            error['pexe'] = max(linear)
+            error['nexe'] = min(linear)
             error['maxe'] = max(linear, key=lambda x: abs(x))
             error['mine'] = min(linear, key=lambda x: abs(x))
             error['me'] = sum(linear) / Nrxn
@@ -976,6 +1018,8 @@ class WrappedDatabase(object):
             error['stde'] = math.sqrt((sum(map(lambda x: x ** 2, linear)) - (sum(linear) ** 2) / Nrxn) / Nrxn)
             # fractional (relative) error
             relative = [val[1] for val in err.values()]
+            error['pexpe'] = max(relative)
+            error['nexpe'] = min(relative)
             error['maxpe'] = max(relative, key=lambda x: abs(x))
             error['minpe'] = min(relative, key=lambda x: abs(x))
             error['mpe'] = sum(relative) / Nrxn
@@ -985,6 +1029,8 @@ class WrappedDatabase(object):
             # balanced (relative) error
             balanced = [val[3] for val in err.values()]
             balwt = sum([val[4] for val in err.values()])  # get the wt fn. highly irregular TODO
+            error['pexpbe'] = max(balanced)
+            error['nexpbe'] = min(balanced)
             error['maxpbe'] = max(balanced, key=lambda x: abs(x))
             error['minpbe'] = min(balanced, key=lambda x: abs(x))
             error['mpbe'] = sum(balanced) / balwt #Nrxn
@@ -993,6 +1039,8 @@ class WrappedDatabase(object):
             error['stdpbe'] = None  # get math domain errors w/wt in denom math.sqrt((sum(map(lambda x: x ** 2, balanced)) - (sum(balanced) ** 2) / balwt) / balwt) #/ Nrxn) / Nrxn)
             # capped (relative) error
             capped = [val[2] for val in err.values()]
+            error['pexpce'] = max(capped)
+            error['nexpce'] = min(capped)
             error['maxpce'] = max(capped, key=lambda x: abs(x))
             error['minpce'] = min(capped, key=lambda x: abs(x))
             error['mpce'] = sum(capped) / Nrxn
@@ -1136,7 +1184,7 @@ class WrappedDatabase(object):
         if *union* is False.
 
         """
-        mcs = [set(v.data) for k, v in self.hrxn.items()]
+        mcs = [set(v.data) for v in self.hrxn.itervalues()]
         if union:
             return sorted(set.union(*mcs))
         else:
@@ -1372,7 +1420,7 @@ class Database(object):
             else:
                 if latex:
                     tmp = """%s/%s, %s""" % \
-                          (methods[mtd].latex, bases[bas].latex, mod)
+                          (methods[mtd].latex, bases[bas].latex, mod.replace('_', '\\_'))
                     fmcs[mc] = """%45s""" % (tmp)
                 else:
                     fmcs[mc] = """%20s / %-20s, %s""" % \
@@ -1472,12 +1520,15 @@ class Database(object):
             else:
                 ssfunc = lambda x: func[db]
             odb.add_Subset(name=name, func=ssfunc)
-            if name in odb.sset.keys():
+            if name in odb.sset:
                 merged.append(name)
             else:
                 merged.append(None)
-        self.sset[label] = merged
-        print """Database %s: Subset %s formed: %s""" % (self.dbse, label, self.sset[label])
+        if any(merged):
+            self.sset[label] = merged
+            print """Database %s: Subset %s formed: %s""" % (self.dbse, label, self.sset[label])
+        else:
+            print """Database %s: Subset %s NOT formed: empty""" % (self.dbse, label)
 
     def add_Subset_union(self, name, sslist):
         """
@@ -1522,6 +1573,31 @@ class Database(object):
                 ssname = prefix + '_' + str(sidx)
             random_sample(ssname)
 
+    def promote_Subset(self, name=None):
+        """Examine component databases and elevate subset *name* not necessarily
+        present for all component databases to a subset for the *self*. When *name*
+        is None, promotes all subsets found for component databases. Also promotes
+        entirety of each component database as a subset with name of component
+        database dbse in lowercase.
+
+        """
+        if name is None:
+            sss = [set(odb.sset.keys()) for db, odb in self.dbdict.items()]
+            new = sorted(set.union(*sss))
+        else:
+            new = [name]
+        for ss in new:
+            if ss not in self.sset:
+                self.sset[ss] = [ss if ss in odb.sset else None for db, odb in self.dbdict.iteritems()]
+                print """Database %s: Subset %s promoted: %s""" % (self.dbse, ss, self.sset[ss])
+        if name is None and len(self.dbdict) > 1:
+            for db, odb in self.dbdict.items():
+                dbix = self.dbdict.keys().index(db)
+                ss = odb.dbse.lower()
+                if ss not in self.sset:
+                    self.sset[ss] = ['default' if ix == dbix else None for ix in range(len(self.dbdict))]
+                    print """Database %s: Subset %s promoted: %s""" % (self.dbse, ss, self.sset[ss])
+
     def _intersect_subsets(self):
         """Examine component database subsets and collect common names as
         Database subset.
@@ -1537,7 +1613,7 @@ class Database(object):
         Database modelchem.
 
         """
-        mcs = [set(odb.available_modelchems()) for db, odb in self.dbdict.items()]
+        mcs = [set(odb.available_modelchems()) for odb in self.dbdict.itervalues()]
         new = sorted(set.intersection(*mcs))
         for mc in new:
             self.mcs[mc] = [mc] * len(self.dbdict.keys())
@@ -1573,7 +1649,7 @@ class Database(object):
             else:
                 errors[db], indiv[db] = odb.compute_statistics(self.mcs[modelchem][dbix],
                                                                sset=self.sset[sset][dbix],
-                                                               benchmark=self.mcs[benchmark][dbix],
+                                                               benchmark='ZEROS' if benchmark == 'ZEROS' else self.mcs[benchmark][dbix],
                                                                failoninc=failoninc, verbose=verbose, returnindiv=True)
                 actvdb.append(errors[db])
         errors[self.dbse] = average_errors(*actvdb)
@@ -1631,7 +1707,7 @@ class Database(object):
         print text
 
     def plot_bars(self, modelchem, benchmark='default', sset=['default', 'hb', 'mx', 'dd'],
-                  failoninc=True, verbose=False,
+                  failoninc=True, verbose=False, view=True,
                   saveas=None, relpath=False, graphicsformat=['pdf']):
         """Prepares 'grey bars' diagram for each model chemistry in array
         *modelchem* versus *benchmark* over all component databases. A wide bar
@@ -1679,6 +1755,7 @@ class Database(object):
         else:
             # if running from Canopy, call mpl directly
             filedict = mpl.bars(dbdat, title=title,
+                                view=view,
                                 saveas=saveas, relpath=relpath, graphicsformat=graphicsformat)
             return filedict
 
@@ -1708,39 +1785,55 @@ class Database(object):
         """
 
         """
-        # compute errors
-        mc = modelchem
-        errors, indiv = self.compute_statistics(mc, benchmark=benchmark, sset=sset,
-                                                failoninc=failoninc, verbose=verbose, returnindiv=True)
-        # repackage
-        dbdat = []
-        for db, odb in self.dbdict.iteritems():
-            dbix = self.dbdict.keys().index(db)
-            oss = odb.oss[self.sset[sset][dbix]]
-            # TODO may need to make axis name distributable across wrappeddbs
-            # TODO not handling mc present bm absent
-            if indiv[db] is not None:
-                for rxn in oss.hrxn:
-                    rxnix = oss.hrxn.index(rxn)
-                    bm = self.mcs[benchmark][dbix]
-                    if bm is None or bm not in odb.hrxn[rxn].data:
-                        dbdat.append({'db': db,
-                                      'sys': str(rxn),
-                                      'color': odb.hrxn[rxn].color,
-                                      'mcdata': odb.hrxn[rxn].data[self.mcs[mc][dbix]].value,
-                                      'bmdata': None,
-                                      'error': [None],
-                                      'axis': oss.axis[axis][rxnix]})
+        dbdatdict = OrderedDict()
+        for mc in modelchem:
+            # compute errors
+            errors, indiv = self.compute_statistics(mc, benchmark=benchmark, sset=sset,
+                                                    failoninc=failoninc, verbose=verbose, returnindiv=True)
+            # repackage
+            dbdat = []
+            for db, odb in self.dbdict.iteritems():
+                dbix = self.dbdict.keys().index(db)
+                oss = odb.oss[self.sset[sset][dbix]]
+                # TODO may need to make axis name distributable across wrappeddbs
+                # TODO not handling mc present bm absent
+                if indiv[db] is not None:
+                    for rxn in oss.hrxn:
+                        rxnix = oss.hrxn.index(rxn)
+                        bm = self.mcs[benchmark][dbix]
+                        bmpresent = False if (bm is None or bm not in odb.hrxn[rxn].data) else True
+                        mcpresent = False if (self.mcs[mc][dbix] not in odb.hrxn[rxn].data) else True
+                        entry = {'db': db,
+                                 'sys': str(rxn),
+                                 'color': odb.hrxn[rxn].color,
+                                 'axis': oss.axis[axis][rxnix]}
 
-                    else:
-                        dbdat.append({'db': db,
-                                      'sys': str(rxn),
-                                      'color': odb.hrxn[rxn].color,
-                                      'mcdata': odb.hrxn[rxn].data[self.mcs[mc][dbix]].value,
-                                      'bmdata': odb.hrxn[rxn].data[self.mcs[benchmark][dbix]].value,
-                                      'error': [indiv[db][rxn][0]],
-                                      'axis': oss.axis[axis][rxnix]})
-        title = """%s vs %s axis %s for %s subset %s""" % (mc, benchmark, axis, self.dbse, sset)
+                        if bmpresent:
+                            entry['bmdata'] = odb.hrxn[rxn].data[self.mcs[benchmark][dbix]].value
+                        else:
+                            entry['bmdata'] = None
+
+                        if mcpresent:
+                            entry['mcdata'] = odb.hrxn[rxn].data[self.mcs[mc][dbix]].value
+                        else:
+                            continue
+
+                        if bmpresent and mcpresent:
+                            entry['error'] = [indiv[db][rxn][0]]
+                        else:
+                            entry['error'] = [None]
+                        dbdat.append(entry)
+            dbdatdict[fancify_mc_tag(mc).strip()] = dbdat
+
+        pre, suf, mid = string_contrast(modelchem)
+        title = """%s[%s]%s vs %s axis %s for %s subset %s""" % (pre, str(len(mid)), suf, benchmark, axis, self.dbse, sset)
+        print title
+        #for mc, dbdat in dbdatdict.iteritems():
+        #    print mc
+        #    for d in dbdat:
+        #        print '{:20s} {:8.2f}    {:8.2f} {:8.2f}'.format(d['sys'], d['axis'],
+        #            0.0 if d['bmdata'] is None else d['bmdata'],
+        #            0.0 if d['mcdata'] is None else d['mcdata'])
         # generate matplotlib instructions and call or print
         try:
             import mpl
@@ -1751,7 +1844,7 @@ class Database(object):
                   (dbdat, color, title, axis, view, repr(saveas), repr(relpath), repr(graphicsformat))
         else:
             # if running from Canopy, call mpl directly
-            filedict = mpl.valerr(dbdat, color=color, title=title, xtitle=axis,
+            filedict = mpl.valerr(dbdatdict, color=color, title=title, xtitle=axis,
                                   view=view,
                                   saveas=saveas, relpath=relpath, graphicsformat=graphicsformat)
             return filedict
@@ -1787,7 +1880,7 @@ class Database(object):
             for rxn, orxn in odb.hrxn.iteritems():
                 lss = self.sset[sset][dbix]
                 if lss is not None:
-                    if rxn in odb.sset[lss].keys():
+                    if rxn in odb.sset[lss]:
                         dbrxn = orxn.dbrxn
                         try:
                             elst = saptdata['SAPT ELST ENERGY'][dbrxn]
@@ -1812,6 +1905,7 @@ class Database(object):
 
     def plot_ternary(self, sset='default', labeled=True,
         pythonpath='/Users/loriab/linux/bfdb/sapt_punt', failoninc=True,  # pythonpath=None
+        view=True,
         saveas=None, relpath=False, graphicsformat=['pdf']):
         """This is a stopgap function that loads sapt component data from
         sapt_punt in bfdb repo, then formats it to plot a ternary diagram.
@@ -1839,11 +1933,13 @@ class Database(object):
         else:
             # if running from Canopy, call mpl directly
             filedict = mpl.ternary(dbdat, title=title, labeled=labeled,
+                                   view=view,
                                    saveas=saveas, relpath=relpath, graphicsformat=graphicsformat)
             return filedict
 
     def plot_flat(self, modelchem, benchmark='default', sset='default',
-                  failoninc=True, verbose=False, color='sapt', xlimit=4.0, view=True,
+                  failoninc=True, verbose=False, color='sapt', xlimit=4.0, xlines=[0.0, 0.3, 1.0],
+                  view=True,
                   saveas=None, relpath=False, graphicsformat=['pdf']):
         """Computes individual errors and summary statistics for single
         model chemistry *modelchem* versus *benchmark* over
@@ -1887,12 +1983,12 @@ class Database(object):
             import matplotlib.pyplot as plt
         except ImportError:
             # if not running from Canopy, print line to execute from Canopy
-            print """filedict = mpl.flat(%s,\n    color='%s',\n    title='%s',\n    mae=%s,\n    mape=%s,\n    xlimit=%s,\n    view=%s\n    saveas=%s\n    relpath=%s\n    graphicsformat=%s)\n\n""" % \
-                  (dbdat, color, mc, mae, mape, xlimit, view, repr(saveas), repr(relpath), repr(graphicsformat))
+            print """filedict = mpl.flat(%s,\n    color='%s',\n    title='%s',\n    mae=%s,\n    mape=%s,\n    xlimit=%s,\n    xlines=%s,\n    view=%s\n    saveas=%s\n    relpath=%s\n    graphicsformat=%s)\n\n""" % \
+                  (dbdat, color, mc, mae, mape, xlimit, repr(xlines), view, repr(saveas), repr(relpath), repr(graphicsformat))
         else:
             # if running from Canopy, call mpl directly
             filedict = mpl.flat(dbdat, color=color, title=mc, mae=mae, mape=mape,
-                                xlimit=xlimit, view=view,
+                                xlimit=xlimit, xlines=xlines, view=view,
                                 saveas=saveas, relpath=relpath, graphicsformat=graphicsformat)
             return filedict
 
@@ -1965,11 +2061,11 @@ reinitialize
         rhrxn = OrderedDict()
         for db, odb in self.dbdict.items():
             dbix = self.dbdict.keys().index(db)
-            for rxn, orxn in odb.hrxn.iteritems():
-                lss = self.sset[sset][dbix]
-                if lss is not None:
-                    if rxn in odb.sset[lss].keys():
-                        # rhrxn[rxn] = orxn
+            lss = self.sset[sset][dbix]
+            if lss is not None:
+                for rxn in odb.hrxn:
+                    if rxn in odb.sset[lss]:
+                        orxn = odb.hrxn[rxn]
                         rhrxn[orxn.dbrxn] = orxn  # this is a change and conflict with vergil version
         return rhrxn
 
@@ -1998,7 +2094,7 @@ reinitialize
         """
         dbdat = []
         rhrxn = self.get_hrxn(sset=sset)
-        for dbrxn, orxn in rhrxn.iteritems():
+        for orxn in rhrxn.itervalues():
             dbix = self.dbdict.keys().index(orxn.dbrxn.split('-')[0])
             lmc = self.mcs[modelchem][dbix]
             lbm = self.mcs[benchmark][dbix]
@@ -2029,8 +2125,35 @@ reinitialize
             #     dbdat.append((lmc, lbm, orxn))
         return dbdat
 
+    def get_missing_reactions(self, modelchem, sset='default'):
+        """Returns a dictionary (keys self.dbse and all component
+        WrappedDatabase.dbse) of two elements, the first being the number
+        of reactions *sset* should contain and the second being a list of
+        the reaction names (dbrxn) not available for *modelchem*. Absence
+        of benchmark not considered.
+
+        """
+        counts = OrderedDict()
+        counts[self.dbse] = [0, []]
+        soledb = True if (len(self.dbdict) == 1 and self.dbdict.items()[0][0] == self.dbse) else False
+        if not soledb:
+            for db in self.dbdict.keys():
+                counts[db] = [0, []]
+        for (lmc, lbm, orxn) in self.get_reactions(modelchem, benchmark='default',
+                                                   sset=sset, failoninc=False):
+            db, rxn = orxn.dbrxn.split('-', 1)
+            mcdatum = orxn.data[lmc].value if lmc else None
+            counts[self.dbse][0] += 1
+            if not soledb:
+                counts[db][0] += 1
+            if mcdatum is None:
+                counts[self.dbse][1].append(orxn.dbrxn)
+                if not soledb:
+                    counts[db][1].append(orxn.dbrxn)
+        return counts
+
     def plot_disthist(self, modelchem, benchmark='default', sset='default',
-                      failoninc=True, verbose=False, xtitle='',
+                      failoninc=True, verbose=False, xtitle='', view=True,
                       saveas=None, relpath=False, graphicsformat=['pdf']):
         """Computes individual errors and summary statistics for single
         model chemistry *modelchem* versus *benchmark* over
@@ -2073,13 +2196,15 @@ reinitialize
         else:
             # if running from Canopy, call mpl directly
             filedict = mpl.disthist(dbdat, title=title, xtitle=xtitle, me=me, stde=stde,
+                                    view=view,
                                     saveas=saveas, relpath=relpath, graphicsformat=graphicsformat)
             return filedict
 
     def plot_modelchems(self, modelchem, benchmark='default', mbenchmark=None,
                         sset='default', msset=None, failoninc=True, verbose=False, color='sapt',
-                        xlimit=4.0, labeled=True, saveas=None, mousetext=None, mouselink=None, mouseimag=None,
-                        mousetitle=None, mousediv=None, relpath=False, graphicsformat=['pdf']):
+                        xlimit=4.0, labeled=True, view=True,
+                        mousetext=None, mouselink=None, mouseimag=None, mousetitle=None, mousediv=None,
+                        saveas=None, relpath=False, graphicsformat=['pdf']):
         """Computes individual errors and summary statistics over all component
         databases for each model chemistry in array *modelchem* versus *benchmark*
         over subset *sset*. *mbenchmark* and *msset* are array options (same
@@ -2129,12 +2254,12 @@ reinitialize
         # repackage
         dbdat = []
         for db, odb in self.dbdict.items():
-            dbindbdict = self.dbdict.keys().index(db)
-            for rxn in odb.hrxn.keys():
+            dbix = self.dbdict.keys().index(db)
+            for rxn in odb.hrxn:
                 data = []
                 for ix in index:
                     if indiv[ix][db] is not None:
-                        if rxn in odb.sset[self.sset[lsset[index.index(ix)]][dbindbdict]].keys():
+                        if rxn in odb.sset[self.sset[lsset[index.index(ix)]][dbix]]:
                             try:
                                 data.append(indiv[ix][db][rxn][0])
                             except KeyError, e:
@@ -2170,14 +2295,51 @@ reinitialize
         else:
             # if running from Canopy, call mpl directly
             filedict, htmlcode = mpl.threads(dbdat, color=color, title=title, labels=ixmid, mae=mae, mape=mape,
-                                             xlimit=xlimit, labeled=labeled, saveas=saveas, mousetext=mousetext, mouselink=mouselink,
+                                             xlimit=xlimit, labeled=labeled, view=view,
+                                             mousetext=mousetext, mouselink=mouselink,
                                              mouseimag=mouseimag, mousetitle=mousetitle, mousediv=mousediv,
-                                             relpath=relpath, graphicsformat=graphicsformat)
+                                             saveas=saveas, relpath=relpath, graphicsformat=graphicsformat)
             return filedict, htmlcode
+
+    def plot_liliowa(self, modelchem, benchmark='default',
+                     failoninc=True, xlimit=2.0, view=True,
+                     saveas=None, relpath=False, graphicsformat=['pdf']):
+        """
+
+        Note that not possible to access sset of component databases. That is, for Database SSIBBI, SSI-only arylaryl is accessible b/c not defined in BBI, but SSI-only neutral is not accessible.
+        """
+        # compute errors
+        mc = modelchem
+        errors = {}
+        for ss in self.sset.keys():
+            errors[ss] = self.compute_statistics(mc, benchmark=benchmark, sset=ss,
+                                                 failoninc=failoninc, verbose=False, returnindiv=False)
+
+        # repackage
+        dbdat = []
+        ssarray = ['pospos', 'posneg', 'pospolar', 'posaliph', 'posaryl',
+                   None, 'negneg', 'negpolar', 'negaliph', 'negaryl',
+                   None, None, 'polarpolar', 'polaraliph', 'polararyl',
+                   None, None, None, 'aliphaliph', 'alipharyl',
+                   None, None, None, None, 'arylaryl']
+        for ss in ssarray:
+            dbdat.append(0.0 if ss is None else errors[ss][self.dbse]['mae'])
+
+        # generate matplotlib instructions and call or print
+        try:
+            import mpl
+            import matplotlib.pyplot as plt
+        except ImportError:
+            print 'Matplotlib not avail'
+        else:
+            filedict = mpl.liliowa(dbdat, xlimit=xlimit, view=view,
+                                saveas=saveas, relpath=relpath, graphicsformat=graphicsformat)
+            return filedict
 
     def plot_iowa(self, modelchem, benchmark='default', sset='default',
                   failoninc=True, verbose=False,
                   title='', xtitle='', xlimit=2.0,
+                  view=True,
                   saveas=None, relpath=False, graphicsformat=['pdf']):
         """Computes individual errors for single *modelchem* versus
         *benchmark* over subset *sset*. Coloring green-to-purple with
@@ -2211,6 +2373,7 @@ reinitialize
         else:
             # if running from Canopy, call mpl directly
             filedict = mpl.iowa(dbdat, dblbl, title=title, xtitle=xtitle, xlimit=xlimit,
+                                view=view,
                                 saveas=saveas, relpath=relpath, graphicsformat=graphicsformat)
             return filedict
 
@@ -2443,7 +2606,7 @@ reinitialize
                     for block, blkerrors in serrors.iteritems():
                         if blkerrors:  # skip e.g., NBC block in HB of DB4
                             tablelines.append(r"""\hline""")
-                            summlines = [[] for i in range(6)]
+                            summlines = [[] for i in range(8)]
                             for col in columnplan:
                                 if col == field_to_put_labels[0]:
                                     summlines[0].append(
@@ -2451,18 +2614,22 @@ reinitialize
                                         ('' if sset == 'default' else sset + r""" $\subset$ """,
                                          block,
                                          '' if isComplete else r""", \textit{partial}"""))
-                                    summlines[1].append(r"""\textit{Minimal Error}         """)
-                                    summlines[2].append(r"""\textit{Maximal Error}         """)
-                                    summlines[3].append(r"""\textit{Mean Signed Error}     """)
-                                    summlines[4].append(r"""\textit{Mean Absolute Error}   """)
-                                    summlines[5].append(r"""\textit{Root-Mean-Square Error}""")
+                                    summlines[1].append(r"""\textit{Minimal Signed Error}   """)
+                                    summlines[2].append(r"""\textit{Minimal Absolute Error} """)
+                                    summlines[3].append(r"""\textit{Maximal Signed Error}   """)
+                                    summlines[4].append(r"""\textit{Maximal Absolute Error} """)
+                                    summlines[5].append(r"""\textit{Mean Signed Error}      """)
+                                    summlines[6].append(r"""\textit{Mean Absolute Error}    """)
+                                    summlines[7].append(r"""\textit{Root-Mean-Square Error} """)
                                 elif col in ['e', 'pe']:
                                     summlines[0].append('')
-                                    summlines[1].append(blkerrors['min' + col])
-                                    summlines[2].append(blkerrors['max' + col])
-                                    summlines[3].append(blkerrors['m' + col])
-                                    summlines[4].append(blkerrors['ma' + col])
-                                    summlines[5].append(blkerrors['rms' + col])
+                                    summlines[1].append(blkerrors['nex' + col])
+                                    summlines[2].append(blkerrors['min' + col])
+                                    summlines[3].append(blkerrors['pex' + col])
+                                    summlines[4].append(blkerrors['max' + col])
+                                    summlines[5].append(blkerrors['m' + col])
+                                    summlines[6].append(blkerrors['ma' + col])
+                                    summlines[7].append(blkerrors['rms' + col])
                                 else:
                                     for ln in range(len(summlines)):
                                         summlines[ln].append('')
@@ -2504,9 +2671,14 @@ reinitialize
 
     def table_wrapper(self, mtd, bas, tableplan, benchmark='default',
                       opt=['CP'], err=['mae'], sset=['default'], dbse=None,
+                      opttarget=None,
                       failoninc=True,
-                      plotpath='analysis/flats/flat_', subjoin=True,
+                      xlimit=4.0, xlines=[0.0, 0.3, 1.0],
+                      ialimit=2.0,
+                      plotpath='autogen',
+                      subjoin=True,
                       title=None, indextitle=None,
+                      suppressblanks=False,
                       standalone=True, theme=None, filename=None):
         """Prepares dictionary of errors for all combinations of *mtd*, *opt*,
         *bas* with respect to model chemistry *benchmark*, mindful of *failoninc*.
@@ -2519,17 +2691,73 @@ reinitialize
 
         """
         # get plan for table from *tableplan* and some default values
+        kwargs = {'plotpath': plotpath,
+                  'subjoin': subjoin,
+                  'xlines': xlines,
+                  'xlimit': xlimit,
+                  'ialimit': ialimit}
         rowplan, columnplan, landscape, footnotes, \
-        suggestedtitle, suggestedtheme = tableplan(plotpath=plotpath, subjoin=subjoin)
+        suggestedtitle, suggestedtheme = tableplan(**kwargs)
+        #suggestedtitle, suggestedtheme = tableplan(plotpath=plotpath, subjoin=subjoin)
+
+        # make figure files write themselves
+        autothread = {}
+        autoliliowa = {}
+        if plotpath == 'autogen':
+            for col in columnplan:
+                if col[3].__name__ == 'flat':
+                    if col[4] and autothread:
+                        print 'TODO: merge not handled'
+                    elif col[4] or autothread:
+                        autothread.update(col[4])
+                    else:
+                        autothread = {'dummy': True}
+                elif col[3].__name__ == 'liliowa':
+                    autoliliowa = {'dummy': True}
 
         # negotiate some defaults
         dbse = [self.dbse] if dbse is None else dbse
         theme = suggestedtheme if theme is None else theme
         title = suggestedtitle if title is None else title
         indextitle = title if indextitle is None else indextitle
+        opttarget = {'default': ['']} if opttarget is None else opttarget
+
+        def unify_options(orequired, opossible):
+            """Perform a merge of options tags in *orequired* and *opossible* so
+            that the result is free of duplication and has the mode at the end.
+
+            """
+            opt_combos = []
+            for oreq in orequired:
+                for opos in opossible:
+                    pieces = sorted(set(oreq.split('_') + opos.split('_')))
+                    if '' in pieces:
+                        pieces.remove('')
+                    for mode in ['CP', 'unCP', 'SA']:
+                        if mode in pieces:
+                            pieces.remove(mode)
+                            pieces.append(mode)
+                    pieces = '_'.join(pieces)
+                    opt_combos.append(pieces)
+            return opt_combos
 
         # gather list of model chemistries for table
         mcs = ['-'.join(prod) for prod in itertools.product(mtd, opt, bas)]
+        mc_translator = {}
+        for m, o, b in itertools.product(mtd, opt, bas):
+            nominal_mc = '-'.join([m, o, b])
+            for oo in unify_options([o], opttarget['default']):
+                trial_mc = '-'.join([m, oo, b])
+                try:
+                    perr = self.compute_statistics(trial_mc, benchmark=benchmark, sset='default',  # prob. too restrictive by choosing subset
+                                                   failoninc=False, verbose=False, returnindiv=False)
+                except KeyError, e:
+                    continue
+                else:
+                    mc_translator[nominal_mc] = trial_mc
+                    break
+            else:
+                mc_translator[nominal_mc] = None
 
         # compute errors
         serrors = {}
@@ -2537,16 +2765,40 @@ reinitialize
             serrors[mc] = {}
             for ss in self.sset.keys():
                 serrors[mc][ss] = {}
-                if mc in self.mcs.keys():
-                    perr = self.compute_statistics(mc, benchmark=benchmark, sset=ss,
+                if mc_translator[mc] in self.mcs:
+                    # Note: not handling when one component Wdb has one translated pattern and another another
+                    perr = self.compute_statistics(mc_translator[mc], benchmark=benchmark, sset=ss,
                                                    failoninc=failoninc, verbose=False, returnindiv=False)
                     serrors[mc][ss][self.dbse] = format_errors(perr[self.dbse], mode=3)
+                    if not failoninc:
+                        mcsscounts = self.get_missing_reactions(mc_translator[mc], sset=ss)
+                        serrors[mc][ss][self.dbse]['tgtcnt'] = mcsscounts[self.dbse][0]
+                        serrors[mc][ss][self.dbse]['misscnt'] = len(mcsscounts[self.dbse][1])
+                    if autothread:
+                        if ('sset' in autothread and ss in autothread['sset']) or ('sset' not in autothread):
+                            mcssplots = self.plot_flat(mc_translator[mc], benchmark=benchmark, sset=ss,
+                                failoninc=failoninc, color='sapt', xlimit=xlimit, xlines=xlines, view=False,
+                                saveas='flat_' + '-'.join([self.dbse, ss, mc]), relpath=True, graphicsformat=['pdf'])
+                            serrors[mc][ss][self.dbse]['plotflat'] = mcssplots['pdf']
+                    if autoliliowa and ss == 'default':
+                            mcssplots = self.plot_liliowa(mc_translator[mc], benchmark=benchmark,
+                                failoninc=failoninc, xlimit=ialimit, view=False,
+                                saveas='liliowa_' + '-'.join([self.dbse, ss, mc]), relpath=True, graphicsformat=['pdf'])
+                            serrors[mc][ss][self.dbse]['plotliliowa'] = mcssplots['pdf']
                     for db in self.dbdict.keys():
-                        serrors[mc][ss][db] = None if perr[db] is None else format_errors(perr[db], mode=3)
+                        if perr[db] is None:
+                            serrors[mc][ss][db] = None
+                        else:
+                            serrors[mc][ss][db] = format_errors(perr[db], mode=3)
+                            if not failoninc:
+                                serrors[mc][ss][db]['tgtcnt'] = mcsscounts[db][0]
+                                serrors[mc][ss][db]['misscnt'] = len(mcsscounts[db][1])
                 else:
                     serrors[mc][ss][self.dbse] = format_errors(initialize_errors(), mode=3)
                     for db in self.dbdict.keys():
                         serrors[mc][ss][db] = format_errors(initialize_errors(), mode=3)
+        for key in serrors.keys():
+            print """{:>35}{:>35}{}""".format(key, mc_translator[key], serrors[key]['default'][self.dbse]['mae'])
 
         # find indices that would be neglected in a single sweep over table_generic
         keysinplan = set(sum([col[-1].keys() for col in columnplan], rowplan))
@@ -2563,12 +2815,6 @@ reinitialize
         if standalone:
             tablelines += textables.begin_latex_document()
 
-        # if plotpath == 'autogen':  # TODO make fig files write themselves
-        #     plotpath = os.environ['HOME'] + os.sep + 'flat_'
-        #     for mc in mcs:
-        #         self.plot_flat(mc)
-        #     # TODO isn't going to work if sset in rowplan
-
         for io in iteroers:
             actvargs = dict(zip(obvious.keys(), [[k] for k in io]))
             nudbse = actvargs['dbse'] if 'dbse' in actvargs else dbse
@@ -2581,8 +2827,10 @@ reinitialize
             table, index = textables.table_generic(
                 mtd=numtd, bas=nubas, opt=nuopt, err=nuerr, sset=nusset, dbse=nudbse,
                 rowplan=rowplan, columnplan=columnplan, serrors=serrors,
-                plotpath=plotpath, subjoin=subjoin,
+                plotpath='' if plotpath == 'autogen' else plotpath,
+                subjoin=subjoin,
                 title=title, indextitle=indextitle,
+                suppressblanks=suppressblanks,
                 landscape=landscape, footnotes=footnotes,
                 standalone=False, theme=theme)
 
@@ -3261,3 +3509,5 @@ class ThreeDatabases(Database):
 fnreservoir = {}
 fnreservoir['blankslat'] = r"""Errors with respect to Benchmark. Guide lines are at 0, 0.3, and 1.0 kcal/mol overbound ($-$) and underbound ($+$)."""
 fnreservoir['5min'] = r"""Only equilibrium and near-equilibrium systems included. (All S22 and HSG, 50/194 NBC10, 28/118 HBC6.)"""
+fnreservoir['liliowa'] = r"""{0}MAE (dark by {1} kcal/mol) for subsets in residue classes cation, anion, polar, aliphatic, \& aromatic (L to R)."""
+fnreservoir['flat'] = r"""{0}Errors with respect to benchmark within $\pm${1} kcal/mol. Guide lines are at {2} overbound ($-$) and underbound ($+$)."""

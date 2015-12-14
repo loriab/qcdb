@@ -170,16 +170,19 @@ def divide_and_commit(mol):
 
         frag_pattern = mol.BFS()
         mol = mol.auto_fragments()
-        Nmol1 = mol.fragments[0][1] - mol.fragments[0][0] + 1
-        Nmol2 = mol.fragments[1][1] - mol.fragments[1][0] + 1
 
-        print "%-25s %6d %6d %6d %6d %6d\t\t%s" % (system, CHGsyst, MLPsyst, Nsyst, Nmol1, Nmol2, frag_pattern)
+        if mol.nfragments() == 2:
+            print "%-25s %6d %6d %6d %6d %6d\t\t%s" % (system, CHGsyst, MLPsyst, Nsyst,
+                mol.fragments[0][1] - mol.fragments[0][0] + 1,
+                mol.fragments[1][1] - mol.fragments[1][0] + 1,
+                frag_pattern)
+
+        else:
+            print "%-25s %6d %6d %6d %6d\t\t%s" % (system, CHGsyst, MLPsyst, Nsyst,
+                mol.fragments[0][1] - mol.fragments[0][0] + 1,
+                "ERROR: 2 fragments not detected")
+
         text = "GEOS['%%s-%%s-%%s' %% (dbse, '%s', 'dimer')] = qcdb.Molecule(\"\"\"\n" % (str(system))
-
-        if mol.nfragments() != 2:
-            print "ERROR: 2 fragments not detected for system %s." % (system)
-            print "       If you really have trimers or above, contact LAB to modify this script.\n"
-            sys.exit()
 
     else:
 

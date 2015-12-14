@@ -118,7 +118,7 @@ def genset_allneutral(dbinstance):
 
 def genset_anyanion(dbinstance):
     """anion
-    systems where any component in an anion
+    systems where any component is an anion
 
     """
     eligible = []

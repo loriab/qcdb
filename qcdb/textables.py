@@ -1,3 +1,4 @@
+import re
 import sys
 import itertools
 try:
@@ -7,11 +8,15 @@ except ImportError:
 from qcdb.modelchems import Method, BasisSet, Error, methods, bases, errors
 
 mc_archive = {'mtd': methods, 'bas': bases, 'err': errors}
+fancy_mc_archive = {}
+for tier in [methods, bases, errors]:
+    for k, v in tier.iteritems():
+        fancy_mc_archive[k] = v.latex
 
 
 # define helper functions for formatting table cells
 def val(kw):
-    return r"""%s""" % (kw['matelem'])
+    return r"""%s%s""" % (kw['matelem'], kw['footnote'])
 
 
 def graphics(kw):
@@ -19,12 +24,46 @@ def graphics(kw):
     return r"""\includegraphics[width=6.67cm,height=3.5mm]{%s%s.pdf}""" % (kw['plotpath'], mc)
 
 
+def flat(kw):
+    if kw['matelem'].strip():
+        dbssmc = '-'.join([kw[bit] for bit in ['dbse', 'sset', 'mtd', 'opt', 'bas']])
+        return r"""\includegraphics[width=6.67cm,height=3.5mm]{%sflat_%s.pdf}""" % (kw['plotpath'], dbssmc)
+    else:
+        return ''
+
+
+def liliowa(kw):
+    if kw['matelem'].strip():
+        dbssmc = '-'.join([kw[bit] for bit in ['dbse', 'sset', 'mtd', 'opt', 'bas']])
+        return r"""\includegraphics[height=3.5mm]{%sliliowa_%s.pdf}""" % (kw['plotpath'], dbssmc)
+    else:
+        return ''
+
+
 def lmtdbas(kw):
     return """%-25s""" % (methods[kw['mtd']].latex + '/' + bases[kw['bas']].latex)
 
 
 def label(kw):
-    return """ %-25s""" % (mc_archive[kw['target']][kw[kw['target']]].latex)
+    kwt = kw['target']
+    return """ %-25s""" % (mc_archive[kwt][kw[kwt]].latex if kwt in mc_archive else kw[kwt])
+
+
+def label2(kw):
+    """This and fancy_mc_archive are experimental alternative for
+    summoning up col/row headers. Safe so long as mtd/bas/opt have
+    orthogonal keys.
+
+    """
+    try:
+        return fancy_mc_archive[kw]
+    except KeyError, e:
+        print 'Consider adding {} to modelchems.py'.format(e)
+        return kw
+
+
+def count(kw):
+    return r"""%6d""" % (kw['count'])
 
 
 def empty(kw):
@@ -34,7 +73,7 @@ def empty(kw):
 def table_generic(dbse, serrors,
     mtd, bas, columnplan, rowplan=['bas', 'mtd'],
     opt=['CP'], err=['mae'], sset=['default'],
-    landscape=False, standalone=True, subjoin=True,
+    landscape=False, standalone=True, subjoin=True, suppressblanks=False,
     footnotes=[], title='', indextitle='',
     plotpath='', theme=''):
     """
@@ -53,7 +92,7 @@ def table_generic(dbse, serrors,
         text.append(r"""\squeezetable""")
         text.append(r"""\begin{%s}[h!tp]""" % ('sidewaystable' if landscape else 'table'))
         text.append(r"""\renewcommand{\baselinestretch}{1}""")
-        text.append(r"""\caption{%s""" % (title.format(**fancy_kw)))
+        text.append(r"""\caption{%s""" % (title.format(**fancy_kw).replace('_', '\\_')))
         text.append(r"""\label{%s}}""" % (ref))
         indices.append(r"""\scriptsize \ref{%s} & \scriptsize %s \\ """ % \
             (ref, indextitle.format(**fancy_kw)))
@@ -66,10 +105,51 @@ def table_generic(dbse, serrors,
 
     def table_footer():
         """Form table footer"""
+
+        # search-and-replace footnotes
+        fnmatch = re.compile(r"""(?P<cellpre>.*)""" + r"""(\\footnotemark)\{(?P<fntext>.*)\}""" + r"""(?P<cellpost>.*)""")
+        otfcounter = len(footnotes) + 1
+        lines2replace = {}
+        otffootnotes = OrderedDict()
+        for idx, line in enumerate(text):
+            newcells = []
+            changed = False
+            for cell in line.split('&'):
+                res = fnmatch.match(cell)
+                if res:
+                    if res.group('fntext') in otffootnotes:
+                        localcounter = otffootnotes[res.group('fntext')]
+                    else:
+                        localcounter = otfcounter
+                        if localcounter == 52:  # fn symbols run out at "zz"
+                            otffootnotes['Missing some reactions'] = localcounter
+                        else:
+                            otfcounter += 1
+                            otffootnotes[res.group('fntext')] = localcounter
+                    newcells.append(res.group('cellpre') + r"""\footnotemark[""" + str(localcounter) + ']' + res.group('cellpost'))
+                    changed = True
+                else:
+                    newcells.append(cell)
+            if changed:
+                lines2replace[idx] = '&'.join(newcells)
+        for idx, line in lines2replace.iteritems():
+            text[idx] = line
+
+        # search-and-suppress "blank" lines
+        if suppressblanks:
+            for idx, line in enumerate(text):
+                if line.strip().endswith('\\'):
+                    innards = ''.join(line.rstrip(""" \\""").split('&')[1:])
+                    if innards.isspace():
+                        text[idx] = '%' + text[idx]
+
+        # finish out table
         text.append(r"""\end{tabular}""")
         text.append(r"""\end{ruledtabular}""")
         for idx, fn in enumerate(footnotes):
             text.append(r"""\footnotetext[%d]{%s}""" % (idx + 1, fn))
+        for fn, idx in otffootnotes.iteritems():
+            text.append(r"""\footnotetext[%d]{%s}""" % (idx, fn))
         text.append(r"""\end{%s}""" % ('sidewaystable' if landscape else 'table'))
         text.append(r"""\endgroup""")
         text.append(r"""\clearpage""")
@@ -78,7 +158,14 @@ def table_generic(dbse, serrors,
     def matelem(dict_row, dict_col):
         """Return merge of index dictionaries *dict_row* and *dict_col* (precedence) with error string from serrors appended at key 'matelem'."""
         kw = dict(dict_row, **dict_col)
-        kw['matelem'] = serrors['-'.join([kw[bit] for bit in ['mtd', 'opt', 'bas']])][kw['sset']][kw['dbse']][kw['err']]
+        errpiece = serrors['-'.join([kw[bit] for bit in ['mtd', 'opt', 'bas']])][kw['sset']][kw['dbse']]
+        kw['matelem'] = errpiece[kw['err']]
+        if 'tgtcnt' in errpiece:
+            kw['count'] = errpiece['tgtcnt']
+        if 'misscnt' in errpiece and errpiece['misscnt'] != 0 and 'tgtcnt' in errpiece:
+            kw['footnote'] = r"""\footnotemark{Missing %d of %d reactions.}""" % (errpiece['misscnt'], errpiece['tgtcnt'])
+        else:
+            kw['footnote'] = ''
         return kw
 
     # avoid misunderstandings
@@ -149,13 +236,15 @@ def table_generic(dbse, serrors,
                 table_header(kw, abbr, head1, head0, head2)
             if text[-1] != hline:
                 text.append(hline)
-            text.append(r"""\textbf{%s} \\ """ % (mc_archive[rowplan[0]][hier0].latex))
+            #text.append(r"""\textbf{%s} \\ """ % (mc_archive[rowplan[0]][hier0].latex))
+            text.append(r"""\textbf{%s} \\ """ % (label2(hier0)))
 
             for hier1 in locals()[rowplan[1]]:
                 kw[rowplan[1]] = hier1
                 kw['target'] = rowplan[1]
                 if nH > 2:
-                    text.append(r"""\enspace\textbf{%s} \\ """ % (mc_archive[rowplan[1]][hier1].latex))
+                    #text.append(r"""\enspace\textbf{%s} \\ """ % (mc_archive[rowplan[1]][hier1].latex))
+                    text.append(r"""\enspace\textbf{%s} \\ """ % (label2(hier1)))
 
                     for hier2 in locals()[rowplan[2]]:
                         kw[rowplan[2]] = hier2
