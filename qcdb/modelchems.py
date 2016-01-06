@@ -318,8 +318,10 @@ _tlist = [
     BasisSet('dzf12',      fullname='cc-pVDZ-F12'),
     BasisSet('tzf12',      fullname='cc-pVTZ-F12'),
     BasisSet('qzf12',      fullname='cc-pVQZ-F12'),
+    BasisSet('5zf12',      fullname='cc-pV5Z-F12'),
     BasisSet('dtzf12',     fullname='cc-pVDTZ-F12', build=[['dtzf12'], ['tzf12', 'dtzf12']]),
     BasisSet('tqzf12',     fullname='cc-pVTQZ-F12', build=[['tqzf12'], ['qzf12', 'tqzf12']]),
+    BasisSet('q5zf12',     fullname='cc-pVQ5Z-F12', build=[['q5zf12'], ['5zf12', 'q5zf12']]),
     BasisSet('hill1_adtz', build=[['hillcc_adtz'], ['atz', 'hillcc_adtz']]),  # TODO should have None or non-xtpl first element?
     BasisSet('hill1_atqz', build=[['hillcc_atqz'], ['aqz', 'hillcc_atqz']]),
     BasisSet('hill1_aq5z', build=[['hillcc_aq5z'], ['a5z', 'hillcc_aq5z']]),

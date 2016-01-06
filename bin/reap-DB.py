@@ -584,16 +584,20 @@ else:
         dwcc['atz'] = omega([0.4, 0.6, ratio_HFCABS_MP2F12.xs('atz', level='bstrt')])
     except KeyError as e:
         pass
-    df_omega = pd.concat(dwcc)
 
-    df_omega['psivar'] = 'DW-CCSD(T)-F12 OMEGA'
-    df_omega.set_index('psivar', append=True, inplace=True)
-    df_omega = df_omega.reorder_levels([0, 3, 1, 2])
-    df_omega.index.names = ['bstrt', 'psivar', 'meta', 'rxn']
+    if len(dwcc) == 0:
+        print 'NOT HANDLED, missing valid basis set'
+    else:
+        df_omega = pd.concat(dwcc)
 
-    df = df.append(df_omega, verify_integrity=True)
-    if verbose > 0:
-        print 'SUCCESS'
+        df_omega['psivar'] = 'DW-CCSD(T)-F12 OMEGA'
+        df_omega.set_index('psivar', append=True, inplace=True)
+        df_omega = df_omega.reorder_levels([0, 3, 1, 2])
+        df_omega.index.names = ['bstrt', 'psivar', 'meta', 'rxn']
+
+        df = df.append(df_omega, verify_integrity=True)
+        if verbose > 0:
+            print 'SUCCESS'
 
 
 #     <<< (T*)-F12 & (T**)-F12 >>>
@@ -1217,7 +1221,7 @@ elif project == 'parenq':
 
 elif project == 'f12dilabio':
     mtds = [mtd for mtd in methods if ((mtd == 'HFCABS' or 'F12' in mtd) and ('SC' not in mtd and 'MP2C' not in mtd and 'DWMP2' not in mtd))]
-    bass = ['adz', 'atz', 'aqz', 'a5z', 'dzf12', 'tzf12', 'qzf12',
+    bass = ['adz', 'atz', 'aqz', 'a5z', 'dzf12', 'tzf12', 'qzf12', '5zf12',
             'adtz', 'atqz', 'aq5z', 'dtzf12', 'tqzf12',
             'hill1_adtz', 'hill1_atqz', 'hill1_aq5z', 'hill1_dtzf12', 'hill1_tqzf12']
     opts = ['']
@@ -1402,7 +1406,8 @@ def threadtheframe(modelchem, xlimit=4.0):
         dbdat.append({'sys': str(rxn), 'color': dbobj.dbdict[dbobj.dbse].hrxn[rxn].color, 'data': data})
     qcdb.mpl.thread(dbdat, modelchem, color='sapt', xlimit=xlimit)
 
-if project == 'f12dilabio':
+# commented 5 Jan 2016, below is fine but lacks bypass if pieces missing
+if False and project == 'f12dilabio':
     mine['CCSDTNSBF12-CP-hill2_adtz'] = build_from_lists(['HF-CABS TOTAL ENERGY', 'CCSD-F12B CORRELATION ENERGY', '(T)-F12AB CORRECTION ENERGY'], ['atz', 'hillcc_adtz', 'hillt_adtz'])
 
 # commented 27 April 2015, missing MP2-full
