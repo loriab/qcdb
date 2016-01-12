@@ -74,6 +74,7 @@ while not user_obedient:
 print """
  XYZ file extension.
     All files with this extension in the current directory will be processed
+    [file.sdf]       Read single file with $-delimited MOL format
 """
 fext = raw_input('    fext = [xyz] ').strip()
 if fext == "":
@@ -156,36 +157,10 @@ BINDRGT = {}
 
 print "\n%-25s %6s %6s %6s %6s %6s\t\t%s\n" % ("system", "CHGsyst", "MLPsyst", "Natom", "Nmol1", "Nmol2", "Fragmentation Pattern")
 
-for xyzfile in sorted(glob.glob('*.' + fext) + glob.glob('*.p4m')):
 
-    # ascertain system name and open file
-    system = os.path.splitext(xyzfile)[0]
-    HRGT.append(system)
+def divide_and_commit(mol):
 
-    f = open(xyzfile, 'r')
-    text = f.readlines()
-    f.close()
-
-    # use Molecule object to read geometry in xyz file
-    mol = qcdb.Molecule.init_with_xyz(xyzfile, no_com=True, no_reorient=True)
     Nsyst = mol.natom()
-
-    # alter second line
-    if line2 == 'cgmp':
-        pass
-    elif line2 == 'comment':
-        mol.set_molecular_charge(0)
-        mol.fragment_charges[0] = 0
-        mol.set_multiplicity(1)
-        mol.fragment_multiplicities[0] = 1
-        mol.tagline = text[1].strip()
-    elif line2 == 'trash':
-        mol.set_molecular_charge(0)
-        mol.fragment_charges[0] = 0
-        mol.set_multiplicity(1)
-        mol.fragment_multiplicities[0] = 1
-        mol.tagline = ""
-
     CHGsyst = mol.molecular_charge()
     MLPsyst = mol.multiplicity()
     TAGLRGT[system] = mol.tagline
@@ -195,26 +170,82 @@ for xyzfile in sorted(glob.glob('*.' + fext) + glob.glob('*.p4m')):
 
         frag_pattern = mol.BFS()
         mol = mol.auto_fragments()
-        Nmol1 = mol.fragments[0][1] - mol.fragments[0][0] + 1
-        Nmol2 = mol.fragments[1][1] - mol.fragments[1][0] + 1
 
-        print "%-25s %6d %6d %6d %6d %6d\t\t%s" % (system, CHGsyst, MLPsyst, Nsyst, Nmol1, Nmol2, frag_pattern)
-        gpy += "GEOS['%%s-%%s-%%s' %% (dbse, '%s', 'dimer')] = qcdb.Molecule(\"\"\"\n" % (str(system))
+        if mol.nfragments() == 2:
+            print "%-25s %6d %6d %6d %6d %6d\t\t%s" % (system, CHGsyst, MLPsyst, Nsyst,
+                mol.fragments[0][1] - mol.fragments[0][0] + 1,
+                mol.fragments[1][1] - mol.fragments[1][0] + 1,
+                frag_pattern)
 
-        if mol.nfragments() != 2:
-            print "ERROR: 2 fragments not detected for system %s." % (system)
-            print "       If you really have trimers or above, contact LAB to modify this script.\n"
-            sys.exit()
+        else:
+            print "%-25s %6d %6d %6d %6d\t\t%s" % (system, CHGsyst, MLPsyst, Nsyst,
+                mol.fragments[0][1] - mol.fragments[0][0] + 1,
+                "ERROR: 2 fragments not detected")
+
+        text = "GEOS['%%s-%%s-%%s' %% (dbse, '%s', 'dimer')] = qcdb.Molecule(\"\"\"\n" % (str(system))
 
     else:
 
         print "%-25s %6d %6d %6d %6d %6d" % (system, CHGsyst, MLPsyst, Nsyst, Nsyst, 0)
-        gpy += "GEOS['%%s-%%s-%%s' %% (dbse, '%s', 'reagent')] = qcdb.Molecule(\"\"\"\n" % (str(system))
+        text = "GEOS['%%s-%%s-%%s' %% (dbse, '%s', 'reagent')] = qcdb.Molecule(\"\"\"\n" % (str(system))
 
-    gpy += mol.create_psi4_string_from_molecule()
-    gpy += """\"\"\")\n\n"""
+    text += mol.create_psi4_string_from_molecule()
+    text += """\"\"\")\n\n"""
 
-    count += 1
+    return text
+
+if fext.endswith('.sdf'):
+    lines = open(fext).read()
+    mols = lines.split('$' + os.linesep)
+    for mol in mols:
+
+        #if not mol:
+        if len(mol.splitlines()) < 5:
+            continue
+
+        # use Molecule object to read geometry in xyz file
+        mol = qcdb.Molecule.init_with_mol2(mol, no_com=True, no_reorient=True,
+                                           contentsNotFilename=True)
+
+        # ascertain system name
+        system = mol.tagline.split()[0].replace('-', '_')
+        HRGT.append(system)
+
+        gpy += divide_and_commit(mol)
+        count += 1
+
+else:
+    for xyzfile in sorted(glob.glob('*.' + fext) + glob.glob('*.p4m')):
+
+        # ascertain system name and open file
+        system = os.path.splitext(xyzfile)[0]
+        HRGT.append(system)
+
+        f = open(xyzfile, 'r')
+        text = f.readlines()
+        f.close()
+
+        # use Molecule object to read geometry in xyz file
+        mol = qcdb.Molecule.init_with_xyz(xyzfile, no_com=True, no_reorient=True)
+
+        # alter second line
+        if line2 == 'cgmp':
+            pass
+        elif line2 == 'comment':
+            mol.set_molecular_charge(0)
+            mol.fragment_charges[0] = 0
+            mol.set_multiplicity(1)
+            mol.fragment_multiplicities[0] = 1
+            mol.tagline = text[1].strip()
+        elif line2 == 'trash':
+            mol.set_molecular_charge(0)
+            mol.fragment_charges[0] = 0
+            mol.set_multiplicity(1)
+            mol.fragment_multiplicities[0] = 1
+            mol.tagline = ""
+
+        gpy += divide_and_commit(mol)
+        count += 1
 
 Nrgt = len(HRGT)
 if Nrgt != count:

@@ -12,14 +12,25 @@ import qcdb
 
 homewrite = '.'
 dbnet = {}
-dbnet['S22'] = ['dft', 'saptone', 'pt2']
-dbnet['NBC10'] = ['dft', 'saptone', 'pt2']
-dbnet['HBC6'] = ['dft', 'saptone', 'pt2']
-dbnet['HSG'] = ['dft', 'saptone', 'pt2']
-dbnet['SSI'] = ['bfdbmm', 'merz3', 'dfit']
-dbnet['PCONF'] = ['dfit']
-dbnet['DB4'] = ['dft', 'saptone', 'pt2']
-dbnet['NBC10ext'] = []
+#dbnet['S22'] = ['dft', 'saptone', 'pt2']
+#dbnet['NBC10'] = ['dft', 'saptone', 'pt2']
+#dbnet['HBC6'] = ['dft', 'saptone', 'pt2']
+#dbnet['HSG'] = ['dft', 'saptone', 'pt2']
+#dbnet['SSI'] = ['saptmisc', 'bfdbmm', 'dfit', 'bfdbdft', 'pt2misc', 'ccmisc']
+#dbnet['BBI'] = ['saptmisc', 'bfdbmm', 'dfit', 'bfdbdft', 'pt2misc', 'ccmisc']
+#dbnet['PCONF'] = ['dfit']
+#dbnet['SCONF'] = ['dfit']
+#dbnet['ACONF'] = ['dfit']
+#dbnet['CYCONF'] = ['dfit']
+#dbnet['DB4'] = ['dft', 'saptone', 'pt2']
+#dbnet['NBC10ext'] = ['dfit']
+#dbnet['ACHC'] = ['saptmisc', 'dfit']
+#dbnet['UBQ'] = ['saptmisc', 'bfdbmm']
+#dbnet['S22by7'] = ['saptmisc']
+#dbnet['S66'] = ['saptmisc']
+#dbnet['A24'] = ['dilabio']
+#dbnet['JSCH'] = ['saptmisc']
+#dbnet[''] = []
 
 for db, lproj in dbnet.iteritems():
     print '\n<<< %s >>>' % (db)
@@ -31,6 +42,7 @@ for db, lproj in dbnet.iteritems():
     dbse = asdf.dbse
     t1 = time.time()
     print '%-70s %8.1f' % ('database.py --> Database', t1-t0)
+    print 'Benchmark', asdf.benchmark
 
     Dbfilename = homewrite + '/' + db + '_Db.pickle'
     with open(Dbfilename, 'wb') as handle:

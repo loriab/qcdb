@@ -138,6 +138,28 @@ def prepare_options_for_psi4(options):
     return text
 
 
+def prepare_options_for_qchem(options):
+    """Function to take the full snapshot of the liboptions object
+    encoded in dictionary *options*, find the options directable toward
+    Q-Chem (options['QCHEM']['QCHEM_**']) that aren't default, then write
+    a Q-Chem deck with those options.
+
+    """
+    text = ''
+
+    for opt, val in options['QCHEM'].items():
+        if opt.startswith('QCHEM_'):
+            if val['has_changed']:
+                if not text:
+                    text += """$rem\n"""
+                text += """%-20s %s\n""" % (opt[6:], val['value'])
+                #text += """%s=%s\n""" % (format_option_for_cfour(opt, val['value']))
+    if text:
+        text += """$end\n\n"""
+
+    return text
+
+
 def reconcile_options(full, partial):
     """Function to take the full snapshot of the liboptions object
     encoded in dictionary *full* and reconcile it with proposed options

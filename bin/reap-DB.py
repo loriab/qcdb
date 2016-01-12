@@ -23,6 +23,7 @@ parser.add_argument('-d', '--dbmodule', help='force choice of database module, d
 parser.add_argument('-p', '--project', help='select pre-configured project')
 parser.add_argument('-v', '--verbose', type=int, default=1, help='amount of printing')
 parser.add_argument('-o', '--outdir', default='.', help='directory to write output files')
+parser.add_argument('-i', '--usemedir', help='directory containing input data files, defaults to project value')
 args = parser.parse_args()
 
 project = args.project
@@ -76,11 +77,16 @@ elif project == 'saptone':
     dbse = 'S22'
     path = r"""/Users/loriab/linux/qcdb/data/pt2usemefiles/"""
 
+elif project == 'saptmisc':
+    #dbse = 'ACHC', 'BBI', 'S22by7', 'S66', 'SSI', 'UBQ'
+    dbse = 'ACHC'
+    path = r"""/Users/loriab/linux/qcdb/data/saptmiscusemefiles/"""
+
 # not tested
-#dbse = 'BBI'
-elif project == 'merz3':
+elif project in ['pt2misc', 'ccmisc']:
     dbse = 'SSI'
-    path = r"""/Users/loriab/linux/qcdb/data/merz3usemefiles/"""
+    #path = r"""/Users/loriab/linux/qcdb/data/merz3usemefiles/"""
+    path = r"""/Users/loriab/linux/qcdb/data/bfdbwfnusemefiles/"""
 
 # not tested
 #dbse = 'S22'
@@ -91,11 +97,16 @@ elif project == 'sflow':
     dbse = 'S22'
     path = r"""/Users/loriab/linux/qcdb/data/flowusemefiles/"""
 
-elif project == 'dfit':
-    dbse = 'HBC6'
+elif project in ['dfit', 'dfitm']:
+    #dbse = 'HBC6'
     #dbse = 'NBC10ext'
     #dbse = 'ACONF'
+    dbse = 'SSI'
     path = r"""/Users/loriab/linux/Refitting_DFT_D/Databases/usemefiles/"""
+
+elif project in ['bfdbdftm', 'bfdbdft']:
+    dbse = 'SSI'
+    path = r"""/Users/loriab/linux/qcdb/data/bfdbdftusemefiles/"""
 
 elif project == 'nbcref':
     dbse = 'NBC10ext'
@@ -105,6 +116,13 @@ elif project == 'curveref':
     dbse = 'S22by7'
     path = r"""/Users/loriab/linux/Refitting_DFT_D/Databases/usemefiles/"""
 
+elif project == 'silver':
+    dbse = 'PCONF'
+    path = r"""/Users/loriab/linux/Refitting_DFT_D/Databases/usemefiles/"""
+
+elif project == 'fcnfc':
+    pass
+
 else:
     raise ValidationError("""Project %s not defined.""" % (project))
 
@@ -112,6 +130,7 @@ else:
 # <<< learn about Database: rgts, rxns, modes, and stoichiometry
 
 dbse = dbse if args.dbmodule is None else args.dbmodule
+path = path if args.usemedir is None else args.usemedir
 dbobj = qcdb.Database(dbse, loadfrompickle=True)
 dbse = dbobj.dbse
 print '<<<', dbse, '>>>'
@@ -136,7 +155,7 @@ for mode in modes:
 dfstoich.index.names = ['rxn']
 h2kc = qcdb.psi_hartree2kcalmol
 if verbose > 1:
-    print 'DFSTOICH\n', names[:maxrgt+1], dfstoich.head(5)
+    print 'DFSTOICH\n', names[:maxrgt + 1], dfstoich.head(5)
 
 
 # <<< read usemefiles and convert to giant DataFrame >>>
@@ -173,7 +192,7 @@ for useme in usemeglob:
         raise ValidationError('Error: useme %s needs adding to useme2psivar in psivarrosetta.py' % (e))
 
     if piece.endswith('usemedash'):
-        tmp = pd.read_csv('%s' % (useme), index_col=0, sep='\s+', comment='#', na_values='None', names=names[:maxrgt+1])
+        tmp = pd.read_csv('%s' % (useme), index_col=0, sep='\s+', comment='#', na_values='None', names=names[:maxrgt + 1])
         rawdata[basis][useme2psivar[piece]][optns]['default'] = tmp.dropna(how='all')
         rawdata[basis][useme2psivar[piece]][optns]['CP'] = tmp.dropna(how='all')
     elif piece.endswith('usemesapt') or piece.endswith('usemedftsapt') or piece.endswith('usemempsapt'):
@@ -197,7 +216,7 @@ for useme in usemeglob:
                 else:
                     rawdata[basis][useme2psivar[pv]][optns]['SA'] = tmp2
     else:
-        tmp = pd.read_csv('%s' % (useme), index_col=0, sep='\s+', comment='#', na_values='None', names=names[:maxrgt+1])
+        tmp = pd.read_csv('%s' % (useme), index_col=0, sep='\s+', comment='#', na_values='None', names=names[:maxrgt + 1])
         cpmode.replace('unCP', 'default')
         rawdata[basis][useme2psivar[piece]][optns][cpmode] = tmp.dropna(how='all')
     if verbose > 1:
@@ -372,20 +391,28 @@ def correction(args):
     return base + plus - minus
 
 
+def average(args):
+    return sum(args) / len(args)
+
+
 # <<< append to main DataFrame basic psivar equalities not explicit to useme structure >>>
 
 lvl = 'psivar'
 pv0 = collections.OrderedDict()
 pv0['MP2-F12 TOTAL ENERGY'] = {'func': sum, 'args': ['HF-CABS TOTAL ENERGY', 'MP2-F12 CORRELATION ENERGY']}
+pv0['AVG-CCSD-F12 CORRELATION ENERGY'] = {'func': average, 'args': ['CCSD-F12A CORRELATION ENERGY', 'CCSD-F12B CORRELATION ENERGY']}
+pv0['AVG-CCSD-F12 TOTAL ENERGY'] = {'func': sum, 'args': ['HF-CABS TOTAL ENERGY', 'AVG-CCSD-F12 CORRELATION ENERGY']}
 pv0['CCSD-F12A TOTAL ENERGY'] = {'func': sum, 'args': ['HF-CABS TOTAL ENERGY', 'CCSD-F12A CORRELATION ENERGY']}
 pv0['CCSD-F12B TOTAL ENERGY'] = {'func': sum, 'args': ['HF-CABS TOTAL ENERGY', 'CCSD-F12B CORRELATION ENERGY']}
 pv0['CCSD-F12C TOTAL ENERGY'] = {'func': sum, 'args': ['HF-CABS TOTAL ENERGY', 'CCSD-F12C CORRELATION ENERGY']}
 #pv0['CCSD(T**)-F12A TOTAL ENERGY'] = {'func': sum, 'args': ['HF-CABS TOTAL ENERGY', 'CCSD(T**)-F12A CORRELATION ENERGY']}
 #pv0['CCSD(T**)-F12B TOTAL ENERGY'] = {'func': sum, 'args': ['HF-CABS TOTAL ENERGY', 'CCSD(T**)-F12B CORRELATION ENERGY']}
 #pv0['CCSD(T**)-F12C TOTAL ENERGY'] = {'func': sum, 'args': ['HF-CABS TOTAL ENERGY', 'CCSD(T**)-F12C CORRELATION ENERGY']}
+###pv0['AVG-CCSD(T)-F12 CORRELATION ENERGY'] = {'func': sum, 'args': ['AVG-CCSD-F12 CORRELATION ENERGY', '(T)-F12AB CORRECTION ENERGY']}
 pv0['CCSD(T)-F12A CORRELATION ENERGY'] = {'func': sum, 'args': ['CCSD-F12A CORRELATION ENERGY', '(T)-F12AB CORRECTION ENERGY']}
 pv0['CCSD(T)-F12B CORRELATION ENERGY'] = {'func': sum, 'args': ['CCSD-F12B CORRELATION ENERGY', '(T)-F12AB CORRECTION ENERGY']}
 pv0['CCSD(T)-F12C CORRELATION ENERGY'] = {'func': sum, 'args': ['CCSD-F12C CORRELATION ENERGY', '(T)-F12C CORRECTION ENERGY']}
+###pv0['AVG-CCSD(T)-F12 TOTAL ENERGY'] = {'func': sum, 'args': ['HF-CABS TOTAL ENERGY', 'AVG-CCSD(T)-F12 CORRELATION ENERGY']}
 pv0['CCSD(T)-F12A TOTAL ENERGY'] = {'func': sum, 'args': ['HF-CABS TOTAL ENERGY', 'CCSD(T)-F12A CORRELATION ENERGY']}
 pv0['CCSD(T)-F12B TOTAL ENERGY'] = {'func': sum, 'args': ['HF-CABS TOTAL ENERGY', 'CCSD(T)-F12B CORRELATION ENERGY']}
 pv0['CCSD(T)-F12C TOTAL ENERGY'] = {'func': sum, 'args': ['HF-CABS TOTAL ENERGY', 'CCSD(T)-F12C CORRELATION ENERGY']}
@@ -557,16 +584,20 @@ else:
         dwcc['atz'] = omega([0.4, 0.6, ratio_HFCABS_MP2F12.xs('atz', level='bstrt')])
     except KeyError as e:
         pass
-    df_omega = pd.concat(dwcc)
 
-    df_omega['psivar'] = 'DW-CCSD(T)-F12 OMEGA'
-    df_omega.set_index('psivar', append=True, inplace=True)
-    df_omega = df_omega.reorder_levels([0, 3, 1, 2])
-    df_omega.index.names = ['bstrt', 'psivar', 'meta', 'rxn']
+    if len(dwcc) == 0:
+        print 'NOT HANDLED, missing valid basis set'
+    else:
+        df_omega = pd.concat(dwcc)
 
-    df = df.append(df_omega, verify_integrity=True)
-    if verbose > 0:
-        print 'SUCCESS'
+        df_omega['psivar'] = 'DW-CCSD(T)-F12 OMEGA'
+        df_omega.set_index('psivar', append=True, inplace=True)
+        df_omega = df_omega.reorder_levels([0, 3, 1, 2])
+        df_omega.index.names = ['bstrt', 'psivar', 'meta', 'rxn']
+
+        df = df.append(df_omega, verify_integrity=True)
+        if verbose > 0:
+            print 'SUCCESS'
 
 
 #     <<< (T*)-F12 & (T**)-F12 >>>
@@ -642,10 +673,16 @@ pv1 = collections.OrderedDict()
 pv1['B3LYP-D2 TOTAL ENERGY'] = {'func': sum, 'args': ['B3LYP FUNCTIONAL TOTAL ENERGY', 'B3LYP-D2 DISPERSION CORRECTION ENERGY']}
 pv1['B3LYP-D3 TOTAL ENERGY'] = {'func': sum, 'args': ['B3LYP FUNCTIONAL TOTAL ENERGY', 'B3LYP-D3 DISPERSION CORRECTION ENERGY']}
 pv1['B3LYP-D3BJ TOTAL ENERGY'] = {'func': sum, 'args': ['B3LYP FUNCTIONAL TOTAL ENERGY', 'B3LYP-D3BJ DISPERSION CORRECTION ENERGY']}
+pv1['B3LYP-D3M TOTAL ENERGY'] = {'func': sum, 'args': ['B3LYP FUNCTIONAL TOTAL ENERGY', 'B3LYP-D3M DISPERSION CORRECTION ENERGY']}
+pv1['B3LYP-D3M3 TOTAL ENERGY'] = {'func': sum, 'args': ['B3LYP FUNCTIONAL TOTAL ENERGY', 'B3LYP-D3M3 DISPERSION CORRECTION ENERGY']}
+pv1['B3LYP-D3MBJ TOTAL ENERGY'] = {'func': sum, 'args': ['B3LYP FUNCTIONAL TOTAL ENERGY', 'B3LYP-D3MBJ DISPERSION CORRECTION ENERGY']}
 pv1['B3LYP-XDM TOTAL ENERGY'] = {'func': sum, 'args': ['B3LYP FUNCTIONAL TOTAL ENERGY', 'B3LYP-XDM DISPERSION CORRECTION ENERGY']}
 pv1['B2PLYP-D2 TOTAL ENERGY'] = {'func': sum, 'args': ['B2PLYP TOTAL ENERGY', 'B2PLYP-D2 DISPERSION CORRECTION ENERGY']}
 pv1['B2PLYP-D3 TOTAL ENERGY'] = {'func': sum, 'args': ['B2PLYP TOTAL ENERGY', 'B2PLYP-D3 DISPERSION CORRECTION ENERGY']}
 pv1['B2PLYP-D3BJ TOTAL ENERGY'] = {'func': sum, 'args': ['B2PLYP TOTAL ENERGY', 'B2PLYP-D3BJ DISPERSION CORRECTION ENERGY']}
+pv1['B2PLYP-D3M TOTAL ENERGY'] = {'func': sum, 'args': ['B2PLYP TOTAL ENERGY', 'B2PLYP-D3M DISPERSION CORRECTION ENERGY']}
+pv1['B2PLYP-D3M3 TOTAL ENERGY'] = {'func': sum, 'args': ['B2PLYP TOTAL ENERGY', 'B2PLYP-D3M3 DISPERSION CORRECTION ENERGY']}
+pv1['B2PLYP-D3MBJ TOTAL ENERGY'] = {'func': sum, 'args': ['B2PLYP TOTAL ENERGY', 'B2PLYP-D3MBJ DISPERSION CORRECTION ENERGY']}
 pv1['DSD-PBEP86-D2 TOTAL ENERGY'] = {'func': sum, 'args': ['DSD-PBEP86 TOTAL ENERGY', 'DSD-PBEP86-D2 DISPERSION CORRECTION ENERGY']}
 pv1['DSD-PBEP86-D3 TOTAL ENERGY'] = {'func': sum, 'args': ['DSD-PBEP86 TOTAL ENERGY', 'DSD-PBEP86-D3 DISPERSION CORRECTION ENERGY']}
 pv1['DSD-PBEP86-D3BJ TOTAL ENERGY'] = {'func': sum, 'args': ['DSD-PBEP86 TOTAL ENERGY', 'DSD-PBEP86-D3BJ DISPERSION CORRECTION ENERGY']}
@@ -653,18 +690,38 @@ pv1['B970-D2 TOTAL ENERGY'] = {'func': sum, 'args': ['B970 FUNCTIONAL TOTAL ENER
 pv1['B97-D2 TOTAL ENERGY'] = {'func': sum, 'args': ['B97 FUNCTIONAL TOTAL ENERGY', 'B97-D2 DISPERSION CORRECTION ENERGY']}
 pv1['B97-D3 TOTAL ENERGY'] = {'func': sum, 'args': ['B97 FUNCTIONAL TOTAL ENERGY', 'B97-D3 DISPERSION CORRECTION ENERGY']}
 pv1['B97-D3BJ TOTAL ENERGY'] = {'func': sum, 'args': ['B97 FUNCTIONAL TOTAL ENERGY', 'B97-D3BJ DISPERSION CORRECTION ENERGY']}
+pv1['B97-D3M TOTAL ENERGY'] = {'func': sum, 'args': ['B97 FUNCTIONAL TOTAL ENERGY', 'B97-D3M DISPERSION CORRECTION ENERGY']}
+pv1['B97-D3M3 TOTAL ENERGY'] = {'func': sum, 'args': ['B97 FUNCTIONAL TOTAL ENERGY', 'B97-D3M3 DISPERSION CORRECTION ENERGY']}
+pv1['B97-D3MBJ TOTAL ENERGY'] = {'func': sum, 'args': ['B97 FUNCTIONAL TOTAL ENERGY', 'B97-D3MBJ DISPERSION CORRECTION ENERGY']}
 pv1['BP86-D2 TOTAL ENERGY'] = {'func': sum, 'args': ['BP86 FUNCTIONAL TOTAL ENERGY', 'BP86-D2 DISPERSION CORRECTION ENERGY']}
 pv1['BP86-D3 TOTAL ENERGY'] = {'func': sum, 'args': ['BP86 FUNCTIONAL TOTAL ENERGY', 'BP86-D3 DISPERSION CORRECTION ENERGY']}
 pv1['BP86-D3BJ TOTAL ENERGY'] = {'func': sum, 'args': ['BP86 FUNCTIONAL TOTAL ENERGY', 'BP86-D3BJ DISPERSION CORRECTION ENERGY']}
+pv1['BP86-D3M TOTAL ENERGY'] = {'func': sum, 'args': ['BP86 FUNCTIONAL TOTAL ENERGY', 'BP86-D3M DISPERSION CORRECTION ENERGY']}
+pv1['BP86-D3M3 TOTAL ENERGY'] = {'func': sum, 'args': ['BP86 FUNCTIONAL TOTAL ENERGY', 'BP86-D3M3 DISPERSION CORRECTION ENERGY']}
+pv1['BP86-D3MBJ TOTAL ENERGY'] = {'func': sum, 'args': ['BP86 FUNCTIONAL TOTAL ENERGY', 'BP86-D3MBJ DISPERSION CORRECTION ENERGY']}
 pv1['BLYP-D2 TOTAL ENERGY'] = {'func': sum, 'args': ['BLYP FUNCTIONAL TOTAL ENERGY', 'BLYP-D2 DISPERSION CORRECTION ENERGY']}
 pv1['BLYP-D3 TOTAL ENERGY'] = {'func': sum, 'args': ['BLYP FUNCTIONAL TOTAL ENERGY', 'BLYP-D3 DISPERSION CORRECTION ENERGY']}
 pv1['BLYP-D3BJ TOTAL ENERGY'] = {'func': sum, 'args': ['BLYP FUNCTIONAL TOTAL ENERGY', 'BLYP-D3BJ DISPERSION CORRECTION ENERGY']}
+pv1['BLYP-D3M TOTAL ENERGY'] = {'func': sum, 'args': ['BLYP FUNCTIONAL TOTAL ENERGY', 'BLYP-D3M DISPERSION CORRECTION ENERGY']}
+pv1['BLYP-D3M3 TOTAL ENERGY'] = {'func': sum, 'args': ['BLYP FUNCTIONAL TOTAL ENERGY', 'BLYP-D3M3 DISPERSION CORRECTION ENERGY']}
+pv1['BLYP-D3MBJ TOTAL ENERGY'] = {'func': sum, 'args': ['BLYP FUNCTIONAL TOTAL ENERGY', 'BLYP-D3MBJ DISPERSION CORRECTION ENERGY']}
 pv1['PBE-D2 TOTAL ENERGY'] = {'func': sum, 'args': ['PBE FUNCTIONAL TOTAL ENERGY', 'PBE-D2 DISPERSION CORRECTION ENERGY']}
 pv1['PBE-D3 TOTAL ENERGY'] = {'func': sum, 'args': ['PBE FUNCTIONAL TOTAL ENERGY', 'PBE-D3 DISPERSION CORRECTION ENERGY']}
 pv1['PBE-D3BJ TOTAL ENERGY'] = {'func': sum, 'args': ['PBE FUNCTIONAL TOTAL ENERGY', 'PBE-D3BJ DISPERSION CORRECTION ENERGY']}
+pv1['PBE-D3M TOTAL ENERGY'] = {'func': sum, 'args': ['PBE FUNCTIONAL TOTAL ENERGY', 'PBE-D3M DISPERSION CORRECTION ENERGY']}
+pv1['PBE-D3M3 TOTAL ENERGY'] = {'func': sum, 'args': ['PBE FUNCTIONAL TOTAL ENERGY', 'PBE-D3M3 DISPERSION CORRECTION ENERGY']}
+pv1['PBE-D3MBJ TOTAL ENERGY'] = {'func': sum, 'args': ['PBE FUNCTIONAL TOTAL ENERGY', 'PBE-D3MBJ DISPERSION CORRECTION ENERGY']}
 pv1['PBE0-D2 TOTAL ENERGY'] = {'func': sum, 'args': ['PBE0 FUNCTIONAL TOTAL ENERGY', 'PBE0-D2 DISPERSION CORRECTION ENERGY']}
 pv1['PBE0-D3 TOTAL ENERGY'] = {'func': sum, 'args': ['PBE0 FUNCTIONAL TOTAL ENERGY', 'PBE0-D3 DISPERSION CORRECTION ENERGY']}
 pv1['PBE0-D3BJ TOTAL ENERGY'] = {'func': sum, 'args': ['PBE0 FUNCTIONAL TOTAL ENERGY', 'PBE0-D3BJ DISPERSION CORRECTION ENERGY']}
+pv1['PBE0-D3M TOTAL ENERGY'] = {'func': sum, 'args': ['PBE0 FUNCTIONAL TOTAL ENERGY', 'PBE0-D3M DISPERSION CORRECTION ENERGY']}
+pv1['PBE0-D3M3 TOTAL ENERGY'] = {'func': sum, 'args': ['PBE0 FUNCTIONAL TOTAL ENERGY', 'PBE0-D3M3 DISPERSION CORRECTION ENERGY']}
+pv1['PBE0-D3MBJ TOTAL ENERGY'] = {'func': sum, 'args': ['PBE0 FUNCTIONAL TOTAL ENERGY', 'PBE0-D3MBJ DISPERSION CORRECTION ENERGY']}
+pv1['WPBE-D3 TOTAL ENERGY'] = {'func': sum, 'args': ['WPBE FUNCTIONAL TOTAL ENERGY', 'WPBE-D3 DISPERSION CORRECTION ENERGY']}
+pv1['WPBE-D3BJ TOTAL ENERGY'] = {'func': sum, 'args': ['WPBE FUNCTIONAL TOTAL ENERGY', 'WPBE-D3BJ DISPERSION CORRECTION ENERGY']}
+pv1['WPBE-D3M TOTAL ENERGY'] = {'func': sum, 'args': ['WPBE FUNCTIONAL TOTAL ENERGY', 'WPBE-D3M DISPERSION CORRECTION ENERGY']}
+pv1['WPBE-D3M3 TOTAL ENERGY'] = {'func': sum, 'args': ['WPBE FUNCTIONAL TOTAL ENERGY', 'WPBE-D3M3 DISPERSION CORRECTION ENERGY']}
+pv1['WPBE-D3MBJ TOTAL ENERGY'] = {'func': sum, 'args': ['WPBE FUNCTIONAL TOTAL ENERGY', 'WPBE-D3MBJ DISPERSION CORRECTION ENERGY']}
 pv1['M05-2X-D3 TOTAL ENERGY'] = {'func': sum, 'args': ['M05-2X FUNCTIONAL TOTAL ENERGY', 'M05-2X-D3 DISPERSION CORRECTION ENERGY']}
 pv1['M06-2X-D3 TOTAL ENERGY'] = {'func': sum, 'args': ['M06-2X FUNCTIONAL TOTAL ENERGY', 'M06-2X-D3 DISPERSION CORRECTION ENERGY']}
 pv1['WB97X-D TOTAL ENERGY'] = {'func': sum, 'args': ['WB97X FUNCTIONAL TOTAL ENERGY', 'WB97X-D DISPERSION CORRECTION ENERGY']}
@@ -677,13 +734,13 @@ pv1['MP2.5 CC CORRECTION ENERGY'] = {'func': difference, 'args': ['MP2.5 CORRELA
 pv1['CCSD CC CORRECTION ENERGY'] = {'func': difference, 'args': ['CCSD CORRELATION ENERGY', 'MP2 CORRELATION ENERGY']}
 pv1['SCS-CCSD CC CORRECTION ENERGY'] = {'func': difference, 'args': ['SCS-CCSD CORRELATION ENERGY', 'MP2 CORRELATION ENERGY']}
 pv1['SCS(MI)-CCSD CC CORRECTION ENERGY'] = {'func': difference, 'args': ['SCS(MI)-CCSD CORRELATION ENERGY', 'MP2 CORRELATION ENERGY']}
-pv1['SCS-MP2 CORRELATION ENERGY'] = {'func': spin_component_scaling, 'args': [1.2, 1.0/3.0, 'MP2 CORRELATION ENERGY', 'MP2 SAME-SPIN CORRELATION ENERGY']}
+pv1['SCS-MP2 CORRELATION ENERGY'] = {'func': spin_component_scaling, 'args': [1.2, 1.0 / 3.0, 'MP2 CORRELATION ENERGY', 'MP2 SAME-SPIN CORRELATION ENERGY']}
 pv1['SCS-MP2 TOTAL ENERGY'] = {'func': sum, 'args': ['HF TOTAL ENERGY', 'SCS-MP2 CORRELATION ENERGY']}
 pv1['SCS(N)-MP2 CORRELATION ENERGY'] = {'func': spin_component_scaling, 'args': [0.0, 1.76, 'MP2 CORRELATION ENERGY', 'MP2 SAME-SPIN CORRELATION ENERGY']}
 pv1['SCS(N)-MP2 TOTAL ENERGY'] = {'func': sum, 'args': ['HF TOTAL ENERGY', 'SCS(N)-MP2 CORRELATION ENERGY']}
 pv1['DW-MP2 CORRELATION ENERGY'] = {'func': dispersion_weighting, 'args': ['DW-MP2 OMEGA', 'MP2 CORRELATION ENERGY', 'SCS-MP2 CORRELATION ENERGY']}
 pv1['DW-MP2 TOTAL ENERGY'] = {'func': sum, 'args': ['HF TOTAL ENERGY', 'DW-MP2 CORRELATION ENERGY']}
-pv1['SCS-MP2-F12 CORRELATION ENERGY'] = {'func': spin_component_scaling, 'args': [1.2, 1.0/3.0, 'MP2-F12 CORRELATION ENERGY', 'MP2-F12 SAME-SPIN CORRELATION ENERGY']}
+pv1['SCS-MP2-F12 CORRELATION ENERGY'] = {'func': spin_component_scaling, 'args': [1.2, 1.0 / 3.0, 'MP2-F12 CORRELATION ENERGY', 'MP2-F12 SAME-SPIN CORRELATION ENERGY']}
 pv1['SCS-MP2-F12 TOTAL ENERGY'] = {'func': sum, 'args': ['HF-CABS TOTAL ENERGY', 'SCS-MP2-F12 CORRELATION ENERGY']}
 pv1['SCS(N)-MP2-F12 CORRELATION ENERGY'] = {'func': spin_component_scaling, 'args': [0.0, 1.76, 'MP2-F12 CORRELATION ENERGY', 'MP2-F12 SAME-SPIN CORRELATION ENERGY']}
 pv1['SCS(N)-MP2-F12 TOTAL ENERGY'] = {'func': sum, 'args': ['HF-CABS TOTAL ENERGY', 'SCS(N)-MP2-F12 CORRELATION ENERGY']}
@@ -714,24 +771,32 @@ pv1['(T*)-F12AB CORRECTION ENERGY'] = {'func': product, 'args': ['(T*)-F12 SCALE
 pv1['(T*)-F12C CORRECTION ENERGY'] = {'func': product, 'args': ['(T*)-F12 SCALE', '(T)-F12C CORRECTION ENERGY']}
 pv1['(T**)-F12AB CORRECTION ENERGY'] = {'func': product, 'args': ['(T**)-F12 SCALE', '(T)-F12AB CORRECTION ENERGY']}
 pv1['(T**)-F12C CORRECTION ENERGY'] = {'func': product, 'args': ['(T**)-F12 SCALE', '(T)-F12C CORRECTION ENERGY']}
+###pv1['AVG-CCSD(T)-F12 CC CORRECTION ENERGY'] = {'func': difference, 'args': ['AVG-CCSD(T)-F12 CORRELATION ENERGY', 'MP2-F12 CORRELATION ENERGY']}
 pv1['CCSD(T)-F12A CC CORRECTION ENERGY'] = {'func': difference, 'args': ['CCSD(T)-F12A CORRELATION ENERGY', 'MP2-F12 CORRELATION ENERGY']}
 pv1['CCSD(T)-F12B CC CORRECTION ENERGY'] = {'func': difference, 'args': ['CCSD(T)-F12B CORRELATION ENERGY', 'MP2-F12 CORRELATION ENERGY']}
 pv1['CCSD(T)-F12C CC CORRECTION ENERGY'] = {'func': difference, 'args': ['CCSD(T)-F12C CORRELATION ENERGY', 'MP2-F12 CORRELATION ENERGY']}
+###pv1['AVG-CCSD(T*)-F12 CORRELATION ENERGY'] = {'func': sum, 'args': ['AVG-CCSD-F12 CORRELATION ENERGY', '(T*)-F12AB CORRECTION ENERGY']}
 pv1['CCSD(T*)-F12A CORRELATION ENERGY'] = {'func': sum, 'args': ['CCSD-F12A CORRELATION ENERGY', '(T*)-F12AB CORRECTION ENERGY']}
 pv1['CCSD(T*)-F12B CORRELATION ENERGY'] = {'func': sum, 'args': ['CCSD-F12B CORRELATION ENERGY', '(T*)-F12AB CORRECTION ENERGY']}
 pv1['CCSD(T*)-F12C CORRELATION ENERGY'] = {'func': sum, 'args': ['CCSD-F12C CORRELATION ENERGY', '(T*)-F12C CORRECTION ENERGY']}
+###pv1['AVG-CCSD(T*)-F12 CC CORRECTION ENERGY'] = {'func': difference, 'args': ['AVG-CCSD(T*)-F12 CORRELATION ENERGY', 'MP2-F12 CORRELATION ENERGY']}
 pv1['CCSD(T*)-F12A CC CORRECTION ENERGY'] = {'func': difference, 'args': ['CCSD(T*)-F12A CORRELATION ENERGY', 'MP2-F12 CORRELATION ENERGY']}
 pv1['CCSD(T*)-F12B CC CORRECTION ENERGY'] = {'func': difference, 'args': ['CCSD(T*)-F12B CORRELATION ENERGY', 'MP2-F12 CORRELATION ENERGY']}
 pv1['CCSD(T*)-F12C CC CORRECTION ENERGY'] = {'func': difference, 'args': ['CCSD(T*)-F12C CORRELATION ENERGY', 'MP2-F12 CORRELATION ENERGY']}
+###pv1['AVG-CCSD(T*)-F12 TOTAL ENERGY'] = {'func': sum, 'args': ['HF-CABS TOTAL ENERGY', 'AVG-CCSD(T*)-F12 CORRELATION ENERGY']}
 pv1['CCSD(T*)-F12A TOTAL ENERGY'] = {'func': sum, 'args': ['HF-CABS TOTAL ENERGY', 'CCSD(T*)-F12A CORRELATION ENERGY']}
 pv1['CCSD(T*)-F12B TOTAL ENERGY'] = {'func': sum, 'args': ['HF-CABS TOTAL ENERGY', 'CCSD(T*)-F12B CORRELATION ENERGY']}
 pv1['CCSD(T*)-F12C TOTAL ENERGY'] = {'func': sum, 'args': ['HF-CABS TOTAL ENERGY', 'CCSD(T*)-F12C CORRELATION ENERGY']}
+###pv1['AVG-CCSD(T**)-F12 CORRELATION ENERGY'] = {'func': sum, 'args': ['AVG-CCSD-F12 CORRELATION ENERGY', '(T**)-F12AB CORRECTION ENERGY']}
 pv1['CCSD(T**)-F12A CORRELATION ENERGY'] = {'func': sum, 'args': ['CCSD-F12A CORRELATION ENERGY', '(T**)-F12AB CORRECTION ENERGY']}
 pv1['CCSD(T**)-F12B CORRELATION ENERGY'] = {'func': sum, 'args': ['CCSD-F12B CORRELATION ENERGY', '(T**)-F12AB CORRECTION ENERGY']}
 pv1['CCSD(T**)-F12C CORRELATION ENERGY'] = {'func': sum, 'args': ['CCSD-F12C CORRELATION ENERGY', '(T**)-F12C CORRECTION ENERGY']}
 pv1['CCSD(T**)-F12A CC CORRECTION ENERGY'] = {'func': difference, 'args': ['CCSD(T**)-F12A CORRELATION ENERGY', 'MP2-F12 CORRELATION ENERGY']}
 pv1['CCSD(T**)-F12B CC CORRECTION ENERGY'] = {'func': difference, 'args': ['CCSD(T**)-F12B CORRELATION ENERGY', 'MP2-F12 CORRELATION ENERGY']}
 pv1['CCSD(T**)-F12C CC CORRECTION ENERGY'] = {'func': difference, 'args': ['CCSD(T**)-F12C CORRELATION ENERGY', 'MP2-F12 CORRELATION ENERGY']}
+pv1['AVG-CCSD(T**)-F12 CORRELATION ENERGY'] = {'func': average, 'args': ['CCSD(T)-F12A CORRELATION ENERGY', 'CCSD(T**)-F12B CORRELATION ENERGY']}
+pv1['AVG-CCSD(T**)-F12 CC CORRECTION ENERGY'] = {'func': difference, 'args': ['AVG-CCSD(T**)-F12 CORRELATION ENERGY', 'MP2-F12 CORRELATION ENERGY']}
+pv1['AVG-CCSD(T**)-F12 TOTAL ENERGY'] = {'func': sum, 'args': ['HF-CABS TOTAL ENERGY', 'AVG-CCSD(T**)-F12 CORRELATION ENERGY']}
 pv1['CCSD(T**)-F12A TOTAL ENERGY'] = {'func': sum, 'args': ['HF-CABS TOTAL ENERGY', 'CCSD(T**)-F12A CORRELATION ENERGY']}  # duplicate def
 pv1['CCSD(T**)-F12B TOTAL ENERGY'] = {'func': sum, 'args': ['HF-CABS TOTAL ENERGY', 'CCSD(T**)-F12B CORRELATION ENERGY']}  # duplicate def
 pv1['CCSD(T**)-F12C TOTAL ENERGY'] = {'func': sum, 'args': ['HF-CABS TOTAL ENERGY', 'CCSD(T**)-F12C CORRELATION ENERGY']}  # duplicate def
@@ -1082,6 +1147,8 @@ def generic_mtd(Nstage, stub):
         #return ['%s TOTAL ENERGY' % ('HF-CABS' if 'F12' in stub else 'SCF'),
         return ['%s TOTAL ENERGY' % ('HF-CABS' if 'F12' in stub else 'HF'),
                 '%s CORRELATION ENERGY' % ('MP2-F12' if 'F12' in stub else 'MP2'),
+                #'%s TOTAL ENERGY' % ('HF'),
+                #'%s CORRELATION ENERGY' % ('MP2'),
                 '%s CC CORRECTION ENERGY' % (stub)]
 
 
@@ -1122,7 +1189,7 @@ def build(method, option, cpmode, basis):
         print 'bass:', baslist
         print 'opts:', optlist
         for pcs, bas, opt in zip(mtdlist, baslist, optlist):
-            print df.loc[bas].loc[pcs].loc[opt].loc['S22-2']  #ACONF-15'] #'NBC1-BzBz_S-5.0'] #'S22-2'] #'A24-1'] #'BBI-150LYS-158LEU-2'] #'S22-2']
+            print df.loc[bas].loc[pcs].loc[opt].loc['S22-2']  # ACONF-15'] #'NBC1-BzBz_S-5.0'] #'S22-2'] #'A24-1'] #'BBI-150LYS-158LEU-2'] #'S22-2']
     acting_cpmode = 'default' if cpmode == 'unCP' else cpmode
     return reactionate(acting_cpmode, sum([df.loc[bas].loc[pcs].loc[opt] for pcs, bas, opt in zip(mtdlist, baslist, optlist)]))
 
@@ -1154,7 +1221,7 @@ elif project == 'parenq':
 
 elif project == 'f12dilabio':
     mtds = [mtd for mtd in methods if ((mtd == 'HFCABS' or 'F12' in mtd) and ('SC' not in mtd and 'MP2C' not in mtd and 'DWMP2' not in mtd))]
-    bass = ['adz', 'atz', 'aqz', 'a5z', 'dzf12', 'tzf12', 'qzf12',
+    bass = ['adz', 'atz', 'aqz', 'a5z', 'dzf12', 'tzf12', 'qzf12', '5zf12',
             'adtz', 'atqz', 'aq5z', 'dtzf12', 'tqzf12',
             'hill1_adtz', 'hill1_atqz', 'hill1_aq5z', 'hill1_dtzf12', 'hill1_tqzf12']
     opts = ['']
@@ -1174,6 +1241,14 @@ elif project == 'dhdft':
             'M062XD3']
     bass = ['adz', 'atz']
     opts = ['', 'nfc']
+    cpmd = ['CP', 'unCP']
+
+elif project == 'fcnfc':
+    mtds = ['B2PLYP', 'B2PLYPD3', 'B2PLYPD3BJ',
+            'B97', 'B97D3', 'B97D3BJ',
+            'B3LYP', 'B3LYPD3', 'B3LYPD3BJ']
+    bass = ['adz', 'atz', 'def2qzvp']
+    opts = ['dfhf-dfmp-fc', 'dfhf-dfmp-nfc', 'dfhf']
     cpmd = ['CP', 'unCP']
 
 elif project == 'dhdft2':
@@ -1209,7 +1284,7 @@ elif project == 'pt2':
     opts = ['', 'dfhf', 'dfmp', 'dfhf-dfmp']
     cpmd = ['CP', 'SA']
 
-elif project == 'saptone':
+elif project == 'saptone' or project == 'saptmisc':
     mtds = ['SAPT0', 'SAPT0S', 'SAPTSCS', 'SAPTDFT', 'SAPT2',
             'SAPT2P', 'SAPT2PC', 'SAPT2PM', 'SAPT2PCM',
             'SAPT3', 'SAPT3C', 'SAPT3M', 'SAPT3CM',
@@ -1221,15 +1296,23 @@ elif project == 'saptone':
     opts = ['', 'dfmp']
     cpmd = ['SA']
 
-elif project == 'merz3':
-    #mtds = ['MP2', 'SCSMP2', 'SCSNMP2', 'SCSMIMP2', 'DWMP2', 'MP2C',
-    #        'MP2CF12', 'DWCCSDTF12']
-    #bass = ['adz', 'atz', 'aqz', 'addz', 'adtz', 'atqz', 'qz', 'atqzadz']
-    #opts = ['', 'dfhf-dfmp']
-    mtds = ['SAPT0', 'SAPT0S']
-    bass = ['jadz']
-    opts = ['']  # should SAPT0 be coming through with a dfmp label?
+elif project == 'pt2misc':
+    mtds = ['HF', 'MP2', 'SCSMP2', 'SCSNMP2', 'SCSMIMP2', 'DWMP2',
+            'HFCABS', 'MP2F12', 'SCSMP2F12', 'SCSNMP2F12', 'SCSMIMP2F12', 'DWMP2F12']
+    bass = ['adz', 'atz', 'aqz', 'adtz', 'atqz', 'qz']
+    opts = ['', 'dfhf', 'dfhf-dfmp']
     cpmd = ['CP']
+
+elif project == 'ccmisc':
+    mtds = ['MP2C', 'MP25', 'MP3',
+            'MP2CF12',
+            'CCSDAF12', 'SCSCCSDAF12', 'SCMICCSDAF12', 'CCSDTAF12', 'CCSDTNSAF12',
+            'CCSDBF12', 'SCSCCSDBF12', 'SCMICCSDBF12', 'CCSDTBF12',
+            'DWCCSDTF12']
+    bass = ['adz', 'atz', 'adtz',
+            'atqzadz', 'aq5zadz', 'atqzatz', 'aq5zatz']
+    opts = ['', 'dfhf', 'dfhf-dfmp']
+    cpmd = ['CP', 'SA']
 
 elif project == 'aep':
     mtds = ['SCSMICCSD']
@@ -1243,16 +1326,38 @@ elif project == 'sflow':
     opts = ['dfhf-dfmp-dsrgs0p1', 'dfhf-dfmp-dsrgs0p5', 'dfhf-dfmp-dsrgs1p0']
     cpmd = ['CP']
 
-elif project == 'dfit':
-    mtds = ['B3LYP', 'B97', 'BLYP', 'BP86', 'PBE', 'PBE0', 'WPBE', 'B2PLYP',
-            'B3LYPD3', 'B97D3', 'BLYPD3', 'BP86D3', 'PBED3', 'PBE0D3', 'B2PLYPD3']
-    bass = ['def2qzvp']
+elif project in ['dfit', 'bfdbdft']:
+    mtds = ['B3LYP', 'B3LYPD2', 'B3LYPD3', 'B3LYPD3BJ',
+            'B97', 'B97D2', 'B97D3', 'B97D3BJ',
+#            'B970', 'B970D2', 'B970D3', 'B970D3BJ',
+            'BLYP', 'BLYPD2', 'BLYPD3', 'BLYPD3BJ',
+            'BP86', 'BP86D2', 'BP86D3', 'BP86D3BJ',
+            'PBE', 'PBED2', 'PBED3', 'PBED3BJ',
+            'PBE0', 'PBE0D2', 'PBE0D3', 'PBE0D3BJ',
+            'WPBE', 'WPBED3', 'WPBED3BJ',
+            'B2PLYP', 'B2PLYPD2', 'B2PLYPD3', 'B2PLYPD3BJ',
+            'WB97XD', 'M052X', 'WB97XV']
+    bass = ['def2qzvp', 'adz', 'atz']
+    opts = ['', 'dfhf', 'dfhf-dfmp']  # why B2PLYP with no or dfhf label; why B3LYP w dfhf-dfmp label?
+    cpmd = ['CP', 'unCP']
+
+elif project in ['dfitm', 'bfdbdftm']:
+    mtds = ['B3LYPD3M', 'B3LYPD3M3', 'B3LYPD3MBJ',
+            'B97D3M', 'B97D3M3', 'B97D3MBJ',
+            'BLYPD3M', 'BLYPD3M3', 'BLYPD3MBJ',
+            'BP86D3M', 'BP86D3M3', 'BP86D3MBJ',
+            'PBED3M', 'PBED3M3', 'PBED3MBJ',
+            'PBE0D3M', 'PBE0D3M3', 'PBE0D3MBJ',
+            'WPBED3M', 'WPBED3M3', 'WPBED3MBJ',
+            'B2PLYPD3M', 'B2PLYPD3M3', 'B2PLYPD3MBJ']
+    bass = ['def2qzvp', 'adz', 'atz']
     opts = ['', 'dfhf', 'dfhf-dfmp']  # why B2PLYP with no or dfhf label; why B3LYP w dfhf-dfmp label?
     cpmd = ['CP', 'unCP']
 
 elif project == 'nbcref':
     mtds = ['CCSDT']
-    bass = ['atqzhatz', 'atqzatz', 'atqzadz', 'atqz']
+    #bass = ['atqzhatz', 'atqzatz', 'atqzadz', 'atqz']  # for NBC10ext
+    bass = ['aq5zhatz', 'aq5zatz', 'atqz']  # for NBC10B
     opts = ['', 'dfhf-dfmp']
     cpmd = ['CP']
 
@@ -1261,6 +1366,12 @@ elif project == 'curveref':
     bass = ['adz', 'atz', 'aqz', 'a5z', 'adtz', 'atqz', 'aq5z']
     opts = ['']
     cpmd = ['CP']
+
+elif project == 'silver':
+    mtds = ['DWCCSDTF12', 'CCSDTAF12', 'CCSDTBF12', 'CCSDTABAVGF12', 'MP2', 'MP2F12', 'CCSDTNSAF12']
+    bass = ['adz', 'aq5zadz', 'aq5z', 'atqzadz', 'atqz', 'atz', 'atqzatz', 'aq5zatz']
+    opts = ['', 'dfhf-dfmp']
+    cpmd = ['CP', 'unCP']  # CP for IE, unCP for generic rxns
 
 for cpm in cpmd:
     for mtd in mtds:
@@ -1295,7 +1406,8 @@ def threadtheframe(modelchem, xlimit=4.0):
         dbdat.append({'sys': str(rxn), 'color': dbobj.dbdict[dbobj.dbse].hrxn[rxn].color, 'data': data})
     qcdb.mpl.thread(dbdat, modelchem, color='sapt', xlimit=xlimit)
 
-if project == 'f12dilabio':
+# commented 5 Jan 2016, below is fine but lacks bypass if pieces missing
+if False and project == 'f12dilabio':
     mine['CCSDTNSBF12-CP-hill2_adtz'] = build_from_lists(['HF-CABS TOTAL ENERGY', 'CCSD-F12B CORRELATION ENERGY', '(T)-F12AB CORRECTION ENERGY'], ['atz', 'hillcc_adtz', 'hillt_adtz'])
 
 # commented 27 April 2015, missing MP2-full
@@ -1412,12 +1524,18 @@ try:
     df.xs('{} TOTAL ENERGY'.format(qlvl), level='psivar').xs(qbas, level='bstrt')
 except KeyError, e:
     try:
-        qlvl = 'SSAPT0'
-        qbas = 'jadz'
-        code = 'SAPT0S-SA-jadz'
+        qlvl = 'SAPT2+'
+        qbas = 'adz'
+        code = 'SAPT2P-SA-adz'
         df.xs('{} TOTAL ENERGY'.format(qlvl), level='psivar').xs(qbas, level='bstrt')
     except KeyError, e:
-        code = None
+        try:
+            qlvl = 'SSAPT0'
+            qbas = 'jadz'
+            code = 'SAPT0S-SA-jadz'
+            df.xs('{} TOTAL ENERGY'.format(qlvl), level='psivar').xs(qbas, level='bstrt')
+        except KeyError, e:
+            code = None
 
 if code:
     with open('%s/%s_%s.py' % (homewrite, 'sapt', dbse), 'w') as handle:
@@ -1428,10 +1546,11 @@ if code:
 
         for bit in ['ELST', 'EXCH', 'INDC', 'DISP']:
             dfbit = h2kc * df.xs('{} {} ENERGY'.format(qlvl, bit), level='psivar').xs(qbas, level='bstrt')
-            handle.write("""DATA['SAPT %s ENERGY'] = {}\n""" % (bit))
+            pbit = 'IND' if bit == 'INDC' else bit
+            handle.write("""DATA['SAPT %s ENERGY'] = {}\n""" % (pbit))
             for rxn in rxns:
                 handle.write("""DATA['SAPT %s ENERGY']['%s'] = %10.4f\n""" %
-                             (bit, rxn, dfbit.xs(rxn, level='rxn')['SA']['Rgt0']))
+                             (pbit, rxn, dfbit.xs(rxn, level='rxn')['SA']['Rgt0']))
 
 #    print '{}/{} for {} in {}:  RXN, TOT, ELST, EXCH, IND, DISP'.format(qlvl, qbas, len(rxns), dbse)
 #    for rxn in rxns:

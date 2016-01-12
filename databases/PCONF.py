@@ -83,6 +83,10 @@ BIND['%s-%s'            % (dbse, '7'                     )] =    2.37
 BIND['%s-%s'            % (dbse, '8'                     )] =    2.07
 BIND['%s-%s'            % (dbse, '9'                     )] =    2.51
 BIND['%s-%s'            % (dbse, '10'                    )] =    2.04
+## Reference information
+#BINDINFO = {}
+#for rxn in HRXN:
+#    BINDINFO['%s-%s' % (dbse, rxn)] = {'citation': 'pconf', 'method': 'CCSDT', 'mode': '', 'basis': 'tqz???'}  # CP-status unkn
 
 # <<< Comment Lines >>>
 TAGL = {}
@@ -107,6 +111,9 @@ TAGL['%s-%s-reagent'    % (dbse, '444'                   )] = """ """
 TAGL['%s-%s-reagent'    % (dbse, '470'                   )] = """ """
 TAGL['%s-%s-reagent'    % (dbse, '691'                   )] = """ """
 TAGL['%s-%s-reagent'    % (dbse, '99'                    )] = """ """
+
+TAGL['dbse'] = 'comformation energies for tripeptides'
+TAGL['default'] = 'entire database'
 
 # <<< Geometry Specification Strings >>>
 GEOS = {}

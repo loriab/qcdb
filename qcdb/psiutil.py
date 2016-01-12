@@ -41,21 +41,28 @@ def _success(label):
     sys.stdout.flush()
 
 
-def compare_values(expected, computed, digits, label):
+def compare_values(expected, computed, digits, label, exitonfail=True):
     """Function to compare two values. Prints :py:func:`util.success`
     when value *computed* matches value *expected* to number of *digits*
     (or to *digits* itself when *digits* > 1 e.g. digits=0.04). Performs
-    a system exit on failure. Used in input files in the test suite.
+    a system exit on failure unless *exitonfail* False, in which case
+    returns error message. Used in input files in the test suite.
 
     """
     thresh = 10 ** -digits if digits > 1 else digits
     if abs(expected - computed) > thresh:
         print("\t%s: computed value (%f) does not match (%f) to %f digits." % (label, computed, expected, digits))
-        sys.exit(1)
+        if exitonfail:
+            sys.exit(1)
+        else:
+            return
     if math.isnan(computed):
         print("\t%s: computed value (%f) does not match (%f)\n" % (label, computed, expected))
         print("\tprobably because the computed value is nan.")
-        sys.exit(1)
+        if exitonfail:
+            sys.exit(1)
+        else:
+            return
     _success(label)
 
 

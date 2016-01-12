@@ -10,16 +10,26 @@ sys.path.append('/Users/loriab/linux/qcdb/databases')
 #import qcdb
 import qcdb.dbwrap
 
-# S22, A24, S22by7, BBI, NBC10, NBC10ext, S66, HSG, HBC6, SSI
 homewrite = '.'
 dbnet = {}
-dbnet['S22'] = ['dft', 'saptone', 'pt2']
-dbnet['NBC10'] = ['dft', 'saptone', 'pt2']
-dbnet['HBC6'] = ['dft', 'saptone', 'pt2']
-dbnet['HSG'] = ['dft', 'saptone', 'pt2']
-dbnet['SSI'] = ['bfdbmm', 'merz3', 'dfit']
-dbnet['PCONF'] = ['dfit']
-dbnet['NBC10ext'] = []
+#dbnet['S22'] = ['dft', 'saptone', 'pt2']
+#dbnet['NBC10'] = ['dft', 'saptone', 'pt2']
+#dbnet['HBC6'] = ['dft', 'saptone', 'pt2']
+#dbnet['HSG'] = ['dft', 'saptone', 'pt2']
+#dbnet['SSI'] = ['saptmisc', 'bfdbmm', 'dfit', 'bfdbdft', 'pt2misc', 'ccmisc']
+#dbnet['BBI'] = ['saptmisc', 'bfdbmm', 'dfit', 'bfdbdft', 'pt2misc', 'ccmisc']
+#dbnet['PCONF'] = ['dfit']
+#dbnet['SCONF'] = ['dfit']
+#dbnet['ACONF'] = ['dfit']
+#dbnet['CYCONF'] = ['dfit']
+#dbnet['NBC10ext'] = ['dfit']
+#dbnet['ACHC'] = ['saptmisc', 'dfit']
+#dbnet['UBQ'] = ['saptmisc', 'bfdbmm']
+#dbnet['S22by7'] = ['saptmisc']
+#dbnet['S66'] = ['saptmisc']
+#dbnet['A24'] = ['dilabio']
+#dbnet['JSCH'] = ['saptmisc']
+#dbnet[''] = []
 
 #dbse = 'SSI'  # UNCOMMENT for local WDb
 

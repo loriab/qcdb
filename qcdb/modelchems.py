@@ -170,6 +170,28 @@ class Error(QCEssential):
         return text
 
 
+#class Option(QCEssential):
+#    """Specialization of :pyclass:`QCEssential` for computation variation.
+#
+#    """
+#    def __init__(self, name, fullname=None, latex=None, citations=None, doi=None,  comment=None):
+#        QCEssential.__init__(self, name, fullname, latex, citations, doi, comment)
+#        self.name = name #.lower()
+#
+#    def __str__(self):
+#        text = ''
+#        text += """  ==> %s Computation Mode <==\n\n""" % (self.name)
+#        text += """  Formal name:          %s\n""" % (self.fullname)
+#        text += """  LaTeX representation: %s\n""" % (self.latex)
+#        text += """  DOI:                  %s\n""" % (self.doi)
+#        text += """  Literature citations:\n"""
+#        for rol, cit in self.citations.iteritems():
+#            text += """    %17s: %s\n""" (rol, cit.doi)
+#        text += """  Comment:              %s\n""" % (self.comment)
+#        text += """\n"""
+#        return text
+
+
 _tlist = [
     Publication('dhdft', doi='', dsdbid='', owner='CAC',
         fullname=""),
@@ -183,10 +205,15 @@ _tlist = [
         fullname="""Basis Set Convergence of the Coupled-Cluster Correction, delta_MP2^CCSD(T): Best Practices for Benchmarking Noncovalent Interactions and the Attendant Revision of the S22, NBC10, HBC6, and HSG Databases. M. S. Marshall, L. A. Burns, and C. D. Sherrill, J. Chem. Phys. 135(19), 194102/1-10 (2011)"""),
     Publication('dilabio', doi='10.1021/ct400149j', dsdbid='Burns:2014:49', owner='LAB',
         fullname="""Comparing Counterpoise-Corrected, Uncorrected, and Averaged Binding Energies for Benchmarking Noncovalent Interactions. L. A. Burns, M. S. Marshall, and C. D. Sherrill, J. Chem. Theory Comput. 10(1), 49-57 (2014)"""),
+    Publication('achc', doi='10.1021/acs.jctc.5b00588', dsdbid='', owner='TMP',
+        fullname="""Assessment of Empirical Models versus High-Accuracy Ab Initio Methods for Nucleobase Stacking: Evaluating the Importance of Charge Penetration"""),
     Publication('pt2uncp', doi='', dsdbid='', owner='LAB', fullname=''),
     Publication('dfit', doi='', dsdbid='', owner='DGAS', fullname=''),
     Publication('merz3', doi='', dsdbid='', owner='LAB', fullname=''),
     Publication('bfdbmm', doi='', dsdbid='', owner='LAB', fullname=''),
+    Publication('saptmisc', doi='', dsdbid='', owner='', fullname=''),
+    Publication('bfdbdft', doi='', dsdbid='', owner='', fullname=''),
+    Publication('silver', doi='', dsdbid='', owner='', fullname=''),
     Publication('anon', doi='', dsdbid='', owner='', fullname=''),
     Publication('f12dilabio', doi='', dsdbid='', owner='', fullname=''),
 ]
@@ -281,15 +308,21 @@ _tlist = [
         build=[None, None, ['aqz', 'atqz', 'atz']]),
     BasisSet('aq5zatz',    fullname='[aQ5Z; D:aTZ]', latex="""[aQ5Z; $\delta$:aTZ]""",
         build=[None, None, ['a5z', 'aq5z', 'atz']]),
-    BasisSet('haq5zatz',    fullname='[haQ5Z; D:aTZ]', latex="""[haQ5Z; $\delta$:aTZ]""",
+    BasisSet('aq5zhatz',   fullname='[aQ5Z; D:haTZ]', latex="""[aQ5Z; $\delta$:haTZ]""",
+        build=[None, None, ['a5z', 'aq5z', 'hatz']]),
+    BasisSet('haq5zatz',   fullname='[haQ5Z; D:aTZ]', latex="""[haQ5Z; $\delta$:aTZ]""",
         build=[None, None, ['ha5z', 'haq5z', 'atz']]),
     BasisSet('aq5zaqz',    fullname='[aQ5Z; D:aQZ]', latex="""[aQ5Z; $\delta$:aQZ]""",
         build=[None, None, ['a5z', 'aq5z', 'aqz']]),
+    BasisSet('tqz631gs025',fullname='[TQZ; D:631G*(0.25)', latex="""[TQZ; $\delta$:631gs025]""",
+        build=[None, None, ['qz', 'tqz', '631gs025']]),
     BasisSet('dzf12',      fullname='cc-pVDZ-F12'),
     BasisSet('tzf12',      fullname='cc-pVTZ-F12'),
     BasisSet('qzf12',      fullname='cc-pVQZ-F12'),
+    BasisSet('5zf12',      fullname='cc-pV5Z-F12'),
     BasisSet('dtzf12',     fullname='cc-pVDTZ-F12', build=[['dtzf12'], ['tzf12', 'dtzf12']]),
     BasisSet('tqzf12',     fullname='cc-pVTQZ-F12', build=[['tqzf12'], ['qzf12', 'tqzf12']]),
+    BasisSet('q5zf12',     fullname='cc-pVQ5Z-F12', build=[['q5zf12'], ['5zf12', 'q5zf12']]),
     BasisSet('hill1_adtz', build=[['hillcc_adtz'], ['atz', 'hillcc_adtz']]),  # TODO should have None or non-xtpl first element?
     BasisSet('hill1_atqz', build=[['hillcc_atqz'], ['aqz', 'hillcc_atqz']]),
     BasisSet('hill1_aq5z', build=[['hillcc_aq5z'], ['a5z', 'hillcc_aq5z']]),
@@ -305,8 +338,9 @@ _tlist = [
     BasisSet('631pgs',     fullname='6-31+G(d)'),
     BasisSet('6311pg_3df_2p_', fullname='6-311+G(3df,2p)'),
     BasisSet('6311ppg_3df_2p_', fullname='6-311++G(3df,2p)'),
-    BasisSet('def2qzvp', fullname='def2-QZVP'),
-    BasisSet('na',         fullname='not applicable'),
+    BasisSet('631gs025',     fullname='6-31G*(0.25)'),
+    BasisSet('def2qzvp',   fullname='def2-QZVP'),
+    BasisSet('na',         fullname='no applicable basis'),
 ]
 bases = {}
 for item in _tlist:
@@ -363,6 +397,7 @@ _tlist = [
     Method('SCMICCSDAF12',    fullname='SCS(MI)-CCSD-F12a'),
     Method('SCMICCSDBF12',    fullname='SCS(MI)-CCSD-F12b'),
     Method('SCMICCSDCF12',    fullname='SCS(MI)-CCSD-F12c'),
+    Method('CCSDTABAVGF12',   fullname='AVG-CCSD(T**)-F12'),
     Method('CCSDTAF12',       fullname='CCSD(T**)-F12a'),
     Method('CCSDTBF12',       fullname='CCSD(T**)-F12b'),
     Method('CCSDTCF12',       fullname='CCSD(T**)-F12c'),
@@ -375,15 +410,24 @@ _tlist = [
     Method('B97D2',           fullname='B97-D2'),
     Method('B97D3',           fullname='B97-D3'),
     Method('B97D3BJ',         fullname='B97-D3bj'),
+    Method('B97D3M',          fullname='B97-D3M'),
+    Method('B97D3M3',         fullname='B97-D3M3'),
+    Method('B97D3MBJ',        fullname='B97-D3Mbj'),
     Method('B3LYP',           fullname='B3LYP'),
     Method('B3LYPD2',         fullname='B3LYP-D2'),
     Method('B3LYPD3',         fullname='B3LYP-D3'),
-    Method('B3LYPD3',         fullname='B3LYP-D3'),
+    Method('B3LYPD3BJ',       fullname='B3LYP-D3bj'),
     Method('B3LYPXDM',        fullname='B3LYP-XDM'),
+    Method('B3LYPD3M',        fullname='B3LYP-D3M'),
+    Method('B3LYPD3M3',       fullname='B3LYP-D3M3'),
+    Method('B3LYPD3MBJ',      fullname='B3LYP-D3Mbj'),
     Method('B2PLYP',          fullname='B2PLYP'),
     Method('B2PLYPD2',        fullname='B2PLYP-D2'),
     Method('B2PLYPD3',        fullname='B2PLYP-D3'),
     Method('B2PLYPD3BJ',      fullname='B2PLYP-D3bj'),
+    Method('B2PLYPD3M',       fullname='B2PLYP-D3M'),
+    Method('B2PLYPD3M3',      fullname='B2PLYP-D3M3'),
+    Method('B2PLYPD3MBJ',     fullname='B2PLYP-D3Mbj'),
     Method('M052X',           fullname='M05-2X'),
     Method('M052XD3',         fullname='M05-2X-D3'),
     Method('M062X',           fullname='M06-2X'),
@@ -408,12 +452,23 @@ _tlist = [
     Method('PBED2',           fullname='PBE-D2'),
     Method('PBED3',           fullname='PBE-D3'),
     Method('PBED3BJ',         fullname='PBE-D3bj'),
+    Method('PBED3M',          fullname='PBE-D3M'),
+    Method('PBED3M3',         fullname='PBE-D3M3'),
+    Method('PBED3MBJ',        fullname='PBE-D3Mbj'),
     Method('PBE0',            fullname='PBE0'),
     Method('PBE0D2',          fullname='PBE0-D2'),
     Method('PBE0D3',          fullname='PBE0-D3'),
     Method('PBE0D3BJ',        fullname='PBE0-D3bj'),
+    Method('PBE0D3M',         fullname='PBE0-D3M'),
+    Method('PBE0D3M3',        fullname='PBE0-D3M3'),
+    Method('PBE0D3MBJ',       fullname='PBE0-D3Mbj'),
     Method('PBE02',           fullname='PBE0-2'),
     Method('WPBE',            fullname='wPBE', latex="""$\omega$PBE"""),
+    Method('WPBED3',          fullname='wPBE-D3', latex="""$\omega$PBE-D3"""),
+    Method('WPBED3BJ',        fullname='wPBE-D3bj', latex="""$\omega$PBE-D3bj"""),
+    Method('WPBED3M',         fullname='wPBE-D3M'),
+    Method('WPBED3M3',        fullname='wPBE-D3M3'),
+    Method('WPBED3MBJ',       fullname='wPBE-D3Mbj'),
     Method('CCSDTNSAF12',     fullname='CCSD(T)-F12a'),
     Method('CCSDTNSBF12',     fullname='CCSD(T)-F12b'),
     Method('CCSDTNSCF12',     fullname='CCSD(T)-F12c'),
@@ -423,10 +478,16 @@ _tlist = [
     Method('BP86D2',          fullname='BP86-D2'),
     Method('BP86D3',          fullname='BP86-D3'),
     Method('BP86D3BJ',        fullname='BP86-D3bj'),
+    Method('BP86D3M',         fullname='BP86-D3M'),
+    Method('BP86D3M3',        fullname='BP86-D3M3'),
+    Method('BP86D3MBJ',       fullname='BP86-D3Mbj'),
     Method('BLYP',            fullname='BLYP'),
     Method('BLYPD2',          fullname='BLYP-D2'),
     Method('BLYPD3',          fullname='BLYP-D3'),
     Method('BLYPD3BJ',        fullname='BLYP-D3bj'),
+    Method('BLYPD3M',         fullname='BLYP-D3M'),
+    Method('BLYPD3M3',        fullname='BLYP-D3M3'),
+    Method('BLYPD3MBJ',       fullname='BLYP-D3Mbj'),
     Method('CCSDTQ',          fullname='CCSDT(Q)'),
     Method('CCSDFULLT',       fullname='CCSDT'),
     Method('CCSDTSAF12',      fullname='CCSD(T*)-F12a'),
@@ -440,6 +501,15 @@ _tlist = [
     Method('GAFF',            fullname='GAFF'),
     Method('PM6DH2',          fullname='PM6-DH2'),
     Method('CHARMM',          fullname='CHARMM'),
+    Method('PM3',             fullname='PM3'),
+    Method('PM6',             fullname='PM6'),
+    Method('PDDG',            fullname='PDDG'),
+    Method('FF03',            fullname='FF03'),
+    Method('FF03A',           fullname='FF03A'),
+    Method('FF99SB',          fullname='FF99SB'),
+    Method('FF99SBA',         fullname='FF99SBA'),
+    Method('AM1FS1',          fullname='AM1FS1'),
+    Method('EFP',             fullname='EFP'),
     ]
 
 methods = {}
@@ -447,18 +517,24 @@ for item in _tlist:
     methods[item.name] = item
 
 _tlist = [
+    Error('pexe',            fullname='pexE'),
+    Error('nexe',            fullname='nexE'),
     Error('maxe',            fullname='maxE'),
     Error('mine',            fullname='minE'),
     Error('me',              fullname='ME'),
     Error('mae',             fullname='MAE'),
     Error('rmse',            fullname='rmsE'),
     Error('stde',            fullname='stdE'),
+    Error('pexpe',           fullname='pexPE'),
+    Error('nexpe',           fullname='nexPE'),
     Error('maxpe',           fullname='maxPE'),
     Error('minpe',           fullname='minPE'),
     Error('mpe',             fullname='MPE'),
     Error('mape',            fullname='MAPE', latex=r"""MA$\%$E"""),  #latex="""MA\%E"""),
     Error('rmspe',           fullname='rmsPE'),
     Error('stdpe',           fullname='stdPE'),
+    Error('pexpbe',          fullname='pexPBE'),
+    Error('nexpbe',          fullname='nexPBE'),
     Error('maxpbe',          fullname='maxPBE'),
     Error('minpbe',          fullname='minPBE'),
     Error('mpbe',            fullname='MPBE'),
@@ -469,3 +545,9 @@ _tlist = [
 errors = {}
 for item in _tlist:
     errors[item.name] = item
+
+#_tlist = [
+#    Option('CP',             fullname='CP'),
+#    Option('unCP',           fullname='unCP'),
+#]
+#options = {item.name: item for item in _tlist}
