@@ -25,6 +25,7 @@ for Pople and other non-Dunning orbital basis sets. Some
 plausible fitting basis sets are supplied as defaults.
 
 """
+from __future__ import print_function
 from basislist import *
 
 

@@ -1,3 +1,4 @@
+from __future__ import print_function
 import re
 import sys
 import itertools
@@ -58,7 +59,7 @@ def label2(kw):
     try:
         return fancy_mc_archive[kw]
     except KeyError, e:
-        print 'Consider adding {} to modelchems.py'.format(e)
+        print("""Consider adding {} to modelchems.py""".format(e))
         return kw
 
 
@@ -173,10 +174,10 @@ def table_generic(dbse, serrors,
     for key in ['dbse', 'sset', 'mtd', 'opt', 'bas', 'err']:
         if len(locals()[key]) > 1:
             if key not in rowplan and key not in keysincolumnplan:
-                print """Warning: non-first values in argument '{0}' won't """ \
-                      """get used. Add '{0}' to rowplan to iterate over """ \
-                      """the values or add to columnplan to access""" \
-                      """different values.""".format(key)
+                print("""Warning: non-first values in argument '{0}' won't """
+                      """get used. Add '{0}' to rowplan to iterate over """
+                      """the values or add to columnplan to access"""
+                      """different values.""".format(key))
                 sys.exit()
 
     # form LaTeX reference tag
@@ -313,4 +314,4 @@ if __name__ == "__main__":
                   mtd=['MP2', 'CCSD'], bas=['adz', 'atz'],
                   opt=['CP'], err=['mae', 'mape'],
                   theme='test', subjoin=False)
-    print '\n'.join(tbl)
+    print('\n'.join(tbl))

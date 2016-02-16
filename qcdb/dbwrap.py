@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import sys
 import math
@@ -490,8 +491,8 @@ class Reaction(object):
                           (mcLesser - mcGreater) / abs(mcGreater),
                           (mcLesser - mcGreater) / abs(mcGreater)]  # TODO define BER
             if verbose:
-                print """p = %6.2f, pe = %6.1f%%, bpe = %6.1f%% modelchem %s.""" % \
-                      (err[label][0], 100 * err[label][1], 100 * err[label][2], label)
+                print("""p = %6.2f, pe = %6.1f%%, bpe = %6.1f%% modelchem %s.""" %
+                      (err[label][0], 100 * err[label][1], 100 * err[label][2], label))
 
         return err
 
@@ -544,10 +545,10 @@ class Reaction(object):
             import matplotlib.pyplot as plt
         except ImportError:
             # if not running from Canopy, print line to execute from Canopy
-            print """filedict, htmlcode = mpl.threads(%s,\n    color='%s',\n    title='%s',\n    labels=%s,\n    mae=%s,\n    mape=%s\n    xlimit=%s\n    labeled=%s\n    saveas=%s\n    mousetext=%s\n    mouselink=%s\n    mouseimag=%s\n    mousetitle=%s,\n    mousediv=%s,\n    relpath=%s\n    graphicsformat=%s)\n\n""" % \
+            print("""filedict, htmlcode = mpl.threads(%s,\n    color='%s',\n    title='%s',\n    labels=%s,\n    mae=%s,\n    mape=%s\n    xlimit=%s\n    labeled=%s\n    saveas=%s\n    mousetext=%s\n    mouselink=%s\n    mouseimag=%s\n    mousetitle=%s,\n    mousediv=%s,\n    relpath=%s\n    graphicsformat=%s)\n\n""" %
                   (dbdat, color, title, labels, mae, mape, str(xlimit),
                    repr(labeled), repr(saveas), repr(mousetext), repr(mouselink), repr(mouseimag),
-                   repr(mousetitle), repr(mousediv), repr(relpath), repr(graphicsformat))
+                   repr(mousetitle), repr(mousediv), repr(relpath), repr(graphicsformat)))
         else:
             # if running from Canopy, call mpl directly
             filedict, htmlcode = mpl.threads(dbdat, color=color, title=title, labels=labels, mae=mae, mape=mape,
@@ -633,14 +634,14 @@ class WrappedDatabase(object):
             try:
                 getattr(database, item)
             except AttributeError:
-                print """Warning: Database %s possibly deformed with %s missing.\n""" % (database.__name__, item)
+                print("""Warning: Database %s possibly deformed with %s missing.\n""" % (database.__name__, item))
 
         # form database name
         self.dbse = database.dbse
         try:
             self.tagl = database.TAGL['dbse']
         except KeyError:
-            print """Warning: TAGL missing for database %s""" % (self.dbse)
+            print("""Warning: TAGL missing for database %s""" % (self.dbse))
 
         # form array of database contents to process through
         pieces = []
@@ -660,7 +661,7 @@ class WrappedDatabase(object):
                 tagl = database.TAGL[rgt]
             except KeyError:
                 tagl = None
-                print """Warning: TAGL missing for reagent %s""" % (rgt)
+                print("""Warning: TAGL missing for reagent %s""" % (rgt))
             oHRGT[rgt] = Reagent(name=rgt, mol=mol, tagl=tagl)
         pieces.remove('GEOS')
         self.hrgt = oHRGT
@@ -672,14 +673,14 @@ class WrappedDatabase(object):
                 tagl = database.TAGL[database.dbse + '-' + str(rxn)]
             except KeyError:
                 tagl = None
-                print """Warning: TAGL missing for reaction %s""" % (rxn)
+                print("""Warning: TAGL missing for reaction %s""" % (rxn))
             try:
                 elst = database.DATA['SAPT ELST ENERGY'][database.dbse + '-' + str(rxn)]
                 disp = database.DATA['SAPT DISP ENERGY'][database.dbse + '-' + str(rxn)]
                 color = abs(elst) / (abs(elst) + abs(disp))
             except (KeyError, AttributeError):
                 color = 'black'
-                print """Warning: DATA['SAPT * ENERGY'] missing for reaction %s""" % (rxn)
+                print("""Warning: DATA['SAPT * ENERGY'] missing for reaction %s""" % (rxn))
 
             oHRXN[rxn] = Reaction(name=rxn,
                                   dbse=database.dbse,
@@ -718,13 +719,13 @@ class WrappedDatabase(object):
                 arrsbind = ['BIND']
             else:
                 arrsbind = []
-                print """Warning: No BIND array with reference values."""
+                print("""Warning: No BIND array with reference values.""")
         else:
             for arrbind in arrsbind:
                 if getattr(database, arrbind) is database.BIND:
                     break
             else:
-                print """Warning: No BIND_* array assigned to be master BIND."""
+                print("""Warning: No BIND_* array assigned to be master BIND.""")
 
         oBIND = {}
         for arrbind in arrsbind:
@@ -735,7 +736,7 @@ class WrappedDatabase(object):
                 getattr(database, 'BINDINFO_' + ref)
             except AttributeError:
                 arrbindinfo = None
-                print """Warning: No BINDINFO dict with BIND attribution and modelchem for %s.""" % (ref)
+                print("""Warning: No BINDINFO dict with BIND attribution and modelchem for %s.""" % (ref))
             else:
                 arrbindinfo = 'BINDINFO_' + ref
             oBIND[ref] = [methods[ref], 'default', bases[ref], arrbind,
@@ -821,7 +822,7 @@ class WrappedDatabase(object):
                     sstagl = database.TAGL[label]
                 except KeyError:
                     sstagl = None
-                    print """Warning: TAGL missing for subset %s""" % (label)
+                    print("""Warning: TAGL missing for subset %s""" % (label))
             self.oss[label] = Subset(name=label,
                                      hrxn=self.sset[label].keys(),
                                      tagl=sstagl)
@@ -843,10 +844,10 @@ class WrappedDatabase(object):
                     self.oss[ss].axis[label] = ordered_floats
                     attached = True
             if not attached:
-                print """Warning: AXIS %s not affiliated with a subset""" % (label)
+                print("""Warning: AXIS %s not affiliated with a subset""" % (label))
             pieces.remove(axis)
 
-        print """WrappedDatabase %s: Unparsed attributes""" % (self.dbse), pieces
+        print("""WrappedDatabase %s: Unparsed attributes""" % (self.dbse), pieces)
 
     def __str__(self):
         text = ''
@@ -903,7 +904,7 @@ class WrappedDatabase(object):
         except TypeError, e:
             raise ValidationError("""Function %s did not return list: %s.""" % (func.__name__, str(e)))
         if len(lsslist) == 0:
-            print """WrappedDatabase %s: Subset %s NOT formed: empty""" % (self.dbse, label)
+            print("""WrappedDatabase %s: Subset %s NOT formed: empty""" % (self.dbse, label))
             return
 
         self.sset[label] = OrderedDict()
@@ -912,7 +913,7 @@ class WrappedDatabase(object):
         self.oss[label] = Subset(name=label,
                                  hrxn=self.sset[label].keys(),
                                  tagl=tagl)
-        print """WrappedDatabase %s: Subset %s formed: %d""" % (self.dbse, label, len(self.sset[label].keys()))
+        print("""WrappedDatabase %s: Subset %s formed: %d""" % (self.dbse, label, len(self.sset[label].keys())))
 
     def compute_errors(self, modelchem, benchmark='default', sset='default', failoninc=True, verbose=False):
         """For full database or subset *sset*, computes raw reaction
@@ -958,7 +959,7 @@ class WrappedDatabase(object):
                 if lbench == 'ZEROS':
                     pass
                 else:
-                    print """Reaction %s missing benchmark""" % (str(rxn))
+                    print("""Reaction %s missing benchmark""" % (str(rxn)))
                     continue
             # handle particulars of PEC error measures
 #            rxncureinfo = cureinfo[rxn]
@@ -984,8 +985,8 @@ class WrappedDatabase(object):
 #                        (mcLesser - mcGreater) * balanced_mask / abs(mcGreaterCrvmin),
 #                        balwt]
             if verbose:
-                print """p = %8.4f, pe = %8.3f%%, pbe = %8.3f%% pce = %8.3f%% reaction %s.""" % \
-                 (err[rxn][0], 100 * err[rxn][1], 100 * err[rxn][3], 100 * err[rxn][2], str(rxn))
+                print("""p = %8.4f, pe = %8.3f%%, pbe = %8.3f%% pce = %8.3f%% reaction %s.""" %
+                 (err[rxn][0], 100 * err[rxn][1], 100 * err[rxn][3], 100 * err[rxn][2], str(rxn)))
         return err
 
     def compute_statistics(self, modelchem, benchmark='default', sset='default',
@@ -1002,7 +1003,7 @@ class WrappedDatabase(object):
         if len(err) == 0:
             error = initialize_errors()
             if verbose:
-                print """Warning: nothing to compute."""
+                print("""Warning: nothing to compute.""")
         else:
             Nrxn = float(len(err))
             error = OrderedDict()
@@ -1048,8 +1049,8 @@ class WrappedDatabase(object):
             error['rmspce'] = math.sqrt(sum(map(lambda x: x ** 2, capped)) / Nrxn)
             error['stdpce'] = math.sqrt((sum(map(lambda x: x ** 2, capped)) - (sum(capped) ** 2) / Nrxn) / Nrxn)
             if verbose:
-                print """%d systems in %s for %s vs. %s, subset %s.\n%s""" % \
-                      (len(err), self.dbse, modelchem, benchmark, sset, format_errors(error, mode=2))
+                print("""%d systems in %s for %s vs. %s, subset %s.\n%s""" %
+                      (len(err), self.dbse, modelchem, benchmark, sset, format_errors(error, mode=2)))
         if returnindiv:
             return error, err
         else:
@@ -1068,23 +1069,23 @@ class WrappedDatabase(object):
             datamodule = __import__(modname)
         except ImportError:
             if not failoninc:
-                print """%s data unavailable for database %s.\n""" % (modname, self.dbse)
+                print("""%s data unavailable for database %s.\n""" % (modname, self.dbse))
                 return
             else:
-                print '\nPython module for database data %s failed to load\n\n' % (modname)
-                print '\nSearch path that was tried:\n'
-                print ", ".join(map(str, sys.path))
-                raise ValidationError("Python module loading problem for database data " + str(modname))
+                print("""\nPython module for database data %s failed to load\n\n""" % (modname))
+                print("""\nSearch path that was tried:\n""")
+                print(', '.join(map(str, sys.path)))
+                raise ValidationError("""Python module loading problem for database data """ + str(modname))
         try:
             getattr(datamodule, funcname)(self)
         except AttributeError:
             if not failoninc:
-                print """%s %s data unavailable for database %s.\n""" % (modname, funcname, self.dbse)
+                print("""%s %s data unavailable for database %s.\n""" % (modname, funcname, self.dbse))
                 return
             else:
                 raise ValidationError("Python module missing function %s for loading data " % (str(funcname)))
 
-        print """WrappedDatabase %s: %s %s results loaded""" % (self.dbse, modname, funcname)
+        print("""WrappedDatabase %s: %s %s results loaded""" % (self.dbse, modname, funcname))
 
     def load_qcdata_byproject(self, project, pythonpath=None):
         """Loads qcdb.ReactionDatums from standard location for *project*
@@ -1215,16 +1216,16 @@ class WrappedDatabase(object):
         try:
             ssmod = __import__(modname)
         except ImportError:
-            print '\nPython module for database data %s failed to load\n\n' % (modname)
-            print '\nSearch path that was tried:\n'
-            print ", ".join(map(str, sys.path))
+            print("""\nPython module for database data %s failed to load\n\n""" % (modname))
+            print("""\nSearch path that was tried:\n""")
+            print(', '.join(map(str, sys.path)))
             raise ValidationError("Python module loading problem for database subset generator " + str(modname))
 
         for func in dir(ssmod):
             if callable(getattr(ssmod, func)):
                 self.add_Subset(getattr(ssmod, func).__doc__, getattr(ssmod, func))
 
-        print """WrappedDatabase %s: Defined subsets loaded""" % (self.dbse)
+        print("""WrappedDatabase %s: Defined subsets loaded""" % (self.dbse))
 
     def get_pec_weightinfo(self):
         """
@@ -1383,7 +1384,7 @@ class Database(object):
             for rgt, orgt in odb.hrgt.iteritems():
                 self.hrgt[orgt.name] = orgt
 
-        print """Database %s: %s""" % (self.dbse, ', '.join(self.dbdict.keys()))
+        print("""Database %s: %s""" % (self.dbse, ', '.join(self.dbdict.keys())))
 
     def __str__(self):
         text = ''
@@ -1526,9 +1527,9 @@ class Database(object):
                 merged.append(None)
         if any(merged):
             self.sset[label] = merged
-            print """Database %s: Subset %s formed: %s""" % (self.dbse, label, self.sset[label])
+            print("""Database %s: Subset %s formed: %s""" % (self.dbse, label, self.sset[label]))
         else:
-            print """Database %s: Subset %s NOT formed: empty""" % (self.dbse, label)
+            print("""Database %s: Subset %s NOT formed: empty""" % (self.dbse, label))
 
     def add_Subset_union(self, name, sslist):
         """
@@ -1589,14 +1590,14 @@ class Database(object):
         for ss in new:
             if ss not in self.sset:
                 self.sset[ss] = [ss if ss in odb.sset else None for db, odb in self.dbdict.iteritems()]
-                print """Database %s: Subset %s promoted: %s""" % (self.dbse, ss, self.sset[ss])
+                print("""Database %s: Subset %s promoted: %s""" % (self.dbse, ss, self.sset[ss]))
         if name is None and len(self.dbdict) > 1:
             for db, odb in self.dbdict.items():
                 dbix = self.dbdict.keys().index(db)
                 ss = odb.dbse.lower()
                 if ss not in self.sset:
                     self.sset[ss] = ['default' if ix == dbix else None for ix in range(len(self.dbdict))]
-                    print """Database %s: Subset %s promoted: %s""" % (self.dbse, ss, self.sset[ss])
+                    print("""Database %s: Subset %s promoted: %s""" % (self.dbse, ss, self.sset[ss]))
 
     def _intersect_subsets(self):
         """Examine component database subsets and collect common names as
@@ -1704,7 +1705,7 @@ class Database(object):
                 for db in self.dbdict.keys():
                     text += """%44s""" % ('' if perr[db] is None else format_errors(perr[db]))
                 text += '\n'
-        print text
+        print(text)
 
     def plot_bars(self, modelchem, benchmark='default', sset=['default', 'hb', 'mx', 'dd'],
                   failoninc=True, verbose=False, view=True,
@@ -1750,8 +1751,8 @@ class Database(object):
             import matplotlib.pyplot as plt
         except ImportError:
             # if not running from Canopy, print line to execute from Canopy
-            print """filedict = mpl.bars(%s,\n    title='%s'\n    saveas=%s\n    relpath=%s\n    graphicsformat=%s)\n\n""" % \
-                  (dbdat, title, repr(saveas), repr(relpath), repr(graphicsformat))
+            print("""filedict = mpl.bars(%s,\n    title='%s'\n    saveas=%s\n    relpath=%s\n    graphicsformat=%s)\n\n""" %
+                  (dbdat, title, repr(saveas), repr(relpath), repr(graphicsformat)))
         else:
             # if running from Canopy, call mpl directly
             filedict = mpl.bars(dbdat, title=title,
@@ -1827,7 +1828,7 @@ class Database(object):
 
         pre, suf, mid = string_contrast(modelchem)
         title = """%s[%s]%s vs %s axis %s for %s subset %s""" % (pre, str(len(mid)), suf, benchmark, axis, self.dbse, sset)
-        print title
+        print(title)
         #for mc, dbdat in dbdatdict.iteritems():
         #    print mc
         #    for d in dbdat:
@@ -1840,8 +1841,8 @@ class Database(object):
             import matplotlib.pyplot as plt
         except ImportError:
             # if not running from Canopy, print line to execute from Canopy
-            print """filedict = mpl.valerr(%s,\n    color='%s',\n    title='%s',\n    xtitle='%s',\n    view=%s\n    saveas=%s\n    relpath=%s\n    graphicsformat=%s)\n\n""" % \
-                  (dbdat, color, title, axis, view, repr(saveas), repr(relpath), repr(graphicsformat))
+            print("""filedict = mpl.valerr(%s,\n    color='%s',\n    title='%s',\n    xtitle='%s',\n    view=%s\n    saveas=%s\n    relpath=%s\n    graphicsformat=%s)\n\n""" %
+                  (dbdat, color, title, axis, view, repr(saveas), repr(relpath), repr(graphicsformat)))
         else:
             # if running from Canopy, call mpl directly
             filedict = mpl.valerr(dbdatdict, color=color, title=title, xtitle=axis,
@@ -1865,9 +1866,9 @@ class Database(object):
             try:
                 datamodule = __import__(modname)
             except ImportError:
-                print '\nPython module for database data %s failed to load\n\n' % (modname)
-                print '\nSearch path that was tried:\n'
-                print ", ".join(map(str, sys.path))
+                print("""\nPython module for database data %s failed to load\n\n""" % (modname))
+                print("""\nSearch path that was tried:\n""")
+                print(', '.join(map(str, sys.path)))
                 raise ValidationError("Python module loading problem for database subset generator " + str(modname))
 
             try:
@@ -1888,12 +1889,12 @@ class Database(object):
                             ind = saptdata['SAPT IND ENERGY'][dbrxn]
                             disp = saptdata['SAPT DISP ENERGY'][dbrxn]
                         except (KeyError, AttributeError):
-                            print """Warning: DATA['SAPT * ENERGY'] missing for reaction %s""" % (dbrxn)
+                            print("""Warning: DATA['SAPT * ENERGY'] missing for reaction %s""" % (dbrxn))
                             if failoninc:
                                 break
                         else:
                             if not all([elst, ind, disp]):  # exch sometimes physically zero
-                                print """Warning: DATA['SAPT * ENERGY'] missing piece for reaction %s: %s""" % (dbrxn, [elst, exch, ind, disp])
+                                print("""Warning: DATA['SAPT * ENERGY'] missing piece for reaction %s: %s""" % (dbrxn, [elst, exch, ind, disp]))
                                 if failoninc:
                                     break
                         saptpackage[dbrxn] = {'mc': saptmc,
@@ -1983,8 +1984,8 @@ class Database(object):
             import matplotlib.pyplot as plt
         except ImportError:
             # if not running from Canopy, print line to execute from Canopy
-            print """filedict = mpl.flat(%s,\n    color='%s',\n    title='%s',\n    mae=%s,\n    mape=%s,\n    xlimit=%s,\n    xlines=%s,\n    view=%s\n    saveas=%s\n    relpath=%s\n    graphicsformat=%s)\n\n""" % \
-                  (dbdat, color, mc, mae, mape, xlimit, repr(xlines), view, repr(saveas), repr(relpath), repr(graphicsformat))
+            print("""filedict = mpl.flat(%s,\n    color='%s',\n    title='%s',\n    mae=%s,\n    mape=%s,\n    xlimit=%s,\n    xlines=%s,\n    view=%s\n    saveas=%s\n    relpath=%s\n    graphicsformat=%s)\n\n""" %
+                  (dbdat, color, mc, mae, mape, xlimit, repr(xlines), view, repr(saveas), repr(relpath), repr(graphicsformat)))
         else:
             # if running from Canopy, call mpl directly
             filedict = mpl.flat(dbdat, color=color, title=mc, mae=mae, mape=mape,
@@ -2191,8 +2192,8 @@ reinitialize
             import matplotlib.pyplot as plt
         except ImportError:
             # if not running from Canopy, print line to execute from Canopy
-            print """filedict = mpl.disthist(%s,\n    title='%s',\n    xtitle='%s'\n    me=%s,\n    stde=%s,\n    saveas=%s,\n    relpath=%s\n    graphicsformat=%s)\n\n""" % \
-                  (dbdat, title, xtitle, me, stde, repr(saveas), repr(relpath), repr(graphicsformat))
+            print("""filedict = mpl.disthist(%s,\n    title='%s',\n    xtitle='%s'\n    me=%s,\n    stde=%s,\n    saveas=%s,\n    relpath=%s\n    graphicsformat=%s)\n\n""" %
+                  (dbdat, title, xtitle, me, stde, repr(saveas), repr(relpath), repr(graphicsformat)))
         else:
             # if running from Canopy, call mpl directly
             filedict = mpl.disthist(dbdat, title=title, xtitle=xtitle, me=me, stde=stde,
@@ -2288,10 +2289,10 @@ reinitialize
             import matplotlib.pyplot as plt
         except ImportError:
             # if not running from Canopy, print line to execute from Canopy
-            print """filedict, htmlcode = mpl.threads(%s,\n    color='%s',\n    title='%s',\n    labels=%s,\n    mae=%s,\n    mape=%s\n    xlimit=%s\n    labeled=%s\n    saveas=%s\n    mousetext=%s\n    mouselink=%s\n    mouseimag=%s\n    mousetitle=%s,\n    mousediv=%s,\n    relpath=%s\n    graphicsformat=%s)\n\n""" % \
+            print("""filedict, htmlcode = mpl.threads(%s,\n    color='%s',\n    title='%s',\n    labels=%s,\n    mae=%s,\n    mape=%s\n    xlimit=%s\n    labeled=%s\n    saveas=%s\n    mousetext=%s\n    mouselink=%s\n    mouseimag=%s\n    mousetitle=%s,\n    mousediv=%s,\n    relpath=%s\n    graphicsformat=%s)\n\n""" %
                   (dbdat, color, title, ixmid, mae, mape, str(xlimit),
                   repr(labeled), repr(saveas), repr(mousetext), repr(mouselink), repr(mouseimag),
-                  repr(mousetitle), repr(mousediv), repr(relpath), repr(graphicsformat))
+                  repr(mousetitle), repr(mousediv), repr(relpath), repr(graphicsformat)))
         else:
             # if running from Canopy, call mpl directly
             filedict, htmlcode = mpl.threads(dbdat, color=color, title=title, labels=ixmid, mae=mae, mape=mape,
@@ -2330,7 +2331,7 @@ reinitialize
             import mpl
             import matplotlib.pyplot as plt
         except ImportError:
-            print 'Matplotlib not avail'
+            print('Matplotlib not avail')
         else:
             filedict = mpl.liliowa(dbdat, xlimit=xlimit, view=view,
                                 saveas=saveas, relpath=relpath, graphicsformat=graphicsformat)
@@ -2368,8 +2369,8 @@ reinitialize
             import matplotlib.pyplot as plt
         except ImportError:
             # if not running from Canopy, print line to execute from Canopy
-            print """mpl.iowa(%s,\n    %s,\n    title='%s',\n    xtitle='%s'\n    xlimit=%s,\n    saveas=%s,\n    relpath=%s\n    graphicsformat=%s)\n\n""" % \
-                  (dbdat, dblbl, title, xtitle, xlimit, repr(saveas), repr(relpath), repr(graphicsformat))
+            print("""mpl.iowa(%s,\n    %s,\n    title='%s',\n    xtitle='%s'\n    xlimit=%s,\n    saveas=%s,\n    relpath=%s\n    graphicsformat=%s)\n\n""" %
+                  (dbdat, dblbl, title, xtitle, xlimit, repr(saveas), repr(relpath), repr(graphicsformat)))
         else:
             # if running from Canopy, call mpl directly
             filedict = mpl.iowa(dbdat, dblbl, title=title, xtitle=xtitle, xlimit=xlimit,
@@ -2442,7 +2443,7 @@ reinitialize
                     wmc = self.mcs[mc][dbix]
                 except KeyError:
                     # modelchem not in Database at all
-                    print mc, 'not found'
+                    print(mc, 'not found')
                     continue
                 key = mc if modelchemlabels is None else modelchemlabels[modelchem.index(mc)]
                 try:
@@ -2452,14 +2453,14 @@ reinitialize
                     if failoninc:
                         raise ValidationError("""Reaction %s missing datum %s.""" % (key, str(e)))
                     else:
-                        print mc, str(e), 'not found'
+                        print(mc, str(e), 'not found')
                         continue
             listodicts.append(dictorxn)
 
         df = pd.DataFrame(listodicts)
         pd.set_option('display.width', 500)
-        print df.head(5)
-        print df.tail(5)
+        print(df.head(5))
+        print(df.tail(5))
         return df
 
     def table_reactions(self, modelchem, benchmark='default', sset='default',
@@ -2661,10 +2662,10 @@ reinitialize
                 handle.write('\n'.join(tablelines))
             with open(filename + '_index.tex', 'w') as handle:
                 handle.write('\n'.join(indexlines) + '\n')
-            print """\n  LaTeX index written to {filename}_index.tex\n""" \
-                  """  LaTeX table written to {filename}.tex\n""" \
-                  """  >>> pdflatex {filename}\n""" \
-                  """  >>> open /Applications/Preview.app {filename}.pdf\n""".format(filename=filename)
+            print("""\n  LaTeX index written to {filename}_index.tex\n"""
+                  """  LaTeX table written to {filename}.tex\n"""
+                  """  >>> pdflatex {filename}\n"""
+                  """  >>> open /Applications/Preview.app {filename}.pdf\n""".format(filename=filename))
             filedict = {'data': os.path.abspath(filename) + '.tex',
                         'index': os.path.abspath(filename + '_index.tex')}
             return filedict
@@ -2707,7 +2708,7 @@ reinitialize
             for col in columnplan:
                 if col[3].__name__ == 'flat':
                     if col[4] and autothread:
-                        print 'TODO: merge not handled'
+                        print('TODO: merge not handled')
                     elif col[4] or autothread:
                         autothread.update(col[4])
                     else:
@@ -2798,7 +2799,7 @@ reinitialize
                     for db in self.dbdict.keys():
                         serrors[mc][ss][db] = format_errors(initialize_errors(), mode=3)
         for key in serrors.keys():
-            print """{:>35}{:>35}{}""".format(key, mc_translator[key], serrors[key]['default'][self.dbse]['mae'])
+            print("""{:>35}{:>35}{}""".format(key, mc_translator[key], serrors[key]['default'][self.dbse]['mae']))
 
         # find indices that would be neglected in a single sweep over table_generic
         keysinplan = set(sum([col[-1].keys() for col in columnplan], rowplan))
@@ -2851,10 +2852,10 @@ reinitialize
                 handle.write('\n'.join(tablelines))
             with open(filename + '_index.tex', 'w') as handle:
                 handle.write('\n'.join(indexlines))
-            print """\n  LaTeX index written to {filename}_index.tex\n""" \
-                  """  LaTeX table written to {filename}.tex\n""" \
-                  """  >>> pdflatex {filename}\n""" \
-                  """  >>> open /Applications/Preview.app {filename}.pdf\n""".format(filename=filename)
+            print("""\n  LaTeX index written to {filename}_index.tex\n"""
+                  """  LaTeX table written to {filename}.tex\n"""
+                  """  >>> pdflatex {filename}\n"""
+                  """  >>> open /Applications/Preview.app {filename}.pdf\n""".format(filename=filename))
             filedict = {'data': os.path.abspath(filename) + '.tex',
                         'index': os.path.abspath(filename + '_index.tex')}
             return filedict

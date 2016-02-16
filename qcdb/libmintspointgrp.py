@@ -1,3 +1,4 @@
+from __future__ import print_function
 from exceptions import *
 from vecutil import *
 
@@ -983,7 +984,7 @@ class CharacterTable(object):
         for ir in range(self.PYnirrep):
             nc = 1 if self.PYgamma[ir].complex() else self.PYgamma[ir].degen
             for c in range(nc):
-                print 'i =', i, 'ir =', ir, 'c =', c, 'cn =', cn, 'nc =', nc
+                print('i =', i, 'ir =', ir, 'c =', c, 'cn =', cn, 'nc =', nc)
                 if cn == i:
                     return ir
                 cn += 1  # right place to increment?
@@ -997,7 +998,7 @@ class CharacterTable(object):
         for ir in range(self.PYnirrep):
             nc = 1 if self.PYgamma[ir].complex() else self.PYgamma[ir].degen
             for c in range(nc):
-                print 'i =', i, 'ir =', ir, 'c =', c, 'cn =', cn, 'nc =', nc
+                print('i =', i, 'ir =', ir, 'c =', c, 'cn =', cn, 'nc =', nc)
                 if cn == i:
                     return c
                 cn += 1  # right place to increment?

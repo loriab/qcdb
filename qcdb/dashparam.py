@@ -23,6 +23,7 @@
 """
 Module to hold and distribute the -D dispersion correction parameters.
 """
+from __future__ import print_function
 try:
     from p4regex import *
 except ImportError:

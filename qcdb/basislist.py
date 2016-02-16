@@ -26,6 +26,7 @@ query appropriate fitting bases for any orbital basis distributed
 with Psi4.
 
 """
+from __future__ import print_function
 import os
 
 

@@ -24,6 +24,7 @@ r"""Stuff stolen from psi. Should import or not as necessary
 or some better way. Apologies to the coders.
 
 """
+from __future__ import print_function
 import sys
 import math
 import re

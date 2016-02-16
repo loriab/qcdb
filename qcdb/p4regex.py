@@ -1,3 +1,4 @@
+from __future__ import print_function
 import re
 
 yes = re.compile(r'^(yes|true|on|1)', re.IGNORECASE)

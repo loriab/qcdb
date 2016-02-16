@@ -20,6 +20,7 @@
 #@END LICENSE
 #
 
+from __future__ import print_function
 import re
 import math
 from collections import defaultdict
@@ -59,7 +60,7 @@ def harvest_output(outtext):
         r'^(?:\s*?)$',
         outtext, re.MULTILINE | re.DOTALL)
     if mobj:
-        print 'matched sapt'
+        print('matched sapt')
         for pv in mobj.group(0).split('\n'):
             submobj = re.search(r'^\s+' + r'(.+?)' + r'\s+' + 
                 NUMBER + r'\s+' + r'mH' + r'\s+' +

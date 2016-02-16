@@ -21,6 +21,7 @@
 #
 
 """Module with functions that interface with Grimme's DFTD3 code."""
+from __future__ import print_function
 import os
 import re
 import sys
@@ -223,7 +224,7 @@ def run_dftd3(self, func=None, dashlvl=None, dashparam=None, dertype=None):
         if isP4regime:
             psi4.print_out(text)  # TODO
         else:
-            print text
+            print(text)
 
     # Clean up files and remove scratch directory
     os.unlink(paramfile)

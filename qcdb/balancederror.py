@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+from __future__ import print_function
+
 def compute_balanced_error(mcsys, refsys, refeq, curveratio, verbose=False):
     """Computes the balanced error quantity from the interaction energy
     of a system under investigation with a certain model chemistry,
@@ -34,11 +36,11 @@ def compute_balanced_error(mcsys, refsys, refeq, curveratio, verbose=False):
     error = (mcsys - refsys) * q / abs(refeq * temp)
     xsys = weight * error
     if verbose:
-        print '%65s wtdamp %8.3f   posndamp %8.3f   damp %8.3f %8.3f' % ('',
+        print("""%65s wtdamp %8.3f   posndamp %8.3f   damp %8.3f %8.3f""" % ('',
             xsys / ((mcsys - refsys) / abs(refeq)),
             abs(refsys) / abs(refeq),
             (xsys / ((mcsys - refsys) / abs(refeq))) * (abs(refsys)/abs(refeq)),
-            xsys / ((mcsys - refsys)/abs(refsys)))
+            xsys / ((mcsys - refsys)/abs(refsys))))
 
     # [absolute, relative, balanced error]
     return [mcsys - refsys, (mcsys - refsys) / abs(refsys), xsys]
@@ -70,9 +72,9 @@ if __name__ == '__main__':
         [6.5, -0.029, -0.09],
         [10.0, 0.018, 0.01]]
 
-    print '%10s %10s %10s %10s %10s %10s' % \
-        ('R', 'refIE', 'mcIE', 'Error', '%Err', '%BalErr')
+    print('%10s %10s %10s %10s %10s %10s' %
+        ('R', 'refIE', 'mcIE', 'Error', '%Err', '%BalErr'))
     for sys in data:
         ber = compute_balanced_error(sys[2], sys[1], refeq, sys[0] / refR, verbose=True)
-        print '%10.1f %10.2f %10.2f %10.2f %10.1f %10.1f' % \
-            (sys[0], sys[1], sys[2], ber[0], 100 * ber[1], 100 * ber[2])
+        print('%10.1f %10.2f %10.2f %10.2f %10.1f %10.1f' % \
+            (sys[0], sys[1], sys[2], ber[0], 100 * ber[1], 100 * ber[2]))
