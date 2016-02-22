@@ -1,3 +1,4 @@
+from __future__ import print_function
 from vecutil import *
 from physconst import *
 from cov_radii import *
@@ -155,8 +156,8 @@ def bond_profile(self):
         # break cycle if takes more than given number of iterations
         max_iter = 100
         if N_iter > max_iter:
-            print 'Error: multiple bond determination not complete'
-            print '  %i bonds unaccounted for' % (N_left)
+            print("""Error: multiple bond determination not complete""")
+            print("""  %i bonds unaccounted for""" % (N_left))
             break
 
     # bond order is number of bonds between each bonded atom pair

@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import re
 import string
@@ -510,7 +511,7 @@ class BasisSet(object):
         text += """    Name: %s\n""" % (name)
 
         if returnBasisSet:
-            print text
+            print(text)
             return basisset
         else:
             bsdict = {}
@@ -936,7 +937,7 @@ class BasisSet(object):
             text = self.print_detail(out=None)
 
         if out is None:
-            print text
+            print(text)
         else:
             with open(out, mode='w') as handle:
                 handle.write(text)

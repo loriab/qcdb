@@ -1,6 +1,7 @@
 data = [(1.1,0.9),(2.1,2),(3, 2.9)]
 
 
+from __future__ import print_function
 import sys
 sys.path.append('/Users/loriab/linux/qcdb')
 sys.path.append('/Users/loriab/linux/qcdb/databases')
@@ -27,5 +28,5 @@ def powerfit(x, a, b):
 popt, pcov = curve_fit(powerfit, x, y)
 plt.plot(x,powerfit(x,*popt),'b--')
 plt.show()
-print popt
-print pcov
+print(popt)
+print(pcov)

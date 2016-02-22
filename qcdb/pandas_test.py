@@ -1,4 +1,4 @@
-
+from __future__ import print_function
 
 def test_pandas(h2kc, project, df):
     """
@@ -9,7 +9,7 @@ def test_pandas(h2kc, project, df):
     try:
 
         if project == 'dhdft':
-            print """\n        Checks from dhdft project:\n"""
+            print("""\n        Checks from dhdft project:\n""")
             digits = 4
 
             # B3LYP
@@ -123,7 +123,7 @@ def test_pandas(h2kc, project, df):
 
             # duplicates of checks from dft project that should match dhdft project
             #   digits shouldn't need to be this big but is: df vs non-df & psi4 vs qchem
-            print """\n        Checks from dft project:\n"""
+            print("""\n        Checks from dft project:\n""")
             digits = 0.04
 
             # B3LYP
@@ -181,7 +181,7 @@ def test_pandas(h2kc, project, df):
             qcdb.compare_values(-7.2387, h2kc * df['PBE0D3-unCP-atz']['S22-22'], digits, 'PBE0D3-unCP-atz')  # new dash
 
         elif project == 'dft':
-            print """\n        Checks from dft project:\n"""
+            print("""\n        Checks from dft project:\n""")
             digits = 4
 
             # B3LYP
@@ -426,7 +426,7 @@ def test_pandas(h2kc, project, df):
             qcdb.compare_values(-6.7097, h2kc * df['XYG3-unCP-6311ppg_3df_2p_']['S22-22'], digits, 'XYG3-unCP-6311ppg_3df_2p_')
 
         elif project == 'parenq':
-            print """\n        Checks from parenq project:\n"""
+            print("""\n        Checks from parenq project:\n""")
             digits = 4
 
             qcdb.compare_values(-3.7422, h2kc * df['HF-CP-atz']['A24-4'], digits, 'HF-CP-atz')
@@ -458,7 +458,7 @@ def test_pandas(h2kc, project, df):
             qcdb.compare_values(-3.0433, h2kc * df['CCSDTQ-fno1e4-CP-adtz']['A24-9'], digits, 'CCSDTQ-fno1e4-CP-adtz')
 
         elif project == 'f12dilabio':
-            print """\n        Checks from f12dilabio project:\n"""
+            print("""\n        Checks from f12dilabio project:\n""")
             digits = 4
 
             qcdb.compare_values(-2.4749, h2kc * df['HFCABS-CP-adz']['A24-9'], digits, 'HFCABS-CP-adz')
@@ -533,7 +533,7 @@ def test_pandas(h2kc, project, df):
             qcdb.compare_values(-4.5892, h2kc * df['CCSDTNSBF12-CP-hill2_adtz']['A24-9'], digits, 'CCSDTNSBF12-CP-hill2_adtz')
 
         elif project == 'dilabio':
-            print """\n        Checks from dilabio project:\n"""
+            print("""\n        Checks from dilabio project:\n""")
             digits = 4
 
             qcdb.compare_values(-4.4367, h2kc * df['CCSD-CP-a56z']['A24-4'], digits, 'CCSD-CP-a56z')
@@ -618,7 +618,7 @@ def test_pandas(h2kc, project, df):
             qcdb.compare_values(-4.6480, h2kc * df['CCSDT-ave-aq5zatz']['A24-4'], digits, 'CCSDT-ave-aq5zatz')
 
         elif project == 'pt2':
-            print """\n        Checks from pt2 project:\n"""
+            print("""\n        Checks from pt2 project:\n""")
             digits = 4
 
             # HF
@@ -1473,7 +1473,7 @@ def test_pandas(h2kc, project, df):
             #qcdb.compare_values(-4.9192, h2kc * df['DWMP2F12-CP-tzf12'      ]['S22-2'], digits, 'DWMP2F12-CP-tzf12')
 
         elif project == 'saptone':
-            print """\n        Checks from saptone project:\n"""
+            print("""\n        Checks from saptone project:\n""")
             digits = 4
 
             # SAPT-DFT
@@ -1684,7 +1684,7 @@ def test_pandas(h2kc, project, df):
             qcdb.compare_values(-4.7930, h2kc * df['SAPT3FCM-dfmp-SA-hatz']['S22-2'], digits, 'SAPT3FCM-SA-hatz')
 
     except KeyError, e:
-        print e
+        print(e)
         pass
     else:
-        print 'End of Tests'
+        print('End of Tests')

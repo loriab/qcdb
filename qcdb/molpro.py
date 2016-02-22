@@ -19,12 +19,13 @@
 #
 #@END LICENSE
 #
-
+from __future__ import absolute_import
+from __future__ import print_function
 import math
 
-import qcdb.exceptions
-import qcformat
-import molpro_basissets
+from .exceptions import *
+from . import qcformat
+from . import molpro_basissets
 
 
 class MolproIn(qcformat.InputFormat):
@@ -74,7 +75,7 @@ class MolproIn(qcformat.InputFormat):
                 text += """set,mp2fit;  default,%s/mp2fit\n""" % (self.auxbasis)
                 text += """set,dflhf;   default,%s/jkfit\n""" % (self.auxbasis)
             else:
-                raise qcdb.exceptions.ValidationError("""Auxiliary basis not predictable from orbital basis '%s'""" % (self.basis))
+                raise ValidationError("""Auxiliary basis not predictable from orbital basis '%s'""" % (self.basis))
 
         text += """}\n\n"""
         return text

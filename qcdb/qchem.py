@@ -20,6 +20,7 @@
 #@END LICENSE
 #
 
+from __future__ import print_function
 import re
 import math
 from collections import defaultdict
@@ -154,7 +155,7 @@ def harvest_output(outtext):
         #psivar['DFT FUNCTIONAL TOTAL ENERGY'] = mobj.group(2)
         psivar['MP2 CORRELATION ENERGY'] = mobj.group(1)
         #psivar['DOUBLE-HYBRID CORRECTION ENERGY'] = mobj.group(1)
-        print psivar
+        print(psivar)
 
 # TODO: need to split on 'Q-Chem begins' or 'Quantum Leap' or something
 

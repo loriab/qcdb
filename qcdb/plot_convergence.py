@@ -1,3 +1,4 @@
+from __future__ import print_function
 import sys
 sys.path.append('/Users/loriab/linux/qcdb')
 sys.path.append('/Users/loriab/linux/qcdb/databases')
@@ -10,7 +11,7 @@ a24.load_f12dilabio()
 import matplotlib.pyplot as plt
 import numpy as np
 
-print a24.hrxn[1].data
+print(a24.hrxn[1].data)
 
 mcs1 = ['CCSDT-CP-adz', 'CCSDT-CP-atz', 'CCSDT-CP-aqz','CCSDT-CP-a5z','CCSDT-CP-a6z']
 mcs2 = ['CCSDTAF12-CP-adz','CCSDTAF12-CP-atz','CCSDTAF12-CP-aqz','CCSDTAF12-CP-a5z']
@@ -78,10 +79,10 @@ for rxn in [1,2,3]:
         except: KeyError
         pass
     plot_convergence_aXZ(title, data1, data2, data3, data4)
-    print data1
-    print data2
-    print data3
-    print data4
+    print(data1)
+    print(data2)
+    print(data3)
+    print(data4)
 
 
 def plot_convergence_XZF12(title, conv, f12a, f12b, f12c):
@@ -136,10 +137,10 @@ for rxn in [1,2,3]:
         except: KeyError
         pass
     plot_convergence_XZF12(title, data1, data2f, data3f, data4f)
-    print data1
-    print data2f
-    print data3f
-    print data4f
+    print(data1)
+    print(data2f)
+    print(data3f)
+    print(data4f)
 
 
 

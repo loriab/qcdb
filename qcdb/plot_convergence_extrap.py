@@ -1,3 +1,4 @@
+from __future__ import print_function
 import sys
 sys.path.append('/Users/loriab/linux/qcdb')
 sys.path.append('/Users/loriab/linux/qcdb/databases')
@@ -126,14 +127,14 @@ for rxn in [1,2,3]:
         except: KeyError
         pass
     plot_convergence_aMNZ(title, data1, data2, data3, data4, data5, data6, data7, data8)
-    print data1
-    print data2
-    print data3
-    print data4
-    print data5
-    print data6
-    print data7
-    print data8
+    print(data1)
+    print(data2)
+    print(data3)
+    print(data4)
+    print(data5)
+    print(data6)
+    print(data7)
+    print(data8)
 
 def plot_convergence_MNZF12(title, conv, f12a, f12b, f12c, xconv, xf12a, xf12b, xf12c):
     N1 = len(conv)
@@ -226,14 +227,14 @@ for rxn in [1,2,3]:
         except: KeyError
         pass
     plot_convergence_aMNZ(title, data1, data2, data3, data4, data5, data6, data7, data8)
-    print data1
-    print data2
-    print data3
-    print data4
-    print data5
-    print data6
-    print data7
-    print data8
+    print(data1)
+    print(data2)
+    print(data3)
+    print(data4)
+    print(data5)
+    print(data6)
+    print(data7)
+    print(data8)
 
 
 #def plot_convergence(title, conv, f12a, f12b, f12c, f12aF, f12bF, f12cF, xconv, xf12a, xf12b, xf12c, xf12aF, xf12bF, xf12cF):
