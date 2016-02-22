@@ -19,17 +19,17 @@
 #
 #@END LICENSE
 #
-
+from __future__ import absolute_import
 from __future__ import print_function
 import re
 import math
 from decimal import Decimal
 from collections import defaultdict
-from exceptions import *
-from pdict import PreservingDict
-import qcformat
-import molpro_basissets
-import options
+from .exceptions import *
+from .pdict import PreservingDict
+from . import qcformat
+from . import molpro_basissets
+from . import options
 
 
 def harvest_output(outtext):

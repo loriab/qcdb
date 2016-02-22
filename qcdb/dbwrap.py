@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from __future__ import print_function
 import os
 import sys
@@ -13,11 +14,11 @@ try:
     from collections import OrderedDict
 except ImportError:
     from oldpymodules import OrderedDict
-from exceptions import *
-from molecule import Molecule
-from modelchems import Method, BasisSet, Error, methods, bases, errors, pubs
-import psiutil
-import textables
+from .exceptions import *
+from .molecule import Molecule
+from .modelchems import Method, BasisSet, Error, methods, bases, errors, pubs
+from . import psiutil
+from . import textables
 
 
 def initialize_errors():
@@ -541,7 +542,7 @@ class Reaction(object):
         labels = ['']
         # generate matplotlib instructions and call or print
         try:
-            import mpl
+            from . import mpl
             import matplotlib.pyplot as plt
         except ImportError:
             # if not running from Canopy, print line to execute from Canopy
@@ -1752,7 +1753,7 @@ class Database(object):
         title = self.dbse + ' ' + pre + '[]' + suf + ' ' + ','.join(sset)
         # generate matplotlib instructions and call or print
         try:
-            import mpl
+            from . import mpl
             import matplotlib.pyplot as plt
         except ImportError:
             # if not running from Canopy, print line to execute from Canopy
@@ -1842,7 +1843,7 @@ class Database(object):
         #            0.0 if d['mcdata'] is None else d['mcdata'])
         # generate matplotlib instructions and call or print
         try:
-            import mpl
+            from . import mpl
             import matplotlib.pyplot as plt
         except ImportError:
             # if not running from Canopy, print line to execute from Canopy
@@ -1931,7 +1932,7 @@ class Database(object):
 
         # generate matplotlib instructions and call or print
         try:
-            import mpl
+            from . import mpl
             import matplotlib.pyplot as plt
         except ImportError:
             pass
@@ -1985,7 +1986,7 @@ class Database(object):
         mapbe = None
         # generate matplotlib instructions and call or print
         try:
-            import mpl
+            from . import mpl
             import matplotlib.pyplot as plt
         except ImportError:
             # if not running from Canopy, print line to execute from Canopy
@@ -2193,7 +2194,7 @@ reinitialize
         stde = errors[self.dbse]['stde']
         # generate matplotlib instructions and call or print
         try:
-            import mpl
+            from . import mpl
             import matplotlib.pyplot as plt
         except ImportError:
             # if not running from Canopy, print line to execute from Canopy
@@ -2292,7 +2293,7 @@ reinitialize
         title = self.dbse + ' ' + ixpre + '[]' + ixsuf
         # generate matplotlib instructions and call or print
         try:
-            import mpl
+            from . import mpl
             import matplotlib.pyplot as plt
         except ImportError:
             # if not running from Canopy, print line to execute from Canopy
@@ -2335,7 +2336,7 @@ reinitialize
 
         # generate matplotlib instructions and call or print
         try:
-            import mpl
+            from . import mpl
             import matplotlib.pyplot as plt
         except ImportError:
             print('Matplotlib not avail')
@@ -2372,7 +2373,7 @@ reinitialize
         me = errors[self.dbse]['me']
         # generate matplotlib instructions and call or print
         try:
-            import mpl
+            from . import mpl
             import matplotlib.pyplot as plt
         except ImportError:
             # if not running from Canopy, print line to execute from Canopy

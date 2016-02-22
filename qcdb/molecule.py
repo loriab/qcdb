@@ -19,6 +19,7 @@
 #
 #@END LICENSE
 #
+from __future__ import absolute_import
 from __future__ import print_function
 
 import os
@@ -35,7 +36,7 @@ import socket
 import shutil
 import random
 from collections import defaultdict
-from libmintsmolecule import *
+from .libmintsmolecule import *
 
 
 class Molecule(LibmintsMolecule):
@@ -1113,9 +1114,9 @@ class Molecule(LibmintsMolecule):
         self.translate(coc)
 
 # Attach methods to qcdb.Molecule class
-from interface_dftd3 import run_dftd3 as _dftd3_qcdb_yo
+from .interface_dftd3 import run_dftd3 as _dftd3_qcdb_yo
 Molecule.run_dftd3 = _dftd3_qcdb_yo
-from parker import xyz2mol as _parker_xyz2mol_yo
+from .parker import xyz2mol as _parker_xyz2mol_yo
 Molecule.format_molecule_for_mol2 = _parker_xyz2mol_yo
-from parker import bond_profile as _parker_bondprofile_yo
+from .parker import bond_profile as _parker_bondprofile_yo
 Molecule.bond_profile = _parker_bondprofile_yo

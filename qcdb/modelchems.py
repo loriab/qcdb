@@ -1,8 +1,9 @@
+from __future__ import absolute_import
 from __future__ import print_function
 try:
     from collections import OrderedDict
 except ImportError:
-    from oldpymodules import OrderedDict
+    from .oldpymodules import OrderedDict
 
 # thinking now that QCEssential should have one doi and dictionary of
 # citations. that way the doi contains the record of the definition of the

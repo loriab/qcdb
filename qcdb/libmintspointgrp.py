@@ -1,6 +1,11 @@
+from __future__ import absolute_import
 from __future__ import print_function
-from exceptions import *
-from vecutil import *
+from .exceptions import *
+from .vecutil import *
+import sys
+if sys.version_info >= (3,0):
+    basestring = str
+
 
 #
 # Additional modifications made by Justin Turney <jturney@ccqc.uga.edu>

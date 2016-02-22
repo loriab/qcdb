@@ -19,18 +19,18 @@
 #
 #@END LICENSE
 #
-
+from __future__ import absolute_import
 from __future__ import print_function
 #import os
 #import re
 #import math
 #import copy
 import itertools
-from molecule import Molecule
+from .molecule import Molecule
 #from periodictable import *
 #from physconst import *
-from vecutil import *
-from exceptions import *
+from .vecutil import *
+from .exceptions import *
 
 #LINEAR_A_TOL = 1.0E-2  # When sin(a) is below this, we consider the angle to be linear
 #DEFAULT_SYM_TOL = 1.0E-8

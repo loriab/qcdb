@@ -19,6 +19,7 @@
 #
 #@END LICENSE
 #
+from __future__ import absolute_import
 from __future__ import print_function
 import os
 import re
@@ -27,14 +28,14 @@ import math
 try:
     from collections import OrderedDict
 except ImportError:
-    from oldpymodules import OrderedDict
-from periodictable import *
-from physconst import *
-from vecutil import *
-from exceptions import *
+    from .oldpymodules import OrderedDict
+from .periodictable import *
+from .physconst import *
+from .vecutil import *
+from .exceptions import *
 #from libmintscoordentry import *
-from libmintscoordentry import NumberValue, VariableValue, CartesianEntry, ZMatrixEntry
-from libmintspointgrp import SymmOps, similar, SymmetryOperation, PointGroup
+from .libmintscoordentry import NumberValue, VariableValue, CartesianEntry, ZMatrixEntry
+from .libmintspointgrp import SymmOps, similar, SymmetryOperation, PointGroup
 
 #from libmintspointgrp import PointGroups
 #print PointGroups
@@ -2169,7 +2170,7 @@ class LibmintsMolecule(object):
             # Find principal axis that is unique and make it z-axis.
             It = self.inertia_tensor()
             I_evals, I_evecs = diagonalize3x3symmat(It)
-            ev_list = zip(I_evals, transpose(I_evecs))  # eigenvectors are cols of I_evecs
+            ev_list = list(zip(I_evals, transpose(I_evecs)))  # eigenvectors are cols of I_evecs
             ev_list.sort(key=lambda tup: tup[0], reverse=False)
             I_evals, I_evecs = zip(*ev_list)  # sorted eigenvectors are now rows of I_evecs
             if verbose > 2:

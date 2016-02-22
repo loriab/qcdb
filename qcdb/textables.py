@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from __future__ import print_function
 import re
 import sys
@@ -5,8 +6,8 @@ import itertools
 try:
     from collections import OrderedDict
 except ImportError:
-    from oldpymodules import OrderedDict
-from qcdb.modelchems import Method, BasisSet, Error, methods, bases, errors
+    from .oldpymodules import OrderedDict
+from .modelchems import Method, BasisSet, Error, methods, bases, errors
 
 mc_archive = {'mtd': methods, 'bas': bases, 'err': errors}
 fancy_mc_archive = {}
