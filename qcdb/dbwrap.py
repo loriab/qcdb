@@ -1541,8 +1541,13 @@ class Database(object):
         funcdb = {}
         for db, odb in self.dbdict.iteritems():
             dbix = self.dbdict.keys().index(db)
-            rxnlist = set().union(*[set(self.dbdict[db].sset[self.sset[ss][dbix]].keys()) for ss in sslist])
-            funcdb[db] = lambda x: rxnlist
+            overlapping_dbrxns = []
+            for ss in sslist:
+                lss = self.sset[ss][dbix]
+                if lss is not None:
+                    overlapping_dbrxns.append(self.dbdict[db].sset[lss].keys())
+            rxnlist = set().union(*overlapping_dbrxns)
+            funcdb[db] = rxnlist
         self.add_Subset(name, funcdb)
 
     def add_sampled_Subset(self, sset='default', number_of_samples=1, sample_size=5, prefix='rand'):
@@ -2270,6 +2275,8 @@ reinitialize
                                     data.append(None)
                         else:
                             data.append(None)
+                    else:
+                        data.append(None)
                 if not data or all(item is None for item in data):
                     pass  # filter out empty reactions
                 else:

@@ -280,6 +280,7 @@ def begin_latex_document():
     text.append(r"""\usepackage{dcolumn}""")
     text.append(r"""\usepackage{rotating}""")
     text.append(r"""\usepackage{longtable}""")
+    text.append(r"""\usepackage[table]{xcolor}""")
     text.append(r"""\begin{document}""")
     text.append('')
     return text
