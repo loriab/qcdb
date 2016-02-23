@@ -21,7 +21,8 @@
 #
 #@END LICENSE
 #
-
+from __future__ import absolute_import
+from __future__ import print_function
 import sys
 import math
 import os
@@ -40,22 +41,22 @@ sys.path.append(qcdbpkg_path + '/../databases')
 DBdocstrings = qcdb.dictify_database_docstrings()
 
 # instructions
-print """
+print("""
  Welcome to imake-db.
     Just fill in the variables when prompted.
     Hit ENTER to accept default.
     Strings should not be in quotes.
     Elements in arrays should be space-delimited.
     Nothing is case sensitive.
-"""
+""")
 
 # query database name
 module_choices = dict(zip([x.upper() for x in DBdocstrings.keys()], DBdocstrings.keys()))
 
-print '\n Choose your database.'
+print('\n Choose your database.')
 for item in module_choices.keys():
-    print '    %-12s   %s' % ('[' + module_choices[item] + ']', DBdocstrings[module_choices[item]]['general'][0].lstrip(" |"))
-print '\n'
+    print("""    %-12s   %s""" % ('[' + module_choices[item] + ']', DBdocstrings[module_choices[item]]['general'][0].lstrip(' |')))
+print('\n')
 
 user_obedient = False
 while not user_obedient:
@@ -67,10 +68,10 @@ while not user_obedient:
 # query database subset
 subset_choices = dict(zip([x.upper() for x in DBdocstrings[db_name]['subset'].keys()], DBdocstrings[db_name]['subset'].keys()))
 
-print '\n Choose your subset (multiple allowed).'
+print('\n Choose your subset (multiple allowed).')
 for key, val in DBdocstrings[db_name]['subset'].items():
-    print '    %-12s   %s' % ('[' + key + ']', val)
-print '\n'
+    print("""    %-12s   %s""" % ('[' + key + ']', val))
+print('\n')
 
 subset = []
 user_obedient = False
@@ -89,7 +90,7 @@ while not user_obedient:
             break
 
 # query qc program
-print """
+print("""
  Choose your quantum chemistry program.
     [qchem]
     [molpro]       writes Molpro input files
@@ -97,7 +98,7 @@ print """
     [psi4]         writes Psi4 input files
     #[nwchem]
     #[xyz]          writes basic xyz files only
-"""
+""")
 
 user_obedient = False
 while not user_obedient:
@@ -115,16 +116,16 @@ except ImportError:
     print(", ".join(map(str, sys.path)))
     raise ValidationError("Python module loading problem for QC program " + str(qcprog))
 else:
-    print qcmod
+    print(qcmod)
     qcmtdIN = qcmod.qcmtdIN
 
 # query quantum chemical method(s)
 method_choices = dict(zip([x.upper() for x in qcmtdIN.keys()], qcmtdIN.keys()))
 
-print '\n Choose your quantum chemical methods (multiple allowed).'
+print('\n Choose your quantum chemical methods (multiple allowed).')
 for key, val in qcmtdIN.items():
-    print '    %-12s' % ('[' + key + ']')
-print '\n'
+    print("""    %-12s""" % ('[' + key + ']'))
+print('\n')
 
 methods = []
 user_obedient = False
@@ -142,10 +143,10 @@ while not user_obedient:
 
 
 # query basis set(s)
-print """
+print("""
  Choose your basis set (multiple allowed).
     e.g., aug-cc-pvdz or 6-31+G* or cc-pvtz may-cc-pvtz aug-cc-pvtz
-"""
+""")
 
 bases = []
 user_obedient = False
@@ -158,7 +159,7 @@ while not user_obedient:
             bases.append(btemp)
             user_obedient = True
         else:
-            print '    Basis set %s not recognized.' % (item)
+            print('    Basis set %s not recognized.' % (item))
             proceed = qcdb.query_yes_no('    Proceed anyway? =', False)
             if proceed:
                 bases.append(item)
@@ -169,9 +170,9 @@ while not user_obedient:
                 break
 
 # query castup preference
-print """
+print("""
  Do cast up from smaller basis set?
-"""
+""")
 
 user_obedient = False
 while not user_obedient:
@@ -180,9 +181,9 @@ while not user_obedient:
     # below, options['SCF']['BASIS_GUESS']['value'] = castup
 
 # query directory prefix
-print """
+print("""
  State your destination directory prefix.
-"""
+""")
 
 user_obedient = False
 while not user_obedient:
@@ -195,9 +196,9 @@ while not user_obedient:
         user_obedient = True
 
 # query memory
-print """
+print("""
  Choose your memory usage in MB.
-"""
+""")
 
 user_obedient = False
 while not user_obedient:
@@ -231,7 +232,7 @@ else:
         DATA = {}
 
 
-print """
+print("""
         <<< SCANNED SETTINGS  SCANNED SETTINGS  SCANNED SETTINGS  SCANNED SETTINGS >>>
 
                           dbse = %s
@@ -246,7 +247,7 @@ print """
 
         <<< SCANNED SETTINGS  DISREGARD RESULTS IF INAPPROPRIATE  SCANNED SETTINGS >>>
 
-""" % (dbse, subset, qcprog, methods, bases, dirprefix, memory, castup)
+""" % (dbse, subset, qcprog, methods, bases, dirprefix, memory, castup))
 
 
 # establish multiplicity hash table
@@ -301,7 +302,7 @@ tdir = '-'.join([dirprefix, dbse, qcprog])
 try:
     os.mkdir(tdir)
 except OSError:
-    print 'Warning: directory %s already present.' % (tdir)
+    print('Warning: directory %s already present.' % (tdir))
 
 for basis in bases:
     # below, options['GLOBALS']['BASIS']['value'] = basis
@@ -316,7 +317,7 @@ for basis in bases:
         try:
             os.mkdir(tdir + '/' + subdir)
         except OSError:
-            print 'Warning: directory %s/%s already present.' % (tdir, subdir)
+            print('Warning: directory %s/%s already present.' % (tdir, subdir))
 
         # TODO: forcing c1 symm skipped - still needed for xdm and molpro
 

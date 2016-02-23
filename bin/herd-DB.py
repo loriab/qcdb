@@ -21,7 +21,7 @@
 #
 #@END LICENSE
 #
-
+from __future__ import print_function
 import os
 #import re
 import sys
@@ -133,7 +133,7 @@ except ImportError:
     print(", ".join(map(str, sys.path)))
     raise ValidationError("Python module loading problem for QC program " + str(qcprog))
 else:
-    print qcmod
+    print(qcmod)
     qcmtdIN = qcmod.qcmtdIN
 
 # Load module for requested database
@@ -159,7 +159,7 @@ else:
         DATA = {}
 
 
-print """
+print("""
         <<< SCANNED SETTINGS  SCANNED SETTINGS  SCANNED SETTINGS  SCANNED SETTINGS >>>
 
                           dbse = %s
@@ -170,7 +170,7 @@ print """
 
         <<< SCANNED SETTINGS  DISREGARD RESULTS IF INAPPROPRIATE  SCANNED SETTINGS >>>
 
-""" % (dbse, db_name, qcprog, mode, dirprefix)
+""" % (dbse, db_name, qcprog, mode, dirprefix))
 
 # commence iteration through reactions
 psivar = collections.defaultdict(dict)
@@ -195,7 +195,7 @@ for rxn in HRXN:
             if key == 'SUCCESS':
                 complete = True
         textline += """|  %14s %3d """ % ('Completed' if complete else 'Running', rxnm_wt)
-    print textline
+    print(textline)
 
 saptkeys = sorted([pv for pv in psivar.keys() if (pv and pv.startswith('SAPT ') and pv in psivar2useme.keys())])
 issapt = True if saptkeys else False
@@ -207,7 +207,7 @@ if issapt:  # sapt
     footer += '\n'
 
     # print main results to useme
-    print ''
+    print('')
     usemecontents = ''
     tally = 0
     usemeext = 'usemesapt'
@@ -236,7 +236,7 @@ if issapt:  # sapt
         with open(dirprefix + '.' + usemeext, 'w') as handle:
             handle.write(footer)
             handle.write(usemecontents)
-            print '        writing %4d entries to %s' % (tally, dirprefix + '.' + usemeext)
+            print('        writing %4d entries to %s' % (tally, dirprefix + '.' + usemeext))
 
 else:  # non-sapt
     # prepare useme footer
@@ -251,14 +251,14 @@ else:  # non-sapt
     isDHDFT = True if 'DOUBLE-HYBRID CORRECTION ENERGY' in psivar.keys() else False
     
     # print main results to useme
-    print ''
+    print('')
     for datum in psivar.keys():
         usemecontents = ''
         tally = 0
         try:
             #usemeext = actionable_data[datum]
             usemeext = psivar2useme[datum]
-            print datum
+            print(datum)
         except KeyError:
             continue
     
@@ -298,5 +298,5 @@ else:  # non-sapt
             with open(dirprefix + '.' + usemeext, 'w') as handle:
                 handle.write(usemecontents)
                 handle.write(footer)
-                print '        writing %4d entries to %s' % (tally, dirprefix + '.' + usemeext)
+                print('        writing %4d entries to %s' % (tally, dirprefix + '.' + usemeext))
 
