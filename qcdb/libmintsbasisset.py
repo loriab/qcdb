@@ -1,6 +1,9 @@
+from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import division
 import os
 import re
+import sys
 import string
 import hashlib
 import itertools
@@ -8,14 +11,16 @@ from collections import defaultdict
 try:
     from collections import OrderedDict
 except ImportError:
-    from oldpymodules import OrderedDict
-from exceptions import *
-from psiutil import search_file
-from molecule import Molecule
-from periodictable import *
-from libmintsgshell import GaussianShell
-from libmintsbasissetparser import Gaussian94BasisSetParser
-from basislist import corresponding_basis
+    from .oldpymodules import OrderedDict
+from .exceptions import *
+from .psiutil import search_file
+from .molecule import Molecule
+from .periodictable import *
+from .libmintsgshell import GaussianShell
+from .libmintsbasissetparser import Gaussian94BasisSetParser
+from .basislist import corresponding_basis
+if sys.version_info >= (3,0):
+    basestring = str
 
 
 class BasisSet(object):
@@ -501,7 +506,7 @@ class BasisSet(object):
         # Construct all the one-atom BasisSet-s for mol's CoordEntry-s
         for at in range(mol.natom()):
             oneatombasis = BasisSet(basisset, at)
-            oneatombasishash = hashlib.sha1(oneatombasis.print_detail(numbersonly=True)).hexdigest()
+            oneatombasishash = hashlib.sha1(oneatombasis.print_detail(numbersonly=True).encode('utf-8')).hexdigest()
             mol.set_shell_by_number(at, oneatombasishash, role="CABS")
         mol.update_geometry()  # re-evaluate symmetry taking basissets into account
 
@@ -683,10 +688,14 @@ class BasisSet(object):
                 #   or symbol (N) (in that order; don't want to restrict use of atom
                 #   labels to basis set spec), look everywhere (don't just look
                 #   in library)
-                seek['basis'] = [requested_basname]
+                if(requested_basname.endswith("DECONTRACT")):  # Good gracious, TODO
+                            seek['basis'] = [requested_basname[:-11]]
+                else:
+                    seek['basis'] = [requested_basname]
+                #seek['basis'] = [requested_basname]
                 seek['entry'] = [symbol] if symbol == label else [label, symbol]
                 seek['path'] = basisPath
-                seek['strings'] = '' if basstrings is None else basstrings.keys()
+                seek['strings'] = '' if basstrings is None else list(basstrings.keys())
 
             # Search through paths, bases, entries
             for bas in seek['basis']:
@@ -744,7 +753,7 @@ class BasisSet(object):
         # Construct all the one-atom BasisSet-s for mol's CoordEntry-s
         for at in range(mol.natom()):
             oneatombasis = BasisSet(basisset, at)
-            oneatombasishash = hashlib.sha1(oneatombasis.print_detail(numbersonly=True)).hexdigest()
+            oneatombasishash = hashlib.sha1(oneatombasis.print_detail(numbersonly=True).encode('utf-8')).hexdigest()
             mol.set_shell_by_number(at, oneatombasishash, role=role)
         mol.update_geometry()  # re-evaluate symmetry taking basissets into account
 
@@ -769,7 +778,7 @@ class BasisSet(object):
         #text += """  Basis Set: %s\n""" % (basisset.name)
         text = ''
         for ats, msg in tmp2.items():
-            text += """    atoms %s %s\n""" % (string.ljust(ats, width=maxsats), msg)
+            text += """    atoms %s %s\n""" % (ats.ljust(maxsats), msg)
 
         #print text
         return basisset, text
