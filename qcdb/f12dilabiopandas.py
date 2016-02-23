@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import sys
 import glob
@@ -29,10 +30,10 @@ for useme in glob.glob('%s/%s*useme*' % (path, dbse)):
     #optns = '_'.join(spl[0].split('-')[2:-1])
     basis = spl[0].split('-')[-1]
     piece = '.'.join(spl[1:])
-    print useme, basis, piece
+    print(useme, basis, piece)
     tmp = pd.read_csv('%s' % (useme), index_col=0, sep='\s+', comment='#', na_values='None', names=['rxn', 'dimer', 'monoA-CP', 'monoB-CP'])
-    print useme, basis, piece
-    print tmp.head(10)
+    print(useme, basis, piece)
+    print(tmp.head(10))
     rawdata[basis][useme2psivar[piece]] = tmp.dropna(how='all')
 
 datazip = {}
@@ -98,7 +99,7 @@ for pvar, action in pv0.iteritems():
         df = append_result_of_func_with_funcargs_to_master_DataFrame_atlevel_with_label(
             master=df, label=pvar, atlevel=lvl, func=action['func'], funcargs=action['args'])
     except KeyError, e:
-        print """Building df pv0: empty index '%s' because missing %s""" % (pvar, e)
+        print("""Building df pv0: empty index '%s' because missing %s""" % (pvar, e))
 
 
 # <<< miscellaneous pre-computing >>>
@@ -238,9 +239,9 @@ for mtd in methods:
 #mine['CCSDTNSBF12-CP-Hill2_dtzf12'] = build_from_lists(['HF-CABS TOTAL ENERGY', 'CCSD-F12B CORRELATION ENERGY', '(T)-F12AB CORRECTION ENERGY'], ['tzf12', 'HillCC_dtzf12', 'HillT_dtzf12'])
 mine['CCSDTNSBF12-CP-Hill2_adtz'] = build_from_lists(['HF-CABS TOTAL ENERGY', 'CCSD-F12B CORRELATION ENERGY', '(T)-F12AB CORRECTION ENERGY'], ['atz', 'HillCC_adtz', 'HillT_adtz'])
 
-print 'scf', h2kc * ie(df.loc['atz'].loc['HF-CABS TOTAL ENERGY'].loc['A24-9'])
-print 'cc-f12b', h2kc * ie(df.loc['HillCC_adtz'].loc['CCSD-F12B CORRELATION ENERGY'].loc['A24-9'])
-print '(t)', h2kc * ie(df.loc['HillT_adtz'].loc['(T)-F12AB CORRECTION ENERGY'].loc['A24-9'])
+print('scf', h2kc * ie(df.loc['atz'].loc['HF-CABS TOTAL ENERGY'].loc['A24-9']))
+print('cc-f12b', h2kc * ie(df.loc['HillCC_adtz'].loc['CCSD-F12B CORRELATION ENERGY'].loc['A24-9']))
+print('(t)', h2kc * ie(df.loc['HillT_adtz'].loc['(T)-F12AB CORRECTION ENERGY'].loc['A24-9']))
 
 # <<< test cases >>>
 
@@ -326,10 +327,10 @@ try:
     #qcdb.compare_values(-4.5499, h2kc * mine['CCSDTNSCF12-CP-Hill2_tqzf12']['A24-9'], 4, 'CSDTNSCF12-CP-Hill2_tqzf12')
     
 except KeyError, e:
-    print e
+    print(e)
     pass
 else:
-    print 'End of Tests'
+    print('End of Tests')
 
 
 # <<< write qcdb data loader >>>

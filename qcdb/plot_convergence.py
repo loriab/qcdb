@@ -1,4 +1,3 @@
-#!/theoryfs2/ds/cdsgroup/psi4-install/miniconda/bin/python
 import sys
 sys.path.append('/theoryfs2/ds/cdsgroup/qcdb')
 sys.path.append('/theoryfs2/ds/cdsgroup/qcdb/qcdb')

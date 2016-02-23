@@ -3,6 +3,10 @@ useme2psivar = {
 
     # <<<  DFT  >>>
 
+    'DFT.usemeraw': 'DFT FUNCTIONAL TOTAL ENERGY',  # for herding. plays well with other uses?
+    #'-nobas.DFTdX.usemedash': 'DISPERSION CORRECTION ENERGY',  # for herding. plays well with other uses?
+    #'DHDFT.usemeraw': 'DOUBLE-HYBRID CORRECTION ENERGY',  # for herding. plays well with other uses?  # violation of conventions to get plain dhdft E!
+
     'blyp.usemeraw': 'BLYP FUNCTIONAL TOTAL ENERGY',
     'blypd2.usemedash': 'BLYP-D2 DISPERSION CORRECTION ENERGY',
     'blypd3.usemedash': 'BLYP-D3 DISPERSION CORRECTION ENERGY',

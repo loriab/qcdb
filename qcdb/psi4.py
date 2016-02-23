@@ -19,17 +19,18 @@
 #
 #@END LICENSE
 #
-
+from __future__ import absolute_import
+from __future__ import print_function
 import re
 import math
 from collections import defaultdict
 
-from exceptions import *
-import qcformat
+from .exceptions import *
+from . import qcformat
 #import molpro_basissets
-import options
-from pdict import PreservingDict
-from qcdb.psivarrosetta import useme2psivar
+from . import options
+from .pdict import PreservingDict
+from .psivarrosetta import useme2psivar
 
 
 def harvest_output(outtext):
@@ -59,7 +60,7 @@ def harvest_output(outtext):
         r'^(?:\s*?)$',
         outtext, re.MULTILINE | re.DOTALL)
     if mobj:
-        print 'matched sapt'
+        print('matched sapt')
         for pv in mobj.group(0).split('\n'):
             submobj = re.search(r'^\s+' + r'(.+?)' + r'\s+' + 
                 NUMBER + r'\s+' + r'mH' + r'\s+' +
