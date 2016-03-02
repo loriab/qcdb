@@ -109,7 +109,9 @@ def run_dftd3(self, func=None, dashlvl=None, dashparam=None, dertype=None):
 
     # Find environment by merging PSIPATH and PATH environment variables
     lenv = {
-        'PATH': ':'.join([os.path.abspath(x) for x in os.environ.get('PSIPATH', '').split(':') if x != '']) + ':' + os.environ.get('PATH')
+        'PATH': ':'.join([os.path.abspath(x) for x in os.environ.get('PSIPATH', '').split(':') if x != '']) + \
+                ':' + os.environ.get('PATH'),
+        'LD_LIBRARY_PATH': os.environ.get('LD_LIBRARY_PATH')
         }
 
     # Find out if running from Psi4 for scratch details and such
@@ -135,10 +137,10 @@ def run_dftd3(self, func=None, dashlvl=None, dashparam=None, dertype=None):
     os.chdir(dftd3_tmpdir)
 
     # Write dftd3_parameters file that governs dispersion calc
-    paramfile = './dftd3_parameters'
-    pfile = open(paramfile, 'w')
-    pfile.write(dash_server(func, dashlvl, 'dftd3'))
-    pfile.close()
+    #paramfile = './dftd3_parameters'  # older, patch name
+    paramfile = '.dftd3par.local'
+    with open(paramfile, 'w') as handle:
+        handle.write(dash_server(func, dashlvl, 'dftd3'))
 
     # Write dftd3_geometry file that supplies geometry to dispersion calc
     geomfile = './dftd3_geometry.xyz'
