@@ -31,7 +31,7 @@ homewrite = args.outdir
 verbose = args.verbose
 
 if verbose > 1:
-    print args
+    print(args)
 
 
 # <<< define projects >>>
@@ -133,7 +133,7 @@ dbse = dbse if args.dbmodule is None else args.dbmodule
 path = path if args.usemedir is None else args.usemedir
 dbobj = qcdb.Database(dbse, loadfrompickle=True)
 dbse = dbobj.dbse
-print '<<<', dbse, '>>>'
+print('<<<', dbse, '>>>')
 modes = []
 stoich = {}
 for orxn in dbobj.hrxn.itervalues():
@@ -155,7 +155,7 @@ for mode in modes:
 dfstoich.index.names = ['rxn']
 h2kc = qcdb.psi_hartree2kcalmol
 if verbose > 1:
-    print 'DFSTOICH\n', names[:maxrgt + 1], dfstoich.head(5)
+    print('DFSTOICH\n', names[:maxrgt + 1], dfstoich.head(5))
 
 
 # <<< read usemefiles and convert to giant DataFrame >>>
@@ -184,10 +184,10 @@ for useme in usemeglob:
                 raise ValidationError('Error: option %s needs adding to to optclue2psivar is psivarrosetta.py: %s' % (opt, e))
     optns = '-'.join(optns2)
     if verbose > 2:
-        print useme, basis, piece, optns, useme2psivar[piece]
+        print(useme, basis, piece, optns, useme2psivar[piece])
 
     try:
-        print 'Reading useme: %6s %50s %15s %5s' % (basis, useme2psivar[piece], optns, cpmode)
+        print('Reading useme: %6s %50s %15s %5s' % (basis, useme2psivar[piece], optns, cpmode))
     except KeyError as e:
         raise ValidationError('Error: useme %s needs adding to useme2psivar in psivarrosetta.py' % (e))
 
@@ -220,7 +220,7 @@ for useme in usemeglob:
         cpmode.replace('unCP', 'default')
         rawdata[basis][useme2psivar[piece]][optns][cpmode] = tmp.dropna(how='all')
     if verbose > 1:
-        print tmp.head(4)
+        print(tmp.head(4))
 
 baszip = {}
 for baskey, basval in sorted(rawdata.iteritems()):
@@ -228,12 +228,12 @@ for baskey, basval in sorted(rawdata.iteritems()):
     for pvkey, pvval in sorted(basval.iteritems()):
         metazip = {}
         if verbose > 0:
-            print """reading  %s %s""" % (pvkey, '.' * (40 - len(pvkey))),
+            print("""reading  %s %s""" % (pvkey, '.' * (40 - len(pvkey))), end='')
         for metakey, metaval, in pvval.iteritems():
             metazip[metakey] = pd.concat(metaval, axis=1)  # merge CP/unCP
         pvzip[pvkey] = pd.concat(metazip)
         if verbose > 0:
-            print """SUCCESS w/ %s %s""" % (baskey, ', '.join(metazip.keys()))
+            print("""SUCCESS w/ %s %s""" % (baskey, ', '.join(metazip.keys())))
     baszip[baskey] = pd.concat(pvzip)
 df = pd.concat(baszip)
 df.index.names = ['bstrt', 'psivar', 'meta', 'rxn']
@@ -445,14 +445,14 @@ pv0['MP3 TOTAL ENERGY'] = {'func': sum, 'args': ['HF TOTAL ENERGY', 'MP3 CORRELA
 for pvar, action in pv0.iteritems():
     try:
         if verbose > 0:
-            print """building %s %s""" % (pvar, '.' * (50 - len(pvar))),
+            print("""building %s %s""" % (pvar, '.' * (50 - len(pvar))), end='')
         df = append_result_of_func_with_funcargs_to_master_DataFrame_atlevel_with_label(
             master=df, label=pvar, atlevel=lvl, func=action['func'], funcargs=action['args'])
         if verbose > 0:
-            print """SUCCESS"""
+            print("""SUCCESS""")
     except KeyError, e:
         if verbose > 0:
-            print """FAILED, missing %s""" % (e)
+            print("""FAILED, missing %s""" % (e))
 
 
 # <<< miscellaneous pre-computing >>>
@@ -461,12 +461,12 @@ for pvar, action in pv0.iteritems():
 
 try:
     if verbose > 0:
-        print 'building intermediate SAPT EXCHSCAL ...',
+        print('building intermediate SAPT EXCHSCAL ...', end='')
     ex10 = df.xs('SAPT EXCH10 ENERGY', level='psivar')
     ex10ss = df.xs('SAPT EXCH10(S^2) ENERGY', level='psivar')
 except KeyError, e:
     if verbose > 0:
-        print 'NOT HANDLED, missing', e
+        print('NOT HANDLED, missing', e)
 else:
     ratio = ex10 / ex10ss
     ones = ratio.copy()
@@ -482,7 +482,7 @@ else:
 
     df = df.append(exsc, verify_integrity=True)
     if verbose > 0:
-        print 'SUCCESS'
+        print('SUCCESS')
 
 
 #     <<< SA MP2 CORL >>>
@@ -491,11 +491,11 @@ for pv in ['HF TOTAL ENERGY', 'MP2 CORRELATION ENERGY', 'HF-CABS TOTAL ENERGY',
            'MP2-F12 CORRELATION ENERGY']:
     try:
         if verbose > 0:
-            print 'building intermediate SA %s ...' % (pv),
+            print('building intermediate SA %s ...' % (pv), end='')
         target = df.xs(pv, level='psivar') * 1.0
     except KeyError, e:
         if verbose > 0:
-            print 'NOT HANDLED, missing', e
+            print('NOT HANDLED, missing', e)
     else:
         ans = cp2sa(target)
         target.loc[:, ('SA', 'Rgt0')] = ans['CP']
@@ -512,13 +512,13 @@ for pv in ['HF TOTAL ENERGY', 'MP2 CORRELATION ENERGY', 'HF-CABS TOTAL ENERGY',
 
         df.update(target, raise_conflict=True)
         if verbose > 0:
-            print 'SUCCESS'
+            print('SUCCESS')
 
 
 #     <<< MP2 OMEGA >>>
 
 if verbose > 0:
-    print 'building intermediates DW-MP2 OMEGA, DW-MP2-F12-OMEGA ...',
+    print('building intermediates DW-MP2 OMEGA, DW-MP2-F12-OMEGA ...', end='')
 dwmp2 = collections.defaultdict(dict)
 meta_combos = {
     '': ['', ''],
@@ -540,7 +540,7 @@ for mt, mtl in meta_combos.iteritems():
 
 if not dwmp2:
     if verbose > 0:
-        print 'NOT HANDLED'
+        print('NOT HANDLED')
 else:
     pvzip = {}
     for pvkey, pvval in dwmp2.iteritems():
@@ -559,18 +559,18 @@ else:
 
     df = df.append(df_omega, verify_integrity=True)
     if verbose > 0:
-        print 'SUCCESS'
+        print('SUCCESS')
 
 
 #     <<< DW-CCSD(T)-F12 >>>
 
 try:
     if verbose > 0:
-        print 'building intermediate DW-CCSD(T) OMEGA ...',
+        print('building intermediate DW-CCSD(T) OMEGA ...', end='')
     df.xs('HF-CABS TOTAL ENERGY', level='psivar')
     df.xs('MP2-F12 TOTAL ENERGY', level='psivar')
 except KeyError, e:
-    print 'NOT HANDLED, missing', e
+    print('NOT HANDLED, missing', e)
 else:
     ratio_HFCABS_MP2F12 = rxnm_contract_expand(df.xs('HF-CABS TOTAL ENERGY', level='psivar')) / \
                           rxnm_contract_expand(df.xs('MP2-F12 TOTAL ENERGY', level='psivar'))
@@ -586,7 +586,7 @@ else:
         pass
 
     if len(dwcc) == 0:
-        print 'NOT HANDLED, missing valid basis set'
+        print('NOT HANDLED, missing valid basis set')
     else:
         df_omega = pd.concat(dwcc)
 
@@ -597,19 +597,19 @@ else:
 
         df = df.append(df_omega, verify_integrity=True)
         if verbose > 0:
-            print 'SUCCESS'
+            print('SUCCESS')
 
 
 #     <<< (T*)-F12 & (T**)-F12 >>>
 
 try:
     if verbose > 0:
-        print 'building intermediates (T*)-F12 & (T**)-F12 SCALE ...',
+        print('building intermediates (T*)-F12 & (T**)-F12 SCALE ...', end='')
     df.xs('MP2 CORRELATION ENERGY', level='psivar')
     df.xs('MP2-F12 CORRELATION ENERGY', level='psivar')
 except KeyError, e:
     if verbose > 0:
-        print 'NOT HANDLED, missing', e
+        print('NOT HANDLED, missing', e)
 else:
     ratio_MP2F12_MP2 = df.xs('MP2-F12 CORRELATION ENERGY', level='psivar') / \
                        df.xs('MP2 CORRELATION ENERGY', level='psivar')
@@ -622,7 +622,7 @@ else:
 
     df = df.append(tstar, verify_integrity=True)
     if verbose > 0:
-        print 'SUCCESS',
+        print('SUCCESS', end='')
 
     tstarstar = ratio_MP2F12_MP2.copy()
     for md, rg in tstarstar.columns.values:
@@ -636,24 +636,24 @@ else:
 
     df = df.append(tstarstar, verify_integrity=True)
     if verbose > 0:
-        print 'SUCCESS'
+        print('SUCCESS')
 
 
 #     <<< DASH-D >>>
 
 try:
     if verbose > 0:
-        print 'building intermediates -D ...',
+        print('building intermediates -D ...', end='')
     dashes = df.xs('nobas', level='bstrt')
 except KeyError, e:
     if verbose > 0:
-        print 'NOT HANDLED', e
+        print('NOT HANDLED', e)
 else:
     df_nobas = pd.concat({tup[0]: dashes for tup in df.index.values if tup[0] != 'nobas'})
     df_nobas.index.names = ['bstrt', 'psivar', 'meta', 'rxn']
 
     if verbose > 0:
-        print 'SUCCESS'
+        print('SUCCESS')
     df = df.append(df_nobas, verify_integrity=True)
 
 
@@ -939,14 +939,14 @@ pv1['DFT-SAPT TOTAL ENERGY'] = {'func': sum, 'args': ['DFT-SAPT ELST ENERGY', 'D
 for pvar, action in pv1.iteritems():
     try:
         if verbose > 0:
-            print """building %s %s""" % (pvar, '.' * (50 - len(pvar))),
+            print("""building %s %s""" % (pvar, '.' * (50 - len(pvar))), end='')
         df = append_result_of_func_with_funcargs_to_master_DataFrame_atlevel_with_label(
             master=df, label=pvar, atlevel=lvl, func=action['func'], funcargs=action['args'])
         if verbose > 0:
-            print """SUCCESS"""
+            print("""SUCCESS""")
     except KeyError, e:
         if verbose > 0:
-            print """FAILED, missing %s""" % (e)
+            print("""FAILED, missing %s""" % (e))
 
 #mlist = ['SAPT0 TOTAL ENERGY', 'SAPT0 DISP ENERGY', 'SAPT EXCHSCAL', 'SAPT HF(2) ENERGY']
 #mlist = ['MP2 CORRELATION ENERGY', 'MP2C CC CORRECTION ENERGY', 'MP2C CORRELATION ENERGY', 'MP2C TOTAL ENERGY']
@@ -1006,24 +1006,24 @@ pv2['hillt_dtzf12'] = {'func': xtpl_power, 'args': [2.615472, 3, 'tzf12', 'dzf12
 for pvar, action in pv2.iteritems():
     try:
         if verbose > 0:
-            print """building %s %s""" % (pvar, '.' * (50 - len(pvar))),
+            print("""building %s %s""" % (pvar, '.' * (50 - len(pvar))), end='')
         df = append_result_of_func_with_funcargs_to_master_DataFrame_atlevel_with_label(
             master=df, label=pvar, atlevel=lvl, func=action['func'], funcargs=action['args'])
         if verbose > 0:
-            print """SUCCESS"""
+            print("""SUCCESS""")
     except KeyError, e:
         if verbose > 0:
-            print """FAILED, missing %s""" % (e)
+            print("""FAILED, missing %s""" % (e))
 
 
 #     <<< SCS(MI)-MP2 & SCS(MI)-F12 >>>
 try:
     if verbose > 0:
-        print 'building intermediates SCS(MI)-MP2 ...',
+        print('building intermediates SCS(MI)-MP2 ...', end='')
     df.xs('MP2-F12 CORRELATION ENERGY', level='psivar')
     df.xs('MP2 CORRELATION ENERGY', level='psivar')
 except KeyError, e:
-    print 'NOT HANDLED, missing', e
+    print('NOT HANDLED, missing', e)
 else:
     mi_os = {  'atz': 0.17,  'adtz': 0.29,  'aqz': 0.31,  'atqz': 0.40,
               'hatz': 0.17, 'hadtz': 0.29, 'haqz': 0.31, 'hatqz': 0.40,
@@ -1072,7 +1072,7 @@ else:
     if len(df_mi) > 0:
         df = df.append(df_mi, verify_integrity=True)
         if verbose > 0:
-            print 'SUCCESS'
+            print('SUCCESS')
 
 
 lvl = 'psivar'
@@ -1084,14 +1084,14 @@ pv3['SCS(MI)-MP2-F12 TOTAL ENERGY'] = {'func': sum, 'args': ['HF-CABS TOTAL ENER
 for pvar, action in pv3.iteritems():
     try:
         if verbose > 0:
-            print """building %s %s""" % (pvar, '.' * (50 - len(pvar))),
+            print("""building %s %s""" % (pvar, '.' * (50 - len(pvar))), end='')
         df = append_result_of_func_with_funcargs_to_master_DataFrame_atlevel_with_label(
             master=df, label=pvar, atlevel=lvl, func=action['func'], funcargs=action['args'])
         if verbose > 0:
-            print """SUCCESS"""
+            print("""SUCCESS""")
     except KeyError, e:
         if verbose > 0:
-            print """FAILED, missing %s""" % (e)
+            print("""FAILED, missing %s""" % (e))
 
 
 # <<< define simple functions codifying cbs() piecing >>>
@@ -1177,12 +1177,12 @@ def build(method, option, cpmode, basis):
     #if method in ['MP2C', 'MP2CF12'] and basis in ['atqzadz', 'adz', 'adtz']:
     #if method in ['B3LYPD3'] and basis in ['def2qzvp']:
     #if method in ['B3LYPD3M', 'B3LYPD3MBJ'] and basis in ['atz']:
-        print '\n', method, option, cpmode, basis
-        print 'pcss:', mtdlist
-        print 'bass:', baslist
-        print 'opts:', optlist
+        print('\n', method, option, cpmode, basis)
+        print('pcss:', mtdlist)
+        print('bass:', baslist)
+        print('opts:', optlist)
         for pcs, bas, opt in zip(mtdlist, baslist, optlist):
-            print df.loc[bas].loc[pcs].loc[opt].loc['BBI-157LYS-160VAL-1'] #'S22-2']  # ACONF-15'] #'NBC1-BzBz_S-5.0'] #'S22-2'] #'A24-1'] #'BBI-150LYS-158LEU-2'] #'S22-2']
+            print(df.loc[bas].loc[pcs].loc[opt].loc['S22-2'])  # ACONF-15'] #'NBC1-BzBz_S-5.0'] #'S22-2'] #'A24-1'] #'BBI-150LYS-158LEU-2'] #'S22-2']
     acting_cpmode = 'default' if cpmode == 'unCP' else cpmode
     return reactionate(acting_cpmode, sum([df.loc[bas].loc[pcs].loc[opt] for pcs, bas, opt in zip(mtdlist, baslist, optlist)]))
 
@@ -1194,7 +1194,7 @@ mine = pd.DataFrame({}, index=rxns)
 mine.index.names = ['rxn']
 df.sortlevel(inplace=True)
 if verbose > 0:
-    print 'SORTEDNESS OF DF:', df.index.lexsort_depth
+    print('SORTEDNESS OF DF:', df.index.lexsort_depth)
 
 if project == 'dft':
     mtds = ['B3LYP', 'B3LYPD2', 'B3LYPD3', 'B2PLYP', 'B2PLYPD2', 'B2PLYPD3',
@@ -1374,17 +1374,17 @@ for cpm in cpmd:
                 try:
                     tmp = build(mtd, opt, cpm, bas)
                     if verbose > 1:
-                        print """Built model chemistry %s""" % (mc)
+                        print("""Built model chemistry %s""" % (mc))
                 except KeyError, e:
                     if verbose > 1:
-                        print """Error building rxn mc: empty '%s' b/c no %s""" % (mc, e)
+                        print("""Error building rxn mc: empty '%s' b/c no %s""" % (mc, e))
                 else:
                     if isinstance(tmp, basestring) and tmp == 'Overly':
                         if verbose > 1:
-                            print """Overly optioned rxn mc: {} for {}""".format(opt, mc)
+                            print("""Overly optioned rxn mc: {} for {}""".format(opt, mc))
                     elif tmp.empty or tmp.dropna(how='all').empty:  # invalid for canopy python
                         if verbose > 1:
-                            print """Empty rxn mc: empty '%s'""" % (mc)
+                            print("""Empty rxn mc: empty '%s'""" % (mc))
                     else:
                         mine[mc] = tmp
 
@@ -1469,8 +1469,8 @@ if False:
     #threadtheframe(['CCSDTQ-fno1e4-CP-adz', 'CCSDTQ-fno1e4-CP-atz', 'CCSDTQ-fno1e4-CP-adtz', 'CCSDTQ-fno1e5-CP-adtz', 'CCSDTQ-fno1e5-CP-atz', 'CCSDTQ-fno1e5-CP-adz', 'CCSDT-CP-aq5z'], xlimit=7.0)
 
 if verbose > 1:
-    print 'Reaction Energies', mine.columns
-    print 'MINE top\n', mine.head(5), '\n', mine.tail(5)
+    print('Reaction Energies', mine.columns)
+    print('MINE top\n', mine.head(5), '\n', mine.tail(5))
 
 
 # <<< test cases >>>
@@ -1482,7 +1482,7 @@ test_pandas(h2kc, project, mine)
 # <<< write qcdb data loader >>>
 
 with open('%s/%s_%s.py' % (homewrite, dbse, project), 'w') as handle:
-    print 'Writing to %s/%s_%s.py ...' % (homewrite, dbse, project)
+    print('Writing to %s/%s_%s.py ...' % (homewrite, dbse, project))
     handle.write('\ndef load_%s(dbinstance):\n\n' % (project))
 
     for mc in mine.columns:
@@ -1494,7 +1494,7 @@ with open('%s/%s_%s.py' % (homewrite, dbse, project), 'w') as handle:
             value = h2kc * mine[mc]['%s-%s' % (dbse, rxn)]
             if pd.isnull(value):
                 if rxn == 2:
-                    print 'dropping', mc
+                    print('dropping', mc)
                 pass
             else:
                 handle.write("""    dbinstance.add_ReactionDatum(citation='%s', dbse='%s', rxn=%s, method='%s', mode='%s', basis='%s', value=%.4f)\n""" %
@@ -1505,7 +1505,7 @@ with open('%s/%s_%s.py' % (homewrite, dbse, project), 'w') as handle:
 
 with pd.get_store('%s/%s_%s.h5' % (homewrite, dbse, project)) as handle:
     handle['pdie'] = mine * h2kc
-    print 'Writing to %s/%s_%s.h5 ...' % (homewrite, dbse, project)
+    print('Writing to %s/%s_%s.h5 ...' % (homewrite, dbse, project))
 
 
 # <<< SAPT components interlude >>>
@@ -1532,7 +1532,7 @@ except KeyError, e:
 
 if code:
     with open('%s/%s_%s.py' % (homewrite, 'sapt', dbse), 'w') as handle:
-        print 'Writing to %s/%s_%s.py ...' % (homewrite, 'sapt', dbse)
+        print('Writing to %s/%s_%s.py ...' % (homewrite, 'sapt', dbse))
         handle.write("""DATA = {}\n\n""")
         handle.write("""DATA['SAPT MODELCHEM'] = '%s'\n""" % (code))
         rxns = ['%s-%s' % (dbse, rxn) for rxn in dbobj.dbdict[dbobj.dbse].hrxn.keys()]

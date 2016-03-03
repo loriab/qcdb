@@ -21,7 +21,7 @@
 #
 
 #!/usr/bin/python
-
+from __future__ import print_function
 import sys
 import math
 import os
@@ -41,22 +41,22 @@ usemeold = True
 DBdocstrings = qcdb.dictify_database_docstrings()
 
 # instructions
-print """
+print("""
  Welcome to igrimme-db.
     Just fill in the variables when prompted.
     Hit ENTER to accept default.
     Strings should not be in quotes.
     Elements in arrays should be space-delimited.
     Nothing is case sensitive.
-"""
+""")
 
 # query database name
 module_choices = dict(zip([x.upper() for x in DBdocstrings.keys()], DBdocstrings.keys()))
 
-print '\n Choose your database.'
+print('\n Choose your database.')
 for item in module_choices.keys():
-    print '    %-12s   %s' % ('[' + module_choices[item] + ']', DBdocstrings[module_choices[item]]['general'][0].lstrip(" |"))
-print '\n',
+    print("""    %-12s   %s""" % ('[' + module_choices[item] + ']', DBdocstrings[module_choices[item]]['general'][0].lstrip(' |')))
+print('\n', end='')
 
 user_obedient = False
 while not user_obedient:
@@ -66,7 +66,7 @@ while not user_obedient:
         user_obedient = True
 
 # query functionals
-print '\n State your functional with Psi4 names (multiple allowed).\n'
+print('\n State your functional with Psi4 names (multiple allowed).\n')
 
 functionals = []
 user_obedient = False
@@ -81,23 +81,25 @@ while not user_obedient:
         user_obedient = True
 
 # query dash level
-print """
+print("""
  Choose your -D correction level (multiple allowed).
     [d2]
     [d3zero]
     [d3bj]
-"""
+    [d3mzero]
+    [d3mbj]
+""")
 
 variants = []
 user_obedient = False
 while not user_obedient:
-    temp = raw_input('    variants [d2 d3zero d3bj] = ').strip()
+    temp = raw_input('    variants [d2 d3zero d3bj d3mzero d3mbj] = ').strip()
     ltemp = temp.split()
     if temp == "":
-        variants = ['d2', 'd3zero', 'd3bj']
+        variants = ['d2', 'd3zero', 'd3bj', 'd3mzero', 'd3mbj']
         user_obedient = True
     for item in ltemp:
-        if item.lower() in ['d2', 'd3zero', 'd3bj']:
+        if item.lower() in ['d2', 'd3zero', 'd3bj', 'd3mzero', 'd3mbj']:
             variants.append(item.lower())
             user_obedient = True
         else:
@@ -128,7 +130,7 @@ else:
         DATA = {}
 
 
-print """
+print("""
         <<< SCANNED SETTINGS  SCANNED SETTINGS  SCANNED SETTINGS  SCANNED SETTINGS >>>
 
                           dbse = %s
@@ -137,7 +139,7 @@ print """
 
         <<< SCANNED SETTINGS  DISREGARD RESULTS IF INAPPROPRIATE  SCANNED SETTINGS >>>
 
-""" % (dbse, functionals, variants)
+""" % (dbse, functionals, variants))
 
 
 # commence main computation loop
@@ -148,13 +150,13 @@ h2.update_geometry()
 
 for func in functionals:
     for variant in variants:
-        print """\n  ==> %s-%s <==""" % (func.upper(), variant.upper())
+        print("""\n  ==> %s-%s <==""" % (func.upper(), variant.upper()))
 
         # catch if this is an invalid functional-dashlvl before run database
         try:
-            h2.run_dftd3(func=func, dashlvl=variant)
+            h2.run_dftd3(func=func, dashlvl=variant, dertype=0)
         except qcdb.ValidationError:
-            print 'No output or files will be generated.'
+            print('No output or files will be generated.')
             continue
 
         #ddir = 'output-dftd3_$set-$functional-$variant'
@@ -174,7 +176,7 @@ for func in functionals:
         for i in range(maxrgt):
             textline += '          DASHCORR  WT'
         textline += '       DISP      REF\n'
-        print textline
+        print(textline)
 
         # commence iteration through reactions
         for rxn in HRXN:
@@ -184,7 +186,8 @@ for func in functionals:
             # compute correction for rgts and rxn
             for rgt in ACTV[index]:
                 GEOS[rgt].update_geometry()
-                DASHCORR[rgt], temp = GEOS[rgt].run_dftd3(func=func, dashlvl=variant)
+                #DASHCORR[rgt], temp = GEOS[rgt].run_dftd3(func=func, dashlvl=variant)
+                DASHCORR[rgt] = GEOS[rgt].run_dftd3(func=func, dashlvl=variant, dertype=0)
             IEDASH = sum([RXNM[index][rgt] * DASHCORR[rgt] for rgt in ACTV[index]]) * qcdb.psi_hartree2kcalmol
 
             # print main results
@@ -195,7 +198,7 @@ for func in functionals:
                 else:
                     textline += '|                     '
             textline += '| %8.3f %8.3f' % (IEDASH, BIND[index])
-            print textline
+            print(textline)
 
             # print main results to useme
             textline = '%-23s ' % (index)

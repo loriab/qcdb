@@ -1,182 +1,151 @@
-from __future__ import print_function
 import sys
-sys.path.append('/Users/loriab/linux/qcdb')
-sys.path.append('/Users/loriab/linux/qcdb/databases')
+sys.path.append('/theoryfs2/ds/cdsgroup/qcdb')
+sys.path.append('/theoryfs2/ds/cdsgroup/qcdb/qcdb')
 import qcdb
 
-a24 = qcdb.Database('A24')
-a24.load_dilabio()
-a24.load_f12dilabio()
-
-import matplotlib.pyplot as plt
 import numpy as np
+import mpl
+import matplotlib.pyplot as plt
 
-print(a24.hrxn[1].data)
+def plot_convergence(rxn, dbse, proj, loadfrompickle, mtd_list, bsse, bas_list,  curvestyle,
+                    title='default', xlabel='default', ylabel='default', legend=True, 
+                    markersize='default', linewidth='default',
+                    standalone=True, plotpath='default', filename='default', filetype='default'):
 
-mcs1 = ['CCSDT-CP-adz', 'CCSDT-CP-atz', 'CCSDT-CP-aqz','CCSDT-CP-a5z','CCSDT-CP-a6z']
-mcs2 = ['CCSDTAF12-CP-adz','CCSDTAF12-CP-atz','CCSDTAF12-CP-aqz','CCSDTAF12-CP-a5z']
-mcs3 = ['CCSDTBF12-CP-adz','CCSDTBF12-CP-atz','CCSDTBF12-CP-aqz','CCSDTBF12-CP-a5z']
-mcs4 = ['CCSDTCF12-CP-adz','CCSDTCF12-CP-atz','CCSDTCF12-CP-aqz']
-mcs2f = ['CCSDTAF12-CP-dzf12','CCSDTAF12-CP-tzf12','CCSDTAF12-CP-qzf12']
-mcs3f = ['CCSDTBF12-CP-dzf12','CCSDTBF12-CP-tzf12','CCSDTBF12-CP-qzf12']
-mcs4f = ['CCSDTCF12-CP-dzf12','CCSDTCF12-CP-tzf12','CCSDTCF12-CP-qzf12']
-#mcs5 = ['CCSDT-CP-adtz','CCSDT-CP-atqz','CCSDT-CP-aq5z','CCSDT-CP-a56z']
-#mcs6 = ['CCSDTAF12-CP-adtz','CCSDTAF12-CP-atqz','CCSDTAF12-CP-aq5z']
-#mcs7 = ['CCSDTBF12-CP-adtz','CCSDTBF12-CP-atqz','CCSDTBF12-CP-aq5z']
-#mcs8 = ['CCSDTCF12-CP-adtz','CCSDTCF12-CP-atqz']
-#mcs6f = ['CCSDTAF12-CP-dtzf12','CCSDTAF12-CP-tqzf12']
-#mcs7f = ['CCSDTBF12-CP-dtzf12','CCSDTBF12-CP-tqzf12']
-#mcs8f = ['CCSDTCF12-CP-dtzf12','CCSDTCF12-CP-tqzf12']
-def plot_convergence_aXZ(title, conv, f12a, f12b, f12c):
-    N1 = len(conv)
-    N2 = len(f12a)
-    N3 = len(f12b)
-    N4 = len(f12c)
-    x1 = np.arange(1, N1+1)
-    x2 = np.arange(1, N2+1)
-    x3 = np.arange(1, N3+1)
-    x4 = np.arange(1, N4+1)
-    y1 = [-num for (s, num) in data1]
-    y2 = [-num for (s, num) in data2]
-    y3 = [-num for (s, num) in data3]
-    y4 = [-num for (s, num) in data4]
-    ax, fig = plt.subplots(figsize = (12,6))
-    plt.plot(x1, y1, 'ro-',label = 'CCSD(T)')
-    plt.plot(x2, y2, 'bs-',label = 'CCSD(T**)-F12a')
-    plt.plot(x3, y3, 'g^-',label = 'CCSD(T**)-F12b')
-    plt.plot(x4, y4, 'm*-',label = 'CCSD(T**)-F12c')    
-    labels = ['aDZ','aTZ','aQZ','a5Z','a6Z']
-    plt.axhline(-bench, color='black',linestyle='--')
-    plt.title(title)
-    plt.xlabel('Level of Theory')
-    plt.ylabel('Interaction Energies')
-    plt.legend(loc = 'bottom right')
-    plt.xticks(x1, labels)
-    plt.margins(0.2)
-    plt.show()
+    """Prepares convergence plots for all members of array *rxn* of
+    reactions from database *dbse* in project(s) *proj* of modelchemistry
+    defined by all combinations of the method list, *mtd_list*,
+    counterpoise scheme, *bsse*, and basis set list, *bas_list*, arrays.
 
-for rxn in [1,2,3]:
-    title = 'A24-'+str(rxn)+'/aXZ'
-    bench = a24.hrxn[rxn].data[a24.hrxn[rxn].benchmark].value
-    data1 = []
-    for mc in mcs1:
-        try: data1.append((mc,a24.hrxn[rxn].data[mc].value))
-        except: KeyError
-        pass
-    data2 = []
-    for mc in mcs2:
-        try: data2.append((mc,a24.hrxn[rxn].data[mc].value))
-        except: KeyError
-        pass
-    data3 = []
-    for mc in mcs3:
-        try: data3.append((mc,a24.hrxn[rxn].data[mc].value))
-        except: KeyError
-        pass
-    data4 = []
-    for mc in mcs4:
-        try: data4.append((mc,a24.hrxn[rxn].data[mc].value))
-        except: KeyError
-        pass
-    plot_convergence_aXZ(title, data1, data2, data3, data4)
-    print(data1)
-    print(data2)
-    print(data3)
-    print(data4)
+    Convergence curves are plotted relative to reference value, with
+    style defined in array *curvestyle* for each of the curves to be
+    created.  Curve styles are three-character strings giving marker
+    style, curve color, and line style.
 
+    Plot title *title* will default to a standard string identifier
+    based on *rxn* and *dbse*, unless otherwise specified. Axis labels
+    *xlabel* and *ylabel* may be specified, but have default values
+    "Basis Set" and "Interaction Energy" otherwise. Ticks on the x axis
+    will be basis sets defined in *bas_list*.
 
-def plot_convergence_XZF12(title, conv, f12a, f12b, f12c):
-    N1 = len(conv)
-    N2 = len(f12a)
-    N3 = len(f12b)
-    N4 = len(f12c)
-    x1 = np.arange(1, N1+1)
-    x2 = np.arange(1, N2+1)
-    x3 = np.arange(1, N3+1)
-    x4 = np.arange(1, N4+1)
-    y1 = [-num for (s, num) in data1]
-    y2 = [-num for (s, num) in data2f]
-    y3 = [-num for (s, num) in data3f]
-    y4 = [-num for (s, num) in data4f]
-    ax, fig = plt.subplots(figsize = (12,6))
-    plt.plot(x1, y1, 'ro-',label = 'CCSD(T)')
-    plt.plot(x2, y2, 'bs-',label = 'CCSD(T**)-F12a')
-    plt.plot(x3, y3, 'g^-',label = 'CCSD(T**)-F12b')
-    plt.plot(x4, y4, 'm*-',label = 'CCSD(T**)-F12c')    
-    labels = ['DZ-F12','TZ-F12','QZF12','a5Z','a6Z']
-    plt.axhline(-bench, color='black',linestyle='--')
-    plt.title(title)
-    plt.xlabel('Level of Theory')
-    plt.ylabel('Interaction Energies')
-    plt.legend(loc = 'bottom right')
-    plt.xticks(x1, labels)
-    plt.margins(0.2)
-    plt.show()
+    Inclusion of legend may be turned on or off by the truth value
+    of *legend*.  Marker and line size may be changed by adjusting
+    *markersize* and *linewidth* arguments, both accepting float values.
+    Default linewidth is 1, default marker size is 5.5.
 
-for rxn in [1,2,3]:
-    title = 'A24-'+str(rxn)+'/XZ-F12'
-    bench = a24.hrxn[rxn].data[a24.hrxn[rxn].benchmark].value
-    data1 = []
-    for mc in mcs1:
-        try: data1.append((mc,a24.hrxn[rxn].data[mc].value))
-        except: KeyError
-        pass
-    data2f = []
-    for mc in mcs2f:
-        try: data2f.append((mc,a24.hrxn[rxn].data[mc].value))
-        except: KeyError
-        pass
-    data3f = []
-    for mc in mcs3f:
-        try: data3f.append((mc,a24.hrxn[rxn].data[mc].value))
-        except: KeyError
-        pass
-    data4f = []
-    for mc in mcs4f:
-        try: data4f.append((mc,a24.hrxn[rxn].data[mc].value))
-        except: KeyError
-        pass
-    plot_convergence_XZF12(title, data1, data2f, data3f, data4f)
-    print(data1)
-    print(data2f)
-    print(data3f)
-    print(data4f)
+    Plots are opened if *standalone* is true, in .pdf format by
+    default. File type can be changed by *filetype*, and will be saved in
+    location designated by *plotpath* as *dbse*_*rxn*_convplot.*filetype*
+    if *filename* is left as 'default'.
 
+    """
+    # load data from corresponding function arguments
+    asdf = qcdb.Database([dbse], loadfrompickle=loadfrompickle)
+    for pr in proj:
+            asdf.load_qcdata_byproject(pr)
+    
+    # Build 2D modelchems array
+    mcs = []
+    for mtd in mtd_list:
+        for b in bsse:
+            temp_mcs_row = []
+            for bas in bas_list:
+                temp_bas = []
+                temp_bas.append(mtd + '-' + b + '-' + bas)
+                temp_mcs_row.append(temp_bas[0])
+        mcs.append(temp_mcs_row)
 
+    # Get benchmark values for all rxns/modelchems in database
+    bench = asdf.benchmark # Where to look for the benchmark values
+    temp_ref_array = []
+    for lmc, lbm, orxn in asdf.get_reactions(modelchem=bench): 
+        temp_ref_array.append(orxn.data[bench].value) # Get all benchmark values for database
+    
+    # TODO: Form rxn array based on more intuitive string argument?
 
-#rxn = 1
-#data1 = ([(mc,a24.hrxn[rxn].data[mc].value) for mc in mcs1])
-#data2 = ([(mc,a24.hrxn[rxn].data[mc].value) for mc in mcs2])
-#data3 = ([(mc,a24.hrxn[rxn].data[mc].value) for mc in mcs3])
-#data4 = ([(mc,a24.hrxn[rxn].data[mc].value) for mc in mcs4])
-#N1 = len(mcs1)
-#N2 = len(mcs2)
-#N3 = len(mcs3)
-#N4 = len(mcs4)
-#x1 = np.arange(1, N1+1)
-#x2 = np.arange(1, N2+1)
-#x3 = np.arange(1, N3+1)
-#x4 = np.arange(1, N4+1)
-#y1 = [-num for (s, num) in data1]
-#y2 = [-num for (s, num) in data2]
-#y3 = [-num for (s, num) in data3]
-#y4 = [-num for (s, num) in data4]
-#plt.plot(x1, y1, 'ro-',label = 'CCSD(T)')
-#plt.plot(x2, y2, 'bs-',label = 'CCSD(T**)-F12a')
-#plt.plot(x3, y3, 'g^-',label = 'CCSD(T**)-F12b')
-#plt.plot(x4, y4, 'm*-',label = 'CCSD(T**)-F12c')
-##ax, fig = plt.subplots(12,6)
-#labels = ['aDZ','aTZ','aQZ','a5Z','a6Z']
-##plt.axhline(-bench, color='black',linestyle='--')
-#plt.title('A24-'+str(rxn))
-#plt.xlabel('Level of Theory')
-#plt.ylabel('Interaction Energies')
-#plt.legend(loc = 'bottom right')
-#plt.xticks(x1, labels)
-#plt.margins(0.2)
-#plt.show()
-#
-#print data1
-#print data2
-#print data3
-#print data4
+    # Iterate over array *rxn* and create plot for each one
+    for r in rxn:
+        # Assign plot title
+        if title == 'default':
+            title = dbse + '-' + str(r) + ' ConvPlot'
+        else:
+            title = title
+        # Get benchmark value for r 
+        ref = temp_ref_array[r-1]
+        # Build rank 2 *dbdata* array containing all data for rxn *r* to be plotted 
+        # Build rank 1 *curve_labels* array for use in legend
+        # Build rank 1 *x_vals* array against which to plot rows of *dbdata*
+        dbdata = []
+        x_vals = []
+        curve_labels = []
+        for row in mcs: # Each row contains different combo of *mcs* and *bsse*
+            temp_dbdata_row = []
+            for mc in row: # Iterate over different values of *bas* for same *mcs* & *bsse*
+                all_dbse_mc_data = []
+                for lmc, lbm, orxn in asdf.get_reactions(modelchem=mc): # Gets rxndata for modelchem *mc* for whole database *dbse*
+                    all_dbse_mc_data.append(orxn.data[mc].value) # Appends all *dbse*/*mc* rxn datum to temporary array
+                temp_dbdata_row.append(all_dbse_mc_data[r-1]) # Appends rxn *r*/*mc* datum to array for later append to *dbdata*
+                # Split modelchem *mc* name *mtd*-*bsse*-*bas* by '-' delimiter, save in temp array 
+                temp_curve_label = mc.split("-")
+            # Concatenate *mtd* + '-' + *bsse* to form unique curve_label, add to *curve_labels* array
+            curve_labels.append(temp_curve_label[0] + '-' + temp_curve_label[1])
+            dbdata.append(temp_dbdata_row) # Add row to *dbdata* array
+        x_vals = np.arange(1, len(bas_list) + 1)[:] # Evelnly spaced x values for every basis set in *bas*
+        
+        # Set default *linewidth* and *markersize*
+        if linewidth=='default':
+            linewidth = 1
+        if markersize=='default':
+            markersize = 5.5 
+        # Regardless of this decision, assume from here on that *curvestyle* is an array.
+        # Iterate over curves (by each label in *curve_labels*) and plot x_vals, dbdata[row], curvestyle, curve_labels
+        for l in range(0, len(curve_labels)):
+            plt.plot(x_vals, dbdata[l], curvestyle[l], label= curve_labels[l],linewidth=linewidth, markersize=markersize)
+        # Set other plot options
+        plt.axhline(ref, color='black', linestyle='--')
+        plt.title(title)
+        if xlabel=='default':
+            plt.xlabel('Basis Set')
+        else: 
+            plt.xlabel(xlabel)
+        if ylabel=='default':
+            plt.ylabel('Interaction Energy')
+        else:
+            plt.ylabel(ylabel)
+        if legend:
+            plt.legend(loc = 'upper right') 
+        plt.xticks(np.arange(1, len(bas_list) + 1), bas_list)
+        plt.margins(0.2)
+        # Save or display plot
+        if standalone:  
+            plt.show()
+        elif plotpath == 'default' and filename == 'defulat' and filetype == 'default':
+            # Form a unique filename, save in working directory as .pdf
+            plt.savefig(dbse + '-' + str(r) + '-convplot.pdf')
+        elif plotpath == 'default' and filename == 'defulat':
+            plt.savefig(dbse + '-' + str(r) + '-convplot' + filetype)
+        elif plotpath == 'defulat':
+            plt.savefig(filename + '.' + filetype)
+        else:
+            plt.savefig( plotpath + '/' + filename + '.' + filetype)
+
+plot_convergence(
+rxn = [1],
+dbse = 'A24',
+proj = ['f12dilabio','dilabio'],
+loadfrompickle=True,
+mtd_list = ['CCSDT','MP2'],
+bsse = ['CP'],
+bas_list = ['adz','atz','aqz','a5z'],
+curvestyle=['ro-','bs-'],
+title='default',
+xlabel='default',
+ylabel='default',
+legend=True,
+markersize='default',
+linewidth='default',
+standalone=True,
+plotpath='default',
+filename='default',
+filetype='default'
+)
