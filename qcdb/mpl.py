@@ -573,7 +573,7 @@ def threads(data, labels, color=None, title='', xlimit=4.0, mae=None, mape=None,
 
         # labeling
         if not(mousetext or mouselink or mouseimag):
-            if labeled:
+            if labeled and len(data) < 200:
                 try:
                     toplblposn = next(item for item in xvals if item is not None)
                     botlblposn = next(item for item in reversed(xvals) if item is not None)
