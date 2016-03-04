@@ -2,6 +2,7 @@
 #! using Python's built-in loop mechanisms.  The geometry is apecified using a Z-matrix with variables
 #! that are updated during the potential energy surface scan, and then the same procedure is performed
 #! using polar coordinates, converted to Cartesian coordinates.
+from __future__ import print_function
 import math
 import qcdb
 
@@ -21,7 +22,7 @@ h2o = qcdb.Molecule("""
     H 1 R 2 A
 """)
 
-print "\n Testing Z-matrix coordinates\n"  #TEST
+print("\n Testing Z-matrix coordinates\n")  #TEST
 
 count = 0
 for R in Rvals:
@@ -38,7 +39,7 @@ for R in Rvals:
 # every change of geometry
 
 
-print "\n Testing polar coordinates\n"  #TEST
+print("\n Testing polar coordinates\n")  #TEST
 
 count = 0
 for R in Rvals:
