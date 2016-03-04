@@ -8,7 +8,7 @@ import mpl
 import matplotlib.pyplot as plt
 
 def plot_convergence(rxn, dbse, proj, loadfrompickle, mtd_list, bsse, bas_list,  curvestyle,
-                    title='default', xlabel='default', ylabel='default', legend=True, 
+                    failoninc = True, title='default', xlabel='default', ylabel='default', legend=True, 
                     markersize='default', linewidth='default',
                     standalone=True, plotpath='default', filename='default', filetype='default'):
 
@@ -82,8 +82,17 @@ def plot_convergence(rxn, dbse, proj, loadfrompickle, mtd_list, bsse, bas_list, 
             temp_dbdata_row = []
             for mc in row: # Iterate over different values of *bas* for same *mcs* & *bsse*
                 all_dbse_mc_data = []
-                for lmc, lbm, orxn in asdf.get_reactions(modelchem=mc): # Gets rxndata for modelchem *mc* for whole database *dbse*
-                    all_dbse_mc_data.append(orxn.data[mc].value) # Appends all *dbse*/*mc* rxn datum to temporary array
+                if mc in asdf.mcs.keys(): # If the modelchem exists at all, regardless of some missing data
+                    for lmc, lbm, orxn in asdf.get_reactions(modelchem=mc,failoninc=failoninc): # Gets rxndata dictionary 
+                        try:
+                            all_dbse_mc_data.append(orxn.data[mc].value) # Appends all *dbse*/*mc* rxn datum to temporary array
+                        except KeyError, e: # Protects against missing data
+                            if failoninc: 
+                                raise e # Raises offending mc label
+                            else:
+                                all_dbse_mc_data.append(np.NaN) # Appends None to dbdata array, so nothing gets plotted for no data
+                else:
+                    all_dbse_mc_data.append(np.NaN) # Append None to dbdata array for an entire mc if it doesn't exist
                 temp_dbdata_row.append(all_dbse_mc_data[r-1]) # Appends rxn *r*/*mc* datum to array for later append to *dbdata*
                 # Split modelchem *mc* name *mtd*-*bsse*-*bas* by '-' delimiter, save in temp array 
                 temp_curve_label = mc.split("-")
@@ -119,7 +128,7 @@ def plot_convergence(rxn, dbse, proj, loadfrompickle, mtd_list, bsse, bas_list, 
         # Save or display plot
         if standalone:  
             plt.show()
-        elif plotpath == 'default' and filename == 'defulat' and filetype == 'default':
+        elif plotpath == 'default' and filename == 'default' and filetype == 'default':
             # Form a unique filename, save in working directory as .pdf
             plt.savefig(dbse + '-' + str(r) + '-convplot.pdf')
         elif plotpath == 'default' and filename == 'defulat':
@@ -134,17 +143,18 @@ rxn = [1],
 dbse = 'A24',
 proj = ['f12dilabio','dilabio'],
 loadfrompickle=True,
-mtd_list = ['CCSDT','MP2'],
+mtd_list = ['CCSDT','CCSDTAF12','CCSDTBF12','CCSDTCF12'],
 bsse = ['CP'],
-bas_list = ['adz','atz','aqz','a5z'],
-curvestyle=['ro-','bs-'],
+bas_list = ['adz','atz','aqz','a5z','a6z'],
+curvestyle=['ro-','bs-','g^-','m*-'],
+failoninc=False,
 title='default',
 xlabel='default',
 ylabel='default',
 legend=True,
-markersize='default',
+markersize=7,
 linewidth='default',
-standalone=True,
+standalone=False,
 plotpath='default',
 filename='default',
 filetype='default'
