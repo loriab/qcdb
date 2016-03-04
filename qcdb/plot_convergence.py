@@ -1,10 +1,11 @@
+from __future__ import absolute_import
 import sys
 sys.path.append('/theoryfs2/ds/cdsgroup/qcdb')
 sys.path.append('/theoryfs2/ds/cdsgroup/qcdb/qcdb')
 import qcdb
 
 import numpy as np
-import mpl
+from . import mpl
 import matplotlib.pyplot as plt
 
 def plot_convergence(rxn, dbse, proj, loadfrompickle, mtd_list, bsse, bas_list,  curvestyle,

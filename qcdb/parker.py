@@ -1,7 +1,8 @@
+from __future__ import absolute_import
 from __future__ import print_function
-from vecutil import *
-from physconst import *
-from cov_radii import *
+from .vecutil import *
+from .physconst import *
+from .cov_radii import *
 
 BOND_FACTOR = 1.2  # fudge factor for bond length threshold
 

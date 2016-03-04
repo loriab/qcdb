@@ -1,4 +1,5 @@
 from __future__ import print_function
+from __future__ import absolute_import
 import os
 import sys
 import math
@@ -10,11 +11,11 @@ import itertools
 try:
     from collections import OrderedDict
 except ImportError:
-    from oldpymodules import OrderedDict
-from exceptions import *
-from modelchems import Method, BasisSet, Error, methods, bases, errors
-import psiutil
-import textables
+    from .oldpymodules import OrderedDict
+from .exceptions import *
+from .modelchems import Method, BasisSet, Error, methods, bases, errors
+from . import psiutil
+from . import textables
 
 
 def initialize_errors(e=None, pe=None, pbe=None, extrema=True):
@@ -532,7 +533,7 @@ class Database(object):
         label = name.lower()
         try:
             lsslist = [rxn for rxn in self.sset['default'].keys() if rxn in func(self)]
-        except TypeError, e:
+        except TypeError as e:
             raise ValidationError("""Function %s did not return list: %s.""" % (func.__name__, str(e)))
         if len(lsslist) == 0:
             print("""Database %s: Subset %s NOT formed: empty""" % (self.dbse, label))
@@ -555,7 +556,7 @@ class Database(object):
             # sset is normal subset name 'MX' corresponding to HRXN_MX or MX array in database module
             try:
                 lsset = self.sset[sset.lower()]
-            except KeyError, e:
+            except KeyError as e:
                 #raise ValidationError("""Subset named %s not available""" % (str(e)))
                 lsset = OrderedDict()
         else:
@@ -576,7 +577,7 @@ class Database(object):
             try:
                 mcLesser = oRxn.data[modelchem].value
                 mcGreater = oRxn.data[lbench].value
-            except KeyError, e:
+            except KeyError as e:
                 if failoninc:
                     raise ValidationError("""Reaction %s missing datum %s.""" % (str(rxn), str(e)))
                 else:
@@ -697,7 +698,7 @@ class Database(object):
             raise ValidationError("Pandas data managment module must be available for import")
 
         try:
-            self.hrxn.iterkeys().next() + 1
+            next(self.hrxn.iterkeys()) + 1
         except TypeError:
             intrxn = False
         else:
@@ -833,7 +834,7 @@ class Database(object):
             for mc in modelchem:
                 try:
                     data.append(indiv[mc][rxn][0])
-                except KeyError, e:
+                except KeyError as e:
                     if failoninc:
                         raise e
                     else:
@@ -844,7 +845,7 @@ class Database(object):
         mapbe = [100 * errors[mc]['mapbe'] for mc in modelchem]
         # generate matplotlib instructions and call or print
         try:
-            import mpl
+            from . import mpl
             import matplotlib.pyplot as plt
         except ImportError:
             # if not running from Canopy, print line to execute from Canopy
@@ -906,7 +907,7 @@ class Database(object):
                 if rxn in self.sset[lsset[index.index(ix)]].keys():
                     try:
                         data.append(indiv[ix][rxn][0])
-                    except KeyError, e:
+                    except KeyError as e:
                         if failoninc:
                             raise e
                         else:
@@ -921,7 +922,7 @@ class Database(object):
         title = self.dbse + ' ' + ixpre + '[]' + ixsuf
         # generate matplotlib instructions and call or print
         try:
-            import mpl
+            from . import mpl
             import matplotlib.pyplot as plt
         except ImportError:
             # if not running from Canopy, print line to execute from Canopy
@@ -954,7 +955,7 @@ class Database(object):
             data = []
             try:
                 data.append(indiv[mc][rxn][0])
-            except KeyError, e:
+            except KeyError as e:
                 if failoninc:
                     raise e
                 else:
@@ -967,7 +968,7 @@ class Database(object):
         mapbe = None 
         # generate matplotlib instructions and call or print
         try: 
-            import mpl
+            from . import mpl
             import matplotlib.pyplot as plt
         except ImportError:
             # if not running from Canopy, print line to execute from Canopy
@@ -1006,7 +1007,7 @@ class Database(object):
         title = self.dbse + ' ' + pre + '[]' + suf
         # generate matplotlib instructions and call or print
         try:
-            import mpl
+            from . import mpl
             import matplotlib.pyplot as plt
         except ImportError:
             # if not running from Canopy, print line to execute from Canopy
@@ -1033,12 +1034,12 @@ class Database(object):
             try:
                 mcdat.append(indiv[rxn][0])
                 mclbl.append(str(rxn))
-            except KeyError, e:
+            except KeyError as e:
                 if failoninc:
                     raise e
         # generate matplotlib instructions and call or print
         try:
-            import mpl
+            from . import mpl
             import matplotlib.pyplot as plt
         except ImportError:
             # if not running from Canopy, print line to execute from Canopy
@@ -1360,7 +1361,7 @@ class FourDatabases(object):
         title = '4DB ' + pre + '[]' + suf
         # generate matplotlib instructions and call or print
         try:
-            import mpl
+            from . import mpl
             import matplotlib.pyplot as plt
         except ImportError:
             # if not running from Canopy, print line to execute from Canopy
@@ -1454,7 +1455,7 @@ class FourDatabases(object):
         mapbe = [100 * errors[mc]['DB4']['mapbe'] for mc in modelchem]
         # generate matplotlib instructions and call or print
         try:
-            import mpl
+            from . import mpl
             import matplotlib.pyplot as plt
         except ImportError:
             # if not running from Canopy, print line to execute from Canopy
@@ -1501,7 +1502,7 @@ class FourDatabases(object):
         mapbe = None
         # generate matplotlib instructions and call or print
         try:
-            import mpl
+            from . import mpl
             import matplotlib.pyplot as plt
         except ImportError:
             # if not running from Canopy, print line to execute from Canopy
@@ -1943,7 +1944,7 @@ class ThreeDatabases(object):
         title = '3DB ' + pre + '[]' + suf
         # generate matplotlib instructions and call or print
         try:
-            import mpl
+            from . import mpl
             import matplotlib.pyplot as plt
         except ImportError:
             # if not running from Canopy, print line to execute from Canopy
@@ -2027,7 +2028,7 @@ class ThreeDatabases(object):
         mapbe = [100 * errors[mc]['DB3']['mapbe'] for mc in modelchem]
         # generate matplotlib instructions and call or print
         try:
-            import mpl
+            from . import mpl
             import matplotlib.pyplot as plt
         except ImportError:
             # if not running from Canopy, print line to execute from Canopy
@@ -2072,7 +2073,7 @@ class ThreeDatabases(object):
         mapbe = None
         # generate matplotlib instructions and call or print
         try:
-            import mpl
+            from . import mpl
             import matplotlib.pyplot as plt
         except ImportError:
             # if not running from Canopy, print line to execute from Canopy

@@ -21,15 +21,16 @@
 #
 
 from __future__ import print_function
+from __future__ import absolute_import
 import re
 import math
 from collections import defaultdict
 
-from exceptions import *
-import qcformat
+from .exceptions import *
+from . import qcformat
 #import molpro_basissets
-import options
-from pdict import PreservingDict
+from . import options
+from .pdict import PreservingDict
 
 
 def harvest_output(outtext):

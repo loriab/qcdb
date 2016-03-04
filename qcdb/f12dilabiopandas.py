@@ -98,7 +98,7 @@ for pvar, action in pv0.iteritems():
     try:
         df = append_result_of_func_with_funcargs_to_master_DataFrame_atlevel_with_label(
             master=df, label=pvar, atlevel=lvl, func=action['func'], funcargs=action['args'])
-    except KeyError, e:
+    except KeyError as e:
         print("""Building df pv0: empty index '%s' because missing %s""" % (pvar, e))
 
 
@@ -326,7 +326,7 @@ try:
     #qcdb.compare_values(-4.5580, h2kc * mine['CCSDTNSBF12-CP-Hill2_tqzf12']['A24-9'], 4, 'CSDTNSBF12-CP-Hill2_tqzf12')
     #qcdb.compare_values(-4.5499, h2kc * mine['CCSDTNSCF12-CP-Hill2_tqzf12']['A24-9'], 4, 'CSDTNSCF12-CP-Hill2_tqzf12')
     
-except KeyError, e:
+except KeyError as e:
     print(e)
     pass
 else:

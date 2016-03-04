@@ -59,7 +59,7 @@ def label2(kw):
     """
     try:
         return fancy_mc_archive[kw]
-    except KeyError, e:
+    except KeyError as e:
         print("""Consider adding {} to modelchems.py""".format(e))
         return kw
 
