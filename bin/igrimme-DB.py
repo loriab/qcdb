@@ -86,18 +86,20 @@ print("""
     [d2]
     [d3zero]
     [d3bj]
+    [d3mzero]
+    [d3mbj]
 """)
 
 variants = []
 user_obedient = False
 while not user_obedient:
-    temp = raw_input('    variants [d2 d3zero d3bj] = ').strip()
+    temp = raw_input('    variants [d2 d3zero d3bj d3mzero d3mbj] = ').strip()
     ltemp = temp.split()
     if temp == "":
-        variants = ['d2', 'd3zero', 'd3bj']
+        variants = ['d2', 'd3zero', 'd3bj', 'd3mzero', 'd3mbj']
         user_obedient = True
     for item in ltemp:
-        if item.lower() in ['d2', 'd3zero', 'd3bj']:
+        if item.lower() in ['d2', 'd3zero', 'd3bj', 'd3mzero', 'd3mbj']:
             variants.append(item.lower())
             user_obedient = True
         else:
@@ -152,7 +154,7 @@ for func in functionals:
 
         # catch if this is an invalid functional-dashlvl before run database
         try:
-            h2.run_dftd3(func=func, dashlvl=variant)
+            h2.run_dftd3(func=func, dashlvl=variant, dertype=0)
         except qcdb.ValidationError:
             print('No output or files will be generated.')
             continue
@@ -184,7 +186,8 @@ for func in functionals:
             # compute correction for rgts and rxn
             for rgt in ACTV[index]:
                 GEOS[rgt].update_geometry()
-                DASHCORR[rgt], temp = GEOS[rgt].run_dftd3(func=func, dashlvl=variant)
+                #DASHCORR[rgt], temp = GEOS[rgt].run_dftd3(func=func, dashlvl=variant)
+                DASHCORR[rgt] = GEOS[rgt].run_dftd3(func=func, dashlvl=variant, dertype=0)
             IEDASH = sum([RXNM[index][rgt] * DASHCORR[rgt] for rgt in ACTV[index]]) * qcdb.psi_hartree2kcalmol
 
             # print main results

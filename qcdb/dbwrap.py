@@ -1130,7 +1130,7 @@ class WrappedDatabase(object):
             raise ValidationError("Pandas data managment module must be available for import")
 
         try:
-            self.hrxn.iterkeys().next() + 1
+            next(self.hrxn.iterkeys()) + 1
         except TypeError:
             intrxn = False
         else:
@@ -1155,7 +1155,7 @@ class WrappedDatabase(object):
     def integer_reactions(self):
         """Returns boolean of whether reaction names need to be cast to integer"""
         try:
-            self.hrxn.iterkeys().next() + 1
+            next(self.hrxn.iterkeys()) + 1
         except TypeError:
             return False
         else:
@@ -1198,11 +1198,11 @@ class WrappedDatabase(object):
         rxns = self.hrxn.itervalues()
         while bm is None:
             try:
-                bm = rxns.next().benchmark
+                bm = next(rxns).benchmark
             except StopIteration:
                 break
         return bm
-        # return self.hrxn.itervalues().next().benchmark
+        # return next(self.hrxn.itervalues()).benchmark
         # TODO all rxns have same bench in db module so all have same here in obj
         #   but the way things stored in Reactions, this doesn't have to be so
 

@@ -40,7 +40,6 @@ from . import cfour
 from . import jajo
 from . import orca
 from .orient import OrientMols
-#from origdbwrap import Database, FourDatabases, ThreeDatabases  # , ReactionDatum, Reagent, Reaction
 from .dbwrap import Database, DB4 #DatabaseWrapper  #ReactionDatum, Reagent, Reaction
 from .libmintspointgrp import SymmetryOperation, PointGroup
 from .libmintsbasisset import BasisSet
