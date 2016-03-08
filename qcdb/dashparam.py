@@ -167,8 +167,8 @@ dashcoeff = {
         'b97-d'       : {'s6': 1.000, 's8':  1.020078, 'sr6': 1.151808, 'beta': 0.035964},
         'blyp'        : {'s6': 1.000, 's8':  1.841686, 'sr6': 1.279637, 'beta': 0.014370},
         'bp86'        : {'s6': 1.000, 's8':  1.945174, 'sr6': 1.233460, 'beta': 0.000035},
-        'pbe'         : {'s6': 1.000, 's8': -0.000018, 'sr6': 2.340218, 'beta': 0.129434},
-        'pbe0'        : {'s6': 1.000, 's8':  0.000081, 'sr6': 2.077949, 'beta': 0.116755},
+        'pbe'         : {'s6': 1.000, 's8':  0.000000, 'sr6': 2.340218, 'beta': 0.129434},
+        'pbe0'        : {'s6': 1.000, 's8':  0.000000, 'sr6': 2.077949, 'beta': 0.116755},
         'lcwpbe'      : {'s6': 1.000, 's8':  1.280619, 'sr6': 1.366361, 'beta': 0.003160},
     },
     'd3mbj': {
@@ -212,7 +212,7 @@ def dash_server(func, dashlvl, mode='psi4'):
     #   d2gr:    s6 sr6=1.1 s8=0.0 a2=None alpha6 version=2
     #   d3zero:  s6 sr6 s8 a2=None alpha6 version=3
     #   d3bj:    s6 a1 s8 a2 alpha6=None version=4
-    #   d3mzero: s6 alpha6=14.0 version=5
+    #   d3mzero: s6 sr6 s8 beta alpha6=14.0 version=5
     #   d3mbj:   s6 a1 s8 a2 alpha6=None version=6
 
     if mode.lower() == 'dftd3':
@@ -264,6 +264,9 @@ def dash_server(func, dashlvl, mode='psi4'):
     #   d2gr:    name=-D2GR   s6=s6 p1=alpha6 p2=None p3=None
     #   d3zero:  name=-D3ZERO s6=s6 p1=sr6 p2=s8 p3=alpha6
     #   d3bj:    name=-D3BJ   s6=s6 p1=a1 p2=s8 p3=a2
+
+    #   d3mzero: name=-D3M    s6=s6 p1=sr6 p2=s8 beta alpha6=14.0 version=5
+    #   d3mbj:   name=-D3MBJ  s6=s6 p1=a1 p2=s8 p3=a2
     elif mode.lower() == 'psi4':
         if dashlvleff == 'd2p4':
             return '-D2', \
@@ -282,6 +285,18 @@ def dash_server(func, dashlvl, mode='psi4'):
                 dashcoeff[dashlvleff][func]['alpha6']
         elif dashlvleff == 'd3bj':
             return '-D3BJ', \
+                dashcoeff[dashlvleff][func]['s6'], \
+                dashcoeff[dashlvleff][func]['s8'], \
+                dashcoeff[dashlvleff][func]['a1'], \
+                dashcoeff[dashlvleff][func]['a2']
+        elif dashlvleff == 'd3mzero':
+            return '-D3MZERO', \
+                dashcoeff[dashlvleff][func]['s6'], \
+                dashcoeff[dashlvleff][func]['s8'], \
+                dashcoeff[dashlvleff][func]['sr6'], \
+                dashcoeff[dashlvleff][func]['beta']
+        elif dashlvleff == 'd3mbj':
+            return '-D3MBJ', \
                 dashcoeff[dashlvleff][func]['s6'], \
                 dashcoeff[dashlvleff][func]['s8'], \
                 dashcoeff[dashlvleff][func]['a1'], \

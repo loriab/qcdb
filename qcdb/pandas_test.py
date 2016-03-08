@@ -1683,7 +1683,7 @@ def test_pandas(h2kc, project, df):
             qcdb.compare_values(-4.6894, h2kc * df['SAPT3FCM-dfmp-SA-jatz']['S22-2'], digits, 'SAPT3FCM-SA-jatz')
             qcdb.compare_values(-4.7930, h2kc * df['SAPT3FCM-dfmp-SA-hatz']['S22-2'], digits, 'SAPT3FCM-SA-hatz')
 
-    except KeyError, e:
+    except KeyError as e:
         print(e)
         pass
     else:

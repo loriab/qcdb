@@ -289,12 +289,12 @@ class ReactionDatum(object):
         # computational method
         try:
             tmp_method = methods[method.upper()]
-        except KeyError, e:
+        except KeyError as e:
             raise ValidationError("""Invalid ReactionDatum method %s: %s""" % (method, e))
         # computational basis set
         try:
             tmp_basis = bases[basis.lower()]
-        except KeyError, e:
+        except KeyError as e:
             raise ValidationError("""Invalid ReactionDatum basis %s: %s""" % (basis, e))
         # publication
         if citation is None:
@@ -302,7 +302,7 @@ class ReactionDatum(object):
         else:
             try:
                 tmp_pub = pubs[citation.lower()]
-            except KeyError, e:
+            except KeyError as e:
                 raise ValidationError("""Invalid ReactionDatum publication %s: %s""" % (citation, e))
         return cls(dbse, rxn, tmp_method, mode, tmp_basis, value, units, citation=tmp_pub, doi=doi, comment=comment)
 
@@ -475,14 +475,14 @@ class Reaction(object):
         lbench = self.benchmark if benchmark == 'default' else benchmark
         try:
             mcGreater = self.data[lbench].value
-        except KeyError, e:
+        except KeyError as e:
             raise ValidationError("""Reaction %s missing benchmark datum %s.""" % (self.name, str(e)))
 
         err = {}
         for label, datum in lsset.iteritems():
             try:
                 mcLesser = datum.value
-            except KeyError, e:
+            except KeyError as e:
                 if failoninc:
                     raise ValidationError("""Reaction %s missing datum %s.""" % (label, str(e)))
                 else:
@@ -902,7 +902,7 @@ class WrappedDatabase(object):
         try:
             filtered = func(self)
             lsslist = [rxn for rxn in self.sset['default'].keys() if rxn in filtered]
-        except TypeError, e:
+        except TypeError as e:
             raise ValidationError("""Function %s did not return list: %s.""" % (func.__name__, str(e)))
         if len(lsslist) == 0:
             print("""WrappedDatabase %s: Subset %s NOT formed: empty""" % (self.dbse, label))
@@ -928,7 +928,7 @@ class WrappedDatabase(object):
             # sset is normal subset name 'MX' corresponding to HRXN_MX or MX array in database module
             try:
                 lsset = self.sset[sset.lower()]
-            except KeyError, e:
+            except KeyError as e:
                 # raise ValidationError("""Subset named %s not available""" % (str(e)))
                 lsset = OrderedDict()
         else:
@@ -949,14 +949,14 @@ class WrappedDatabase(object):
             lbench = oRxn.benchmark if benchmark == 'default' else benchmark
             try:
                 mcLesser = oRxn.data[modelchem].value
-            except KeyError, e:
+            except KeyError as e:
                 if failoninc:
                     raise ValidationError("""Reaction %s missing datum %s.""" % (str(rxn), str(e)))
                 else:
                     continue
             try:
                 mcGreater = oRxn.data[lbench].value
-            except KeyError, e:
+            except KeyError as e:
                 if lbench == 'ZEROS':
                     pass
                 else:
@@ -966,7 +966,7 @@ class WrappedDatabase(object):
 #            rxncureinfo = cureinfo[rxn]
 #            try:
 #                mcGreaterCrvmin = self.hrxn[rxncureinfo['eq']].data[lbench].value
-#            except KeyError, e:
+#            except KeyError as e:
 #                print """Reaction %s missing benchmark""" % (str(eqrxn))
 
 #            cure_denom = cure_weight(refrxn=mcGreater, refeq=mcGreaterCrvmin, rrat=rxncureinfo['Rrat'])
@@ -2107,12 +2107,12 @@ reinitialize
             lbm = self.mcs[benchmark][dbix]
             try:
                 orxn.data[lbm]
-            except KeyError, e:
+            except KeyError as e:
                 # not sure if should treat bm differently
                 lbm = None
             try:
                 orxn.data[lmc]
-            except KeyError, e:
+            except KeyError as e:
                 if failoninc:
                     raise e
                 else:
@@ -2122,7 +2122,7 @@ reinitialize
             # try:
             #     orxn.data[lmc]
             #     orxn.data[lbm]
-            # except KeyError, e:
+            # except KeyError as e:
             #     if failoninc:
             #         raise e
             #     else:
@@ -2269,7 +2269,7 @@ reinitialize
                         if rxn in odb.sset[self.sset[lsset[index.index(ix)]][dbix]]:
                             try:
                                 data.append(indiv[ix][db][rxn][0])
-                            except KeyError, e:
+                            except KeyError as e:
                                 if failoninc:
                                     raise e
                                 else:
@@ -2456,7 +2456,7 @@ reinitialize
                 key = mc if modelchemlabels is None else modelchemlabels[modelchem.index(mc)]
                 try:
                     dictorxn[key] = orxn.data[wmc].value
-                except KeyError, e:
+                except KeyError as e:
                     # reaction not in modelchem
                     if failoninc:
                         raise ValidationError("""Reaction %s missing datum %s.""" % (key, str(e)))
@@ -2760,7 +2760,7 @@ reinitialize
                 try:
                     perr = self.compute_statistics(trial_mc, benchmark=benchmark, sset='default',  # prob. too restrictive by choosing subset
                                                    failoninc=False, verbose=False, returnindiv=False)
-                except KeyError, e:
+                except KeyError as e:
                     continue
                 else:
                     mc_translator[nominal_mc] = trial_mc

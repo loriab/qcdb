@@ -9,10 +9,25 @@ except ImportError:
     from .oldpymodules import OrderedDict
 from .modelchems import Method, BasisSet, Error, methods, bases, errors
 
+try:
+    dict.iteritems
+except AttributeError:
+    # Python 3
+    def itervalues(d):
+        return iter(d.values())
+    def iteritems(d):
+        return iter(d.items())
+else:
+    # Python 2
+    def itervalues(d):
+        return d.itervalues()
+    def iteritems(d):
+        return d.iteritems()
+
 mc_archive = {'mtd': methods, 'bas': bases, 'err': errors}
 fancy_mc_archive = {}
 for tier in [methods, bases, errors]:
-    for k, v in tier.iteritems():
+    for k, v in iteritems(tier):
         fancy_mc_archive[k] = v.latex
 
 
@@ -59,7 +74,7 @@ def label2(kw):
     """
     try:
         return fancy_mc_archive[kw]
-    except KeyError, e:
+    except KeyError as e:
         print("""Consider adding {} to modelchems.py""".format(e))
         return kw
 
@@ -88,7 +103,7 @@ def table_generic(dbse, serrors,
     def table_header(kw, abbr, head1, head0, head2):
         """Form table header"""
         ref = r"""tbl:qcdb-%s-%s""" % (theme, '-'.join([kw[bit] for bit in tag]))
-        fancy_kw = {k: (mc_archive[k][v].latex if k in mc_archive else v) for k, v in kw.iteritems()}
+        fancy_kw = {k: (mc_archive[k][v].latex if k in mc_archive else v) for k, v in iteritems(kw)}
         text.append('')
         text.append(r"""\begingroup""")
         text.append(r"""\squeezetable""")
@@ -134,7 +149,7 @@ def table_generic(dbse, serrors,
                     newcells.append(cell)
             if changed:
                 lines2replace[idx] = '&'.join(newcells)
-        for idx, line in lines2replace.iteritems():
+        for idx, line in iteritems(lines2replace):
             text[idx] = line
 
         # search-and-suppress "blank" lines
@@ -150,7 +165,7 @@ def table_generic(dbse, serrors,
         text.append(r"""\end{ruledtabular}""")
         for idx, fn in enumerate(footnotes):
             text.append(r"""\footnotetext[%d]{%s}""" % (idx + 1, fn))
-        for fn, idx in otffootnotes.iteritems():
+        for fn, idx in iteritems(otffootnotes):
             text.append(r"""\footnotetext[%d]{%s}""" % (idx, fn))
         text.append(r"""\end{%s}""" % ('sidewaystable' if landscape else 'table'))
         text.append(r"""\endgroup""")
