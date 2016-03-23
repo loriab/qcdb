@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import sys
 import glob
@@ -283,9 +284,13 @@ def reactionate(cpmode, rgts):
         cp = pd.DataFrame(dfstoich['CP'] * rgts['CP'])
         uncp = pd.DataFrame(dfstoich['default'] * rgts['default'])
         ave = 0.5 * (cp + uncp)
+        if verbose > 2:
+            print(ave)
         return ave.sum(axis=1)
     else:
-        hjkl = pd.DataFrame(dfstoich[cpmode] * rgts[cpmode])
+        hjkl = pd.DataFrame(rgts[cpmode] * dfstoich[cpmode], index=rxns)
+        if verbose > 2:
+            print(hjkl)
         return hjkl.sum(axis=1)
 
 
@@ -1372,6 +1377,8 @@ for cpm in cpmd:
             for opt in opts:
                 mc = '-'.join([mtd, cpm, bas]) if opt == '' else '-'.join([mtd, opt, cpm, bas])
                 try:
+                    if verbose > 2:
+                        print("""<<<  Reagents for {}  >>>""".format(mc))
                     tmp = build(mtd, opt, cpm, bas)
                     if verbose > 1:
                         print("""Built model chemistry %s""" % (mc))
