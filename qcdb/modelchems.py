@@ -447,6 +447,7 @@ _tlist = [
     Method('WB97XD',          fullname='wB97X-D', latex="""$\omega$B97X-D"""),
     Method('WB97X2',          fullname='wB97X-2', latex="""$\omega$B97X-2"""),
     Method('WB97XV',          fullname='wB97X-V', latex="""$\omega$B97X-V"""),
+    Method('WB97MV',          fullname='wB97M-V', latex="""$\omega$B97M-V"""),
     Method('PBE',             fullname='PBE'),
     Method('PBED2',           fullname='PBE-D2'),
     Method('PBED3',           fullname='PBE-D3'),

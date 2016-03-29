@@ -1334,7 +1334,7 @@ elif project in ['dfit', 'bfdbdft']:
             'PBE0', 'PBE0D2', 'PBE0D3', 'PBE0D3BJ',
             'WPBE', 'WPBED3', 'WPBED3BJ',
             'B2PLYP', 'B2PLYPD2', 'B2PLYPD3', 'B2PLYPD3BJ',
-            'WB97XD', 'M052X', 'WB97XV']
+            'WB97XD', 'M052X', 'WB97XV', 'WB97MV']
     bass = ['def2qzvp', 'adz', 'atz']
     opts = ['', 'dfhf', 'dfhf-dfmp']  # why B2PLYP with no or dfhf label; why B3LYP w dfhf-dfmp label?
     cpmd = ['CP', 'unCP']

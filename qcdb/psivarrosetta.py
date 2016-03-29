@@ -54,6 +54,8 @@ useme2psivar = {
 
     'wb97xv.usemeraw': 'WB97X-V TOTAL ENERGY',
 
+    'wb97mv.usemeraw': 'WB97M-V TOTAL ENERGY',
+
     'm052x.usemeraw': 'M05-2X FUNCTIONAL TOTAL ENERGY',
     'm052xd3.usemedash': 'M05-2X-D3 DISPERSION CORRECTION ENERGY',
 
