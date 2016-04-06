@@ -154,7 +154,7 @@ class Molecule(LibmintsMolecule):
                     instance.add_atom(fileAtom, fileX, fileY, fileZ, z2el[fileAtom], z2mass[fileAtom], fileAtom)
 
                 else:
-                    raise ValidationError("Molecule::init_with_xyz: Malformed atom information line %d." % (i + 3))
+                    raise ValidationError("Molecule::init_with_xyz: Malformed atom information line %d.\n%s:%s" % (i + 3, xyzfilename, text[i + 2]))
             except IndexError:
                 raise ValidationError("Molecule::init_with_xyz: Expected atom in file at line %d.\n%s" % (i + 3, text[i + 2]))
 

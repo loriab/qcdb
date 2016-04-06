@@ -182,7 +182,7 @@ for useme in usemeglob:
                 if useme2psivar[piece] in optclue2psivar[opt]:
                     optns2.append(opt)
             except KeyError as e:
-                raise ValidationError('Error: option %s needs adding to to optclue2psivar is psivarrosetta.py: %s' % (opt, e))
+                raise ValidationError('Error: option %s needs adding to to optclue2psivar in psivarrosetta.py: %s from %s' % (opt, e, useme))
     optns = '-'.join(optns2)
     if verbose > 2:
         print(useme, basis, piece, optns, useme2psivar[piece])

@@ -1532,11 +1532,11 @@ class Database(object):
         else:
             print("""Database %s: Subset %s NOT formed: empty""" % (self.dbse, label))
 
-    def add_Subset_union(self, name, sslist):
+    def add_Subset_union(self, name, sslist, union=True):
         """
         Define a new subset labeled *name* (note that there's nothing to
         prevent overwriting an existing subset name) from the union of
-        existing named subsets in *sslist*.
+        existing named subsets in *sslist*. Intersection taken if *union* false.
 
         """
         funcdb = {}
@@ -1545,9 +1545,14 @@ class Database(object):
             overlapping_dbrxns = []
             for ss in sslist:
                 lss = self.sset[ss][dbix]
-                if lss is not None:
+                if lss is None:
+                    overlapping_dbrxns.append([])
+                else:
                     overlapping_dbrxns.append(self.dbdict[db].sset[lss].keys())
-            rxnlist = set().union(*overlapping_dbrxns)
+            if union:
+                rxnlist = set().union(*overlapping_dbrxns)
+            else:
+                rxnlist = set(overlapping_dbrxns[0]).intersection(*overlapping_dbrxns)
             funcdb[db] = rxnlist
         self.add_Subset(name, funcdb)
 

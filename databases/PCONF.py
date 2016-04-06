@@ -73,20 +73,36 @@ RXNM['%s-%s'            % (dbse, '10'                    )] = dict(zip(ACTV['%s-
 
 # <<< Reference Values [kcal/mol] >>>
 BIND = {}
-BIND['%s-%s'            % (dbse, '1'                     )] =    0.14
-BIND['%s-%s'            % (dbse, '2'                     )] =    0.90
-BIND['%s-%s'            % (dbse, '3'                     )] =    1.15
-BIND['%s-%s'            % (dbse, '4'                     )] =    0.79
-BIND['%s-%s'            % (dbse, '5'                     )] =    1.31
-BIND['%s-%s'            % (dbse, '6'                     )] =    1.87
-BIND['%s-%s'            % (dbse, '7'                     )] =    2.37
-BIND['%s-%s'            % (dbse, '8'                     )] =    2.07
-BIND['%s-%s'            % (dbse, '9'                     )] =    2.51
-BIND['%s-%s'            % (dbse, '10'                    )] =    2.04
-## Reference information
-#BINDINFO = {}
-#for rxn in HRXN:
-#    BINDINFO['%s-%s' % (dbse, rxn)] = {'citation': 'pconf', 'method': 'CCSDT', 'mode': '', 'basis': 'tqz???'}  # CP-status unkn
+# Original publication
+BIND_PCONF0 = {}
+BIND_PCONF0['%s-%s'            % (dbse, '1'                     )] =    0.14
+BIND_PCONF0['%s-%s'            % (dbse, '2'                     )] =    0.90
+BIND_PCONF0['%s-%s'            % (dbse, '3'                     )] =    1.15
+BIND_PCONF0['%s-%s'            % (dbse, '4'                     )] =    0.79
+BIND_PCONF0['%s-%s'            % (dbse, '5'                     )] =    1.31
+BIND_PCONF0['%s-%s'            % (dbse, '6'                     )] =    1.87
+BIND_PCONF0['%s-%s'            % (dbse, '7'                     )] =    2.37
+BIND_PCONF0['%s-%s'            % (dbse, '8'                     )] =    2.07
+BIND_PCONF0['%s-%s'            % (dbse, '9'                     )] =    2.51
+BIND_PCONF0['%s-%s'            % (dbse, '10'                    )] =    2.04
+# Current revision
+BIND_PCONFA = {}
+BIND_PCONFA['%s-%s'            % (dbse, '1'                     )] =    0.421
+BIND_PCONFA['%s-%s'            % (dbse, '2'                     )] =    1.122
+BIND_PCONFA['%s-%s'            % (dbse, '3'                     )] =    1.716
+BIND_PCONFA['%s-%s'            % (dbse, '4'                     )] =    1.097
+BIND_PCONFA['%s-%s'            % (dbse, '5'                     )] =    1.833
+BIND_PCONFA['%s-%s'            % (dbse, '6'                     )] =    2.040
+BIND_PCONFA['%s-%s'            % (dbse, '7'                     )] =    2.391
+BIND_PCONFA['%s-%s'            % (dbse, '8'                     )] =    2.544
+BIND_PCONFA['%s-%s'            % (dbse, '9'                     )] =    2.717
+BIND_PCONFA['%s-%s'            % (dbse, '10'                    )] =    2.254
+# Set default
+BIND = BIND_PCONFA
+# Reference information
+BINDINFO_PCONFA = {}
+for rxn in HRXN:
+    BINDINFO_PCONFA['%s-%s' % (dbse, rxn)] = {'citation': 'dfit', 'method': 'CCSDTAF12', 'mode': 'dfhf_dfmp_unCP', 'basis': 'aq5zadz'}  # non-f12 mp2 xtpl
 
 # <<< Comment Lines >>>
 TAGL = {}
