@@ -1792,7 +1792,8 @@ class Database(object):
     #     return dbdat
 
     def plot_axis(self, axis, modelchem, benchmark='default', sset='default',
-                  failoninc=True, verbose=False, color='sapt', view=True,
+                  failoninc=True, verbose=False, color='sapt',
+                  view=True, return_data=False,
                   saveas=None, relpath=False, graphicsformat=['pdf']):
         """
 
@@ -1846,20 +1847,21 @@ class Database(object):
         #        print '{:20s} {:8.2f}    {:8.2f} {:8.2f}'.format(d['sys'], d['axis'],
         #            0.0 if d['bmdata'] is None else d['bmdata'],
         #            0.0 if d['mcdata'] is None else d['mcdata'])
-        # generate matplotlib instructions and call or print
-        try:
-            from . import mpl
-            import matplotlib.pyplot as plt
-        except ImportError:
-            # if not running from Canopy, print line to execute from Canopy
-            print("""filedict = mpl.valerr(%s,\n    color='%s',\n    title='%s',\n    xtitle='%s',\n    view=%s\n    saveas=%s\n    relpath=%s\n    graphicsformat=%s)\n\n""" %
-                  (dbdat, color, title, axis, view, repr(saveas), repr(relpath), repr(graphicsformat)))
+
+        if return_data:
+            return dbdatdict
         else:
-            # if running from Canopy, call mpl directly
-            filedict = mpl.valerr(dbdatdict, color=color, title=title, xtitle=axis,
-                                  view=view,
-                                  saveas=saveas, relpath=relpath, graphicsformat=graphicsformat)
-            return filedict
+            try:
+                from . import mpl
+                import matplotlib.pyplot as plt
+            except ImportError:
+                raise ValidationError("Matplotlib or qcdb.mpl import error")
+            else:
+                # if running from Canopy, call matplotlib directly
+                filedict = mpl.valerr(dbdatdict, color=color, title=title, xtitle=axis,
+                                      view=view,
+                                      saveas=saveas, relpath=relpath, graphicsformat=graphicsformat)
+                return filedict
 
     def load_saptdata_frombfdb(self, sset='default',
         pythonpath='/Users/loriab/linux/bfdb/sapt_punt', failoninc=True):  # pythonpath=None
