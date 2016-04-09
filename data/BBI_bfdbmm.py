@@ -83,7 +83,7 @@ def load_bfdbmm(dbinstance):
     dbinstance.add_ReactionDatum(citation='bfdbmm', dbse='BBI', rxn='172GLY-175TRP-1', method='CHARMM', mode='', basis='na', value= -3.81797) 
     dbinstance.add_ReactionDatum(citation='bfdbmm', dbse='BBI', rxn='197TYR-201LEU-2', method='CHARMM', mode='', basis='na', value= -6.77787) 
     dbinstance.add_ReactionDatum(citation='bfdbmm', dbse='BBI', rxn='199SER-202TYR-1', method='CHARMM', mode='', basis='na', value= -0.349726)
-    dbinstance.add_ReactionDatum(citation='bfdbmm', dbse='BBI', rxn='205THR-208GLU-1', method='CHARMM', mode='', basis='na', value= -7.844093)
+    dbinstance.add_ReactionDatum(citation='bfdbmm', dbse='BBI', rxn='205THR-208GLU-1', method='CHARMM', mode='', basis='na', value= -0.07844093)
     dbinstance.add_ReactionDatum(citation='bfdbmm', dbse='BBI', rxn='205THR-209LEU-2', method='CHARMM', mode='', basis='na', value= -5.46814) 
     dbinstance.add_ReactionDatum(citation='bfdbmm', dbse='BBI', rxn='228ARG-232GLU-1', method='CHARMM', mode='', basis='na', value= -7.68028) 
     # bfdb.sql methodid 1
