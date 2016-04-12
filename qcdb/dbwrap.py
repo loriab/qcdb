@@ -1719,6 +1719,7 @@ class Database(object):
         print(text)
 
     def plot_bars(self, modelchem, benchmark='default', sset=['default', 'hb', 'mx', 'dd'],
+                  ylimit=None,
                   failoninc=True, verbose=False, view=True,
                   saveas=None, relpath=False, graphicsformat=['pdf']):
         """Prepares 'grey bars' diagram for each model chemistry in array
@@ -1767,7 +1768,7 @@ class Database(object):
         else:
             # if running from Canopy, call mpl directly
             filedict = mpl.bars(dbdat, title=title,
-                                view=view,
+                                view=view, ylimit=ylimit,
                                 saveas=saveas, relpath=relpath, graphicsformat=graphicsformat)
             return filedict
 

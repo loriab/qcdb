@@ -81,25 +81,36 @@ def segment_color(argcolor, saptcolor):
     return clr
 
 
-def bars(data, title='', saveas=None, relpath=False, graphicsformat=['pdf'], view=True):
+def bars(data, title='', saveas=None, relpath=False, graphicsformat=['pdf'], view=True,
+    ylimit=None):
     """Generates a 'gray-bars' diagram between model chemistries with error
     statistics in list *data*, which is supplied as part of the dictionary
     for each participating bar/modelchem, along with *mc* keys in argument
     *data*. The plot is labeled with *title* and each bar with *mc* key and
-    plotted at a fixed scale to facilitate comparison across projects.
+    plotted at a fixed scale to facilitate comparison across projects. The
+    y-range is set to *ylimit* if specified, otherwise adjusted to fit data.
 
     """
     import hashlib
     import matplotlib.pyplot as plt
 
+    # figure out y-scaling
+    maxdata = 0.0
+    for bar in data:
+        if bar is not None:
+            maxdata = max(maxdata, max(bar['data']))
+    padded_ylim = 1.2 * maxdata  # pad 2% for data, 18% for labels
+    padded_ylim = padded_ylim if ylimit is None else ylimit
+    #padded_ylim = 4.86  # venerable old default
+
     # initialize plot, fix dimensions for consistent Illustrator import
     fig, ax = plt.subplots(figsize=(12, 7))
-    plt.ylim([0, 4.86])
+    plt.ylim([0, padded_ylim])
     plt.xlim([0, 6])
     plt.xticks([])
 
     # label plot and tiers
-    ax.text(0.4, 4.6, title,
+    ax.text(0.4, 0.95 * padded_ylim, title,
         verticalalignment='bottom', horizontalalignment='left',
         family='Times New Roman', weight='bold', fontsize=12)
 
@@ -112,12 +123,12 @@ def bars(data, title='', saveas=None, relpath=False, graphicsformat=['pdf'], vie
             lefts = [xval, xval + 0.025, xval + 0.065, xval + 0.105]
 
             rect = ax.bar(lefts, bar['data'], widths, linewidth=0)
-            rect[0].set_color('grey')
-            rect[1].set_color('red')
-            rect[2].set_color('green')
-            rect[3].set_color('blue')
+            rect[0].set_color((0, 0, 0, 0.3))
+            rect[1].set_color((0.80, 0.20, 0.20))
+            rect[2].set_color((0.00, 0.41, 0.22))
+            rect[3].set_color((0.27, 0.30, 0.63))
 
-            ax.text(xval + .08, 4.3, bar['mc'],
+            ax.text(xval + .08, 0.88 * padded_ylim, bar['mc'],
                 verticalalignment='center', horizontalalignment='right', rotation='vertical',
                 family='Times New Roman', fontsize=8)
         xval += 0.20
