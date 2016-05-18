@@ -156,84 +156,90 @@ def compute_therm_terms(E0, molecule, vibfreq, vibtemp, rot_symm_num, rot_const,
     terms = {'Electronic':0,'Translational':1,'Rotational':2,'Vibrational':3,'Total':4}
     kterms = ['Electronic','Translational','Rotational','Vibrational','Total']
 
-    E = np.zeros(5) 
-    Cv = np.zeros(5) 
-    Cp = np.zeros(5) 
-    S = np.zeros(5)
-    H = np.zeros(5)
-    G = np.zeros(5)
+    E = {} 
+    Cv = {} 
+    Cp = {} 
+    S = {}
+    H = {}
+    G = {}
      
     beta = 1./(qcdb.physconst.psi_kb*T)
 
     if rot_type == "RT_ATOM": 
-        E[terms['Rotational']] = Cv[terms['Rotational']] = Cp[terms['Rotational']] = S[terms['Rotational']] = 0.0
+        E['Rotational'] = Cv['Rotational'] = Cp['Rotational'] = S['Rotational'] = 0.0
     elif rot_type == "RT_LINEAR": 
-        E[terms['Rotational']] = T
-        Cv[terms['Rotational']] = Cp[terms['Rotational']] = 1.0
+        E['Rotational'] = T
+        Cv['Rotational'] = Cp['Rotational'] = 1.0
         q_rot = 1. / (beta * rot_symm_num*100*qcdb.physconst.psi_c*qcdb.physconst.psi_h*rot_const[1])
-        S[terms['Rotational']] = 1.0 + math.log(q_rot) 
+        S['Rotational'] = 1.0 + math.log(q_rot) 
     else: # EVERYTHING ELSE
-        E[terms['Rotational']] = 1.5*T
-        Cv[terms['Rotational']] = Cp[terms['Rotational']] = 1.5
+        E['Rotational'] = 1.5*T
+        Cv['Rotational'] = Cp['Rotational'] = 1.5
         phi_A, phi_B, phi_C = rot_const*100*qcdb.physconst.psi_c*qcdb.physconst.psi_h/qcdb.physconst.psi_kb
         q_rot = math.sqrt(pi)*pow(T,1.5)/(float(rot_symm_num)*math.sqrt(phi_A*phi_B*phi_C))
-        S[terms['Rotational']] = 1.5 + math.log(q_rot)
-    H[terms['Rotational']] = E[terms['Rotational']] 
-    G[terms['Rotational']] = H[terms['Rotational']] - T * S[terms['Rotational']]
+        S['Rotational'] = 1.5 + math.log(q_rot)
+    H['Rotational'] = E['Rotational'] 
+    G['Rotational'] = H['Rotational'] - T * S['Rotational']
     
     ZPVE = 0.0
+    E['Vibrational'] = Cv['Vibrational'] = Cp['Vibrational'] = S['Vibrational'] = 0.0
     for i in range(len(vibfreq)):
         if vibtemp[i] < 0.0: 
             text+= "WARNING: vibration with imaginary frequency neglected in vibrational contributions.\n"
         else:
             if vibtemp[i] < 900.0: text+="WARNING: used thermodynamic relations are not appropriate for low frequency modes.\n"
             rT = vibtemp[i]/T
-            E[terms['Vibrational']] += vibtemp[i]*(0.5+1.0/(math.exp(rT)-1.))
-            Cv[terms['Vibrational']] += math.exp(rT)*math.pow((rT/(math.exp(rT)-1.)),2.)
-            Cp[terms['Vibrational']] += math.exp(rT)*math.pow((rT/(math.exp(rT)-1.)),2.)
-            S[terms['Vibrational']] +=  rT/(math.exp(rT)-1.) - math.log(1.-math.exp(-rT))
+            E['Vibrational'] += vibtemp[i]*(0.5+1.0/(math.exp(rT)-1.))
+            Cv['Vibrational'] += math.exp(rT)*math.pow((rT/(math.exp(rT)-1.)),2.)
+            Cp['Vibrational'] += math.exp(rT)*math.pow((rT/(math.exp(rT)-1.)),2.)
+            S['Vibrational'] +=  rT/(math.exp(rT)-1.) - math.log(1.-math.exp(-rT))
             ZPVE += vibfreq[i]/2.
-            H[terms['Vibrational']] = E[terms['Vibrational']]
-            G[terms['Vibrational']] = H[terms['Vibrational']] - T * S[terms['Vibrational']]
+            H['Vibrational'] = E['Vibrational']
+            G['Vibrational'] = H['Vibrational'] - T * S['Vibrational']
     # Electronic
     q_elec = molecule.multiplicity()
-    S[terms['Electronic']] = math.log(q_elec)
-    G[terms['Electronic']] = H[terms['Electronic']] - T * S[terms['Electronic']]
+    H['Electronic'] = 0.0
+    E['Electronic'] = 0.0
+    Cp['Electronic'] = 0.0
+    Cv['Electronic'] = 0.0
+    S['Electronic'] = math.log(q_elec)
+    G['Electronic'] = H['Electronic'] - T * S['Electronic']
     # Translational
-    E[terms['Translational']] = 1.5 * T
-    Cv[terms['Translational']] = 1.5
-    Cp[terms['Translational']] = 2.5
+    E['Translational'] = 1.5 * T
+    Cv['Translational'] = 1.5
+    Cp['Translational'] = 2.5
     q_trans = pow(2.0*pi*mw*qcdb.physconst.psi_amu2kg/(beta*qcdb.physconst.psi_h*qcdb.physconst.psi_h),1.5)*qcdb.physconst.psi_na/(beta*P)
-    S[terms['Translational']] = (5.0/2.0) + math.log(q_trans/qcdb.physconst.psi_na)
-    H[terms['Translational']] = 2.5 * T
-    G[terms['Translational']] = H[terms['Translational']] - T * S[terms['Translational']]
+    S['Translational'] = (5.0/2.0) + math.log(q_trans/qcdb.physconst.psi_na)
+    H['Translational'] = 2.5 * T
+    G['Translational'] = H['Translational'] - T * S['Translational']
     
     ## Unit conversions
     R_to_cal = qcdb.physconst.psi_R/qcdb.physconst.psi_cal2J
-    E *= R_to_cal/1000.0
-    H *= R_to_cal/1000.0
-    G *= R_to_cal/1000.0
-    Cv *= R_to_cal
-    Cp *= R_to_cal
-    S *= R_to_cal
+    for i in E: E[i] *= R_to_cal/1000.0
+    for i in H: H[i] *= R_to_cal/1000.0
+    for i in G: G[i] *= R_to_cal/1000.0
+    for i in Cv: Cv[i] *= R_to_cal
+    for i in Cp: Cp[i] *= R_to_cal
+    for i in S: S[i] *= R_to_cal
     # Total energy 
-    E[terms['Total']] = sum(E[:4])
-    Cp[terms['Total']] = sum(Cp[:4])
-    S[terms['Total']] = sum(S[:4])
-    H[terms['Total']] = sum(H[:4])
-    G[terms['Total']] = sum(G[:4])
+    E['Total'] = E['Translational'] + E['Rotational'] + E['Vibrational'] + E['Electronic']
+    Cp['Total'] = Cp['Translational'] + Cp['Rotational'] + Cp['Vibrational'] + Cp['Electronic']
+    Cv['Total'] = Cv['Translational'] + Cv['Rotational'] + Cv['Vibrational'] + Cv['Electronic']
+    S['Total'] = S['Translational'] + S['Rotational'] + S['Vibrational'] + S['Electronic']
+    H['Total'] = H['Translational'] + H['Rotational'] + H['Vibrational'] + H['Electronic']
+    G['Total'] = G['Translational'] + G['Rotational'] + G['Vibrational'] + G['Electronic']
     
     ZPVE_au = ZPVE * 100 * qcdb.physconst.psi_h * qcdb.physconst.psi_c / qcdb.physconst.psi_hartree2J
-    DU = E[terms['Total']] * 1000.0 * qcdb.physconst.psi_cal2J / qcdb.physconst.psi_na / qcdb.physconst.psi_hartree2J
+    DU = E['Total'] * 1000.0 * qcdb.physconst.psi_cal2J / qcdb.physconst.psi_na / qcdb.physconst.psi_hartree2J
     DH = DU + qcdb.physconst.psi_kb * T / qcdb.physconst.psi_hartree2J
-    DG = DH - T * S[terms['Total']] * qcdb.physconst.psi_cal2J / qcdb.physconst.psi_na / qcdb.physconst.psi_hartree2J
+    DG = DH - T * S['Total'] * qcdb.physconst.psi_cal2J / qcdb.physconst.psi_na / qcdb.physconst.psi_hartree2J
    
 
     text+="\n==> Components <==\n\n"
     text+="Entropy, S\n"
     for i in range(5):
         term = kterms[i]
-        ScalmolK = S[terms[term]]
+        ScalmolK = S[term]
         SjmolK = ScalmolK * qcdb.physconst.psi_cal2J
         SmEhK = ScalmolK / qcdb.physconst.psi_hartree2kcalmol
         if kterms[i] == "Electronic": text+="  %15s S  %11.3lf [cal/(mol K)]  %11.3lf [J/(mol K)]  %15.8lf [mEh/K] (multiplicity = %d)\n" % (term,ScalmolK,SjmolK,SmEhK,molecule.multiplicity())
@@ -245,7 +251,7 @@ def compute_therm_terms(E0, molecule, vibfreq, vibtemp, rot_symm_num, rot_const,
     text+="\nConstant volume heat capacity, Cv\n"
     for i in range(5):
         term = kterms[i]
-        CvcalmolK = Cv[terms[term]]
+        CvcalmolK = Cv[term]
         CvjmolK = CvcalmolK * qcdb.physconst.psi_cal2J
         CvmEhK = CvcalmolK / qcdb.physconst.psi_hartree2kcalmol
         if term == "Total": text+=" Total Cv %10s  %11.3lf [cal/(mol K)]  %11.3lf [J/(mol K)]  %15.8lf [mEh/K]\n" % ('',CvcalmolK,CvjmolK,CvmEhK)
@@ -254,7 +260,7 @@ def compute_therm_terms(E0, molecule, vibfreq, vibtemp, rot_symm_num, rot_const,
     text+="\nConstant pressure heat capacity, Cp\n"
     for i in range(5):
         term = kterms[i]
-        CpcalmolK = Cp[terms[term]]
+        CpcalmolK = Cp[term]
         CpjmolK = CpcalmolK * qcdb.physconst.psi_cal2J
         CpmEhK = CpcalmolK / qcdb.physconst.psi_hartree2kcalmol
         if term == "Total": text+=" Total Cp %10s  %11.3lf [cal/(mol K)]  %11.3lf [J/(mol K)]  %15.8lf [mEh/K]\n" % ('',CpcalmolK,CpjmolK,CpmEhK)
@@ -277,7 +283,7 @@ def compute_therm_terms(E0, molecule, vibfreq, vibtemp, rot_symm_num, rot_const,
     text+="Thermal Energy, E (includes ZPE)\n"
     for i in range(5):
         term = kterms[i]
-        Ekcalmol = E[terms[term]]
+        Ekcalmol = E[term]
         Ekjmol = Ekcalmol*qcdb.psi_cal2J
         Eh = Ekcalmol/qcdb.psi_hartree2kcalmol
         if term == "Total": text+=" Correction E %7s %11.3lf [kcal/mol]  %11.3lf [kJ/mol]  %15.8lf [Eh]\n" % ('',Ekcalmol,Ekjmol,Eh)
@@ -288,7 +294,7 @@ def compute_therm_terms(E0, molecule, vibfreq, vibtemp, rot_symm_num, rot_const,
     text+="Enthalpy, H_trans = E_trans + k_B * T\n"
     for i in range(5):
         term = kterms[i]
-        Hkcalmol = H[terms[term]]
+        Hkcalmol = H[term]
         Hkjmol = Hkcalmol*qcdb.psi_cal2J
         Hh = Hkcalmol/qcdb.psi_hartree2kcalmol
         if term == "Total": text+=" Correction H %7s %11.3lf [kcal/mol]  %11.3lf [kJ/mol]  %15.8lf [Eh]\n" % ('',Hkcalmol,Hkjmol,Hh)
@@ -299,7 +305,7 @@ def compute_therm_terms(E0, molecule, vibfreq, vibtemp, rot_symm_num, rot_const,
     text+="Gibbs free energy, G = H - T * S\n"
     for i in range(5):
         term = kterms[i]
-        Gkcalmol = G[terms[term]]
+        Gkcalmol = G[term]
         Gkjmol = Gkcalmol*qcdb.psi_cal2J
         Gh = Gkcalmol/qcdb.psi_hartree2kcalmol
         if term == "Total": text+=" Correction G %7s %11.3lf [kcal/mol]  %11.3lf [kJ/mol]  %15.8lf [Eh]\n" % ('',Gkcalmol,Gkjmol,Gh)
