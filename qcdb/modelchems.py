@@ -218,6 +218,7 @@ _tlist = [
     Publication('silver', doi='', dsdbid='', owner='', fullname=''),
     Publication('anon', doi='', dsdbid='', owner='', fullname=''),
     Publication('f12dilabio', doi='', dsdbid='', owner='', fullname=''),
+    Publication('dilabioextras',doi='', dsdbid='', owner='', fullname=''),
 ]
 pubs = {}
 for item in _tlist:
@@ -316,8 +317,10 @@ _tlist = [
         build=[None, None, ['ha5z', 'haq5z', 'atz']]),
     BasisSet('aq5zaqz',    fullname='[aQ5Z; D:aQZ]', latex="""[aQ5Z; $\delta$:aQZ]""",
         build=[None, None, ['a5z', 'aq5z', 'aqz']]),
-    BasisSet('tqz631gs025',fullname='[TQZ; D:631G*(0.25)', latex="""[TQZ; $\delta$:631gs025]""",
+    BasisSet('tqz631gs025',fullname='[TQZ; D:631G*(0.25)]', latex="""[TQZ; $\delta$:631gs025]""",
         build=[None, None, ['qz', 'tqz', '631gs025']]),
+    BasisSet('a56za5z',    fullname='[a56Z; D:a5Z]', latex="""[a56Z; $\delta$:a5Z]""",
+        build=[None, None, ['a6z', 'a56z', 'a5z']]),
     BasisSet('dzf12',      fullname='cc-pVDZ-F12'),
     BasisSet('tzf12',      fullname='cc-pVTZ-F12'),
     BasisSet('qzf12',      fullname='cc-pVQZ-F12'),
