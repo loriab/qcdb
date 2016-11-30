@@ -349,6 +349,14 @@ class LibmintsMolecule(object):
             print("""WARNING: Obtaining masses from atom with fractional charge...may be incorrect!!!\n""")
             # TODO outfile
         return z2mass[int(self.atoms[atom].Z())]
+    
+    def set_mass(self, atom, mass):
+        """Sets mass of atom to user-specified value (0-indexed)
+
+        >>>  H2OH2O.set_mass(4, 2.0141017778)
+
+        """
+        self.full_atoms[atom].PYmass = mass        
 
     def symbol(self, atom):
         """Returns the cleaned up label of the atom (C2 => C, H4 = H) (0-indexed)
@@ -1850,9 +1858,10 @@ class LibmintsMolecule(object):
             for j in range(3):
                 if math.fabs(tensor[i][j]) < ZERO:
                     tensor[i][j] = 0.0
+
         return tensor
 
-    def rotational_constants(self, tol=FULL_PG_TOL):
+    def rotational_constants(self, tol=FULL_PG_TOL, print_text = True):
         """Compute the rotational constants and return them in wavenumbers"""
 
         evals, evecs = diagonalize3x3symmat(self.inertia_tensor())
@@ -1883,7 +1892,7 @@ class LibmintsMolecule(object):
             'A', '%16.8f' % (im_cm / evals[0]) if not isLinear else '*****', \
             'B', '%16.8f' % (im_cm / evals[1]) if not isOne else '*****', \
             'C', '%16.8f' % (im_cm / evals[2]) if not isAtom else '*****')
-        print(text)
+        if (print_text): print(text)
         # TODO outfile
         rot_const = []
         rot_const.append(im_cm / evals[0] if not isLinear else None)

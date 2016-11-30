@@ -169,7 +169,7 @@ def plot_convergence(rxn, dbse, proj, loadfrompickle, std_mtd, std_bsse, std_bas
             plt.savefig(dbse + '-' + str(r) + '-convplot.pdf')
         elif plotpath == 'default' and filename == 'defulat':
             plt.savefig(dbse + '-' + str(r) + '-convplot' + filetype)
-        elif plotpath == 'defulat':
+        elif plotpath == 'default':
             plt.savefig(filename + '.' + filetype)
         else:
             plt.savefig( plotpath + '/' + filename + '.' + filetype)
