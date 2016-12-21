@@ -1683,6 +1683,122 @@ def test_pandas(h2kc, project, df):
             qcdb.compare_values(-4.6894, h2kc * df['SAPT3FCM-dfmp-SA-jatz']['S22-2'], digits, 'SAPT3FCM-SA-jatz')
             qcdb.compare_values(-4.7930, h2kc * df['SAPT3FCM-dfmp-SA-hatz']['S22-2'], digits, 'SAPT3FCM-SA-hatz')
 
+        elif project == 'sapta0a1conv':
+            print("""\n        Checks from sapta0a1test project:\n""")
+
+            #test_alpha_0 = False
+            test_alpha_0 = True
+
+            if not test_alpha_0:
+
+                # <<<  subset of saptone above  >>>
+                print('Round 1')
+                digits = 0.0006
+    
+                # SAPT0
+                qcdb.compare_values(-5.3837, h2kc * df['SAPT0-SA-adz'    ]['S22-2'], digits, 'SAPT0-SA-adz')
+    
+                # sSAPT0
+                qcdb.compare_values(-5.3440, h2kc * df['SAPT0S-SA-adz'   ]['S22-2'], digits, 'SAPT0S-SA-adz')
+    
+                # SCS-SAPT0
+                qcdb.compare_values(-5.2855, h2kc * df['SAPTSCS-SA-adz'  ]['S22-2'], digits, 'SAPTSCS-SA-adz')
+    
+                # SAPT2
+                qcdb.compare_values(-4.2041, h2kc * df['SAPT2-SA-adz'    ]['S22-2'], digits, 'SAPT2-SA-adz')
+    
+                # SAPT2+
+                qcdb.compare_values(-4.5873, h2kc * df['SAPT2P-SA-adz'   ]['S22-2'], digits, 'SAPT2P-SA-adz')
+                qcdb.compare_values(-4.5646, h2kc * df['SAPT2PC-SA-adz'  ]['S22-2'], digits, 'SAPT2PC-SA-adz')
+                qcdb.compare_values(-4.7490, h2kc * df['SAPT2PM-SA-adz'  ]['S22-2'], digits, 'SAPT2PM-SA-adz')
+                qcdb.compare_values(-4.7264, h2kc * df['SAPT2PCM-SA-adz' ]['S22-2'], digits, 'SAPT2PCM-SA-adz')
+    
+                # SAPT2+(3)
+                qcdb.compare_values(-4.3833, h2kc * df['SAPT3-SA-adz'    ]['S22-2'], digits, 'SAPT3-SA-adz')
+                qcdb.compare_values(-4.3607, h2kc * df['SAPT3C-SA-adz'   ]['S22-2'], digits, 'SAPT3C-SA-adz')
+                qcdb.compare_values(-4.5450, h2kc * df['SAPT3M-SA-adz'   ]['S22-2'], digits, 'SAPT3M-SA-adz')
+                qcdb.compare_values(-4.5224, h2kc * df['SAPT3CM-SA-adz'  ]['S22-2'], digits, 'SAPT3CM-SA-adz')
+    
+                # SAPT2+3
+                qcdb.compare_values(-4.4876, h2kc * df['SAPT3F-SA-adz'   ]['S22-2'], digits, 'SAPT3F-SA-adz')
+                qcdb.compare_values(-4.4649, h2kc * df['SAPT3FC-SA-adz'  ]['S22-2'], digits, 'SAPT3FC-SA-adz')
+                qcdb.compare_values(-4.5566, h2kc * df['SAPT3FM-SA-adz'  ]['S22-2'], digits, 'SAPT3FM-SA-adz')
+                qcdb.compare_values(-4.5339, h2kc * df['SAPT3FCM-SA-adz' ]['S22-2'], digits, 'SAPT3FCM-SA-adz')
+    
+                # <<<  qa1 from sapt6 - presumably from historical (saptone) data  >>>
+                print('Round 2')
+                mtdlbl = '-SA-adz'
+                digits = 0.0006
+    
+                qcdb.compare_values(-5.3837, h2kc * df['SAPT0'    + mtdlbl]['S22-2'], digits, 'SAPT0'             )
+                qcdb.compare_values(-5.3440, h2kc * df['SAPT0S'   + mtdlbl]['S22-2'], digits, 'SSAPT0'            )
+                qcdb.compare_values(-5.2855, h2kc * df['SAPTSCS'  + mtdlbl]['S22-2'], digits, 'SCS-SAPT0'         )
+                qcdb.compare_values(-4.2041, h2kc * df['SAPT2'    + mtdlbl]['S22-2'], digits, 'SAPT2'             )
+                qcdb.compare_values(-4.5873, h2kc * df['SAPT2P'   + mtdlbl]['S22-2'], digits, 'SAPT2+'            )
+                qcdb.compare_values(-4.5646, h2kc * df['SAPT2PC'  + mtdlbl]['S22-2'], digits, 'SAPT2+(CCD)'       )
+                qcdb.compare_values(-4.7490, h2kc * df['SAPT2PM'  + mtdlbl]['S22-2'], digits, 'SAPT2+DMP2'        )
+                qcdb.compare_values(-4.7264, h2kc * df['SAPT2PCM' + mtdlbl]['S22-2'], digits, 'SAPT2+(CCD)DMP2'   )
+                qcdb.compare_values(-4.3833, h2kc * df['SAPT3'    + mtdlbl]['S22-2'], digits, 'SAPT2+(3)'         )
+                qcdb.compare_values(-4.3607, h2kc * df['SAPT3C'   + mtdlbl]['S22-2'], digits, 'SAPT2+(3)(CCD)'    )
+                qcdb.compare_values(-4.5450, h2kc * df['SAPT3M'   + mtdlbl]['S22-2'], digits, 'SAPT2+(3)DMP2'     )
+                qcdb.compare_values(-4.5224, h2kc * df['SAPT3CM'  + mtdlbl]['S22-2'], digits, 'SAPT2+(3)(CCD)DMP2')
+                qcdb.compare_values(-4.4876, h2kc * df['SAPT3F'   + mtdlbl]['S22-2'], digits, 'SAPT2+3'           )
+                qcdb.compare_values(-4.4649, h2kc * df['SAPT3FC'  + mtdlbl]['S22-2'], digits, 'SAPT2+3(CCD)'      )
+                qcdb.compare_values(-4.5566, h2kc * df['SAPT3FM'  + mtdlbl]['S22-2'], digits, 'SAPT2+3DMP2'       )
+                qcdb.compare_values(-4.5339, h2kc * df['SAPT3FCM' + mtdlbl]['S22-2'], digits, 'SAPT2+3(CCD)DMP2'  )
+    
+                # <<<  a1 from sapt6 - presumably fresh, all df, fc runs  >>>
+                print('Round 3')
+                digits = 3
+    
+                #qcdb.compare_values(-3.56841161, h2kc * df[refs['a1']['HF']['TOTAL ENERGY']                =  
+                qcdb.compare_values(-5.38368157, h2kc * df['SAPT0'    + mtdlbl]['S22-2'], digits, 'SAPT0'             )
+                qcdb.compare_values(-4.20411910, h2kc * df['SAPT2'    + mtdlbl]['S22-2'], digits, 'SAPT2'             )
+                qcdb.compare_values(-4.58728412, h2kc * df['SAPT2P'   + mtdlbl]['S22-2'], digits, 'SAPT2+'            )
+                qcdb.compare_values(-4.38332144, h2kc * df['SAPT3'    + mtdlbl]['S22-2'], digits, 'SAPT2+(3)'         )
+                qcdb.compare_values(-4.48758541, h2kc * df['SAPT3F'   + mtdlbl]['S22-2'], digits, 'SAPT2+3'           )
+                qcdb.compare_values(-4.74869784, h2kc * df['SAPT2PM'  + mtdlbl]['S22-2'], digits, 'SAPT2+DMP2'        )
+                qcdb.compare_values(-4.54473516, h2kc * df['SAPT3M'   + mtdlbl]['S22-2'], 0.005,  'SAPT2+(3)DMP2'     )
+                qcdb.compare_values(-4.55625962, h2kc * df['SAPT3M'   + mtdlbl]['S22-2'], 0.015,  'SAPT2+3DMP2'       )
+                qcdb.compare_values(-4.56442636, h2kc * df['SAPT2PC'  + mtdlbl]['S22-2'], digits, 'SAPT2+(CCD)'       )
+                qcdb.compare_values(-4.36046368, h2kc * df['SAPT3C'   + mtdlbl]['S22-2'], digits, 'SAPT2+(3)(CCD)'    )
+                qcdb.compare_values(-4.46472765, h2kc * df['SAPT3FC'  + mtdlbl]['S22-2'], digits, 'SAPT2+3(CCD)'      )
+                qcdb.compare_values(-4.72584008, h2kc * df['SAPT2PCM' + mtdlbl]['S22-2'], digits, 'SAPT2+(CCD)DMP2'   )
+                qcdb.compare_values(-4.52187740, h2kc * df['SAPT3CM'  + mtdlbl]['S22-2'], digits, 'SAPT2+(3)(CCD)DMP2')
+                qcdb.compare_values(-4.53340186, h2kc * df['SAPT3FCM' + mtdlbl]['S22-2'], digits, 'SAPT2+3(CCD)DMP2'  )
+
+            else:
+
+                # <<<  a0 from sapt6
+                print('Round 4')
+                mtdlbl = '-SA-adz'
+                digits = 3
+
+                # sapt and mp2corl optionless
+                qcdb.compare_values(-5.38659786, h2kc * df['SAPT0'    + mtdlbl]['S22-2'], digits, 'SAPT0')
+                qcdb.compare_values(-4.21902186, h2kc * df['SAPT2'    + mtdlbl]['S22-2'], digits, 'SAPT2')
+                qcdb.compare_values(-4.60218688, h2kc * df['SAPT2P'   + mtdlbl]['S22-2'], digits, 'SAPT2+')
+                qcdb.compare_values(-4.39822419, h2kc * df['SAPT3'    + mtdlbl]['S22-2'], digits, 'SAPT2+(3)')
+                qcdb.compare_values(-4.50586162, h2kc * df['SAPT3F'   + mtdlbl]['S22-2'], digits, 'SAPT2+3')
+                #qcdb.compare_values(-4.74869784, h2kc * df['SAPT2PM'  + mtdlbl]['S22-2'], digits, 'SAPT2+DMP2')
+                #qcdb.compare_values(-4.54473516, h2kc * df['SAPT3M'   + mtdlbl]['S22-2'], digits, 'SAPT2+(3)DMP2')
+                #qcdb.compare_values(-4.55617723, h2kc * df['SAPT3FM'  + mtdlbl]['S22-2'], digits, 'SAPT2+3DMP2')
+                qcdb.compare_values(-4.57932912, h2kc * df['SAPT2PC'  + mtdlbl]['S22-2'], digits, 'SAPT2+(CCD)')
+                qcdb.compare_values(-4.37536644, h2kc * df['SAPT3C'   + mtdlbl]['S22-2'], digits, 'SAPT2+(3)(CCD)')
+                qcdb.compare_values(-4.48300386, h2kc * df['SAPT3FC'  + mtdlbl]['S22-2'], digits, 'SAPT2+3(CCD)')
+                #qcdb.compare_values(-4.72584008, h2kc * df['SAPT2PCM' + mtdlbl]['S22-2'], digits, 'SAPT2+(CCD)DMP2')
+                #qcdb.compare_values(-4.52187740, h2kc * df['SAPT3CM'  + mtdlbl]['S22-2'], digits, 'SAPT2+(3)(CCD)DMP2')
+                #qcdb.compare_values(-4.53331948, h2kc * df['SAPT3FCM' + mtdlbl]['S22-2'], digits, 'SAPT2+3(CCD)DMP2')
+
+                # sapt and mp2corl with dfhf-dfmp -or- sapt with dfhf and mp2corl with dfhf-dfmp
+                mtdlbl = '-dfmp-SA-adz'
+                qcdb.compare_values(-4.74869784, h2kc * df['SAPT2PM'  + mtdlbl]['S22-2'], digits, 'SAPT2+DMP2')
+                qcdb.compare_values(-4.54473516, h2kc * df['SAPT3M'   + mtdlbl]['S22-2'], digits, 'SAPT2+(3)DMP2')
+                qcdb.compare_values(-4.55617723, h2kc * df['SAPT3FM'  + mtdlbl]['S22-2'], digits, 'SAPT2+3DMP2')
+                qcdb.compare_values(-4.72584008, h2kc * df['SAPT2PCM' + mtdlbl]['S22-2'], digits, 'SAPT2+(CCD)DMP2')
+                qcdb.compare_values(-4.52187740, h2kc * df['SAPT3CM'  + mtdlbl]['S22-2'], digits, 'SAPT2+(3)(CCD)DMP2')
+                qcdb.compare_values(-4.53331948, h2kc * df['SAPT3FCM' + mtdlbl]['S22-2'], digits, 'SAPT2+3(CCD)DMP2')
+
     except KeyError as e:
         print(e)
         pass

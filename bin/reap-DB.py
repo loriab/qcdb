@@ -16,6 +16,7 @@ import numpy as np
 pd.set_option('display.max_columns', 10)
 pd.set_option('display.width', 200)
 
+SAPT_ALPHA = 0.0  # new for alpha=0 standard: toggle btwn 0.0 and 1.0
 
 # <<< setup >>>
 
@@ -77,6 +78,11 @@ elif project == 'pt2':
 elif project == 'saptone':
     dbse = 'S22'
     path = r"""/Users/loriab/linux/qcdb/data/pt2usemefiles/"""
+
+elif project == 'sapta0a1conv':
+    # perfectly fine but for testing only
+    dbse = 'S22'
+    path = r"""/Users/loriab/linux/qcdb/data/convert_sapt_alpha1_to_alpha0_usemefiles/"""
 
 elif project == 'saptmisc':
     #dbse = 'ACHC', 'BBI', 'S22by7', 'S66', 'SSI', 'UBQ'
@@ -466,7 +472,7 @@ for pvar, action in pv0.iteritems():
 
 try:
     if verbose > 0:
-        print('building intermediate SAPT EXCHSCAL ...', end='')
+        print('building intermediate SAPT EXCHSCAL1 ...', end='')
     ex10 = df.xs('SAPT EXCH10 ENERGY', level='psivar')
     ex10ss = df.xs('SAPT EXCH10(S^2) ENERGY', level='psivar')
 except KeyError, e:
@@ -480,7 +486,7 @@ else:
     # return 1.0 if ex10 < 1.0e-5 else ex10 / ex10ss
     exsc = ratio.where(logic, ones)
 
-    exsc['psivar'] = 'SAPT EXCHSCAL'
+    exsc['psivar'] = 'SAPT EXCHSCAL1'
     exsc.set_index('psivar', append=True, inplace=True)
     exsc = exsc.reorder_levels([0, 3, 1, 2])
     exsc.index.names = ['bstrt', 'psivar', 'meta', 'rxn']
@@ -812,7 +818,8 @@ pv1['MP2C TOTAL ENERGY'] = {'func': sum, 'args': ['HF TOTAL ENERGY', 'MP2C CORRE
 pv1['MP2C-F12 CC CORRECTION ENERGY'] = {'func': sum, 'args': ['MP2C CC CORRECTION ENERGY']}
 pv1['MP2C-F12 CORRELATION ENERGY'] = {'func': sum, 'args': ['MP2C CC CORRECTION ENERGY', 'MP2-F12 CORRELATION ENERGY']}
 pv1['MP2C-F12 TOTAL ENERGY'] = {'func': sum, 'args': ['HF-CABS TOTAL ENERGY', 'MP2C-F12 CORRELATION ENERGY']}
-pv1['SAPT EXCHSCAL3'] = {'func': lambda x: x[0] ** 3, 'args': ['SAPT EXCHSCAL']}
+pv1['SAPT EXCHSCAL3'] = {'func': lambda x: x[0] ** 3, 'args': ['SAPT EXCHSCAL1']}
+pv1['SAPT EXCHSCAL'] = {'func': lambda x: x[0] ** SAPT_ALPHA, 'args': ['SAPT EXCHSCAL1']}  # new for alpha=0 standard
 pv1['SAPT HF(2) ALPHA=0.0 ENERGY'] = {'func': lambda x: x[0] - (x[1] + x[2] + x[3] + x[4]),
                                       'args': ['SAPT HF TOTAL ENERGY', 'SAPT ELST10,R ENERGY', 'SAPT EXCH10 ENERGY',
                                                'SAPT IND20,R ENERGY', 'SAPT EXCH-IND20,R ENERGY']}
@@ -1282,7 +1289,7 @@ elif project == 'pt2':
     opts = ['', 'dfhf', 'dfmp', 'dfhf-dfmp']
     cpmd = ['CP', 'SA']
 
-elif project == 'saptone' or project == 'saptmisc':
+elif project in ['saptone', 'saptmisc', 'sapta0a1conv']:
     mtds = ['SAPT0', 'SAPT0S', 'SAPTSCS', 'SAPTDFT', 'SAPT2',
             'SAPT2P', 'SAPT2PC', 'SAPT2PM', 'SAPT2PCM',
             'SAPT3', 'SAPT3C', 'SAPT3M', 'SAPT3CM',
