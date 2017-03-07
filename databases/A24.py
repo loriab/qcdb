@@ -86,7 +86,7 @@ for rxn in HRXN:
 
 # <<< Reference Values [kcal/mol] >>>
 BIND = {}
-# Original publication JCTC 9 2151 (2013)
+# A240: Original publication JCTC 9 2151 (2013) 
 BIND_HOBZA = {}
 BIND_HOBZA['%s-%s' % (dbse,  1)] =  -6.493
 BIND_HOBZA['%s-%s' % (dbse,  2)] =  -5.006
@@ -112,7 +112,7 @@ BIND_HOBZA['%s-%s' % (dbse, 21)] =  -0.364
 BIND_HOBZA['%s-%s' % (dbse, 22)] =   0.821
 BIND_HOBZA['%s-%s' % (dbse, 23)] =   0.934
 BIND_HOBZA['%s-%s' % (dbse, 24)] =   1.115
-# Weighted averaged reference used in JCTC 10 49 (2014)
+# A24A: Weighted averaged reference used in JCTC 10 49 (2014)
 BIND_AVE = {}
 BIND_AVE['%s-%s' % (dbse,  1)] =  -6.502
 BIND_AVE['%s-%s' % (dbse,  2)] =  -5.007
@@ -138,7 +138,7 @@ BIND_AVE['%s-%s' % (dbse, 21)] =  -0.347
 BIND_AVE['%s-%s' % (dbse, 22)] =   0.835
 BIND_AVE['%s-%s' % (dbse, 23)] =   0.945
 BIND_AVE['%s-%s' % (dbse, 24)] =   1.131
-# Highest extrapolated CP CCSD(T) values (q5 or 56)
+# A24B: Highest extrapolated CP CCSD(T) values (q5 or 56)
 BIND_CDS = {}
 BIND_CDS['%s-%s' % (dbse,  1)] =  -6.506  # 56
 BIND_CDS['%s-%s' % (dbse,  2)] =  -5.015  # 56

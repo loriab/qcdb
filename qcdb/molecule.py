@@ -1113,6 +1113,50 @@ class Molecule(LibmintsMolecule):
         coc = scale(self.center_of_charge(), -1.0)
         self.translate(coc)
 
+    def compare_molecules(self, ref):
+        """Compares geometry of molecule to reference geometry *ref*.
+
+        Uses Kabsch algorithm to compute the optimal alignment of two
+        molecular geometries P and Q by minimizing the norm of the residual,
+        || Q - U * P||.  
+
+        Arguments:
+        molecule self : Molecule to compare to existing reference.
+        molecule *ref* : Reference geometry to compare to
+
+        Returns:
+        float64 rmsd : Least root mean square displacement between two molecules.
+
+        >>> molecule.compare_molecules(ref)
+        """
+        import numpy as np
+        
+        # Export molecular geometry to NumPy arrays
+        P = self.format_molecule_for_numpy()[:, 1:]
+        Q = ref.format_molecule_for_numpy()[:, 1:]
+        
+        # Translate P & Q to respective centroids
+        P -= np.mean(P, axis=0)
+        Q -= np.mean(Q, axis=0)
+
+        # Compute covariance matrix & SVD
+        A = np.dot(P.T, Q)
+        V, s, W = np.linalg.svd(A)
+
+        # Build optimal rotation matrix
+        if (np.linalg.det(V) * np.linalg.det(W)) < 0:   # Right hand coordinate system?
+            V[:, -1] = -V[:, -1]
+        U = V.dot(W)
+
+        # Rotate P onto Q
+        P = P.dot(U)
+
+        # Compute & Return RMSD
+        rmsd = np.linalg.norm(P - Q) / np.sqrt(P.shape[0])
+
+        return rmsd
+        
+
 # Attach methods to qcdb.Molecule class
 from .interface_dftd3 import run_dftd3 as _dftd3_qcdb_yo
 Molecule.run_dftd3 = _dftd3_qcdb_yo
