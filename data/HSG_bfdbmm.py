@@ -22,6 +22,29 @@ def load_bfdbmm(dbinstance):
     dbinstance.add_ReactionDatum(citation='bfdbmm', dbse='HSG', rxn=18, method='CHARMM', mode='', basis='na', value= -0.17763)
     dbinstance.add_ReactionDatum(citation='bfdbmm', dbse='HSG', rxn=19, method='CHARMM', mode='', basis='na', value= -1.41111)
     dbinstance.add_ReactionDatum(citation='bfdbmm', dbse='HSG', rxn=20, method='CHARMM', mode='', basis='na', value=  1.84467)
+    # cgenff3.0.1/hsg/inte2.txt
+    # newly run by Kenno V Feb 2017
+    # above is earlier work, last datestamp 23 Sep 2015
+    dbinstance.add_ReactionDatum(citation='anon', dbse='HSG', rxn=1, method='CGENFF', mode='', basis='na', value=  -0.674224)
+    dbinstance.add_ReactionDatum(citation='anon', dbse='HSG', rxn=2, method='CGENFF', mode='', basis='na', value=  -2.18471)
+    dbinstance.add_ReactionDatum(citation='anon', dbse='HSG', rxn=3, method='CGENFF', mode='', basis='na', value=  -0.350405)
+    dbinstance.add_ReactionDatum(citation='anon', dbse='HSG', rxn=4, method='CGENFF', mode='', basis='na', value= -14.2531)
+    dbinstance.add_ReactionDatum(citation='anon', dbse='HSG', rxn=5, method='CGENFF', mode='', basis='na', value= -17.3035)
+    dbinstance.add_ReactionDatum(citation='anon', dbse='HSG', rxn=6, method='CGENFF', mode='', basis='na', value=  -2.3788)
+    dbinstance.add_ReactionDatum(citation='anon', dbse='HSG', rxn=7, method='CGENFF', mode='', basis='na', value=  -3.58571)  # diff
+    dbinstance.add_ReactionDatum(citation='anon', dbse='HSG', rxn=8, method='CGENFF', mode='', basis='na', value=  -0.601533)  # diff
+    dbinstance.add_ReactionDatum(citation='anon', dbse='HSG', rxn=9, method='CGENFF', mode='', basis='na', value=  -4.98325)  # diff
+    dbinstance.add_ReactionDatum(citation='anon', dbse='HSG', rxn=10, method='CGENFF', mode='', basis='na', value= -7.59517)
+    dbinstance.add_ReactionDatum(citation='anon', dbse='HSG', rxn=11, method='CGENFF', mode='', basis='na', value= -6.19271)  # diff
+    dbinstance.add_ReactionDatum(citation='anon', dbse='HSG', rxn=12, method='CGENFF', mode='', basis='na', value=  1.51758)
+    dbinstance.add_ReactionDatum(citation='anon', dbse='HSG', rxn=13, method='CGENFF', mode='', basis='na', value= -1.98962)
+    dbinstance.add_ReactionDatum(citation='anon', dbse='HSG', rxn=14, method='CGENFF', mode='', basis='na', value= -0.956435)
+    dbinstance.add_ReactionDatum(citation='anon', dbse='HSG', rxn=15, method='CGENFF', mode='', basis='na', value= -0.769564)
+    dbinstance.add_ReactionDatum(citation='anon', dbse='HSG', rxn=16, method='CGENFF', mode='', basis='na', value= -1.01149)
+    dbinstance.add_ReactionDatum(citation='anon', dbse='HSG', rxn=17, method='CGENFF', mode='', basis='na', value= -1.17308)
+    dbinstance.add_ReactionDatum(citation='anon', dbse='HSG', rxn=18, method='CGENFF', mode='', basis='na', value= -0.17828)
+    dbinstance.add_ReactionDatum(citation='anon', dbse='HSG', rxn=19, method='CGENFF', mode='', basis='na', value= -1.41111)
+    dbinstance.add_ReactionDatum(citation='anon', dbse='HSG', rxn=20, method='CGENFF', mode='', basis='na', value=  1.84467)
     # rxn=21 missing
     # bfdb.sql methodid 1
     dbinstance.add_ReactionDatum(citation='anon', dbse='HSG', rxn=1,  method='AM1', mode='', basis='na', value= -0.27712845)
