@@ -347,6 +347,7 @@ _tlist = [
     BasisSet('6311ppg_3df_2p_', fullname='6-311++G(3df,2p)'),
     BasisSet('631gs025',     fullname='6-31G*(0.25)'),
     BasisSet('def2qzvp',   fullname='def2-QZVP'),
+    BasisSet('def2msvp',   fullname='def2-mSVP'),
     BasisSet('na',         fullname='no applicable basis'),
 ]
 bases = {}
@@ -471,6 +472,7 @@ _tlist = [
     Method('WPBED3BJ',        fullname='wPBE-D3(BJ)', latex="""$\omega$PBE-D3(BJ)"""),
     Method('WPBED3M',         fullname='wPBE-D3M', latex="""$\omega$PBE-D3M"""),
     Method('WPBED3MBJ',       fullname='wPBE-D3M(BJ)', latex="""$\omega$PBE-D3M(BJ)"""),
+    Method('PBEH3C',          fullname='PBEh-3c'),
     Method('CCSDTNSAF12',     fullname='CCSD(T)-F12a'),
     Method('CCSDTNSBF12',     fullname='CCSD(T)-F12b'),
     Method('CCSDTNSCF12',     fullname='CCSD(T)-F12c'),

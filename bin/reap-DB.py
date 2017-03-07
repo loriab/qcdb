@@ -89,6 +89,11 @@ elif project == 'saptmisc':
     dbse = 'ACHC'
     path = r"""/Users/loriab/linux/qcdb/data/saptmiscusemefiles/"""
 
+elif project == 'dftmisc':
+    #dbse = 'BBI', 'SSI'
+    dbse = 'BBI'
+    path = r"""/Users/loriab/linux/qcdb/data/dftmiscusemefiles/"""
+
 # not tested
 elif project in ['pt2misc', 'ccmisc']:
     dbse = 'SSI'
@@ -437,6 +442,7 @@ pv0['M06-2X TOTAL ENERGY'] = {'func': sum, 'args': ['M06-2X FUNCTIONAL TOTAL ENE
 pv0['PBE0 TOTAL ENERGY'] = {'func': sum, 'args': ['PBE0 FUNCTIONAL TOTAL ENERGY']}
 pv0['PBE TOTAL ENERGY'] = {'func': sum, 'args': ['PBE FUNCTIONAL TOTAL ENERGY']}
 pv0['WPBE TOTAL ENERGY'] = {'func': sum, 'args': ['WPBE FUNCTIONAL TOTAL ENERGY']}
+pv0['PBEH-3C TOTAL ENERGY'] = {'func': sum, 'args': ['PBEH-3C FUNCTIONAL TOTAL ENERGY']}  # proper basis restriction not imposed
 pv0['HF TOTAL ENERGY'] = {'func': sum, 'args': ['SCF TOTAL ENERGY']}
 pv0['MP3 CORRELATION ENERGY'] = {'func': difference, 'args': ['MP3 FNO CORRELATION ENERGY', 'FNO CORRECTION ENERGY']}  # TODO not checked
 pv0['CCSD CORRELATION ENERGY'] = {'func': difference, 'args': ['CCSD FNO CORRELATION ENERGY', 'FNO CORRECTION ENERGY']}  # TODO not checked
@@ -672,9 +678,9 @@ else:
 #for ml in mlist:
 #    mdf = df.xs(ml, level='psivar').xs('adz', level='bstrt')
 #    #mdf = df.xs(ml, level='psivar').xs('adz', level='bstrt').xs('S22-2', level='rxn')
-#    print ml, '\n'#, categories(mdf, 0)
+#    print(ml, '\n')#, categories(mdf, 0)
 #    #print h2kc * mdf
-#    print mdf.head(5)
+#    print(mdf.head(5))
 
 
 # <<< append to main DataFrame computable method quantities >>>
@@ -1307,6 +1313,12 @@ elif project == 'pt2misc':
     bass = ['adz', 'atz', 'aqz', 'adtz', 'atqz', 'qz']
     opts = ['', 'dfhf', 'dfhf-dfmp']
     cpmd = ['CP']
+
+elif project == 'dftmisc':
+    mtds = ['PBEH3C']
+    bass = ['def2msvp']
+    opts = ['', 'dfhf']
+    cpmd = ['unCP']
 
 elif project == 'ccmisc':
     mtds = ['MP2C', 'MP25', 'MP3',
