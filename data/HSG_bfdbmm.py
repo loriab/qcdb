@@ -2,26 +2,28 @@
 def load_bfdbmm(dbinstance):
 
     # cgenff/hsg_inte1.txt
-    dbinstance.add_ReactionDatum(citation='bfdbmm', dbse='HSG', rxn=1, method='CHARMM', mode='', basis='na', value= -0.66888)
-    dbinstance.add_ReactionDatum(citation='bfdbmm', dbse='HSG', rxn=2, method='CHARMM', mode='', basis='na', value= -2.20172)
-    dbinstance.add_ReactionDatum(citation='bfdbmm', dbse='HSG', rxn=3, method='CHARMM', mode='', basis='na', value= -0.343247)
-    dbinstance.add_ReactionDatum(citation='bfdbmm', dbse='HSG', rxn=4, method='CHARMM', mode='', basis='na', value=-14.3922)
-    dbinstance.add_ReactionDatum(citation='bfdbmm', dbse='HSG', rxn=5, method='CHARMM', mode='', basis='na', value=-17.2401)
-    dbinstance.add_ReactionDatum(citation='bfdbmm', dbse='HSG', rxn=6, method='CHARMM', mode='', basis='na', value= -2.37916)
-    dbinstance.add_ReactionDatum(citation='bfdbmm', dbse='HSG', rxn=7, method='CHARMM', mode='', basis='na', value= -2.76727)
-    dbinstance.add_ReactionDatum(citation='bfdbmm', dbse='HSG', rxn=8, method='CHARMM', mode='', basis='na', value= -0.468104)
-    dbinstance.add_ReactionDatum(citation='bfdbmm', dbse='HSG', rxn=9, method='CHARMM', mode='', basis='na', value= -5.42821)
-    dbinstance.add_ReactionDatum(citation='bfdbmm', dbse='HSG', rxn=10, method='CHARMM', mode='', basis='na', value= -7.51519)
-    dbinstance.add_ReactionDatum(citation='bfdbmm', dbse='HSG', rxn=11, method='CHARMM', mode='', basis='na', value= -6.71113)
-    dbinstance.add_ReactionDatum(citation='bfdbmm', dbse='HSG', rxn=12, method='CHARMM', mode='', basis='na', value=  1.5176)
-    dbinstance.add_ReactionDatum(citation='bfdbmm', dbse='HSG', rxn=13, method='CHARMM', mode='', basis='na', value= -1.98802)
-    dbinstance.add_ReactionDatum(citation='bfdbmm', dbse='HSG', rxn=14, method='CHARMM', mode='', basis='na', value= -0.941816)
-    dbinstance.add_ReactionDatum(citation='bfdbmm', dbse='HSG', rxn=15, method='CHARMM', mode='', basis='na', value= -0.783307)
-    dbinstance.add_ReactionDatum(citation='bfdbmm', dbse='HSG', rxn=16, method='CHARMM', mode='', basis='na', value= -1.01255)
-    dbinstance.add_ReactionDatum(citation='bfdbmm', dbse='HSG', rxn=17, method='CHARMM', mode='', basis='na', value= -1.17488)
-    dbinstance.add_ReactionDatum(citation='bfdbmm', dbse='HSG', rxn=18, method='CHARMM', mode='', basis='na', value= -0.17763)
-    dbinstance.add_ReactionDatum(citation='bfdbmm', dbse='HSG', rxn=19, method='CHARMM', mode='', basis='na', value= -1.41111)
-    dbinstance.add_ReactionDatum(citation='bfdbmm', dbse='HSG', rxn=20, method='CHARMM', mode='', basis='na', value=  1.84467)
+    # 15 Mar 2017 commenting out CHARMM since CGenFF succeeds it
+    #dbinstance.add_ReactionDatum(citation='bfdbmm', dbse='HSG', rxn=1, method='CHARMM', mode='', basis='na', value= -0.66888)
+    #dbinstance.add_ReactionDatum(citation='bfdbmm', dbse='HSG', rxn=2, method='CHARMM', mode='', basis='na', value= -2.20172)
+    #dbinstance.add_ReactionDatum(citation='bfdbmm', dbse='HSG', rxn=3, method='CHARMM', mode='', basis='na', value= -0.343247)
+    #dbinstance.add_ReactionDatum(citation='bfdbmm', dbse='HSG', rxn=4, method='CHARMM', mode='', basis='na', value=-14.3922)
+    #dbinstance.add_ReactionDatum(citation='bfdbmm', dbse='HSG', rxn=5, method='CHARMM', mode='', basis='na', value=-17.2401)
+    #dbinstance.add_ReactionDatum(citation='bfdbmm', dbse='HSG', rxn=6, method='CHARMM', mode='', basis='na', value= -2.37916)
+    #dbinstance.add_ReactionDatum(citation='bfdbmm', dbse='HSG', rxn=7, method='CHARMM', mode='', basis='na', value= -2.76727)
+    #dbinstance.add_ReactionDatum(citation='bfdbmm', dbse='HSG', rxn=8, method='CHARMM', mode='', basis='na', value= -0.468104)
+    #dbinstance.add_ReactionDatum(citation='bfdbmm', dbse='HSG', rxn=9, method='CHARMM', mode='', basis='na', value= -5.42821)
+    #dbinstance.add_ReactionDatum(citation='bfdbmm', dbse='HSG', rxn=10, method='CHARMM', mode='', basis='na', value= -7.51519)
+    #dbinstance.add_ReactionDatum(citation='bfdbmm', dbse='HSG', rxn=11, method='CHARMM', mode='', basis='na', value= -6.71113)
+    #dbinstance.add_ReactionDatum(citation='bfdbmm', dbse='HSG', rxn=12, method='CHARMM', mode='', basis='na', value=  1.5176)
+    #dbinstance.add_ReactionDatum(citation='bfdbmm', dbse='HSG', rxn=13, method='CHARMM', mode='', basis='na', value= -1.98802)
+    #dbinstance.add_ReactionDatum(citation='bfdbmm', dbse='HSG', rxn=14, method='CHARMM', mode='', basis='na', value= -0.941816)
+    #dbinstance.add_ReactionDatum(citation='bfdbmm', dbse='HSG', rxn=15, method='CHARMM', mode='', basis='na', value= -0.783307)
+    #dbinstance.add_ReactionDatum(citation='bfdbmm', dbse='HSG', rxn=16, method='CHARMM', mode='', basis='na', value= -1.01255)
+    #dbinstance.add_ReactionDatum(citation='bfdbmm', dbse='HSG', rxn=17, method='CHARMM', mode='', basis='na', value= -1.17488)
+    #dbinstance.add_ReactionDatum(citation='bfdbmm', dbse='HSG', rxn=18, method='CHARMM', mode='', basis='na', value= -0.17763)
+    #dbinstance.add_ReactionDatum(citation='bfdbmm', dbse='HSG', rxn=19, method='CHARMM', mode='', basis='na', value= -1.41111)
+    #dbinstance.add_ReactionDatum(citation='bfdbmm', dbse='HSG', rxn=20, method='CHARMM', mode='', basis='na', value=  1.84467)
+
     # cgenff3.0.1/hsg/inte2.txt
     # newly run by Kenno V Feb 2017
     # above is earlier work, last datestamp 23 Sep 2015
