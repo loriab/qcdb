@@ -1099,3 +1099,4 @@ el2z["GH"] = 0
 z2mass = dict(zip(_temp_z, _temp_mass))
 z2el = dict(zip(_temp_z, _temp_symbol))
 z2element = dict(zip(_temp_z, _temp_element))
+el2element = dict(zip(_temp_symbol, _temp_element))

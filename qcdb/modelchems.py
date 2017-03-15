@@ -503,6 +503,7 @@ _tlist = [
     Method('GAFF',            fullname='GAFF'),
     Method('PM6DH2',          fullname='PM6-DH2'),
     Method('CHARMM',          fullname='CHARMM'),
+    Method('CGENFF',          fullname='CGenFF'),
     Method('PM3',             fullname='PM3'),
     Method('PM6',             fullname='PM6'),
     Method('PDDG',            fullname='PDDG'),
