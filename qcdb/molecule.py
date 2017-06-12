@@ -1113,7 +1113,7 @@ class Molecule(LibmintsMolecule):
         coc = scale(self.center_of_charge(), -1.0)
         self.translate(coc)
 
-    def compare_molecules(self, ref):
+    def compare_molecules(self, ref, return_aligned=False):
         """Compares geometry of molecule to reference geometry *ref*.
 
         Uses Kabsch algorithm to compute the optimal alignment of two
@@ -1121,11 +1121,17 @@ class Molecule(LibmintsMolecule):
         || Q - U * P||.  
 
         Arguments:
-        molecule self : Molecule to compare to existing reference.
-        molecule *ref* : Reference geometry to compare to
+        <qcdb.Molecule> self : Molecule to compare to existing reference
+        <qcdb.Molecule> ref : Reference geometry against which to compare
+
+		Keyword Arguments:
+		<bool> return_aligned : Return aligned copy of *self* superimposed on *ref* 
+			(default False)
 
         Returns:
-        float64 rmsd : Least root mean square displacement between two molecules.
+        <float64> rmsd : Least root mean square displacement between two molecules.
+		
+		<qcdb.Molecule> aligned : Superimposed *self* on *ref* for visualization.
 
         >>> molecule.compare_molecules(ref)
         """
@@ -1153,7 +1159,8 @@ class Molecule(LibmintsMolecule):
 
         # Compute & Return RMSD
         rmsd = np.linalg.norm(P - Q) / np.sqrt(P.shape[0])
-
+        if return_aligned:
+            mol = self.set_geometry(P)
         return rmsd
         
 
