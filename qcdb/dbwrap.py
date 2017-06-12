@@ -19,6 +19,8 @@ from .molecule import Molecule
 from .modelchems import Method, BasisSet, Error, methods, bases, errors, pubs
 from . import psiutil
 from . import textables
+if sys.version_info >= (3, 0):
+    basestring = str
 
 
 def initialize_errors():
