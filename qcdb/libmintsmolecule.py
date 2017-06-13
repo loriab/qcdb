@@ -1337,17 +1337,29 @@ class LibmintsMolecule(object):
             geom.append([self.fx(at), self.fy(at), self.fz(at)])
         return geom
 
-    def set_geometry(self, geom):
-        """Sets the geometry, given a N X 3 array of coordinates *geom* in Bohr.
+    def set_geometry(self, geom, units='a0'):
+        """Sets the geometry, given a N X 3 array of coordinates *geom* in units *units*.
+
+		args:
+		<Libmints.Molecule> self : your molecule
+		<array> geom : Nx3 array of Cartesian atomic coordinates
+
+		kwargs:
+		<str> units : Units to convert to.
+			'a0' : Bohr (default)
+			'AA' : Angstrom
 
         >>> H2OH2O.set_geometry([[1,2,3],[4,5,6],[7,8,9],[-1,-2,-3],[-4,-5,-6],[-7,-8,-9]])
 
         """
         self.lock_frame = False
         for at in range(self.natom()):
-            self.atoms[at].set_coordinates(geom[at][0] / self.input_units_to_au,
-                                           geom[at][1] / self.input_units_to_au,
-                                           geom[at][2] / self.input_units_to_au)
+            if units == 'a0':
+                self.atoms[at].set_coordinates(geom[at][0] / self.input_units_to_au,
+                                               geom[at][1] / self.input_units_to_au,
+                                               geom[at][2] / self.input_units_to_au)
+            elif units == 'AA':
+                self.atoms[at].set_coordinates(geom[at][0], geom[at][1], geom[at][2])
 
     def set_full_geometry(self, geom):
         """Sets the full geometry (dummies included), given a N X 3 array of coordinates *geom* in Bohr.
