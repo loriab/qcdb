@@ -839,7 +839,7 @@ class Molecule(LibmintsMolecule):
             'XE': 2.05 / 1.5}  # Bondi JPC 68 441 (1964)
 
         Queue = []
-        White = range(self.natom())  # untouched
+        White = list(range(self.natom()))  # untouched
         Black = []  # touched and all edges discovered
         Fragment = []  # stores fragments
 
@@ -1113,7 +1113,8 @@ class Molecule(LibmintsMolecule):
         coc = scale(self.center_of_charge(), -1.0)
         self.translate(coc)
 
-    def compare_molecules(self, ref):
+    def align_molecules(self, ref, weight=None, alg='svd',
+                          return_aligned=False):
         """Compares geometry of molecule to reference geometry *ref*.
 
         Uses Kabsch algorithm to compute the optimal alignment of two
@@ -1121,40 +1122,153 @@ class Molecule(LibmintsMolecule):
         || Q - U * P||.  
 
         Arguments:
-        molecule self : Molecule to compare to existing reference.
-        molecule *ref* : Reference geometry to compare to
+        <qcdb.Molecule> self := Molecule to compare to existing reference
+        <qcdb.Molecule> ref := Reference geometry against which to compare
+
+        Keyword Arguments:
+        <str or np.array> weight := Weighting to be applied to atomic coordinates.
+            Accepted: None, <str> 'mass', <np.array> w, <list> w
+            Default: None
+        <str> algorithm := Algorithm to use to compute the optimal alignment.
+            Accepted: 'quaternion', 'svd'
+            Default: 'quaternion'
+        <bool> return_aligned := Return aligned copy of *self* superimposed on *ref* 
+            Default: False
 
         Returns:
-        float64 rmsd : Least root mean square displacement between two molecules.
+        <float64> rmsd := Least root mean square displacement between two molecules.
+
+        Optional:
+        <qcdb.Molecule> self := Rotated Molecule *self* aligned with *ref* 
+        <qcdb.Molecule> ref := Molecule of reference geometry
 
         >>> molecule.compare_molecules(ref)
         """
         import numpy as np
+
+        # Export molecular geometry to Nx4 NumPy arrays
+        Pmol = self.format_molecule_for_numpy()
+        Qmol = ref.format_molecule_for_numpy()
+
+        # Weighting coordinates
+        if weight is None:
+            w = np.ones((Pmol.shape[0], 1))
+        elif weight == 'mass':
+            w = Pmol[:, 0, None]
+        elif isinstance(weight, list):
+            w = np.asarray(weight)
+        elif isinstance(weight, np.ndarray):
+            w = weight
+        else:
+            raise Exception("Unrecognized argument type %s for \
+                             keyword argument 'weight'." % type(weight))
         
-        # Export molecular geometry to NumPy arrays
-        P = self.format_molecule_for_numpy()[:, 1:]
-        Q = ref.format_molecule_for_numpy()[:, 1:]
+        P = Pmol[:, 1:] * w
+        Q = Qmol[:, 1:] * w
         
-        # Translate P & Q to respective centroids
-        P -= np.mean(P, axis=0)
-        Q -= np.mean(Q, axis=0)
+        # Translate P & Q to global origin by subtracting away respective centroids
+        P = (P - P.mean(axis=0)).T
+        Q = (Q - Q.mean(axis=0)).T
 
-        # Compute covariance matrix & SVD
-        A = np.dot(P.T, Q)
-        V, s, W = np.linalg.svd(A)
-
-        # Build optimal rotation matrix
-        if (np.linalg.det(V) * np.linalg.det(W)) < 0:   # Right hand coordinate system?
-            V[:, -1] = -V[:, -1]
-        U = V.dot(W)
-
-        # Rotate P onto Q
-        P = P.dot(U)
+        # Choose algorithm, compute rotation, & rotate P onto Q
+        if alg.lower() == 'svd':
+            R = self.kabsch_svd(P, Q) 
+            P = R.dot(P)
+        elif alg.lower() == 'quaternion':
+            R = self.kabsch_quaternion(P, Q)
+            P = R.dot(P)
 
         # Compute & Return RMSD
-        rmsd = np.linalg.norm(P - Q) / np.sqrt(P.shape[0])
+        rmsd = np.linalg.norm(Q.T - P.T) / np.sqrt(P.T.shape[0])
 
-        return rmsd
+        # Returns
+        if return_aligned:
+            self.set_geometry(P.T, units='AA')
+            self.update_geometry()
+            ref.set_geometry(Q.T, units='AA')
+            ref.update_geometry()
+            return rmsd, self, ref
+        else:
+            return rmsd
+        
+    def kabsch_svd(self, P, Q):
+        """Computes the optimal rotation matrix R which maps a set of N points 
+        P = {p_n | p in R^M} onto a set of N points Q = {q_n | q in R^M} according
+        to the minimization of ||Q - R*P||, using the SVD formulation of the Kabsch 
+        algorithm.
+    
+        Arguments:
+        <np.ndarray> P := MxN array. M=dimension of space, N=number of points.
+        <np.ndarray> Q := MxN array. M=dimension of space, N=number of points.
+
+        Returns:
+        <np.ndarray> R := Optimal MxM rotation matrix mapping P onto Q.
+        """
+        import numpy as np
+
+        # Form covariance matrix
+        cov = Q.dot(P.T)
+
+        # Compute the SVD of the covariance matrix
+        U, D, V = np.linalg.svd(cov)
+
+        # Build optimal rotation matrix
+        if (np.linalg.det(U) * np.linalg.det(V)) < 0: # Right hand coordinate system?
+            U[:, -1] = -U[:, -1]
+        R = U.dot(V)
+
+        return R
+
+    def kabsch_quaternion(self, P, Q):
+        """Computes the optimal rotation matrix U which mapping a set of points P onto 
+        the set of points Q according to the minimization of ||Q - R*P||, using the
+        unit quaternion formulation of the Kabsch algorithm.
+
+        Arguments:
+        <np.ndarray> P := MxN array. M=dimension of space, N=number of points.
+        <np.ndarray> Q := MxN array. M=dimension of space, N=number of points.
+
+        Returns:
+        <np.ndarray> U := Optimal MxM rotation matrix mapping P onto Q.
+        """
+        import numpy as np
+
+        # Form covariance matrix
+        cov = Q.dot(P.T)
+
+        # Form the quaternion transformation matrix F
+        F = np.zeros((4,4))
+        # diagonal
+        F[0,0] = cov[0,0] + cov[1,1] + cov[2,2]
+        F[1,1] = cov[0,0] - cov[1,1] - cov[2,2]
+        F[2,2] = -cov[0,0] + cov[1,1] - cov[2,2]
+        F[3,3] = -cov[0,0] - cov[1,1] + cov[2,2]
+        # Upper & lower triangle
+        F[1,0] = F[0,1] = cov[1,2] - cov[2,1]
+        F[2,0] = F[0,2] = cov[2,0] - cov[0,2]
+        F[3,0] = F[0,3] = cov[0,1] - cov[1,0]
+        F[2,1] = F[1,2] = cov[0,1] + cov[1,0]
+        F[3,1] = F[1,3] = cov[0,2] + cov[2,0]
+        F[3,2] = F[2,3] = cov[1,2] + cov[2,1]
+        
+        # Compute ew, ev of F
+        ew, ev = np.linalg.eigh(F)
+
+        # Construct optimal rotation matrix from leading ev
+        q = ev[:,-1]
+        U = np.zeros((3,3))
+
+        U[0,0] = q[0]**2 + q[1]**2 - q[2]**2 - q[3]**2
+        U[0,1] = 2*(q[1]*q[2] - q[0]*q[3])
+        U[0,2] = 2*(q[1]*q[3] + q[0]*q[2])
+        U[1,0] = 2*(q[1]*q[2] + q[0]*q[3])
+        U[1,1] = q[0]**2 - q[1]**2 + q[2]**2 - q[3]**2
+        U[1,2] = 2*(q[2]*q[3] - q[0]*q[1])
+        U[2,0] = 2*(q[1]*q[3] - q[0]*q[2])
+        U[2,1] = 2*(q[2]*q[3] + q[0]*q[1])
+        U[2,2] = q[0]**2 - q[1]**2 - q[2]**2 + q[3]**2
+
+        return U
         
 
 # Attach methods to qcdb.Molecule class

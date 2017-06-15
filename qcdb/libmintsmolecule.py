@@ -321,7 +321,7 @@ class LibmintsMolecule(object):
         """
         return self.input_units_to_au * self.atoms[atom].compute()[2]
 
-    def xyz(self, atom, posn=None):
+    def xyz(self, atom, posn=None, to_au=True):
         """Returns a Vector3 with x, y, z position of atom (0-indexed)
         in Bohr or coordinate at *posn*
 
@@ -329,7 +329,11 @@ class LibmintsMolecule(object):
         [3.175492014248769, -0.7062681346308132, -1.4334725450878665]
 
         """
-        temp = scale(self.atoms[atom].compute(), self.input_units_to_au)
+        if to_au:
+            factor = self.input_units_to_au
+        else:
+            factor = 1.0
+        temp = scale(self.atoms[atom].compute(), factor)
         if posn is None:
             return temp
         else:
@@ -1337,17 +1341,29 @@ class LibmintsMolecule(object):
             geom.append([self.fx(at), self.fy(at), self.fz(at)])
         return geom
 
-    def set_geometry(self, geom):
-        """Sets the geometry, given a N X 3 array of coordinates *geom* in Bohr.
+    def set_geometry(self, geom, units='a0'):
+        """Sets the geometry, given a N X 3 array of coordinates *geom* in units *units*.
+
+        args:
+        <Libmints.Molecule> self : your molecule
+        <array> geom : Nx3 array of Cartesian atomic coordinates
+
+        kwargs:
+        <str> units : Units to convert to.
+        'a0' : Bohr (default)
+        'AA' : Angstrom
 
         >>> H2OH2O.set_geometry([[1,2,3],[4,5,6],[7,8,9],[-1,-2,-3],[-4,-5,-6],[-7,-8,-9]])
 
         """
         self.lock_frame = False
         for at in range(self.natom()):
-            self.atoms[at].set_coordinates(geom[at][0] / self.input_units_to_au,
-                                           geom[at][1] / self.input_units_to_au,
-                                           geom[at][2] / self.input_units_to_au)
+            if units == 'a0':
+                self.atoms[at].set_coordinates(geom[at][0] / self.input_units_to_au,
+                                               geom[at][1] / self.input_units_to_au,
+                                               geom[at][2] / self.input_units_to_au)
+            elif units == 'AA':
+                self.atoms[at].set_coordinates(geom[at][0], geom[at][1], geom[at][2])
 
     def set_full_geometry(self, geom):
         """Sets the full geometry (dummies included), given a N X 3 array of coordinates *geom* in Bohr.
@@ -1796,7 +1812,7 @@ class LibmintsMolecule(object):
             temp = scale(temp, 1.0 / self.input_units_to_au)
             self.full_atoms[at].set_coordinates(temp[0], temp[1], temp[2])
 
-    def center_of_mass(self):
+    def center_of_mass(self, to_au=True):
         """Computes center of mass of molecule (does not translate molecule).
 
         >>> H2OH2O.center_of_mass()
@@ -1808,7 +1824,7 @@ class LibmintsMolecule(object):
 
         for at in range(self.natom()):
             m = self.mass(at)
-            ret = add(ret, scale(self.xyz(at), m))
+            ret = add(ret, scale(self.xyz(at, to_au=to_au), m))
             total_m += m
 
         ret = scale(ret, 1.0 / total_m)
