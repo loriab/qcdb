@@ -131,6 +131,12 @@ def format_errors(err, mode=1):
         mape = '  ----  ' if err['mape'] is None else '%6.1f\%%' % (100 * err['mape'])
         mapbe = '  ----  ' if err['mapbe'] is None else '%6.1f\%%' % (100 * err['mapbe'])
         mapce = '  ----  ' if err['mapce'] is None else '%6.1f\%%' % (100 * err['mapce'])
+        #me = ' ----' if err['me'] is None else '%+.4f' % (err['me'])
+        #stde = '----' if err['stde'] is None else '%.4f' % (err['stde'])
+        #mae = '  ----' if err['mae'] is None else '%8.4f' % (err['mae'])
+        #mape = '  ----  ' if err['mape'] is None else '%8.3f\%%' % (100 * err['mape'])
+        #mapbe = '  ----  ' if err['mapbe'] is None else '%8.3f\%%' % (100 * err['mapbe'])
+        #mapce = '  ----  ' if err['mapce'] is None else '%8.3f\%%' % (100 * err['mapce'])
         text = """$\{%s; %s\}$ %s %s %s""" % \
                (me, stde, mae, mape, mapce)
         return text
@@ -443,12 +449,12 @@ class Reaction(object):
             text += """  Benchmark:            %f\n""" % (self.data[self.benchmark].value)
         text += """  Color:                %s\n""" % (str(self.color))
         text += """  Reaction matrix:\n"""
-        for mode, rxnm in self.rxnm.iteritems():
+        for mode, rxnm in self.rxnm.items():
             text += """      %s\n""" % (mode)
-            for rgt, coeff in rxnm.iteritems():
+            for rgt, coeff in rxnm.items():
                 text += """       %3d  %s\n""" % (coeff, rgt.name)
         text += """  Data:\n"""
-        for label, datum in sorted(self.data.iteritems()):
+        for label, datum in sorted(self.data.items()):
             text += """      %8.2f  %s\n""" % (datum.value, label)
         text += """\n"""
         return text
@@ -481,7 +487,7 @@ class Reaction(object):
             raise ValidationError("""Reaction %s missing benchmark datum %s.""" % (self.name, str(e)))
 
         err = {}
-        for label, datum in lsset.iteritems():
+        for label, datum in lsset.items():
             try:
                 mcLesser = datum.value
             except KeyError as e:
@@ -658,7 +664,7 @@ class WrappedDatabase(object):
 
         # form qcdb.Reagent objects from all defined geometries, GEOS
         oHRGT = {}
-        for rgt, mol in database.GEOS.iteritems():
+        for rgt, mol in database.GEOS.items():
             mol.update_geometry()
             try:
                 tagl = database.TAGL[rgt]
@@ -709,7 +715,7 @@ class WrappedDatabase(object):
         # populate reaction matrices in qcdb.Reaction objects
         for rxn in database.HRXN:
             dbrxn = database.dbse + '-' + str(rxn)
-            for mode, actvrxnm in oACTV.iteritems():
+            for mode, actvrxnm in oACTV.items():
                 tdict = OrderedDict()
                 for rgt in getattr(database, actvrxnm[0])[dbrxn]:
                     tdict[oHRGT[rgt]] = getattr(database, actvrxnm[1])[dbrxn][rgt]
@@ -751,7 +757,7 @@ class WrappedDatabase(object):
         # populate data with reference values in qcdb.Reaction objects
         for rxn in database.HRXN:
             dbrxn = database.dbse + '-' + str(rxn)
-            for ref, info in oBIND.iteritems():
+            for ref, info in oBIND.items():
                 bindval = getattr(database, info[3])[dbrxn]
                 if info[5] is None:
                     methodfeed = info[0]
@@ -839,7 +845,7 @@ class WrappedDatabase(object):
                 raise ValidationError("""Axis %s not importable.""" % (label))
             axisrxns = frozenset(defn.keys())
             attached = False
-            for ss, rxns in self.sset.iteritems():
+            for ss, rxns in self.sset.items():
                 if frozenset(rxns).issubset(axisrxns):
                     ordered_floats = []
                     for rx in self.oss[ss].hrxn:
@@ -947,7 +953,7 @@ class WrappedDatabase(object):
 
 #        cureinfo = self.get_pec_weightinfo()
         err = {}
-        for rxn, oRxn in lsset.iteritems():
+        for rxn, oRxn in lsset.items():
             lbench = oRxn.benchmark if benchmark == 'default' else benchmark
             try:
                 mcLesser = oRxn.data[modelchem].value
@@ -1112,7 +1118,7 @@ class WrappedDatabase(object):
         with open(pklfile, 'rb') as handle:
             hrxns = pickle.load(handle)
         # no error checking for speed
-        for rxn, data in hrxns.iteritems():
+        for rxn, data in hrxns.items():
             self.hrxn[rxn].data.update(data)
 
     def load_qcdata_hdf5_trusted(self, project, path=None):
@@ -1188,7 +1194,7 @@ class WrappedDatabase(object):
         if *union* is False.
 
         """
-        mcs = [set(v.data) for v in self.hrxn.itervalues()]
+        mcs = [set(v.data) for v in self.hrxn.values()]
         if union:
             return sorted(set.union(*mcs))
         else:
@@ -1204,7 +1210,7 @@ class WrappedDatabase(object):
             except StopIteration:
                 break
         return bm
-        # return next(self.hrxn.itervalues()).benchmark
+        # return next(self.hrxn.values()).benchmark
         # TODO all rxns have same bench in db module so all have same here in obj
         #   but the way things stored in Reactions, this doesn't have to be so
 
@@ -1377,14 +1383,14 @@ class Database(object):
 
         # merge Reaction-s
         self.hrxn = OrderedDict()
-        for db, odb in self.dbdict.iteritems():
-            for rxn, orxn in odb.hrxn.iteritems():
+        for db, odb in self.dbdict.items():
+            for rxn, orxn in odb.hrxn.items():
                 self.hrxn[orxn.dbrxn] = orxn
 
         # merge Reagent-s
         self.hrgt = OrderedDict()
-        for db, odb in self.dbdict.iteritems():
-            for rgt, orgt in odb.hrgt.iteritems():
+        for db, odb in self.dbdict.items():
+            for rgt, orgt in odb.hrgt.items():
                 self.hrgt[orgt.name] = orgt
 
         print("""Database %s: %s""" % (self.dbse, ', '.join(self.dbdict.keys())))
@@ -1518,7 +1524,7 @@ class Database(object):
         """
         label = name.lower()
         merged = []
-        for db, odb in self.dbdict.iteritems():
+        for db, odb in self.dbdict.items():
             if callable(func[db]):
                 ssfunc = func[db]
             else:
@@ -1542,7 +1548,7 @@ class Database(object):
 
         """
         funcdb = {}
-        for db, odb in self.dbdict.iteritems():
+        for db, odb in self.dbdict.items():
             dbix = self.dbdict.keys().index(db)
             overlapping_dbrxns = []
             for ss in sslist:
@@ -1602,7 +1608,7 @@ class Database(object):
             new = [name]
         for ss in new:
             if ss not in self.sset:
-                self.sset[ss] = [ss if ss in odb.sset else None for db, odb in self.dbdict.iteritems()]
+                self.sset[ss] = [ss if ss in odb.sset else None for db, odb in self.dbdict.items()]
                 print("""Database %s: Subset %s promoted: %s""" % (self.dbse, ss, self.sset[ss]))
         if name is None and len(self.dbdict) > 1:
             for db, odb in self.dbdict.items():
@@ -1627,7 +1633,7 @@ class Database(object):
         Database modelchem.
 
         """
-        mcs = [set(odb.available_modelchems()) for odb in self.dbdict.itervalues()]
+        mcs = [set(odb.available_modelchems()) for odb in self.dbdict.values()]
         new = sorted(set.intersection(*mcs))
         for mc in new:
             self.mcs[mc] = [mc] * len(self.dbdict.keys())
@@ -1808,7 +1814,7 @@ class Database(object):
                                                     failoninc=failoninc, verbose=verbose, returnindiv=True)
             # repackage
             dbdat = []
-            for db, odb in self.dbdict.iteritems():
+            for db, odb in self.dbdict.items():
                 dbix = self.dbdict.keys().index(db)
                 oss = odb.oss[self.sset[sset][dbix]]
                 # TODO may need to make axis name distributable across wrappeddbs
@@ -1894,7 +1900,7 @@ class Database(object):
             saptmc = saptdata['SAPT MODELCHEM']
 
             dbix = self.dbdict.keys().index(db)
-            for rxn, orxn in odb.hrxn.iteritems():
+            for rxn, orxn in odb.hrxn.items():
                 lss = self.sset[sset][dbix]
                 if lss is not None:
                     if rxn in odb.sset[lss]:
@@ -2024,7 +2030,7 @@ class Database(object):
         if not os.path.exists(xyzdir):
             os.mkdir(xyzdir)
 
-        for rgt, orgt in self.hrgt.iteritems():
+        for rgt, orgt in self.hrgt.items():
             omol = Molecule(orgt.mol)
             omol.update_geometry()
             omol.save_xyz(xyzdir + rgt + '.xyz')
@@ -2092,7 +2098,7 @@ reinitialize
         """
         rhrxn = self.get_hrxn(sset=sset)
         rhrgt = OrderedDict()
-        for rxn, orxn in rhrxn.iteritems():
+        for rxn, orxn in rhrxn.items():
             for orgt in orxn.rxnm[actv].keys():
                 rhrgt[orgt.name] = orgt
         # TODO prob need to avoid duplicates or pass
@@ -2111,7 +2117,7 @@ reinitialize
         """
         dbdat = []
         rhrxn = self.get_hrxn(sset=sset)
-        for orxn in rhrxn.itervalues():
+        for orxn in rhrxn.values():
             dbix = self.dbdict.keys().index(orxn.dbrxn.split('-')[0])
             lmc = self.mcs[modelchem][dbix]
             lbm = self.mcs[benchmark][dbix]
@@ -2411,7 +2417,7 @@ reinitialize
 
         listodicts = []
         rhrxn = self.get_hrxn(sset=sset)
-        for dbrxn, orxn in rhrxn.iteritems():
+        for dbrxn, orxn in rhrxn.items():
             wdb = dbrxn.split('-')[0]
             dbix = self.dbdict.keys().index(wdb)
             wbm = self.mcs[benchmark][dbix]
@@ -2614,7 +2620,7 @@ reinitialize
             tablelines.append(r"""\endlastfoot""")
 
             # table body
-            for dbrxn, stuff in terrors.iteritems():
+            for dbrxn, stuff in terrors.items():
                 tablelines.append(' & '.join([stuff[col] for col in columnplan]) + r""" \\ """)
 
             # table body summary
@@ -2622,7 +2628,7 @@ reinitialize
                 field_to_put_labels = [col for col in ['tagl', 'dbrxn', 'indx'] if col in columnplan]
                 if field_to_put_labels:
 
-                    for block, blkerrors in serrors.iteritems():
+                    for block, blkerrors in serrors.items():
                         if blkerrors:  # skip e.g., NBC block in HB of DB4
                             tablelines.append(r"""\hline""")
                             summlines = [[] for i in range(8)]
