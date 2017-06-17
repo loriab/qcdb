@@ -10,7 +10,7 @@ import os
 #matplotlib.use('Agg')
 
 
-def expand_saveas(saveas, def_filename, def_path=os.path.abspath(os.curdir), def_prefix='', relpath=False):
+def expand_saveas(saveas, def_filename, def_path=None, def_prefix='', relpath=False):
     """Analyzes string *saveas* to see if it contains information on
     path to save file, name to save file, both or neither (*saveas*
     ends in '/' to indicate directory only) (able to expand '.'). A full
@@ -21,6 +21,9 @@ def expand_saveas(saveas, def_filename, def_path=os.path.abspath(os.curdir), def
     to identify the type of figure.
 
     """
+    if def_path is None:
+        def_path=os.path.abspath(os.curdir)
+
     defname = def_prefix + def_filename.replace(' ', '_')
     if saveas is None:
         pth = def_path
