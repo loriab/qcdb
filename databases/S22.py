@@ -173,6 +173,28 @@ BIND_S22B['%s-%s' % (dbse, 22)] =  -7.097
 # Set default
 BIND = BIND_S22B
 # Reference information
+BINDINFO_S220 = {}
+for rxn in HRXN:
+    if rxn in [1, 2, 8, 9]:
+        BINDINFO_S220['%s-%s' % (dbse, rxn)] = {'citation': 's22jsch', 'method': 'CCSDT', 'mode': 'CP', 'basis': 'q5zqz'}
+    elif rxn in [3, 4, 16]:
+        BINDINFO_S220['%s-%s' % (dbse, rxn)] = {'citation': 's22jsch', 'method': 'CCSDT', 'mode': 'CP', 'basis': 'q5ztz'}
+    elif rxn in [5, 6, 13, 22]:
+        BINDINFO_S220['%s-%s' % (dbse, rxn)] = {'citation': 's22jsch', 'method': 'CCSDT', 'mode': 'CP', 'basis': 'tqztzfd'}
+    elif rxn in [7, 14, 15, 21]:
+        BINDINFO_S220['%s-%s' % (dbse, rxn)] = {'citation': 's22jsch', 'method': 'CCSDT', 'mode': 'CP', 'basis': 'tqzdz'}
+    elif rxn in [10, 17, 18]:
+        BINDINFO_S220['%s-%s' % (dbse, rxn)] = {'citation': 's22jsch', 'method': 'CCSDT', 'mode': 'CP', 'basis': 'q5ztzfd'}
+    elif rxn in [11, 20]:
+        BINDINFO_S220['%s-%s' % (dbse, rxn)] = {'citation': 's22jsch', 'method': 'CCSDT', 'mode': 'CP', 'basis': 'atqzadz'}
+    elif rxn in [12, 19]:
+        BINDINFO_S220['%s-%s' % (dbse, rxn)] = {'citation': 's22jsch', 'method': 'CCSDT', 'mode': 'CP', 'basis': 'atqztzfd'}
+BINDINFO_S22A = {}
+for rxn in HRXN:
+    if rxn in [1, 2, 3, 4, 8, 9, 16]:
+        BINDINFO_S22A['%s-%s' % (dbse, rxn)] = {'citation': 's22a', 'method': 'CCSDT', 'mode': 'CP', 'basis': 'atqz'}  # CBS(aQZ; -- ; H:aTZ-aQZ)
+    elif rxn in [5, 6, 7, 10, 11, 12, 13, 14, 15, 17, 18, 19, 20, 21, 22]:
+        BINDINFO_S22A['%s-%s' % (dbse, rxn)] = {'citation': 's22a', 'method': 'CCSDT', 'mode': 'CP', 'basis': 'atqzadtz'}  # CBS(aQZ; H:aTZ-aQZ; Delta:H:aDZ-aTZ)
 BINDINFO_S22B = {}
 BINDINFO_S22B['%s-%s' % (dbse,  1)] = {'citation': 's22b', 'method': 'CCSDT', 'mode': 'CP', 'basis': 'aq5z'}
 BINDINFO_S22B['%s-%s' % (dbse,  2)] = {'citation': 's22b', 'method': 'CCSDT', 'mode': 'CP', 'basis': 'a56z'}
@@ -184,19 +206,19 @@ BINDINFO_S22B['%s-%s' % (dbse,  7)] = {'citation': 's22b', 'method': 'CCSDT', 'm
 
 BINDINFO_S22B['%s-%s' % (dbse,  8)] = {'citation': 's22b', 'method': 'CCSDT', 'mode': 'CP', 'basis': 'aq5z'}
 BINDINFO_S22B['%s-%s' % (dbse,  9)] = {'citation': 's22b', 'method': 'CCSDT', 'mode': 'CP', 'basis': 'aq5z'}
-BINDINFO_S22B['%s-%s' % (dbse, 10)] = {'citation': 's22b', 'method': 'CCSDT', 'mode': 'midbond_CP', 'basis': 'aq5zatz'}
-BINDINFO_S22B['%s-%s' % (dbse, 11)] = {'citation': 's22b', 'method': 'CCSDT', 'mode': 'midbond_CP', 'basis': 'aq5zatz'}
-BINDINFO_S22B['%s-%s' % (dbse, 12)] = {'citation': 's22b', 'method': 'CCSDT', 'mode': 'midbond_CP', 'basis': 'aq5zatz'}
+BINDINFO_S22B['%s-%s' % (dbse, 10)] = {'citation': 's22b', 'method': 'CCSDT', 'mode': 'midbond_CP', 'basis': 'aq5z_aq5zatz'}
+BINDINFO_S22B['%s-%s' % (dbse, 11)] = {'citation': 's22b', 'method': 'CCSDT', 'mode': 'midbond_CP', 'basis': 'aq5z_aq5zatz'}
+BINDINFO_S22B['%s-%s' % (dbse, 12)] = {'citation': 's22b', 'method': 'CCSDT', 'mode': 'midbond_CP', 'basis': 'aq5z_aq5zatz'}
 BINDINFO_S22B['%s-%s' % (dbse, 13)] = {'citation': 's22b', 'method': 'CCSDT', 'mode': 'midbond_CP', 'basis': 'haq5zatz'}
-BINDINFO_S22B['%s-%s' % (dbse, 14)] = {'citation': 's22b', 'method': 'CCSDT', 'mode': 'midbond_CP', 'basis': 'aq5zatz'}
+BINDINFO_S22B['%s-%s' % (dbse, 14)] = {'citation': 's22b', 'method': 'CCSDT', 'mode': 'midbond_CP', 'basis': 'aq5z_aq5zatz'}
 BINDINFO_S22B['%s-%s' % (dbse, 15)] = {'citation': 's22b', 'method': 'CCSDT', 'mode': 'CP', 'basis': 'haq5zatz'}
-#TODO missing some HF xtpl
+
 BINDINFO_S22B['%s-%s' % (dbse, 16)] = {'citation': 's22b', 'method': 'CCSDT', 'mode': 'CP', 'basis': 'aq5z'}
-BINDINFO_S22B['%s-%s' % (dbse, 17)] = {'citation': 's22b', 'method': 'CCSDT', 'mode': 'CP', 'basis': 'aq5zaqz'}
-BINDINFO_S22B['%s-%s' % (dbse, 18)] = {'citation': 's22b', 'method': 'CCSDT', 'mode': 'CP', 'basis': 'aq5zaqz'}
-BINDINFO_S22B['%s-%s' % (dbse, 19)] = {'citation': 's22b', 'method': 'CCSDT', 'mode': 'CP', 'basis': 'aq5zaqz'}
-BINDINFO_S22B['%s-%s' % (dbse, 20)] = {'citation': 's22b', 'method': 'CCSDT', 'mode': 'midbond_CP', 'basis': 'aq5zatz'}
-BINDINFO_S22B['%s-%s' % (dbse, 21)] = {'citation': 's22b', 'method': 'CCSDT', 'mode': 'midbond_CP', 'basis': 'atqzatz'}
+BINDINFO_S22B['%s-%s' % (dbse, 17)] = {'citation': 's22b', 'method': 'CCSDT', 'mode': 'CP', 'basis': 'aq5z_aq5zaqz'}
+BINDINFO_S22B['%s-%s' % (dbse, 18)] = {'citation': 's22b', 'method': 'CCSDT', 'mode': 'CP', 'basis': 'aq5z_aq5zaqz'}
+BINDINFO_S22B['%s-%s' % (dbse, 19)] = {'citation': 's22b', 'method': 'CCSDT', 'mode': 'CP', 'basis': 'aq5z_aq5zaqz'}
+BINDINFO_S22B['%s-%s' % (dbse, 20)] = {'citation': 's22b', 'method': 'CCSDT', 'mode': 'midbond_CP', 'basis': 'aq5z_aq5zatz'}
+BINDINFO_S22B['%s-%s' % (dbse, 21)] = {'citation': 's22b', 'method': 'CCSDT', 'mode': 'midbond_CP', 'basis': 'atqz_atqzatz'}
 BINDINFO_S22B['%s-%s' % (dbse, 22)] = {'citation': 's22b', 'method': 'CCSDT', 'mode': 'midbond_CP', 'basis': 'haq5zatz'}
 
 # <<< Comment Lines >>>
