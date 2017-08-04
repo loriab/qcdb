@@ -556,9 +556,13 @@ BIND_HBC6ARLX['%s-FaOOFaNN-10.0' % (dbse)] =  -0.197
 # Set default
 BIND = BIND_HBC6A
 # Reference information
+BINDINFO_HBC60 = {}
 BINDINFO_HBC6A = {}
+BINDINFO_HBC6ARLX = {}
 for rxn in HRXN:
+    BINDINFO_HBC60['%s-%s' % (dbse, rxn)] = {'citation': 'hbc6', 'method': 'CCSDT', 'mode': 'CP', 'basis': 'atqzadtz'}
     BINDINFO_HBC6A['%s-%s' % (dbse, rxn)] = {'citation': 's22b', 'method': 'CCSDT', 'mode': 'CP', 'basis': 'atqzatz'}
+    BINDINFO_HBC6ARLX['%s-%s' % (dbse, rxn)] = {'citation': 's22b', 'method': 'CCSDT', 'mode': 'CP', 'basis': 'atqzatz'}
 
 # <<< Comment Lines >>>
 TAGL = {}
