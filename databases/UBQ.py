@@ -75,6 +75,8 @@ for rxn in HRXN:
 
 # <<< Reference Values [kcal/mol] >>>
 BIND = {}
+# Original publication
+# Current revision
 BIND_UBQREF = {}
 BIND_UBQREF['%s-%s'            % (dbse, 'ala28-asp32'                )] =   -7.775
 BIND_UBQREF['%s-%s'            % (dbse, 'ala46-lys48'                )] =  -25.767
@@ -170,7 +172,15 @@ BIND_UBQREF['%s-%s'            % (dbse, 'val26-leu56'                )] =   -0.5
 BIND_UBQREF['%s-%s'            % (dbse, 'val5-ile13'                 )] =  -14.475
 BIND_UBQREF['%s-%s'            % (dbse, 'val5-leu15'                 )] =   -0.128
 BIND_UBQREF['%s-%s'            % (dbse, 'val5-leu69'                 )] =   -0.685
+# Set default
 BIND = BIND_UBQREF
+# Reference information
+BINDINFO_UBQREF = {}
+for rxn in HRXN:
+    if rxn in ['glu51-tyr59', 'ile44-his68-big', 'leu50-tyr59', 'phe4-thr14', 'phe45-ala46', 'phe45-ile61', 'phe45-leu67', 'tyr59-ile61']:
+        BINDINFO_UBQREF['%s-%s' % (dbse, rxn)] = {'citation': '1ubq', 'method': 'CCSDT', 'mode': 'CP', 'basis': 'atqzhadtz'}
+    else:
+        BINDINFO_UBQREF['%s-%s' % (dbse, rxn)] = {'citation': '1ubq', 'method': 'MP2', 'mode': 'CP', 'basis': 'atqz'}
 
 # <<< Comment Lines >>>
 TAGL = {}
