@@ -32,9 +32,9 @@
 
 - **benchmark**
 
-  - ``'HOBZA'`` original pub, Riley et al. JCTC 9 2151 (2013).
-  - ``'AVE'`` weighted average CP/unCP, Burns et al. JCTC 10 49 (2014).
-  - |dl| ``'CDS'`` |dr| highest extrapolated CP CCSD(T) values (aq5z or a56z).
+  - ``'A240'`` original pub, Riley et al. JCTC 9 2151 (2013).
+  - ``'A24A'`` weighted average CP/unCP, Burns et al. JCTC 10 49 (2014).
+  - |dl| ``'A24B'`` |dr| highest extrapolated CP CCSD(T) values (aq5z or a56z).
 
 - **subset**
 
@@ -87,85 +87,127 @@ for rxn in HRXN:
 # <<< Reference Values [kcal/mol] >>>
 BIND = {}
 # A240: Original publication JCTC 9 2151 (2013) 
-BIND_HOBZA = {}
-BIND_HOBZA['%s-%s' % (dbse,  1)] =  -6.493
-BIND_HOBZA['%s-%s' % (dbse,  2)] =  -5.006
-BIND_HOBZA['%s-%s' % (dbse,  3)] =  -4.745
-BIND_HOBZA['%s-%s' % (dbse,  4)] =  -4.581
-BIND_HOBZA['%s-%s' % (dbse,  5)] =  -3.137
-BIND_HOBZA['%s-%s' % (dbse,  6)] =  -1.654
-BIND_HOBZA['%s-%s' % (dbse,  7)] =  -0.765
-BIND_HOBZA['%s-%s' % (dbse,  8)] =  -0.663
-BIND_HOBZA['%s-%s' % (dbse,  9)] =  -4.554
-BIND_HOBZA['%s-%s' % (dbse, 10)] =  -2.557
-BIND_HOBZA['%s-%s' % (dbse, 11)] =  -1.621
-BIND_HOBZA['%s-%s' % (dbse, 12)] =  -1.524
-BIND_HOBZA['%s-%s' % (dbse, 13)] =  -1.374
-BIND_HOBZA['%s-%s' % (dbse, 14)] =  -1.090
-BIND_HOBZA['%s-%s' % (dbse, 15)] =  -0.502
-BIND_HOBZA['%s-%s' % (dbse, 16)] =  -1.485
-BIND_HOBZA['%s-%s' % (dbse, 17)] =  -0.827
-BIND_HOBZA['%s-%s' % (dbse, 18)] =  -0.607
-BIND_HOBZA['%s-%s' % (dbse, 19)] =  -0.533
-BIND_HOBZA['%s-%s' % (dbse, 20)] =  -0.405
-BIND_HOBZA['%s-%s' % (dbse, 21)] =  -0.364
-BIND_HOBZA['%s-%s' % (dbse, 22)] =   0.821
-BIND_HOBZA['%s-%s' % (dbse, 23)] =   0.934
-BIND_HOBZA['%s-%s' % (dbse, 24)] =   1.115
+BIND_A240 = {}
+BIND_A240['%s-%s' % (dbse,  1)] =  -6.493
+BIND_A240['%s-%s' % (dbse,  2)] =  -5.006
+BIND_A240['%s-%s' % (dbse,  3)] =  -4.745
+BIND_A240['%s-%s' % (dbse,  4)] =  -4.581
+BIND_A240['%s-%s' % (dbse,  5)] =  -3.137
+BIND_A240['%s-%s' % (dbse,  6)] =  -1.654
+BIND_A240['%s-%s' % (dbse,  7)] =  -0.765
+BIND_A240['%s-%s' % (dbse,  8)] =  -0.663
+BIND_A240['%s-%s' % (dbse,  9)] =  -4.554
+BIND_A240['%s-%s' % (dbse, 10)] =  -2.557
+BIND_A240['%s-%s' % (dbse, 11)] =  -1.621
+BIND_A240['%s-%s' % (dbse, 12)] =  -1.524
+BIND_A240['%s-%s' % (dbse, 13)] =  -1.374
+BIND_A240['%s-%s' % (dbse, 14)] =  -1.090
+BIND_A240['%s-%s' % (dbse, 15)] =  -0.502
+BIND_A240['%s-%s' % (dbse, 16)] =  -1.485
+BIND_A240['%s-%s' % (dbse, 17)] =  -0.827
+BIND_A240['%s-%s' % (dbse, 18)] =  -0.607
+BIND_A240['%s-%s' % (dbse, 19)] =  -0.533
+BIND_A240['%s-%s' % (dbse, 20)] =  -0.405
+BIND_A240['%s-%s' % (dbse, 21)] =  -0.364
+BIND_A240['%s-%s' % (dbse, 22)] =   0.821
+BIND_A240['%s-%s' % (dbse, 23)] =   0.934
+BIND_A240['%s-%s' % (dbse, 24)] =   1.115
 # A24A: Weighted averaged reference used in JCTC 10 49 (2014)
-BIND_AVE = {}
-BIND_AVE['%s-%s' % (dbse,  1)] =  -6.502
-BIND_AVE['%s-%s' % (dbse,  2)] =  -5.007
-BIND_AVE['%s-%s' % (dbse,  3)] =  -4.758
-BIND_AVE['%s-%s' % (dbse,  4)] =  -4.569
-BIND_AVE['%s-%s' % (dbse,  5)] =  -3.131
-BIND_AVE['%s-%s' % (dbse,  6)] =  -1.633
-BIND_AVE['%s-%s' % (dbse,  7)] =  -0.761
-BIND_AVE['%s-%s' % (dbse,  8)] =  -0.669
-BIND_AVE['%s-%s' % (dbse,  9)] =  -4.520
-BIND_AVE['%s-%s' % (dbse, 10)] =  -2.560
-BIND_AVE['%s-%s' % (dbse, 11)] =  -1.618
-BIND_AVE['%s-%s' % (dbse, 12)] =  -1.520
-BIND_AVE['%s-%s' % (dbse, 13)] =  -1.376
-BIND_AVE['%s-%s' % (dbse, 14)] =  -1.088
-BIND_AVE['%s-%s' % (dbse, 15)] =  -0.505
-BIND_AVE['%s-%s' % (dbse, 16)] =  -1.484
-BIND_AVE['%s-%s' % (dbse, 17)] =  -0.831
-BIND_AVE['%s-%s' % (dbse, 18)] =  -0.610
-BIND_AVE['%s-%s' % (dbse, 19)] =  -0.534
-BIND_AVE['%s-%s' % (dbse, 20)] =  -0.397
-BIND_AVE['%s-%s' % (dbse, 21)] =  -0.347
-BIND_AVE['%s-%s' % (dbse, 22)] =   0.835
-BIND_AVE['%s-%s' % (dbse, 23)] =   0.945
-BIND_AVE['%s-%s' % (dbse, 24)] =   1.131
+BIND_A24A = {}
+BIND_A24A['%s-%s' % (dbse,  1)] =  -6.502
+BIND_A24A['%s-%s' % (dbse,  2)] =  -5.007
+BIND_A24A['%s-%s' % (dbse,  3)] =  -4.758
+BIND_A24A['%s-%s' % (dbse,  4)] =  -4.569
+BIND_A24A['%s-%s' % (dbse,  5)] =  -3.131
+BIND_A24A['%s-%s' % (dbse,  6)] =  -1.633
+BIND_A24A['%s-%s' % (dbse,  7)] =  -0.761
+BIND_A24A['%s-%s' % (dbse,  8)] =  -0.669
+BIND_A24A['%s-%s' % (dbse,  9)] =  -4.520
+BIND_A24A['%s-%s' % (dbse, 10)] =  -2.560
+BIND_A24A['%s-%s' % (dbse, 11)] =  -1.618
+BIND_A24A['%s-%s' % (dbse, 12)] =  -1.520
+BIND_A24A['%s-%s' % (dbse, 13)] =  -1.376
+BIND_A24A['%s-%s' % (dbse, 14)] =  -1.088
+BIND_A24A['%s-%s' % (dbse, 15)] =  -0.505
+BIND_A24A['%s-%s' % (dbse, 16)] =  -1.484
+BIND_A24A['%s-%s' % (dbse, 17)] =  -0.831
+BIND_A24A['%s-%s' % (dbse, 18)] =  -0.610
+BIND_A24A['%s-%s' % (dbse, 19)] =  -0.534
+BIND_A24A['%s-%s' % (dbse, 20)] =  -0.397
+BIND_A24A['%s-%s' % (dbse, 21)] =  -0.347
+BIND_A24A['%s-%s' % (dbse, 22)] =   0.835
+BIND_A24A['%s-%s' % (dbse, 23)] =   0.945
+BIND_A24A['%s-%s' % (dbse, 24)] =   1.131
 # A24B: Highest extrapolated CP CCSD(T) values (q5 or 56)
-BIND_CDS = {}
-BIND_CDS['%s-%s' % (dbse,  1)] =  -6.506  # 56
-BIND_CDS['%s-%s' % (dbse,  2)] =  -5.015  # 56
-BIND_CDS['%s-%s' % (dbse,  3)] =  -4.751  # 56
-BIND_CDS['%s-%s' % (dbse,  4)] =  -4.592  # 56
-BIND_CDS['%s-%s' % (dbse,  5)] =  -3.142  # 56
-BIND_CDS['%s-%s' % (dbse,  6)] =  -1.661  # 56
-BIND_CDS['%s-%s' % (dbse,  7)] =  -0.767
-BIND_CDS['%s-%s' % (dbse,  8)] =  -0.665  # 56
-BIND_CDS['%s-%s' % (dbse,  9)] =  -4.565
-BIND_CDS['%s-%s' % (dbse, 10)] =  -2.564
-BIND_CDS['%s-%s' % (dbse, 11)] =  -1.626
-BIND_CDS['%s-%s' % (dbse, 12)] =  -1.527
-BIND_CDS['%s-%s' % (dbse, 13)] =  -1.377
-BIND_CDS['%s-%s' % (dbse, 14)] =  -1.094
-BIND_CDS['%s-%s' % (dbse, 15)] =  -0.504
-BIND_CDS['%s-%s' % (dbse, 16)] =  -1.493
-BIND_CDS['%s-%s' % (dbse, 17)] =  -0.830
-BIND_CDS['%s-%s' % (dbse, 18)] =  -0.609
-BIND_CDS['%s-%s' % (dbse, 19)] =  -0.534
-BIND_CDS['%s-%s' % (dbse, 20)] =  -0.406  # 56
-BIND_CDS['%s-%s' % (dbse, 21)] =  -0.354  # 56
-BIND_CDS['%s-%s' % (dbse, 22)] =   0.818
-BIND_CDS['%s-%s' % (dbse, 23)] =   0.930
-BIND_CDS['%s-%s' % (dbse, 24)] =   1.115
+BIND_A24B = {}
+BIND_A24B['%s-%s' % (dbse,  1)] =  -6.506  # 56
+BIND_A24B['%s-%s' % (dbse,  2)] =  -5.015  # 56
+BIND_A24B['%s-%s' % (dbse,  3)] =  -4.751  # 56
+BIND_A24B['%s-%s' % (dbse,  4)] =  -4.592  # 56
+BIND_A24B['%s-%s' % (dbse,  5)] =  -3.142  # 56
+BIND_A24B['%s-%s' % (dbse,  6)] =  -1.661  # 56
+BIND_A24B['%s-%s' % (dbse,  7)] =  -0.767
+BIND_A24B['%s-%s' % (dbse,  8)] =  -0.665  # 56
+BIND_A24B['%s-%s' % (dbse,  9)] =  -4.565
+BIND_A24B['%s-%s' % (dbse, 10)] =  -2.564
+BIND_A24B['%s-%s' % (dbse, 11)] =  -1.626
+BIND_A24B['%s-%s' % (dbse, 12)] =  -1.527
+BIND_A24B['%s-%s' % (dbse, 13)] =  -1.377
+BIND_A24B['%s-%s' % (dbse, 14)] =  -1.094
+BIND_A24B['%s-%s' % (dbse, 15)] =  -0.504
+BIND_A24B['%s-%s' % (dbse, 16)] =  -1.493
+BIND_A24B['%s-%s' % (dbse, 17)] =  -0.830
+BIND_A24B['%s-%s' % (dbse, 18)] =  -0.609
+BIND_A24B['%s-%s' % (dbse, 19)] =  -0.534
+BIND_A24B['%s-%s' % (dbse, 20)] =  -0.406  # 56
+BIND_A24B['%s-%s' % (dbse, 21)] =  -0.354  # 56
+BIND_A24B['%s-%s' % (dbse, 22)] =   0.818
+BIND_A24B['%s-%s' % (dbse, 23)] =   0.930
+BIND_A24B['%s-%s' % (dbse, 24)] =   1.115
+# A24C: Includes (Q), core, rel corrections PCCP 17 19268 (2015)
+BIND_A24C = {}
+BIND_A24C['%s-%s' % (dbse,  1)] =  -6.546
+BIND_A24C['%s-%s' % (dbse,  2)] =  -5.036
+BIND_A24C['%s-%s' % (dbse,  3)] =  -4.769
+BIND_A24C['%s-%s' % (dbse,  4)] =  -4.585
+BIND_A24C['%s-%s' % (dbse,  5)] =  -3.169
+BIND_A24C['%s-%s' % (dbse,  6)] =  -1.662
+BIND_A24C['%s-%s' % (dbse,  7)] =  -0.779
+BIND_A24C['%s-%s' % (dbse,  8)] =  -0.681
+BIND_A24C['%s-%s' % (dbse,  9)] =  -4.515
+BIND_A24C['%s-%s' % (dbse, 10)] =  -2.586
+BIND_A24C['%s-%s' % (dbse, 11)] =  -1.634
+BIND_A24C['%s-%s' % (dbse, 12)] =  -1.538
+BIND_A24C['%s-%s' % (dbse, 13)] =  -1.396
+BIND_A24C['%s-%s' % (dbse, 14)] =  -1.110
+BIND_A24C['%s-%s' % (dbse, 15)] =  -0.518
+BIND_A24C['%s-%s' % (dbse, 16)] =  -1.522
+BIND_A24C['%s-%s' % (dbse, 17)] =  -0.845
+BIND_A24C['%s-%s' % (dbse, 18)] =  -0.618
+BIND_A24C['%s-%s' % (dbse, 19)] =  -0.542
+BIND_A24C['%s-%s' % (dbse, 20)] =  -0.405
+BIND_A24C['%s-%s' % (dbse, 21)] =  -0.356
+BIND_A24C['%s-%s' % (dbse, 22)] =   0.801
+BIND_A24C['%s-%s' % (dbse, 23)] =   0.909
+BIND_A24C['%s-%s' % (dbse, 24)] =   1.097
 # Set default
-BIND = BIND_CDS
+BIND = BIND_A24B
+# Reference information
+BINDINFO_A240 = {}
+BINDINFO_A24A = {}
+BINDINFO_A24B = {}
+BINDINFO_A24C = {}
+for rxn in HRXN:
+    # A24-0: HF/aug-cc-pV5Z + D:CCSD(T)/aug-cc-pV[TQ5]Z + D:(Q)/6-31G**(0.25,0.15) + DKH4/aug-cc-pCVQZ-DK + CCSD(T)/aug-cc-pCV[TQ]Z(ae - fc)
+    BINDINFO_A240['%s-%s' % (dbse, rxn)] = {'citation': 'a240', 'method': 'CCSDTQ'}
+    if rxn in [1, 2, 3, 4, 5, 6, 8, 20, 21]:
+        BINDINFO_A24A['%s-%s' % (dbse, rxn)] = {'citation': 'dilabio', 'method': 'CCSDT', 'mode': 'ave', 'basis': 'a56z'}
+        BINDINFO_A24B['%s-%s' % (dbse, rxn)] = {'citation': 'dilabio', 'method': 'CCSDT', 'mode': 'CP', 'basis': 'a56z'}
+    else:
+        BINDINFO_A24A['%s-%s' % (dbse, rxn)] = {'citation': 'dilabio', 'method': 'CCSDT', 'mode': 'ave', 'basis': 'aq5z'}
+        BINDINFO_A24B['%s-%s' % (dbse, rxn)] = {'citation': 'dilabio', 'method': 'CCSDT', 'mode': 'CP', 'basis': 'aq5z'}
+    # A24C: A24B + D:(Q)/aTZ (A24-2, 4, 5, 19; could be aDTZ?) /aDZ (1, 6-8, 10-18, 20-24) /None (3, 9) + relativisic(A24-0) + core(A24-0)
+    BINDINFO_A24C['%s-%s' % (dbse, rxn)] = {'citation': 'a24c', 'method': 'CCSDTQ'}
 
 # <<< Comment Lines >>>
 TAGL = {}
