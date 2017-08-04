@@ -1142,7 +1142,7 @@ class Molecule(LibmintsMolecule):
         <qcdb.Molecule> self := Rotated Molecule *self* aligned with *ref* 
         <qcdb.Molecule> ref := Molecule of reference geometry
 
-        >>> molecule.compare_molecules(ref)
+        >>> molecule.align_molecules(ref)
         """
         import numpy as np
 

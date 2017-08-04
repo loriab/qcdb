@@ -26,6 +26,7 @@ from numpy import linalg as la
 import math
 import qcdb
 from periodictable import *
+import psi4
 
 pi = np.pi
 
@@ -45,7 +46,7 @@ def mass_weight_Hessian(Hessian, masses):
 def get_rot_const(molecule, text):
     #molecule is qcdb molecule object
     #get rotational constants from qcdb
-    rot_const = np.array(molecule.rotational_constants(print_text = False))
+    rot_const = np.array(molecule.rotational_constants())
     
     # moments in amu * cm^2
     moments = []
@@ -101,7 +102,7 @@ def get_vibfreq_and_temp(w,rot_type, text):
     if rot_type == 'RT_ATOM': minus = len(w)
     elif rot_type == 'RT_LINEAR': minus = 5
     else: minus = 6
-    
+
     #len(w) - minus is number of vibrational freqs
     sw = sorted(w, key=abs, reverse = True)
     modes = sorted(sw[:(len(w)-minus)])
@@ -315,7 +316,7 @@ def compute_therm_terms(E0, molecule, vibfreq, vibtemp, rot_symm_num, rot_const,
     
     return text  
  
-def do_analysis(E0, Hessian, molecule, T, P, text):
+def do_analysis(wfn, E0, Hessian, molecule, T, P, text):
     #E0 is current energy (float), Hessian is numpy matrix, molecule is qcdb 
     #molecule object, T is float, and P is float.
     #get point group info from qcdb
@@ -329,7 +330,17 @@ def do_analysis(E0, Hessian, molecule, T, P, text):
     text+="%30s %10s\n"%("Full Point Group:",pg)  
     text+="%30s %10s\n"%("Rotor Type:",rot_type[3:])
     text+="%30s %10s\n"%("Rotational Symmetry Number:",rot_symm_num)
+   
+    pg = molecule.find_point_group()
     
+    mints = psi4.MintsHelper(wfn.basisset()) 
+    cdsalcs = mints.cdsalcs(0xFF, True, True)
+    U = np.asarray(cdsalcs.matrix())
+   
+    k_convfactor = qcdb.physconst.psi_hartree2J/(qcdb.physconst.psi_bohr2m * qcdb.physconst.psi_bohr2m * qcdb.physconst.psi_amu2kg)
+    cm_convfactor = 1.0/(2.0 * pi * qcdb.physconst.psi_c * 100.) 
+    count = 0
+ 
     text+= "\n ==> Nuclear Masses <== \n"
 
     masses = []
@@ -346,6 +357,8 @@ def do_analysis(E0, Hessian, molecule, T, P, text):
     mw = sum(masses)
     # get new mass-weighted hessian using current masses
     mwHessian = mass_weight_Hessian(Hessian, masses)
+    blocked_H = np.dot(np.dot(U,mwHessian),U.T)
+    w, v = np.linalg.eig(blocked_H)
 
     # get eigenvalues, eigenvectors of mass-weighted hessian 
     w, v = la.eig(mwHessian)
@@ -355,6 +368,9 @@ def do_analysis(E0, Hessian, molecule, T, P, text):
     # get vibrational freqs and temps, pass rot_type in case it changes
     #for near linear molecules
     vibfreq, vibtemp, rot_type, text = get_vibfreq_and_temp(w, rot_type, text)
+    
+    #Fail if not all irreps are found
+    #if len(vibfreq) != 
 
     # compute thermodynamic terms
     text = compute_therm_terms(E0, molecule, vibfreq, vibtemp, rot_symm_num, rot_const, rot_type, T, P, mw, text)
@@ -370,7 +386,7 @@ def print_header(text):
 
     return text
 
-def thermo_analysis(molecule, E0, Hessian, isotopes = [], T = 298.15, P = 101325.00):
+def thermo_analysis(wfn, molecule, E0, Hessian, isotopes = [], T = 298.15, P = 101325.00):
     """Conduct thermodynamic analysis from a given molecule, energy,
     and Hessian. Molecular coordinates are assumed to be in Angstrom
     and are passed as a string. Energy is is assumed to be in atomic
@@ -399,7 +415,7 @@ def thermo_analysis(molecule, E0, Hessian, isotopes = [], T = 298.15, P = 101325
             #replace mass of atom key-1 with user-defined mass
             molecule.set_mass(key-1, newmass)
         
-        text = do_analysis(E0, Hessian, molecule, T, P, text)
+        text = do_analysis(wfn, E0, Hessian, molecule, T, P, text)
         #reset to standard masses
         for key in dic.keys():
             molecule.set_mass(key-1, el2mass[molecule.symbol(key-1)])
