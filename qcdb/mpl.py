@@ -909,8 +909,7 @@ def iowa(mcdat, mclbl, title='', xtitle='', xlimit=2.0, view=True,
     import matplotlib
     import matplotlib.pyplot as plt
 
-    aa = ['ARG', 'HIE', 'LYS', 'ASP', 'GLU', 'SER', 'THR', 'ASN', 'GLN', 'CYS', 'MET', 'GLY', 'ALA', 'VAL', 'ILE', 'LEU', 'PRO', 'PHE', 'TYR', 'TRP']
-    #aa = ['ILE', 'LEU', 'ASP', 'GLU', 'PHE']
+    aa = ['ARG', 'LYS', 'ASP', 'GLU', 'SER', 'THR', 'ASN', 'GLN', 'CYS', 'MET', 'GLY', 'ALA', 'VAL', 'ILE', 'LEU', 'PRO', 'PHE', 'TYR', 'HIE', 'TRP']
     err = dict(zip(mclbl, mcdat))
 
     # handle for frame, overall axis
@@ -945,12 +944,10 @@ def iowa(mcdat, mclbl, title='', xtitle='', xlimit=2.0, view=True,
             index += 1
 
     #plt.title(title)
-    axt.axvline(x=4.8, linewidth=5, color='k')
-    axt.axvline(x=8.75, linewidth=5, color='k')
-    axt.axvline(x=11.6, linewidth=5, color='k')
-    axt.axhline(y=4.8, linewidth=5, color='k')
-    axt.axhline(y=8.75, linewidth=5, color='k')
-    axt.axhline(y=11.6, linewidth=5, color='k')
+    # HIE in +: 4.8, 8.75, 11.6
+    for posn in [3.85, 7.75, 10.65]:
+        axt.axvline(x=posn, linewidth=5, color='k')
+        axt.axhline(y=posn, linewidth=5, color='k')
     axt.set_zorder(100)
 
     # save and show
