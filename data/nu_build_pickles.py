@@ -16,7 +16,7 @@ dbnet = {}
 #dbnet['NBC10'] = ['dft', 'saptone', 'pt2']
 #dbnet['HBC6'] = ['dft', 'saptone', 'pt2']
 #dbnet['HSG'] = ['dft', 'saptone', 'pt2', 'bfdbmm']
-#dbnet['SSI'] = ['saptmisc', 'bfdbmm', 'dfit', 'bfdbdft', 'pt2misc', 'ccmisc', 'dfitm', 'bfdbdftm', 'dftmisc', 'efp']
+#dbnet['SSI'] = ['saptmisc', 'bfdbmm', 'dfit', 'bfdbdft', 'pt2misc', 'ccmisc', 'dfitm', 'bfdbdftm', 'dftmisc']  #, 'efp']
 #dbnet['BBI'] = ['saptmisc', 'bfdbmm', 'dfit', 'bfdbdft', 'pt2misc', 'ccmisc', 'dfitm', 'bfdbdftm', 'dftmisc']
 #dbnet['PCONF'] = ['dfit', 'dfitm']
 #dbnet['SCONF'] = ['dfit', 'dfitm']
@@ -30,6 +30,21 @@ dbnet = {}
 #dbnet['A24'] = ['dilabio']
 #dbnet['JSCH'] = ['saptmisc']
 #dbnet[''] = []
+
+# [1-4 Aug 2017] LAB
+#   * added merz3 & 1hsg citations to HSG_bfdbmm.py
+#   * added merz3 & 1ubq citations to UBQ_bfdbmm.py
+#   * anon's allowed to remain b/c not dist. in qcdb conda: JSCH, S66, S22by7
+#   * updated dfit, 1hsg, merz3, 1ubq, bfdbefp Citations
+#     * so regen ACHC, *CONF, NBC10ext just in case
+#   * added merz3 citations to BBI_bfdbdftm.py, BBI_bfdbdft.py (was bfdbdft), BBI_bfdbmm.py (some were bfdbmm), BBI_dftmisc.py, BBI_ccmisc.py, BBI_pt2misc.py, BBI_saptmisc.py
+#   * added merz3 citations to SSI_bfdbdftm.py, SSI_bfdbdft.py (was bfdbdft), BBI_bfdbmm.py (some were bfdbmm), SSI_dftmisc.py, SSI_ccmisc.py, SSI_pt2misc.py, SSI_saptmisc.py
+#   * added bfdbefp citation to SSI_efp.py
+#   * added merz3 citation to UBQ_saptmisc.py as well as updating it to alpha0
+#   * added cdsgroup (internal) citation to S66_saptmisc.py and JSCH_saptmisc.py
+#   * added lots more citations & tagl so pretty much regen all
+#   * added dfit citation to S22by7_saptmisc.py
+
 
 #dbse = 'SSI'  # UNCOMMENT for local WDb
 

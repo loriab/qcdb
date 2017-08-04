@@ -1195,12 +1195,16 @@ def build(method, option, cpmode, basis):
     #if method in ['MP2C', 'MP2CF12'] and basis in ['atqzadz', 'adz', 'adtz']:
     #if method in ['B3LYPD3'] and basis in ['def2qzvp']:
     #if method in ['B3LYPD3M', 'B3LYPD3MBJ'] and basis in ['atz']:
+    #if method in ['CCSDT'] and basis in ['a56za5z']:
+    #if method in ['PBEH3C']:
+    #if method in ['B2PLYPD3M']:
+    #if method:
         print('\n', method, option, cpmode, basis)
         print('pcss:', mtdlist)
         print('bass:', baslist)
         print('opts:', optlist)
         for pcs, bas, opt in zip(mtdlist, baslist, optlist):
-            print(df.loc[bas].loc[pcs].loc[opt].loc['S22-2'])  # ACONF-15'] #'NBC1-BzBz_S-5.0'] #'S22-2'] #'A24-1'] #'BBI-150LYS-158LEU-2'] #'S22-2']
+            print(df.loc[bas].loc[pcs].loc[opt].loc['UBQ-ala28-asp32']) #'HBC1-FaOOFaNN-4.2'])  # ACONF-15'] #'NBC1-BzBz_S-5.0'] #'S22-2'] #'A24-1'] #'BBI-150LYS-158LEU-2'] #'S22-2']
     acting_cpmode = 'default' if cpmode == 'unCP' else cpmode
     return reactionate(acting_cpmode, sum([df.loc[bas].loc[pcs].loc[opt] for pcs, bas, opt in zip(mtdlist, baslist, optlist)]))
 
