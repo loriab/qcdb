@@ -390,6 +390,12 @@ _tlist = [
     BasisSet('na',         fullname='no applicable basis'),
     BasisSet('atq5dz_aq5dzatdz', fullname='[aTQ5dZ_; aQ5dZ; D:aTdZ]', latex="""[aTQ5dZ_; aQ5dZ; $\delta$:aTdZ]""",
         build=[None, None, ['atq5dz', 'aq5dz', 'atdz', 'atdz']]),  # untested [HF: tq5; MP2: q5; CCSD: t; (T): t]/aug-cc-pV(X+d)Z
+    BasisSet('adtz_adtz', fullname='[aDTZ_; aDTZ]', latex="""[aDTZ_; aDTZ]""",
+        build=[None, None, ['adtz', 'adtz']]),  # untested build
+    BasisSet('adtz_adtz631gs025', fullname='[aDTZ_; aDTZ; D:6-31G*(0.25)]', latex="""[aDTZ_; aDTZ; $\delta$:6-31G$^*$(0.25)]""",
+        build=[None, None, ['adtz', 'adtz', '631gs025']]),
+    BasisSet('atqz_atqz631gs025', fullname='[aTQZ_; aTQZ; D:6-31G*(0.25)]', latex="""[aTQZ_; aTQZ; $\delta$:6-31G$^*$(0.25)]""",
+        build=[None, None, ['atqz', 'atqz', '631gs025']]),
 ]
 bases = {}
 for item in _tlist:
