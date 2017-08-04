@@ -388,6 +388,8 @@ _tlist = [
     BasisSet('def2qzvp',   fullname='def2-QZVP'),
     BasisSet('def2msvp',   fullname='def2-mSVP'),
     BasisSet('na',         fullname='no applicable basis'),
+    BasisSet('atq5dz_aq5dzatdz', fullname='[aTQ5dZ_; aQ5dZ; D:aTdZ]', latex="""[aTQ5dZ_; aQ5dZ; $\delta$:aTdZ]""",
+        build=[None, None, ['atq5dz', 'aq5dz', 'atdz', 'atdz']]),  # untested [HF: tq5; MP2: q5; CCSD: t; (T): t]/aug-cc-pV(X+d)Z
 ]
 bases = {}
 for item in _tlist:
