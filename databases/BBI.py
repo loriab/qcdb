@@ -295,6 +295,12 @@ BIND_SILVER['%s-%s' % (dbse, '205THR-209LEU-2')] =   -5.867
 BIND_SILVER['%s-%s' % (dbse, '228ARG-232GLU-1')] =   -7.561
 # Set default
 BIND = BIND_SILVER
+# Reference information
+BINDINFO_BRONZE = {}
+BINDINFO_SILVER = {}
+for rxn in HRXN:
+    BINDINFO_BRONZE['%s-%s' % (dbse, rxn)] = {'citation': 'merz3', 'method': 'MP2CF12', 'mode': 'SA', 'basis': 'adz'}
+    BINDINFO_SILVER['%s-%s' % (dbse, rxn)] = {'citation': 'merz3', 'method': 'DWCCSDTF12', 'mode': 'CP', 'basis': 'adz'}  # addz?
 
 # <<< Comment Lines >>>
 TAGL = {}
