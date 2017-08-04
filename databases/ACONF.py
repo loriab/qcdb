@@ -93,21 +93,31 @@ RXNM['%s-%s'            % (dbse, '15'                    )] = dict(zip(ACTV['%s-
 
 # <<< Reference Values [kcal/mol] >>>
 BIND = {}
-BIND['%s-%s'            % (dbse, '1'                     )] =    0.598
-BIND['%s-%s'            % (dbse, '2'                     )] =    0.614
-BIND['%s-%s'            % (dbse, '3'                     )] =    0.961
-BIND['%s-%s'            % (dbse, '4'                     )] =    2.813
-BIND['%s-%s'            % (dbse, '5'                     )] =    0.595
-BIND['%s-%s'            % (dbse, '6'                     )] =    0.604
-BIND['%s-%s'            % (dbse, '7'                     )] =    0.934
-BIND['%s-%s'            % (dbse, '8'                     )] =    1.178
-BIND['%s-%s'            % (dbse, '9'                     )] =    1.302
-BIND['%s-%s'            % (dbse, '10'                    )] =    1.250
-BIND['%s-%s'            % (dbse, '11'                    )] =    2.632
-BIND['%s-%s'            % (dbse, '12'                    )] =    2.740
-BIND['%s-%s'            % (dbse, '13'                    )] =    3.283
-BIND['%s-%s'            % (dbse, '14'                    )] =    3.083
-BIND['%s-%s'            % (dbse, '15'                    )] =    4.925
+# Original publication
+# Current revision
+BIND_ACONF0 = {}
+BIND_ACONF0['%s-%s'            % (dbse, '1'                     )] =    0.598
+BIND_ACONF0['%s-%s'            % (dbse, '2'                     )] =    0.614
+BIND_ACONF0['%s-%s'            % (dbse, '3'                     )] =    0.961
+BIND_ACONF0['%s-%s'            % (dbse, '4'                     )] =    2.813
+BIND_ACONF0['%s-%s'            % (dbse, '5'                     )] =    0.595
+BIND_ACONF0['%s-%s'            % (dbse, '6'                     )] =    0.604
+BIND_ACONF0['%s-%s'            % (dbse, '7'                     )] =    0.934
+BIND_ACONF0['%s-%s'            % (dbse, '8'                     )] =    1.178
+BIND_ACONF0['%s-%s'            % (dbse, '9'                     )] =    1.302
+BIND_ACONF0['%s-%s'            % (dbse, '10'                    )] =    1.250
+BIND_ACONF0['%s-%s'            % (dbse, '11'                    )] =    2.632
+BIND_ACONF0['%s-%s'            % (dbse, '12'                    )] =    2.740
+BIND_ACONF0['%s-%s'            % (dbse, '13'                    )] =    3.283
+BIND_ACONF0['%s-%s'            % (dbse, '14'                    )] =    3.083
+BIND_ACONF0['%s-%s'            % (dbse, '15'                    )] =    4.925
+# Set default
+BIND = BIND_ACONF0
+# Reference information
+BINDINFO_ACONF0 = {}
+for rxn in HRXN:
+    # Table 2
+    BINDINFO_ACONF0['%s-%s' % (dbse, rxn)] = {'citation': 'aconf0'}  # W1 ~= CCSD/TQZ + (T)/DTZ
 
 # <<< Comment Lines >>>
 TAGL = {}
