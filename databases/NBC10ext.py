@@ -30,6 +30,7 @@
 |   Pyridine Dimers from Hohenstein et al. JPCA 113 878 (2009).
 |   Collection into NBC10 from Burns et al. JCP 134 084107 (2011).
 |   Revised reference interaction energies (NBC10A) from Marshall et al. JCP 135 194102 (2011).
+|   Revised (pure T-zeta CC) reference interaction energies (NBC10B) from Smith et al. JPCL 7 2197 (2016).
 
 - **cp**  ``'off'`` || ``'on'``
 
@@ -38,7 +39,8 @@
 - **benchmark**
 
   - ``'NBC100'`` Burns et al. JCP 134 084107 (2011).
-  - |dl| ``'NBC10A'`` |dr| Marshall et al. JCP 135 194102 (2011).
+  - ``'NBC10A'`` Marshall et al. JCP 135 194102 (2011).
+  - |dl| ``'NBC10B'`` |dr| Smith et al. JPCL 7 2197 (2016).
 
 - **subset**
 
@@ -694,7 +696,7 @@ for rxn in HRXN:
        (rxn in BzBz_PD36):
         BINDINFO_NBC10B['%s-%s' % (dbse, rxn)] = {'citation': 'dfit', 'method': 'CCSDT', 'mode': 'CP', 'basis': 'aq5zhatz'}
     elif (rxn in BzH2S) or (rxn in BzMe):
-        BINDINFO_NBC10B['%s-%s' % (dbse, rxn)] = {'citation': 's22b', 'method': 'CCSDT', 'mode': 'CP', 'basis': 'aq5zatz'}
+        BINDINFO_NBC10B['%s-%s' % (dbse, rxn)] = {'citation': 'dfit', 'method': 'CCSDT', 'mode': 'CP', 'basis': 'aq5zatz'}
     elif rxn in MeMe:
         BINDINFO_NBC10B['%s-%s' % (dbse, rxn)] = {'citation': 's22b', 'method': 'CCSDT', 'mode': 'CP', 'basis': 'atqz'}
 
