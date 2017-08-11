@@ -595,9 +595,9 @@ class Molecule(LibmintsMolecule):
         return text, options
 
     def format_molecule_for_qchem(self, mixedbas=True):
-        """Returns geometry section of input file formatted for Q-Chem. 
-        For ghost atoms, prints **Gh** as elemental symbol, with expectation 
-        that element identity will be established in mixed basis section. 
+        """Returns geometry section of input file formatted for Q-Chem.
+        For ghost atoms, prints **Gh** as elemental symbol, with expectation
+        that element identity will be established in mixed basis section.
         For ghost atoms when *mixedbas* is False, prints @ plus element symbol.
 
         candidate modeled after psi4_xyz so that absent fragments observed force xyz
@@ -616,7 +616,7 @@ class Molecule(LibmintsMolecule):
                     continue
                 # any fragment marker here <<<
                 if self.nactive_fragments() > 1:
-                    # this only distiguishes Real frags so Real/Ghost don't get 
+                    # this only distiguishes Real frags so Real/Ghost don't get
                     #   fragmentation. may need to change
                     text += """--\n"""
                                          # >>>
@@ -633,12 +633,12 @@ class Molecule(LibmintsMolecule):
                     else:
                         if self.fZ(at):
                             # label for real live atom <<<
-                            text += """{:>3s} """.format(self.symbol(at))
+                            text += """{:>3s} """.format(self.fsymbol(at))
                                                      # >>>
                         else:
                             # label for ghost atom <<<
                             text += """{:>3s} """.format(
-                                'Gh' if mixedbas else ('@' + self.symbol(at)))                
+                                'Gh' if mixedbas else ('@' + self.fsymbol(at)))
                                                  # >>>
                         [x, y, z] = self.full_atoms[at].compute()
                         # Cartesian coordinates <<<

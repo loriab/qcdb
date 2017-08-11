@@ -1,7 +1,7 @@
 """
 | Database of Adenine-Cytosine curves along all possible axes.
-| Geometries from Parker et al. JCTC xxx xxx (2015).
-| Reference interaction energies from Parker et al. JCTC xxx xxx (2015).
+| Geometries from Parker et al. JCTC 11 4197 (2015).
+| Reference interaction energies from Parker et al. JCTC 11 4197 (2015).
 
 
 - **cp**  ``'off'`` <erase this comment and after unless on is a valid option> || ``'on'``
