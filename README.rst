@@ -10,3 +10,8 @@ manipulation of quantum chemical information. Facilitating
 interoperability among quantum chemistry codes. Closely tied in with the
 Psi4 project: www.psicode.org and https://github.com/psi4 .
 
+Because one large file is under git lfs control, you may need to issue the following after cloning. Git itself must be >=1.8.5::
+
+    conda install git-lfs -c conda-forge
+    git lfs fetch
+    git lfs checkout
