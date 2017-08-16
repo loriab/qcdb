@@ -266,7 +266,7 @@ class ReactionDatum(object):
     """Piece of quantum chemical information that describes a qcdb.Reaction object.
 
     """
-
+    __slots__ = ('dbrxn', 'method', 'mode', 'basis', 'value', 'units', 'citation', 'doi', 'comment')
     def __init__(self, dbse, rxn, method, mode, basis, value, units='kcal/mol', citation=None, doi=None, comment=None):
         # geometry
         self.dbrxn = dbse + '-' + str(rxn)
@@ -365,7 +365,7 @@ class Reagent(object):
     """Chemical entity only slightly dresed up from qcdb.Molecule.
 
     """
-
+    __slots__ = ('name', 'NRE', 'mol', 'tagl', 'charge')
     def __init__(self, name, mol, tagl=None, comment=None):
         # full name, e.g., 'S22-2-dimer' or 'NBC1-BzMe-8.0-monoA-CP' or 'HTBH-HCl-reagent'
         self.name = name
@@ -412,7 +412,7 @@ class Reaction(object):
     """
 
     """
-
+    __slots__ = ('name', 'dbrxn', 'indx', 'tagl', 'latex', 'comment', 'rxnm', 'data', 'benchmark', 'color')
     def __init__(self, name, dbse, indx, tagl=None, latex=None, color='black', comment=None):
         # name, e.g., '2' or 'BzMe-8.0'
         self.name = name
