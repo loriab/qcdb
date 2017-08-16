@@ -1873,7 +1873,7 @@ class Database(object):
                 return filedict
 
     def load_saptdata_frombfdb(self, sset='default',
-        pythonpath='/Users/loriab/linux/bfdb/sapt_punt', failoninc=True):  # pythonpath=None
+        pythonpath=None, failoninc=True):
         """This is a stopgap function that loads sapt component data from
         sapt_punt in bfdb repo.
 
@@ -1927,7 +1927,7 @@ class Database(object):
         return saptpackage
 
     def plot_ternary(self, sset='default', labeled=True,
-        pythonpath='/Users/loriab/linux/bfdb/sapt_punt', failoninc=True,  # pythonpath=None
+        pythonpath=None, failoninc=True,
         view=True,
         saveas=None, relpath=False, graphicsformat=['pdf']):
         """This is a stopgap function that loads sapt component data from
@@ -2412,8 +2412,7 @@ reinitialize
         import numpy as np
 
         if self.dbse not in ['ACONF', 'SCONF', 'PCONF', 'CYCONF']:
-            saptdata = self.load_saptdata_frombfdb(sset=sset, pythonpath='/Users/loriab/linux/bfdb/sapt_punt',
-                failoninc=failoninc)
+            saptdata = self.load_saptdata_frombfdb(sset=sset, failoninc=failoninc)
 
         listodicts = []
         rhrxn = self.get_hrxn(sset=sset)

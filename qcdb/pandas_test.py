@@ -1472,7 +1472,8 @@ def test_pandas(h2kc, project, df):
             #qcdb.compare_values(-5.1371, h2kc * df['SCSMIMP2F12-CP-tzf12'   ]['S22-2'], digits, 'SCSMIMP2F12-CP-tzf12')
             #qcdb.compare_values(-4.9192, h2kc * df['DWMP2F12-CP-tzf12'      ]['S22-2'], digits, 'DWMP2F12-CP-tzf12')
 
-        elif project == 'saptone':
+        elif False: # alpha 1 era, I believe (Aug 2017)
+        #elif project == 'saptone':
             print("""\n        Checks from saptone project:\n""")
             digits = 4
 
@@ -1683,7 +1684,7 @@ def test_pandas(h2kc, project, df):
             qcdb.compare_values(-4.6894, h2kc * df['SAPT3FCM-dfmp-SA-jatz']['S22-2'], digits, 'SAPT3FCM-SA-jatz')
             qcdb.compare_values(-4.7930, h2kc * df['SAPT3FCM-dfmp-SA-hatz']['S22-2'], digits, 'SAPT3FCM-SA-hatz')
 
-        elif project == 'sapta0a1conv':
+        elif project in ['sapta0a1conv', 'saptone']: # alpha 0 era, I believe (Aug 2017)
             print("""\n        Checks from sapta0a1test project:\n""")
 
             #test_alpha_0 = False
