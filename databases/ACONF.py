@@ -27,12 +27,10 @@
 #
 
 """
-| Database of <description of members and reference energy type>.
-| Geometries from <Reference>.
-http://www.thch.uni-bonn.de/tc/downloads/GMTKN/GMTKN30/ACONF.html
-| Reference interaction energies from <Reference>.
-Taken from Gruzman, D.; Karton, A.; Martin J. M. L. J. Phys. Chem. A 2009, 113, 11974-11983.
-(W1hval reference values); all values are in kcal/mol.
+| Database (J. Martin) of conformation energies for alkanes.
+| Geometries and reference energies from http://www.thch.uni-bonn.de/tc/downloads/GMTKN/GMTKN30/ACONF.html .
+| Taken from Gruzman, D.; Karton, A.; Martin J. M. L. J. Phys. Chem. A 2009, 113, 11974-11983.
+| (W1hval reference values); all values are in kcal/mol.
 
 
 - **benchmark**
@@ -183,7 +181,7 @@ TAGL['%s-%s-reagent'    % (dbse, 'P_GX'                  )] = """Pentane gauche,
 TAGL['%s-%s-reagent'    % (dbse, 'P_TG'                  )] = """Pentane trans, gauche"""
 TAGL['%s-%s-reagent'    % (dbse, 'P_TT'                  )] = """Pentane trans, trans"""
 
-TAGL['dbse'] = 'comformation energies for alkanes'
+TAGL['dbse'] = 'conformation energies for alkanes'
 TAGL['default'] = 'entire database'
 
 # <<< Geometry Specification Strings >>>

@@ -27,12 +27,11 @@
 #
 
 """
-| Database of <description of members and reference energy type>.
-| Geometries from <Reference>.
-http://www.thch.uni-bonn.de/tc/downloads/GMTKN/GMTKN30/PCONF.html
-| Reference interaction energies from <Reference>.
-Taken from Reha, D.; Valdes, H.; Vondrasek, J.; Hobza, P.; Abu-Riziq, A.; Crews, B.; de Vries, M. S. Chem. Eur. J. 2005, 11, 6803-6817.
-(estimated CCSD(T)/CBS); all values are in kcal/mol.
+| Database (Hobza) of conformation energies for tripeptides.
+| Geometries and reference interaction energies from
+http://www.thch.uni-bonn.de/tc/downloads/GMTKN/GMTKN30/PCONF.html .
+| Taken from Reha, D.; Valdes, H.; Vondrasek, J.; Hobza, P.; Abu-Riziq, A.; Crews, B.; de Vries, M. S. Chem. Eur. J. 2005, 11, 6803-6817.
+| (estimated CCSD(T)/CBS); all values are in kcal/mol.
 
 
 - **benchmark**
@@ -158,7 +157,7 @@ TAGL['%s-%s-reagent'    % (dbse, '470'                   )] = """FGG 470"""
 TAGL['%s-%s-reagent'    % (dbse, '691'                   )] = """FGG 691"""
 TAGL['%s-%s-reagent'    % (dbse, '99'                    )] = """FGG 99"""
 
-TAGL['dbse'] = 'comformation energies for tripeptides'
+TAGL['dbse'] = 'conformation energies for tripeptides'
 TAGL['default'] = 'entire database'
 
 # <<< Geometry Specification Strings >>>

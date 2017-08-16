@@ -27,13 +27,12 @@
 #
 
 """
-| Database of <description of members and reference energy type>.
-| Geometries from <Reference>.
-http://www.thch.uni-bonn.de/tc/downloads/GMTKN/GMTKN30/SCONF.html
-| Reference interaction energies from <Reference>.
-Taken from Csonka, G. I.; French, A. D.; Johnson, G. P.; Stortz, C. A. J. Chem. Theory. Comput. 2009, 5, 679-692;
-and Goerigk, L.; Grimme, S. J. Chem. Theory. Comput. 2010, 6, 107-126.
-(estimated CCSD(T)/CBS); all values are in kcal/mol.
+| Database (Stortz) of conformation energies for sugars.
+| Geometries and reference energies from
+http://www.thch.uni-bonn.de/tc/downloads/GMTKN/GMTKN30/SCONF.html .
+| Taken from Csonka, G. I.; French, A. D.; Johnson, G. P.; Stortz, C. A. J. Chem. Theory. Comput. 2009, 5, 679-692;
+| and Goerigk, L.; Grimme, S. J. Chem. Theory. Comput. 2010, 6, 107-126.
+| (estimated CCSD(T)/CBS); all values are in kcal/mol.
 
 
 - **benchmark**
@@ -201,7 +200,7 @@ TAGL['%s-%s-reagent'    % (dbse, 'G1'                    )] = """GLC4 G1"""
 TAGL['%s-%s-reagent'    % (dbse, 'G2'                    )] = """GLC4 G2"""
 TAGL['%s-%s-reagent'    % (dbse, 'G3'                    )] = """GLC4 G3"""
 TAGL['%s-%s-reagent'    % (dbse, 'G4'                    )] = """GLC4 G4"""
-TAGL['dbse'] = 'comformation energies for sugars'
+TAGL['dbse'] = 'conformation energies for sugars'
 TAGL['default'] = 'entire database'
 
 # <<< Geometry Specification Strings >>>

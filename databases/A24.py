@@ -28,8 +28,8 @@
 
 """
 | Database (Hobza) of interaction energies for bimolecular complexes.
-| Geometries from <Reference>.
-| Reference interaction energies from Rezac and Hobza, JCTC (in press).
+| Geometries from JCTC 9 2151 (2013).
+| Reference interaction energies from Rezac and Hobza, and others (see below).
 
 
 - **cp**  ``'off'`` <erase this comment and after unless on is a valid option> || ``'on'``
@@ -92,7 +92,7 @@ for rxn in HRXN:
 
 # <<< Reference Values [kcal/mol] >>>
 BIND = {}
-# A240: Original publication JCTC 9 2151 (2013) 
+# A240: Original publication JCTC 9 2151 (2013)
 BIND_A240 = {}
 BIND_A240['%s-%s' % (dbse,  1)] =  -6.493
 BIND_A240['%s-%s' % (dbse,  2)] =  -5.006

@@ -27,9 +27,9 @@
 #
 
 """
-| Database of <description of members and reference energy type>.
-| Geometries from <Reference>.
-| Reference interaction energies from <Reference>.
+| Database (Merz) of interaction energies for bimolecular complexes from native 1UBQ protein fold.
+| Geometries and reference interaction energies from
+ J. C. Faver, M. L. Benson, X. He, B. P. Roberts, B. Wang, M. S. Marshall, C. D. Sherrill, K. M. Merz, PLoS ONE 6 e18868 (2011).
 
 
 - **cp**  ``'off'`` <erase this comment and after unless on is a valid option> || ``'on'``

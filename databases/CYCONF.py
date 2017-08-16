@@ -27,18 +27,18 @@
 #
 
 """
-| Database of <description of members and reference energy type>.
-| Geometries from <Reference>.
+| Database (Schaefer) of conformation energies for cysteine.
+| Geometries and reference energies from
 http://www.thch.uni-bonn.de/tc/downloads/GMTKN/GMTKN30/CYCONF.html
 | Reference interaction energies from <Reference>.
+| Taken from Wilke, J. J.; Lind, M. C.; Schaefer III, H. F.; Csaszar, A. G.; Allen, W. D. J. Chem. Theory Comput. 2009, 5, 1511-1523.
+| (estimated CCSD(T)/CBS); all values are in kcal/mol.
 
 
 - **benchmark**
 
   - ``'<benchmark_name>'`` <Reference>.
   - |dl| ``'<default_benchmark_name>'`` |dr| <Reference>.
-Taken from Wilke, J. J.; Lind, M. C.; Schaefer III, H. F.; Csaszar, A. G.; Allen, W. D. J. Chem. Theory Comput. 2009, 5, 1511-1523.
-(estimated CCSD(T)/CBS); all values are in kcal/mol.
 
 
 - **subset**
@@ -145,7 +145,7 @@ TAGL['%s-%s-reagent'    % (dbse, '8'                     )] = """Conformer VIII:
 TAGL['%s-%s-reagent'    % (dbse, '9'                     )] = """Conformer IX: TTG-TC"""
 TAGL['%s-%s-reagent'    % (dbse, '10'                    )] = """Conformer X: CG-TG+A+"""
 TAGL['%s-%s-reagent'    % (dbse, '11'                    )] = """Conformer XI: CTG+G-C"""
-TAGL['dbse'] = 'comformation energies for cysteine'
+TAGL['dbse'] = 'conformation energies for cysteine'
 TAGL['default'] = 'entire database'
 
 # <<< Geometry Specification Strings >>>
