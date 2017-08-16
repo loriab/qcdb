@@ -703,6 +703,23 @@ class WrappedDatabase(object):
         pieces.remove('GEOS')
         self.hrgt = oHRGT
 
+        # form color info from sapt_dbse.py file
+        saptpackage = OrderedDict()
+        modname = 'sapt_' + database.dbse
+        sys.path.append(os.path.dirname(__file__) + '/../data')
+        saptDATA = {}
+        try:
+            datamodule = __import__(modname)
+        except ImportError:
+            print("""Warning: DATA['SAPT * ENERGY'] missing b/c no file %s""" % (modname))
+        else:
+            try:
+                saptDATA = getattr(datamodule, 'DATA')
+            except AttributeError:
+                print("""Warning: DATA['SAPT * ENERGY'] missing b/c no DATA in file %s""" % (modname))
+            else:
+                saptmc = saptDATA['SAPT MODELCHEM']
+
         # form qcdb.Reaction objects from comprehensive reaction list, HRXN
         oHRXN = OrderedDict()
         for rxn in database.HRXN:
@@ -712,8 +729,8 @@ class WrappedDatabase(object):
                 tagl = None
                 print("""Warning: TAGL missing for reaction %s""" % (rxn))
             try:
-                elst = database.DATA['SAPT ELST ENERGY'][database.dbse + '-' + str(rxn)]
-                disp = database.DATA['SAPT DISP ENERGY'][database.dbse + '-' + str(rxn)]
+                elst = saptDATA['SAPT ELST ENERGY'][database.dbse + '-' + str(rxn)]
+                disp = saptDATA['SAPT DISP ENERGY'][database.dbse + '-' + str(rxn)]
                 color = abs(elst) / (abs(elst) + abs(disp))
             except (KeyError, AttributeError):
                 color = 'black'
