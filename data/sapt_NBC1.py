@@ -1,7 +1,8 @@
 DATA = {}
 
 # NBC10ext
-DATA['SAPT MODELCHEM'] = 'SAPT3FC-SA-atz'
+#DATA['SAPT MODELCHEM'] = 'SAPT3FC-SA-atz'
+DATA['SAPT MODELCHEM'] = 'SAPT3FC-CP-atz'  # LAB 2017 for consistency with saptone mc labels
 DATA['SAPT ELST ENERGY'] = {}
 DATA['SAPT ELST ENERGY']['NBC1-BzBz_S-3.2'] =    -6.9579
 DATA['SAPT ELST ENERGY']['NBC1-BzBz_S-3.3'] =    -4.7859

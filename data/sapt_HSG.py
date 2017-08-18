@@ -1,6 +1,7 @@
 DATA = {}
 
-DATA['SAPT MODELCHEM'] = 'SAPT3FC-SA-atz'
+#DATA['SAPT MODELCHEM'] = 'SAPT3FC-SA-atz'
+DATA['SAPT MODELCHEM'] = 'SAPT3FC-CP-atz'  # LAB 2017 for consistency with saptone mc labels
 DATA['SAPT ELST ENERGY'] = {}
 DATA['SAPT ELST ENERGY']['HSG-1'] =    -0.9728
 DATA['SAPT ELST ENERGY']['HSG-2'] =    -1.1609
