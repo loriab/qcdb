@@ -1,3 +1,6 @@
+.. image:: https://zenodo.org/badge/5744708.svg
+   :target: https://zenodo.org/badge/latestdoi/5744708
+   
 qcdb
 ====
 
